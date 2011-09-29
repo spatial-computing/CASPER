@@ -1,0 +1,3 @@
+- EdgePortion migth be fulty in case of really short paths
+- don't ignore the last turn restriction
+- the turn rest. implem. is not working... still

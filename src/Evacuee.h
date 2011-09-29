@@ -1,0 +1,103 @@
+// Copyright 2010 ESRI
+// 
+// All rights reserved under the copyright laws of the United States
+// and applicable international laws, treaties, and conventions.
+// 
+// You may freely redistribute and use this sample code, with or
+// without modification, provided you include the original copyright
+// notice and use restrictions.
+// 
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
+
+#pragma once
+
+#include <vector>
+#include <stack>
+#include <hash_map>
+
+class NAVertex;
+class NAEdge;
+typedef NAVertex * NAVertexPtr;
+
+class PathSegment
+{
+public:
+  PathSegment(double from, double to, long sourceOID, long sourceID, NAEdge * edge, double edgePortion)
+  {
+	  fromPosition = from;
+	  toPosition = to;
+	  SourceOID = sourceOID;
+	  SourceID = sourceID;
+	  Edge = edge;
+	  EdgePortion = edgePortion;
+  }
+
+  double fromPosition;
+  double toPosition;
+  long SourceOID;
+  long SourceID;
+  NAEdge * Edge;
+  double EdgePortion;
+};
+
+typedef PathSegment * PathSegmentPtr;
+
+class EvcPath : public std::stack<PathSegmentPtr>
+{
+public:
+	double RoutedPop;
+	double EvacuationCost;
+	double OrginalCost;
+
+	EvcPath(double routedPop)
+	{
+		RoutedPop = routedPop; 
+		EvacuationCost = -1.0;
+		OrginalCost = -1.0;
+	}	
+};
+
+typedef EvcPath * EvcPathPtr;
+
+class Evacuee
+{
+public:
+	std::vector<NAVertexPtr> * vertices;
+	std::stack<EvcPathPtr> * paths;
+	VARIANT Name;
+	double Population;
+
+	Evacuee(VARIANT name, double pop)
+	{
+		Name = name;
+		vertices = new std::vector<NAVertexPtr>();
+		paths = new std::stack<EvcPathPtr>();
+		Population = pop;
+	}
+
+	~Evacuee(void)
+	{
+		delete vertices;
+		delete paths;
+	}
+};
+
+typedef Evacuee * EvacueePtr;
+typedef std::vector<EvacueePtr> EvacueeList;
+typedef std::pair<long, std::vector<EvacueePtr> *> _NAEvacueeVertexTablePair;
+typedef stdext::hash_map<long, std::vector<EvacueePtr> *>::iterator NAEvacueeVertexTableItr;
+
+class NAEvacueeVertexTable : private stdext::hash_map<long, std::vector<EvacueePtr> *>
+{
+private:
+	int s;
+
+public:
+	NAEvacueeVertexTable() { s = 0; }	
+	int Size() const { return s; }
+	~NAEvacueeVertexTable();
+
+	void Insert(EvacueeList * list);
+	std::vector<EvacueePtr> * Find(long junctionEID);
+	void Erase(long junctionEID) { erase(junctionEID); }
+};

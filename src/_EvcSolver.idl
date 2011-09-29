@@ -1,0 +1,95 @@
+import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\prsht.idl";
+import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\mshtml.idl";
+import "c:\program files\microsoft sdks\windows\v6.0a\include\dimm.idl";
+import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\mshtmhst.idl";
+import "c:\program files\microsoft sdks\windows\v6.0a\include\docobj.idl";
+import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\exdisp.idl";
+import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\objsafe.idl";
+
+[
+	object,
+	uuid(59da3a5d-109d-41f3-afdc-711b5262c769),
+	oleautomation,
+	helpstring("IEvcSolver Interface"),
+	pointer_default(unique)
+] 
+#line 34 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+interface IEvcSolver : IUnknown {
+#line 37 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the saturation constant per capacity")] HRESULT  SaturationPerCap([in] BSTR value);
+#line 39 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the selected saturation constant per capacity")] HRESULT  SaturationPerCap([out,retval] BSTR *value);
+#line 41 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the critical density per capacity")] HRESULT  CriticalDensPerCap([in] BSTR value);
+#line 43 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the selected critical density per capacity")] HRESULT  CriticalDensPerCap([out,retval] BSTR *value);
+#line 45 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Lists discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributes([out,retval] BSTR **names);
+#line 47 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Counts discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributesCount([out,retval] int *count);
+#line 49 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the selected heuristic attribute index")] HRESULT  HeuristicAttribute([in] int index);
+#line 51 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the selected heuristic attribute index")] HRESULT  HeuristicAttribute([out,retval] int *index);
+#line 53 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the selected capacity attribute index")] HRESULT  CapacityAttribute([in] int index);
+#line 55 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the selected caspacity attribute index")] HRESULT  CapacityAttribute([out,retval] int *index);
+#line 57 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the separable evacuee flag")] HRESULT  SeparableEvacuee([in] VARIANT_BOOL value);
+#line 59 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the separable evacuee flag")] HRESULT  SeparableEvacuee([out,retval] VARIANT_BOOL *value);
+#line 61 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the export edge stat flag")] HRESULT  ExportEdgeStat([in] VARIANT_BOOL value);
+#line 63 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the export edge stat flag")] HRESULT  ExportEdgeStat([out,retval] VARIANT_BOOL *value);
+#line 65 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the solver method")] HRESULT  SolverMethod([in] char value);
+#line 67 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the selected solver method")] HRESULT  SolverMethod([out,retval] char *value);
+#line 69 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the cost method")] HRESULT  CostMethod([in] char value);
+#line 71 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the selected cost method")] HRESULT  CostMethod([out,retval] char *value);
+};
+
+
+[ version(1.0), uuid(F25947D1-9C81-48A6-9BFF-CF9EB158FFD7), helpstring("CustomSolver 1.0 Type Library") ]
+library CustomSolver
+{
+	importlib("stdole2.tlb");
+	importlib("olepro32.dll");
+
+	importlib("\Program Files (x86)\ArcGIS\Desktop10.0\com\esrinetworkanalyst.olb");
+	[
+		version(1.0),
+		uuid(7b081f99-b691-46b1-b756-aa72868c8683),
+		helpstring("EvcSolver Class")
+	] 
+#line 85 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	coclass EvcSolver {
+		[default]	interface IEvcSolver;
+	};
+
+	[
+		version(1.0),
+		uuid(cd267b89-0144-4e7c-929e-bcd5d82f4c4d),
+		helpstring("EvcSolverPropPage Class")
+	] 
+#line 29 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolverproppage.h"
+	coclass EvcSolverPropPage {
+		[default]	interface IUnknown;
+	};
+
+	[
+		version(1.0),
+		uuid(6e127557-b452-444d-ac96-3a96a40c4071),
+		helpstring("EvcSolverSymbolizer Class")
+	] 
+#line 32 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolversymbolizer.h"
+	coclass EvcSolverSymbolizer {
+		[default]	interface INASymbolizer2;
+	};
+
+}
+
