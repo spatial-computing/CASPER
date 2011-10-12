@@ -301,7 +301,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\BugList.txt"
+			RelativePath=".\TODO List.txt"
 			>
 		</File>
 	</Files>
