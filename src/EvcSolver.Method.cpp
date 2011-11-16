@@ -12,7 +12,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	// creating the heap for the dijkstra search
 	FibonacciHeap * heap = new FibonacciHeap();
 	NAEdgeClosed * closedList = new NAEdgeClosed();
-	NAEdge * currentEdge;
+	NAEdgePtr currentEdge;
 	std::vector<EvacueePtr>::reverse_iterator rseit;
 	NAVertexPtr neighbor, evc, tempEvc, BetterSafeZone = 0, finalVertex = 0, myVertex, temp;
 	NAEdgePtr myEdge, edge;
@@ -23,15 +23,16 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID;
-	INetworkEdgePtr ipCurrentEdge;
+	INetworkEdgePtr ipCurrentEdge, lastExteriorEdge;
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipElement, ipOtherElement;
 	PathSegment * lastAdded = 0;
 	EvcPathPtr path;
 	long eid;
 	esriNetworkEdgeDirection dir;
-	bool restricted = false, shouldCheckComplexTurn = false;
-	NAEdgeContainer * complexChecker = new NAEdgeContainer();
+	bool restricted = false;
+	esriNetworkTurnParticipationType turnType;
+	//NAEdgeContainer * complexChecker = new NAEdgeContainer();
 
 	///////////////////////////////////////
 	if (ipStepProgressor)
@@ -133,7 +134,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				iterator = safeZoneList->find(myVertex->EID);
 				if (iterator != safeZoneList->end())
 				{
-					// I sould handle the last turn restriction here					
+					// I should handle the last turn restriction here					
 					edge = iterator->second->GetBehindEdge();
 					restricted = false;
 					
@@ -172,29 +173,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				if (myVertex->g > TimeToBeat) break;
 
 				// Query adjacencies from the current junction.
-				// First by complex turn restrictions, then simple ones.
-
-				/// TODO: I don't know how to modify the Dijkstra code to
-				// handle complex (multi-part) turn restrictions.
-
-				shouldCheckComplexTurn = myVertex->Previous != 0;
-				complexChecker->Clear();
-				if (shouldCheckComplexTurn)
-				{
-					if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge
-						, myVertex->Previous->GetBehindEdge()->NetEdge, ipNetworkForwardStarAdjacencies))) return hr;
-					if (FAILED(hr = ipNetworkForwardStarAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
-
-					for (i = 0; i < adjacentEdgeCount; i++)
-					{
-						if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) return hr;					
-						ipCurrentEdge = ipElement;
-						if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;						
-						complexChecker->Insert(ipCurrentEdge);
-					}
-				}
+				if (FAILED(hr = myEdge->NetEdge->get_TurnParticipationType(&turnType))) return hr;
+				if (turnType == 1) lastExteriorEdge = myEdge->LastExteriorEdge;
+				else lastExteriorEdge = 0;
 				if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge
-					, 0, ipNetworkForwardStarAdjacencies))) return hr;				
+					, lastExteriorEdge, ipNetworkForwardStarAdjacencies))) return hr;
+				if (turnType == 2) lastExteriorEdge = myEdge->NetEdge;
 
 				// Get the adjacent edge count
 				// Loop through all adjacent edges and update their cost value
@@ -208,9 +192,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					ipCurrentJunction = ipOtherElement;
 
 					if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-					if (FAILED(hr = ipCurrentEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
-
-					if (shouldCheckComplexTurn && !complexChecker->Exist(ipCurrentEdge)) continue;
+					if (FAILED(hr = ipCurrentEdge->QueryJunctions(0, ipCurrentJunction))) return hr;					
 
 					// check restriction for the recently discovered edge
 					if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipCurrentEdge, &isRestricted))) return hr;
@@ -219,6 +201,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					// if edge has already been discovered then no need to heap it
 					currentEdge = ecache->New(ipCurrentEdge);
 					if (closedList->IsClosed(currentEdge)) continue;
+
+					// multi-part turn restriction flags
+					if (FAILED(hr = ipCurrentEdge->get_TurnParticipationType(&turnType))) return hr;
+					if (turnType == 1) currentEdge->LastExteriorEdge = lastExteriorEdge;
+					else currentEdge->LastExteriorEdge = 0;
 
 					newCost = myVertex->g + currentEdge->GetCost(population2Route, solvermethod);
 					if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrese key.
@@ -344,7 +331,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);	
 		currentEvacuee->vertices->clear();	
 	}
-	delete complexChecker;
+
 	delete closedList;
 	return S_OK;
 }

@@ -129,6 +129,7 @@ public:
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
 	INetworkEdgePtr NetEdge;
+	INetworkEdgePtr LastExteriorEdge;	
 	long EID;
 	double GetCost(double newPop, char method) const;
 	double CapacityLeft() const;

@@ -17,6 +17,7 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	Direction = cpy.Direction;
 	EID = cpy.EID;
 	ToVertex = cpy.ToVertex;
+	LastExteriorEdge = cpy.LastExteriorEdge;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap,
@@ -24,6 +25,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 {
 	reservations = new std::vector<EdgeReservation>();
 	this->NetEdge = edge;
+	LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
 	ReservedPop = 0.0;
 	// cachedCost = originalCost;
