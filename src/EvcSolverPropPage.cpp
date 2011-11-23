@@ -270,6 +270,14 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditDensity, WM_GETTEXT, size + 1, (LPARAM)density);
 		ipSolver->put_CostPerZoneDensity(density);
 		delete [] density;
+		
+		// cost per zone density
+		BSTR flock;
+		size = ::SendMessage(m_hEditDensity, WM_GETTEXTLENGTH, 0, 0);
+		density = new WCHAR[size + 1];
+		::SendMessage(m_hEditDensity, WM_GETTEXT, size + 1, (LPARAM)density);
+		ipSolver->put_CostPerZoneDensity(density);
+		delete [] density;
 	}
 	return S_OK;
 }
@@ -277,14 +285,12 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 STDMETHODIMP EvcSolverPropPage::GetHelpFile(LONG controlID, BSTR* pHelpFile)
 {
 	if (pHelpFile == NULL) return E_POINTER;
-
 	return E_NOTIMPL;
 }
 
 STDMETHODIMP EvcSolverPropPage::GetHelpId(LONG controlID, LONG* pHelpID)
 {
 	if (pHelpID == NULL) return E_POINTER;
-
 	return E_NOTIMPL;
 }
 
@@ -308,6 +314,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hSeparable = GetDlgItem(IDC_CHECK_SEPARABLE);
 	m_hEdgeStat = GetDlgItem(IDC_CHECK_EDGESTAT);
 	m_hEditDensity = GetDlgItem(IDC_EDIT_ZoneDensity);
+	m_hEditFlock = GetDlgItem(IDC_EDIT_FlockInterval);
 	return 0;
 }
 
@@ -376,6 +383,22 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckEdgestat(WORD /*wNotifyCode*/, WORD /
 }
 
 LRESULT EvcSolverPropPage::OnEnChangeEditZonedensity(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnBnClickedCheckFlock(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnEnChangeEditFlockinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

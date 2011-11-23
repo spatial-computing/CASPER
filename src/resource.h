@@ -25,10 +25,14 @@
 #define IDC_CHECK_SEPARABLE2            227
 #define IDC_CHECK_EDGESTAT              227
 #define IDC_EDIT_ZoneDensity            228
-#define IDC_STATICZone                  229
 #define IDC_ZoneOptions                 229
 #define IDC_CASPEROptions               230
 #define IDC_CapacityOptions             231
+#define IDC_FlockOptions                232
+#define IDC_CHECK_Flock                 233
+#define IDC_EDIT1                       234
+#define IDC_EDIT_FlockInterval          234
+#define IDC_STATIC_FlockInterval        235
 
 // Next default values for new objects
 // 
@@ -36,7 +40,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        203
 #define _APS_NEXT_COMMAND_VALUE         32768
-#define _APS_NEXT_CONTROL_VALUE         232
+#define _APS_NEXT_CONTROL_VALUE         236
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
