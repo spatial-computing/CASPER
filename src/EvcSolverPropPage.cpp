@@ -77,6 +77,12 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_SaturationPerCap(&sat);
 		::SendMessage(m_hEditSat, WM_SETTEXT, NULL, (LPARAM)sat);
 		delete [] sat;
+
+		// cost per zone density
+		BSTR density;
+		m_ipEvcSolver->get_CostPerZoneDensity(&density);
+		::SendMessage(m_hEditDensity, WM_SETTEXT, NULL, (LPARAM)density);
+		delete [] density;
 	}
 
 	// Let the IPropertyPageImpl deal with displaying the page
@@ -256,6 +262,14 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditSat, WM_GETTEXT, size + 1, (LPARAM)sat);
 		ipSolver->put_SaturationPerCap(sat);
 		delete [] sat;
+		
+		// cost per zone density
+		BSTR density;
+		size = ::SendMessage(m_hEditDensity, WM_GETTEXTLENGTH, 0, 0);
+		density = new WCHAR[size + 1];
+		::SendMessage(m_hEditDensity, WM_GETTEXT, size + 1, (LPARAM)density);
+		ipSolver->put_CostPerZoneDensity(density);
+		delete [] density;
 	}
 	return S_OK;
 }
@@ -293,6 +307,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hEditSat = GetDlgItem(IDC_EDIT_SAT);
 	m_hSeparable = GetDlgItem(IDC_CHECK_SEPARABLE);
 	m_hEdgeStat = GetDlgItem(IDC_CHECK_EDGESTAT);
+	m_hEditDensity = GetDlgItem(IDC_EDIT_ZoneDensity);
 	return 0;
 }
 
@@ -353,6 +368,14 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckSeparable(WORD /*wNotifyCode*/, WORD 
 }
 
 LRESULT EvcSolverPropPage::OnBnClickedCheckEdgestat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnEnChangeEditZonedensity(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

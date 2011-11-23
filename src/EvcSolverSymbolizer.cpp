@@ -629,7 +629,6 @@ HRESULT EvcSolverSymbolizer::CreatePointRenderer(IColor* pPointColor, IFeatureRe
   return S_OK;
 }
 
-
 HRESULT EvcSolverSymbolizer::CreateLineRenderer(IColor* pLineColor, IFeatureRenderer** ppFeatureRenderer)
 {
   if (!pLineColor || !ppFeatureRenderer) return E_POINTER;

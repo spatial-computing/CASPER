@@ -19,10 +19,16 @@
 #define IDC_EDIT_Critical               221
 #define IDC_COMBO_CostMethod            222
 #define IDC_COMBO_CAPACITY              223
+#define IDC_LableZoneDensity            224
 #define IDC_STATIC_Capacity             225
 #define IDC_CHECK_SEPARABLE             226
 #define IDC_CHECK_SEPARABLE2            227
 #define IDC_CHECK_EDGESTAT              227
+#define IDC_EDIT_ZoneDensity            228
+#define IDC_STATICZone                  229
+#define IDC_ZoneOptions                 229
+#define IDC_CASPEROptions               230
+#define IDC_CapacityOptions             231
 
 // Next default values for new objects
 // 
@@ -30,7 +36,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        203
 #define _APS_NEXT_COMMAND_VALUE         32768
-#define _APS_NEXT_CONTROL_VALUE         227
+#define _APS_NEXT_CONTROL_VALUE         232
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

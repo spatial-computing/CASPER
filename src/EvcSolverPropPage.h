@@ -60,7 +60,8 @@ public:
   enum {IDD = IDD_EvcSolverPROPPAGE};
 
   BEGIN_MSG_MAP(EvcSolverPropPage)
-    CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
+	  COMMAND_HANDLER(IDC_EDIT_ZoneDensity, EN_CHANGE, OnEnChangeEditZonedensity)
+	  CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
     MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 	COMMAND_HANDLER(IDC_COMBO_Heuristic, CBN_SELCHANGE, OnCbnSelchangeComboHeuristic)
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
@@ -113,6 +114,7 @@ private:
   HWND                    m_hEditSat;
   HWND                    m_hSeparable;
   HWND                    m_hEdgeStat;
+  HWND                    m_hEditDensity;
 
 public:
 	LRESULT OnLbnDblclkRestrictionlist(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
@@ -126,4 +128,5 @@ public:
 	LRESULT OnCbnSelchangeComboCapacity(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedCheckSeparable(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedCheckEdgestat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-};
+	LRESULT OnEnChangeEditZonedensity(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+  };

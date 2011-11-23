@@ -69,6 +69,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT CostMethod([in] EVC_SOLVER_METHOD value);
 	[propget, helpstring("Gets the selected cost method")]
 		HRESULT CostMethod([out, retval] EVC_SOLVER_METHOD * value);
+	[propput, helpstring("Sets the cost per safe zone density")]
+		HRESULT CostPerZoneDensity([in] BSTR value);
+	[propget, helpstring("Gets the cost per safe zone density")]
+		HRESULT CostPerZoneDensity([out, retval] BSTR * value);
 };
 
 // EvcSolver
@@ -136,6 +140,8 @@ public:
 	STDMETHOD(get_HeuristicAttribute)(int * index);
 	STDMETHOD(put_CapacityAttribute)(int index);
 	STDMETHOD(get_CapacityAttribute)(int * index);
+	STDMETHOD(get_CostPerZoneDensity)(BSTR * value);
+	STDMETHOD(put_CostPerZoneDensity)(BSTR value);
 
 	// INARouteSolver
 
@@ -226,6 +232,7 @@ private:
 	float					CriticalDensPerCap;
 	EVC_SOLVER_METHOD		solvermethod;
 	EVC_SOLVER_METHOD		costmethod;
+	float					costPerDensity;
 	
 	VARIANT_BOOL separable;
 	VARIANT_BOOL exportEdgeStat;

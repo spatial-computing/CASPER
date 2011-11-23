@@ -319,6 +319,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	m_UseTimeWindows = VARIANT_FALSE;
 	separable = VARIANT_FALSE;
 	exportEdgeStat = VARIANT_TRUE;
+	costPerDensity = 0.0f;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -407,6 +408,16 @@ STDMETHODIMP EvcSolver::get_CriticalDensPerCap(BSTR * value)
 	return S_OK;
 }
 
+STDMETHODIMP EvcSolver::get_CostPerZoneDensity(BSTR * value)
+{	
+	if (value)
+	{
+		*value = new WCHAR[100];
+		swprintf_s(*value, 100, L"%.2f", costPerDensity);
+	}
+	return S_OK;
+}
+
 STDMETHODIMP EvcSolver::put_SaturationPerCap(BSTR value)
 {	
 	swscanf_s(value, L"%f", &SaturationPerCap);
@@ -418,6 +429,13 @@ STDMETHODIMP EvcSolver::put_CriticalDensPerCap(BSTR value)
 	swscanf_s(value, L"%f", &CriticalDensPerCap);
 	return S_OK;
 }
+
+STDMETHODIMP EvcSolver::put_CostPerZoneDensity(BSTR value)
+{	
+	swscanf_s(value, L"%f", &costPerDensity);
+	return S_OK;
+}
+
 
 // returns the name of the heuristic attributes loaded from the network dataset.
 // this will be called from the property page so the user can select.
@@ -836,7 +854,8 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;	
 	if (FAILED(hr = pStm->Read(&separable, sizeof(separable), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&backtrack, sizeof(backtrack), &numBytes))) return hr;	
+	if (FAILED(hr = pStm->Read(&backtrack, sizeof(backtrack), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
 
 	m_bPersistDirty = false;
 
@@ -871,6 +890,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&separable, sizeof(separable), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&backtrack, sizeof(backtrack), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
 	
 	return S_OK;
 }
@@ -995,6 +1015,13 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_NAME));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	// Create and add a capacity field
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_Capacity));
 	ipFieldEdit->put_Type(esriFieldTypeString);
 	ipFieldEdit->put_Length(128);
 	ipFieldsEdit->AddField(ipFieldEdit);

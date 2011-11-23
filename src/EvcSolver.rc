@@ -13,11 +13,13 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (United States) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
+#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -94,7 +96,7 @@ IDR_CUSTOMSOLVER        REGISTRY                "EvcSolver.rgs"
 // Dialog
 //
 
-IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 402, 160
+IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 405, 163
 STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
@@ -116,8 +118,11 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,116,176,12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,131,169,14
-    GROUPBOX        "CASPER Options",IDC_STATIC,202,11,190,36
-    GROUPBOX        "Capacity Options",IDC_STATIC,202,56,190,35
+    GROUPBOX        "CASPER Options",IDC_CASPEROptions,202,11,190,36
+    GROUPBOX        "Capacity Options",IDC_CapacityOptions,202,56,190,35
+    GROUPBOX        "Safe Zone Options",IDC_ZoneOptions,201,104,190,44
+    LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,216,125,117,8
+    EDITTEXT        IDC_EDIT_ZoneDensity,340,122,46,14,ES_AUTOHSCROLL | ES_NUMBER
 END
 
 
@@ -127,14 +132,14 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_EvcSolverPROPPAGE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 395
+        RIGHTMARGIN, 398
         TOPMARGIN, 7
-        BOTTOMMARGIN, 153
+        BOTTOMMARGIN, 156
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -145,7 +150,7 @@ END
 // String Table
 //
 
-STRINGTABLE
+STRINGTABLE 
 BEGIN
     IDS_PROJNAME            "EvacuationSolver"
     IDS_TITLEEvcSolverPROPPAGE "Evacuation Settings"
@@ -153,7 +158,7 @@ BEGIN
     IDS_DOCSTRINGEvcSolverPROPPAGE "Evacuation Settings"
 END
 
-#endif    // English (United States) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
