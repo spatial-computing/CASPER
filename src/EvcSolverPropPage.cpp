@@ -44,6 +44,9 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_ExportEdgeStat(&val);
 		if (val) ::SendMessage(m_hEdgeStat, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hEdgeStat, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+		m_ipEvcSolver->get_FlockingEnabled(&val);
+		if (val) ::SendMessage(m_hCheckFlock, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+		else  ::SendMessage(m_hCheckFlock, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 
 		// set the solver cost method names
 		m_ipEvcSolver->get_CostMethod(&method);
@@ -83,6 +86,12 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_CostPerZoneDensity(&density);
 		::SendMessage(m_hEditDensity, WM_SETTEXT, NULL, (LPARAM)density);
 		delete [] density;
+
+		// cost per zone density
+		BSTR flock;
+		m_ipEvcSolver->get_FlockingInterval(&flock);
+		::SendMessage(m_hEditFlock, WM_SETTEXT, NULL, (LPARAM)flock);
+		delete [] flock;
 	}
 
 	// Let the IPropertyPageImpl deal with displaying the page
@@ -246,6 +255,8 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		ipSolver->put_SeparableEvacuee(selectedIndex == BST_CHECKED);
 		selectedIndex = ::SendMessage(m_hEdgeStat, BM_GETCHECK, 0, 0);
 		ipSolver->put_ExportEdgeStat(selectedIndex == BST_CHECKED);
+		selectedIndex = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
+		ipSolver->put_FlockingEnabled(selectedIndex == BST_CHECKED);
 		
 		// critical density per capacity
 		BSTR critical;
@@ -271,13 +282,13 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		ipSolver->put_CostPerZoneDensity(density);
 		delete [] density;
 		
-		// cost per zone density
+		// flock interval
 		BSTR flock;
-		size = ::SendMessage(m_hEditDensity, WM_GETTEXTLENGTH, 0, 0);
-		density = new WCHAR[size + 1];
-		::SendMessage(m_hEditDensity, WM_GETTEXT, size + 1, (LPARAM)density);
-		ipSolver->put_CostPerZoneDensity(density);
-		delete [] density;
+		size = ::SendMessage(m_hEditFlock, WM_GETTEXTLENGTH, 0, 0);
+		flock = new WCHAR[size + 1];
+		::SendMessage(m_hEditFlock, WM_GETTEXT, size + 1, (LPARAM)flock);
+		ipSolver->put_FlockingInterval(flock);
+		delete [] flock;
 	}
 	return S_OK;
 }
@@ -315,6 +326,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hEdgeStat = GetDlgItem(IDC_CHECK_EDGESTAT);
 	m_hEditDensity = GetDlgItem(IDC_EDIT_ZoneDensity);
 	m_hEditFlock = GetDlgItem(IDC_EDIT_FlockInterval);
+	m_hCheckFlock = GetDlgItem(IDC_CHECK_Flock);
 	return 0;
 }
 

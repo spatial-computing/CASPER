@@ -320,6 +320,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	separable = VARIANT_FALSE;
 	exportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
+	flockingEnabled = VARIANT_FALSE;
+	flockingSnapInterval = 1.0;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -339,6 +341,18 @@ STDMETHODIMP EvcSolver::UpdateContext(INAContext* pNAContext, IDENetworkDataset*
 
 /////////////////////////////////////////////////////////////////////
 // IEvcSolver
+
+STDMETHODIMP EvcSolver::get_FlockingEnabled(VARIANT_BOOL * value)
+{
+	*value = flockingEnabled;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_FlockingEnabled(VARIANT_BOOL value)
+{
+	flockingEnabled = value;
+	return S_OK;
+}
 
 STDMETHODIMP EvcSolver::get_ExportEdgeStat(VARIANT_BOOL * value)
 {
@@ -398,6 +412,16 @@ STDMETHODIMP EvcSolver::get_SaturationPerCap(BSTR * value)
 	return S_OK;
 }
 
+STDMETHODIMP EvcSolver::get_FlockingInterval(BSTR * value)
+{	
+	if (value)
+	{
+		*value = new WCHAR[100];
+		swprintf_s(*value, 100, L"%.2f", flockingSnapInterval);
+	}
+	return S_OK;
+}
+
 STDMETHODIMP EvcSolver::get_CriticalDensPerCap(BSTR * value)
 {	
 	if (value)
@@ -415,6 +439,12 @@ STDMETHODIMP EvcSolver::get_CostPerZoneDensity(BSTR * value)
 		*value = new WCHAR[100];
 		swprintf_s(*value, 100, L"%.2f", costPerDensity);
 	}
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_FlockingInterval(BSTR value)
+{	
+	swscanf_s(value, L"%f", &flockingSnapInterval);
 	return S_OK;
 }
 
@@ -856,6 +886,8 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&backtrack, sizeof(backtrack), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&flockingEnabled, sizeof(flockingEnabled), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&flockingSnapInterval, sizeof(flockingSnapInterval), &numBytes))) return hr;
 
 	m_bPersistDirty = false;
 
@@ -891,6 +923,8 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&backtrack, sizeof(backtrack), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&flockingEnabled, sizeof(flockingEnabled), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&flockingSnapInterval, sizeof(flockingSnapInterval), &numBytes))) return hr;
 	
 	return S_OK;
 }

@@ -72,7 +72,15 @@ __interface IEvcSolver : IUnknown
 	[propput, helpstring("Sets the cost per safe zone density")]
 		HRESULT CostPerZoneDensity([in] BSTR value);
 	[propget, helpstring("Gets the cost per safe zone density")]
-		HRESULT CostPerZoneDensity([out, retval] BSTR * value);
+		HRESULT CostPerZoneDensity([out, retval] BSTR * value);		
+	[propput, helpstring("Sets the flocking snapshot interval in minutes")]
+		HRESULT FlockingInterval([in] BSTR value);
+	[propget, helpstring("Gets the flocking snapshot interval in minutes")]
+		HRESULT FlockingInterval([out, retval] BSTR * value);		
+	[propput, helpstring("Sets the flocking mode to on/off")]
+		HRESULT FlockingEnabled([in] VARIANT_BOOL value);
+	[propget, helpstring("Gets the flocking mode")]
+		HRESULT FlockingEnabled([out, retval] VARIANT_BOOL * value);
 };
 
 // EvcSolver
@@ -142,6 +150,10 @@ public:
 	STDMETHOD(get_CapacityAttribute)(int * index);
 	STDMETHOD(get_CostPerZoneDensity)(BSTR * value);
 	STDMETHOD(put_CostPerZoneDensity)(BSTR value);
+	STDMETHOD(get_FlockingEnabled)(VARIANT_BOOL * value);
+	STDMETHOD(put_FlockingEnabled)(VARIANT_BOOL value);
+	STDMETHOD(get_FlockingInterval)(BSTR * value);
+	STDMETHOD(put_FlockingInterval)(BSTR value);
 
 	// INARouteSolver
 
@@ -233,6 +245,8 @@ private:
 	EVC_SOLVER_METHOD		solvermethod;
 	EVC_SOLVER_METHOD		costmethod;
 	float					costPerDensity;
+	VARIANT_BOOL			flockingEnabled;
+	float					flockingSnapInterval;
 	
 	VARIANT_BOOL separable;
 	VARIANT_BOOL exportEdgeStat;

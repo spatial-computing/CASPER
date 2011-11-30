@@ -15,6 +15,7 @@
 #include "math.h"   // for HUGE_VAL
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
+#include "Flocking.h"
 
 STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, ITrackCancel* pTrackCancel, VARIANT_BOOL* pIsPartialSolution)
 {
@@ -79,7 +80,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Some timing functions
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	BOOL c;
-	double inputSecSys, calcSecSys, outputSecSys, inputSecCpu, calcSecCpu, outputSecCpu;
+	double inputSecSys, calcSecSys, flockSecSys, outputSecSys, inputSecCpu, calcSecCpu, flockSecCpu, outputSecCpu;
 	__int64 tenNanoSec64;
 
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
@@ -644,6 +645,26 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Perform flocking simulation if requested
+
+	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
+	if (this->flockingEnabled)
+	{
+		FlockingEnviroment * flock = new FlockingEnviroment(this->flockingSnapInterval);
+		flock->Init(Evacuees);
+
+
+	}
+
+	// timing
+	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
+	tenNanoSec64 = (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
+	flockSecSys = tenNanoSec64 / 10000000.0;
+	tenNanoSec64 = (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS));
+	flockSecCpu = tenNanoSec64 / 10000000.0;
+	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Write output
 
 	// Now that we have completed our traversal of the network from the Evacuee points, we must output the connected/disconnected edges
@@ -944,9 +965,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	CString formatString;
 	CString msgString;
 
-	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f");
-	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
-		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + outputSecSys + outputSecCpu);
+	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f");
+	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, flockSecSys, flockSecCpu, outputSecSys, outputSecCpu,
+		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
 

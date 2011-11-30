@@ -118,6 +118,7 @@ private:
   HWND                    m_hEdgeStat;
   HWND                    m_hEditDensity;
   HWND                    m_hEditFlock;
+  HWND                    m_hCheckFlock;
 
 public:
 	LRESULT OnLbnDblclkRestrictionlist(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);

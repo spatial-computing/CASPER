@@ -236,6 +236,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Flocking.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\NAGraph.cpp"
 				>
 			</File>
@@ -267,6 +271,10 @@
 			</File>
 			<File
 				RelativePath=".\FibonacciHeap.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Flocking.h"
 				>
 			</File>
 			<File

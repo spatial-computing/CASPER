@@ -126,7 +126,7 @@ BEGIN
     GROUPBOX        "Flocking Model Options",IDC_FlockOptions,202,130,189,55
     CONTROL         "Flocking enabled?",IDC_CHECK_Flock,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,216,148,74,14
     EDITTEXT        IDC_EDIT_FlockInterval,340,161,45,14,ES_AUTOHSCROLL
-    LTEXT           "Snapshot Interval (minutes):",IDC_STATIC_FlockInterval,216,164,91,8
+    LTEXT           "Snapshot Interval:",IDC_STATIC_FlockInterval,216,164,59,8
 END
 
 
