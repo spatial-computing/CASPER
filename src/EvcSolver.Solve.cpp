@@ -12,7 +12,7 @@
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "float.h"  // for FLT_MAX, etc.
-#include "math.h"   // for HUGE_VAL
+#include <cmath>   // for HUGE_VAL
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 #include "Flocking.h"
@@ -645,26 +645,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Perform flocking simulation if requested
-
-	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
-	if (this->flockingEnabled)
-	{
-		FlockingEnviroment * flock = new FlockingEnviroment(this->flockingSnapInterval);
-		flock->Init(Evacuees);
-
-
-	}
-
-	// timing
-	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
-	tenNanoSec64 = (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
-	flockSecSys = tenNanoSec64 / 10000000.0;
-	tenNanoSec64 = (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS));
-	flockSecCpu = tenNanoSec64 / 10000000.0;
-	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Write output
 
 	// Now that we have completed our traversal of the network from the Evacuee points, we must output the connected/disconnected edges
@@ -699,6 +679,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	CComVariant featureID(0);
 	IPointCollectionPtr pline = 0;
 	EvcPathPtr path;
+	std::list<PathSegmentPtr>::iterator psit;
+	std::list<EvcPathPtr>::iterator pit;
 
 	// Get the "Routes" NAClass feature class
 	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
@@ -735,74 +717,70 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (currentEvacuee->paths->empty())
 		{
 			*pIsPartialSolution = VARIANT_TRUE;
-			continue;
 		}
-
-		while (!currentEvacuee->paths->empty())
+		else
 		{
-			path = currentEvacuee->paths->top();
-			currentEvacuee->paths->pop();
-			path->OrginalCost = 0.0;
-			path->EvacuationCost = 0.0;
-			pline = IPointCollectionPtr(CLSID_Polyline);
-
-			while (!path->empty())
+			for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
 			{
-				// take a path segment from the stack
-				pathSegment = path->top();			
-				path->pop();
+				path = *pit;
+				path->OrginalCost = 0.0;
+				path->EvacuationCost = 0.0;
+				pline = IPointCollectionPtr(CLSID_Polyline);
 
-				// retrive street shape for this segment
-				if (FAILED(hr = ipFeatureClassContainer->get_ClassByID(pathSegment->SourceID, &ipNetworkSourceFC))) return hr;
-				if (!ipNetworkSourceFC) continue;
-				if (FAILED(hr = ipNetworkSourceFC->GetFeature(pathSegment->SourceOID, &ipSourceFeature))) return hr;
-				if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
-
-				// Check to see how much of the line geometry we can copy over
-				if (pathSegment->fromPosition != 0.0 || pathSegment->toPosition != 1.0)
+				for (psit = path->begin(); psit != path->end(); psit++)
 				{
-					// We must use only a subcurve of the line geometry
-					ICurve3Ptr ipCurve(ipGeometry);
-					if (FAILED(hr = ipCurve->GetSubcurve(pathSegment->fromPosition, pathSegment->toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
-					ipGeometry = ipSubCurve;
-				}
-				ipGeometry->get_GeometryType(type);			
+					// take a path segment from the stack
+					pathSegment = *psit;
 
-				// get all the points from this polyline and store it in the point stack
-				_ASSERT(*type == esriGeometryPolyline);
-				if (*type == esriGeometryPolyline)
-				{
-					pcollect = (IPolylinePtr)ipGeometry;
-					pcollect->get_PointCount(&pointCount);
+					// retrive street shape for this segment
+					if (FAILED(hr = ipFeatureClassContainer->get_ClassByID(pathSegment->SourceID, &ipNetworkSourceFC))) return hr;
+					if (!ipNetworkSourceFC) continue;
+					if (FAILED(hr = ipNetworkSourceFC->GetFeature(pathSegment->SourceOID, &ipSourceFeature))) return hr;
+					if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
 
-					// if this is not the last path segment then the last point is redundent.
-					if (!path->empty()) pointCount--;
+					// Check to see how much of the line geometry we can copy over
+					if (pathSegment->fromPosition != 0.0 || pathSegment->toPosition != 1.0)
 					{
+						// We must use only a subcurve of the line geometry
+						ICurve3Ptr ipCurve(ipGeometry);
+						if (FAILED(hr = ipCurve->GetSubcurve(pathSegment->fromPosition, pathSegment->toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
+						ipGeometry = ipSubCurve;
+					}
+					ipGeometry->get_GeometryType(type);			
+
+					// get all the points from this polyline and store it in the point stack
+					_ASSERT(*type == esriGeometryPolyline);
+					if (*type == esriGeometryPolyline)
+					{
+						pathSegment->pline = (IPolylinePtr)ipGeometry;
+						pcollect = pathSegment->pline;
+						pcollect->get_PointCount(&pointCount);
+
+						// if this is not the last path segment then the last point is redundent.
+						// TODO
+						if (psit != path->end()) pointCount--;						
 						for (i = 0; i < pointCount; i++)
 						{
 							pcollect->get_Point(i, &p);
 							pline->AddPoint(p);
-						}
-					}
-				}			
-				// Final cost calculations
-				path->EvacuationCost += pathSegment->Edge->GetCost(0.0, costmethod) * pathSegment->EdgePortion;
-				path->OrginalCost    += pathSegment->Edge->originalCost * pathSegment->EdgePortion;
+						}						
+					}			
+					// Final cost calculations
+					path->EvacuationCost += pathSegment->Edge->GetCost(0.0, costmethod) * pathSegment->EdgePortion;
+					path->OrginalCost    += pathSegment->Edge->originalCost * pathSegment->EdgePortion;
+				}
 
-				delete pathSegment;
+				// Store the feature values on the feature buffer
+				if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(evNameFieldIndex, currentEvacuee->Name))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(evacTimeFieldIndex, CComVariant(path->EvacuationCost)))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(orgTimeFieldIndex, CComVariant(path->OrginalCost)))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(popFieldIndex, CComVariant(path->RoutedPop)))) return hr;
+
+				// Insert the feature buffer in the insert cursor
+				if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 			}
-
-			// Store the feature values on the feature buffer
-			if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(evNameFieldIndex, currentEvacuee->Name))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(evacTimeFieldIndex, CComVariant(path->EvacuationCost)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(orgTimeFieldIndex, CComVariant(path->OrginalCost)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(popFieldIndex, CComVariant(path->RoutedPop)))) return hr;
-
-			// Insert the feature buffer in the insert cursor
-			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
-			delete path;
-		}	
+		}
 	}
 
 	// init and execute driving direction agent from the cost attribute
@@ -961,15 +939,44 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	outputSecSys = tenNanoSec64 / 10000000.0;
 	tenNanoSec64 = (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS));
 	outputSecCpu = tenNanoSec64 / 10000000.0;
+	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Perform flocking simulation if requested
+
+	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
+	if (this->flockingEnabled)
+	{
+		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment")); 
+		FlockingEnviroment * flock = new FlockingEnviroment(this->flockingSnapInterval);
+		flock->Init(Evacuees);
+
+		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation")); 
+		flock->RunSimulation();
+	}
+
+	// timing
+	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
+	tenNanoSec64 = (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
+	flockSecSys = tenNanoSec64 / 10000000.0;
+	tenNanoSec64 = (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS));
+	flockSecCpu = tenNanoSec64 / 10000000.0;
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	CString formatString;
 	CString msgString;
 
-	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f");
-	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, flockSecSys, flockSecCpu, outputSecSys, outputSecCpu,
+	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f");
+	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
+
+	// clear and release evacuees and their paths
+	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
+	Evacuees->clear();
+	delete Evacuees;
 
 	// releasing all internal objects
 	delete vcache;
@@ -977,7 +984,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	delete closedList;
 	for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
 	delete safeZoneList;
-	delete Evacuees;
 	delete sortedEvacuees;
 	return S_OK;
 }

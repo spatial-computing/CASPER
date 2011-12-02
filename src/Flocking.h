@@ -20,23 +20,27 @@ public:
 	EvcPathPtr MyPath;
 	NAEdgePtr MyEdge;
 	INetworkJunctionPtr NextVertex;
-	INetworkJunctionPtr FinalVertex;
+	IPointPtr FinalPoint;
 	FLOCK_OBJ_STAT MyStatus;
 
 	// methods
 	
-	FlockingObject(void);
+	FlockingObject(EvcPathPtr path);
 	virtual ~FlockingObject(void);
 };
+
+typedef FlockingObject * FlockingObjectPtr;
+typedef std::list<FlockingObjectPtr>::iterator FlockingObjectItr;
 
 class FlockingEnviroment
 {
 private:
-	FlockingObject * objects;
+	std::list<FlockingObjectPtr> * objects;
 	double snapshotInterval;
 
 public:
 	FlockingEnviroment(double SnapshotInterval);
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList);
+	void RunSimulation(void);
 };

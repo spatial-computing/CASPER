@@ -22,6 +22,14 @@ typedef NAVertex * NAVertexPtr;
 class PathSegment
 {
 public:
+  double fromPosition;
+  double toPosition;
+  long SourceOID;
+  long SourceID;
+  NAEdge * Edge;
+  double EdgePortion;
+  IPolylinePtr pline;
+
   PathSegment(double from, double to, long sourceOID, long sourceID, NAEdge * edge, double edgePortion)
   {
 	  fromPosition = from;
@@ -30,31 +38,31 @@ public:
 	  SourceID = sourceID;
 	  Edge = edge;
 	  EdgePortion = edgePortion;
+	  pline = 0;
   }
-
-  double fromPosition;
-  double toPosition;
-  long SourceOID;
-  long SourceID;
-  NAEdge * Edge;
-  double EdgePortion;
 };
 
 typedef PathSegment * PathSegmentPtr;
 
-class EvcPath : public std::stack<PathSegmentPtr>
+class EvcPath : public std::list<PathSegmentPtr>
 {
 public:
 	double RoutedPop;
 	double EvacuationCost;
 	double OrginalCost;
 
-	EvcPath(double routedPop)
+	EvcPath(double routedPop) : std::list<PathSegmentPtr>()
 	{
 		RoutedPop = routedPop; 
 		EvacuationCost = -1.0;
 		OrginalCost = -1.0;
-	}	
+	}
+
+	~EvcPath(void)
+	{
+		for(iterator it = begin(); it != end(); it++) delete (*it);
+		clear();
+	}
 };
 
 typedef EvcPath * EvcPathPtr;
@@ -63,7 +71,7 @@ class Evacuee
 {
 public:
 	std::vector<NAVertexPtr> * vertices;
-	std::stack<EvcPathPtr> * paths;
+	std::list<EvcPathPtr> * paths;
 	VARIANT Name;
 	double Population;
 
@@ -71,12 +79,15 @@ public:
 	{
 		Name = name;
 		vertices = new std::vector<NAVertexPtr>();
-		paths = new std::stack<EvcPathPtr>();
+		paths = new std::list<EvcPathPtr>();
 		Population = pop;
 	}
 
 	~Evacuee(void)
 	{
+		for(std::list<EvcPathPtr>::iterator it = paths->begin(); it != paths->end(); it++) delete (*it);
+		paths->clear();
+		vertices->clear();
 		delete vertices;
 		delete paths;
 	}
@@ -84,6 +95,7 @@ public:
 
 typedef Evacuee * EvacueePtr;
 typedef std::vector<EvacueePtr> EvacueeList;
+typedef std::vector<EvacueePtr>::iterator EvacueeListItr;
 typedef std::pair<long, std::vector<EvacueePtr> *> _NAEvacueeVertexTablePair;
 typedef stdext::hash_map<long, std::vector<EvacueePtr> *>::iterator NAEvacueeVertexTableItr;
 

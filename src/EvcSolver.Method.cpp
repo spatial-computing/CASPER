@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "float.h"  // for FLT_MAX, etc.
-#include "math.h"   // for HUGE_VAL
+#include <cmath>   // for HUGE_VAL
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 
@@ -275,7 +275,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (fromPosition < toPosition) toPosition = fromPosition + edgePortion;
 					else toPosition = fromPosition - edgePortion;
 
-					path->push(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
+					path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
 					BetterSafeZone->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
 				}
 
@@ -286,7 +286,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (finalVertex->GetBehindEdge())
 					{
 						if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;	
-						path->push(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
+						path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
 						finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
 					}
 					finalVertex = finalVertex->Previous;
@@ -301,7 +301,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (fromPosition < toPosition) fromPosition = toPosition - edgePortion;
 					else fromPosition = toPosition + edgePortion;
 
-					lastAdded = path->top();
+					lastAdded = path->front();
 					if (lastAdded->SourceOID == sourceOID && lastAdded->SourceID == sourceID)
 					{
 						lastAdded->fromPosition = fromPosition;
@@ -309,11 +309,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 					else
 					{
-						path->push(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
+						path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
 						finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
 					}
 				}
-				currentEvacuee->paths->push(path);
+				currentEvacuee->paths->push_front(path);
 			}
 			else
 			{

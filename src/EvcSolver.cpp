@@ -12,7 +12,7 @@
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "float.h"  // for FLT_MAX, etc.
-#include "math.h"   // for HUGE_VAL
+#include <cmath>   // for HUGE_VAL
 #include "EvcSolver.h"
 
 // EvcSolver

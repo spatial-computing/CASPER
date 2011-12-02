@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "NAGraph.h"
 #include "Evacuee.h"
-#include <math.h>
+#include <cmath>
 
 ///////////////////////////////////////////////////////////////////////
 // NAEdge Methods
