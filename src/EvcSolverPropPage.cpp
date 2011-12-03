@@ -87,11 +87,17 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hEditDensity, WM_SETTEXT, NULL, (LPARAM)density);
 		delete [] density;
 
-		// cost per zone density
+		// set flocking snap interval number at the textbox
 		BSTR flock;
-		m_ipEvcSolver->get_FlockingInterval(&flock);
-		::SendMessage(m_hEditFlock, WM_SETTEXT, NULL, (LPARAM)flock);
+		m_ipEvcSolver->get_FlockingSnapInterval(&flock);
+		::SendMessage(m_hEditSnapFlock, WM_SETTEXT, NULL, (LPARAM)flock);
 		delete [] flock;
+
+		// set flocking simulation interval number at the textbox
+		BSTR simul;
+		m_ipEvcSolver->get_FlockingSimulationInterval(&simul);
+		::SendMessage(m_hEditSimulationFlock, WM_SETTEXT, NULL, (LPARAM)simul);
+		delete [] simul;
 	}
 
 	// Let the IPropertyPageImpl deal with displaying the page
@@ -282,13 +288,21 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		ipSolver->put_CostPerZoneDensity(density);
 		delete [] density;
 		
-		// flock interval
+		// flock snap interval
 		BSTR flock;
-		size = ::SendMessage(m_hEditFlock, WM_GETTEXTLENGTH, 0, 0);
+		size = ::SendMessage(m_hEditSnapFlock, WM_GETTEXTLENGTH, 0, 0);
 		flock = new WCHAR[size + 1];
-		::SendMessage(m_hEditFlock, WM_GETTEXT, size + 1, (LPARAM)flock);
-		ipSolver->put_FlockingInterval(flock);
+		::SendMessage(m_hEditSnapFlock, WM_GETTEXT, size + 1, (LPARAM)flock);
+		ipSolver->put_FlockingSnapInterval(flock);
 		delete [] flock;
+		
+		// flock simulation interval
+		BSTR simul;
+		size = ::SendMessage(m_hEditSimulationFlock, WM_GETTEXTLENGTH, 0, 0);
+		simul = new WCHAR[size + 1];
+		::SendMessage(m_hEditSimulationFlock, WM_GETTEXT, size + 1, (LPARAM)simul);
+		ipSolver->put_FlockingSimulationInterval(simul);
+		delete [] simul;
 	}
 	return S_OK;
 }
@@ -325,7 +339,8 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hSeparable = GetDlgItem(IDC_CHECK_SEPARABLE);
 	m_hEdgeStat = GetDlgItem(IDC_CHECK_EDGESTAT);
 	m_hEditDensity = GetDlgItem(IDC_EDIT_ZoneDensity);
-	m_hEditFlock = GetDlgItem(IDC_EDIT_FlockInterval);
+	m_hEditSnapFlock = GetDlgItem(IDC_EDIT_FlockSnapInterval);
+	m_hEditSimulationFlock = GetDlgItem(IDC_EDIT_FlockSimulationInterval);
 	m_hCheckFlock = GetDlgItem(IDC_CHECK_Flock);
 	return 0;
 }
@@ -407,10 +422,25 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckFlock(WORD /*wNotifyCode*/, WORD /*wI
 	SetDirty(TRUE);
 	//refresh property sheet
 	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	
+	int flag = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
+	if (flag == BST_CHECKED) flag = 1; else flag = 0;
+	
+	::SendMessage(m_hEditSnapFlock, WM_ENABLE, flag, 0);
+	::SendMessage(m_hEditSimulationFlock, WM_ENABLE, flag, 0);	
+
 	return 0;
 }
 
-LRESULT EvcSolverPropPage::OnEnChangeEditFlockinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT EvcSolverPropPage::OnEnChangeEditFlocksnapinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

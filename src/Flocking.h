@@ -13,19 +13,21 @@ class FlockingObject
 public:
 	// properties
 
-	double SpeedX;
-	double SpeedY;
-	double X;
-	double Y;
-	EvcPathPtr MyPath;
-	NAEdgePtr MyEdge;
-	INetworkJunctionPtr NextVertex;
-	IPointPtr FinalPoint;
-	FLOCK_OBJ_STAT MyStatus;
+	double		StartTime;
+	double		MyTime;
+	double		SpeedX;
+	double		SpeedY;
+	IPointPtr	MyLocation;
+	IPointPtr 	StartPoint;
+	IPointPtr	FinalPoint;
+	EvcPathPtr	MyPath;
+	NAEdgePtr	MyEdge;
+	INetworkJunctionPtr	NextVertex;
+	FLOCK_OBJ_STAT		MyStatus;
 
 	// methods
 	
-	FlockingObject(EvcPathPtr path);
+	FlockingObject(EvcPathPtr path, double startTime);
 	virtual ~FlockingObject(void);
 };
 
@@ -37,9 +39,10 @@ class FlockingEnviroment
 private:
 	std::list<FlockingObjectPtr> * objects;
 	double snapshotInterval;
+	double simulationInterval;
 
 public:
-	FlockingEnviroment(double SnapshotInterval);
+	FlockingEnviroment(double SnapshotInterval, double SimulationInterval);
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList);
 	void RunSimulation(void);

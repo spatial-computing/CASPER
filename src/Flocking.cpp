@@ -5,25 +5,28 @@
 ///////////////////////////////////////////////////////////
 // Flocking object implementation
 
-FlockingObject::FlockingObject(EvcPathPtr path)
+FlockingObject::FlockingObject(EvcPathPtr path, double startTime)
 {
 	SpeedX = 0.0;
 	SpeedY = 0.0;
 	MyStatus = FLOCK_OBJ_STAT_INIT;
 	MyPath = path;
 	NextVertex = 0;
+	MyTime = 0;
+	StartTime = startTime;
 
 	if (MyPath)
 	{
 		MyEdge = MyPath->front()->Edge;
-		
+		MyPath->front()->pline->get_FromPoint(&StartPoint);
+		MyPath->back()->pline->get_ToPoint(&FinalPoint);
 	}
 	else
 	{
 		MyEdge = 0;
-		X = 0.0;
-		Y = 0.0;
+		MyLocation = 0;
 		FinalPoint = 0;
+		StartPoint = 0;
 	}
 }
 
@@ -34,9 +37,10 @@ FlockingObject::~FlockingObject(void)
 ///////////////////////////////////////////////////////////
 // Flocking enviroment implementation
 
-FlockingEnviroment::FlockingEnviroment(double SnapshotInterval)
+FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval)
 {
 	snapshotInterval = SnapshotInterval;
+	simulationInterval = SimulationInterval;
 	objects = new std::list<FlockingObjectPtr>();
 }
 
@@ -62,7 +66,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList)
 			size = (int)(ceil((*pathItr)->RoutedPop));
 			for (i = 0; i < size; i++)
 			{
-				objects->push_front(new FlockingObject(*pathItr));
+				objects->push_front(new FlockingObject(*pathItr, simulationInterval * i));
 			}
 		}
 	}

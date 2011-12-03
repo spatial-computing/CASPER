@@ -30,9 +30,10 @@
 #define IDC_CapacityOptions             231
 #define IDC_FlockOptions                232
 #define IDC_CHECK_Flock                 233
-#define IDC_EDIT1                       234
-#define IDC_EDIT_FlockInterval          234
-#define IDC_STATIC_FlockInterval        235
+#define IDC_EDIT_FlockSnapInterval      234
+#define IDC_STATIC_FlockSnapInterval    235
+#define IDC_EDIT_FlockSimulationInterval 236
+#define IDC_STATIC_FlockSimulationInterval 237
 
 // Next default values for new objects
 // 

@@ -321,7 +321,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	exportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
-	flockingSnapInterval = 1.0;
+	flockingSnapInterval = 1.0f;
+	flockingSimulationInterval = 0.1f;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -412,12 +413,22 @@ STDMETHODIMP EvcSolver::get_SaturationPerCap(BSTR * value)
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::get_FlockingInterval(BSTR * value)
+STDMETHODIMP EvcSolver::get_FlockingSnapInterval(BSTR * value)
 {	
 	if (value)
 	{
 		*value = new WCHAR[100];
 		swprintf_s(*value, 100, L"%.2f", flockingSnapInterval);
+	}
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_FlockingSimulationInterval(BSTR * value)
+{	
+	if (value)
+	{
+		*value = new WCHAR[100];
+		swprintf_s(*value, 100, L"%.2f", flockingSimulationInterval);
 	}
 	return S_OK;
 }
@@ -442,9 +453,15 @@ STDMETHODIMP EvcSolver::get_CostPerZoneDensity(BSTR * value)
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_FlockingInterval(BSTR value)
+STDMETHODIMP EvcSolver::put_FlockingSnapInterval(BSTR value)
 {	
 	swscanf_s(value, L"%f", &flockingSnapInterval);
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_FlockingSimulationInterval(BSTR value)
+{	
+	swscanf_s(value, L"%f", &flockingSimulationInterval);
 	return S_OK;
 }
 
@@ -888,6 +905,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingEnabled, sizeof(flockingEnabled), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingSnapInterval, sizeof(flockingSnapInterval), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
 
 	m_bPersistDirty = false;
 
@@ -925,6 +943,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingEnabled, sizeof(flockingEnabled), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingSnapInterval, sizeof(flockingSnapInterval), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
 	
 	return S_OK;
 }

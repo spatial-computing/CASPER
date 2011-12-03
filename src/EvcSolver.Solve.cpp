@@ -757,8 +757,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						pcollect->get_PointCount(&pointCount);
 
 						// if this is not the last path segment then the last point is redundent.
-						// TODO
-						if (psit != path->end()) pointCount--;						
+						pointCount--;						
 						for (i = 0; i < pointCount; i++)
 						{
 							pcollect->get_Point(i, &p);
@@ -769,6 +768,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					path->EvacuationCost += pathSegment->Edge->GetCost(0.0, costmethod) * pathSegment->EdgePortion;
 					path->OrginalCost    += pathSegment->Edge->originalCost * pathSegment->EdgePortion;
 				}
+
+				// Add the last point of the last path segment to the polyline
+				pcollect->get_Point(pointCount, &p);
+				pline->AddPoint(p);
 
 				// Store the feature values on the feature buffer
 				if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
@@ -782,6 +785,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 		}
 	}
+	
+	// fluch the insert buffer
+	ipFeatureCursor->Flush();
 
 	// init and execute driving direction agent from the cost attribute
 	/* TODO driving direction
@@ -932,6 +938,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 		}
+
+		// fluch the insert buffer
+		ipFeatureCursor->Flush();
 	}
 
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -948,7 +957,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (this->flockingEnabled)
 	{
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment")); 
-		FlockingEnviroment * flock = new FlockingEnviroment(this->flockingSnapInterval);
+		FlockingEnviroment * flock = new FlockingEnviroment(this->flockingSnapInterval, this->flockingSimulationInterval);
 		flock->Init(Evacuees);
 
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation")); 
