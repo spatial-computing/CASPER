@@ -122,6 +122,8 @@ private:
   HWND                    m_hEditSimulationFlock;
   HWND                    m_hCheckFlock;
 
+  void SetFlockingEnabled();
+
 public:
 	LRESULT OnLbnDblclkRestrictionlist(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditMaxradius(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);

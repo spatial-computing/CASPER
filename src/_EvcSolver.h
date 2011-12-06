@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Wed Sep 28 19:34:13 2011
+/* at Mon Dec 05 19:04:31 2011
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -168,6 +168,30 @@ EXTERN_C const IID IID_IEvcSolver;
         virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_CostMethod( 
             /* [retval][out] */ unsigned char *value) = 0;
         
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_CostPerZoneDensity( 
+            /* [in] */ BSTR value) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_CostPerZoneDensity( 
+            /* [retval][out] */ BSTR *value) = 0;
+        
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_FlockingSimulationInterval( 
+            /* [in] */ BSTR value) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_FlockingSimulationInterval( 
+            /* [retval][out] */ BSTR *value) = 0;
+        
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_FlockingSnapInterval( 
+            /* [in] */ BSTR value) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_FlockingSnapInterval( 
+            /* [retval][out] */ BSTR *value) = 0;
+        
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_FlockingEnabled( 
+            /* [in] */ VARIANT_BOOL value) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_FlockingEnabled( 
+            /* [retval][out] */ VARIANT_BOOL *value) = 0;
+        
     };
     
 #else 	/* C style interface */
@@ -260,6 +284,38 @@ EXTERN_C const IID IID_IEvcSolver;
             IEvcSolver * This,
             /* [retval][out] */ unsigned char *value);
         
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_CostPerZoneDensity )( 
+            IEvcSolver * This,
+            /* [in] */ BSTR value);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_CostPerZoneDensity )( 
+            IEvcSolver * This,
+            /* [retval][out] */ BSTR *value);
+        
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_FlockingSimulationInterval )( 
+            IEvcSolver * This,
+            /* [in] */ BSTR value);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_FlockingSimulationInterval )( 
+            IEvcSolver * This,
+            /* [retval][out] */ BSTR *value);
+        
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_FlockingSnapInterval )( 
+            IEvcSolver * This,
+            /* [in] */ BSTR value);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_FlockingSnapInterval )( 
+            IEvcSolver * This,
+            /* [retval][out] */ BSTR *value);
+        
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_FlockingEnabled )( 
+            IEvcSolver * This,
+            /* [in] */ VARIANT_BOOL value);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_FlockingEnabled )( 
+            IEvcSolver * This,
+            /* [retval][out] */ VARIANT_BOOL *value);
+        
         END_INTERFACE
     } IEvcSolverVtbl;
 
@@ -336,6 +392,30 @@ EXTERN_C const IID IID_IEvcSolver;
 
 #define IEvcSolver_get_CostMethod(This,value)	\
     ( (This)->lpVtbl -> get_CostMethod(This,value) ) 
+
+#define IEvcSolver_put_CostPerZoneDensity(This,value)	\
+    ( (This)->lpVtbl -> put_CostPerZoneDensity(This,value) ) 
+
+#define IEvcSolver_get_CostPerZoneDensity(This,value)	\
+    ( (This)->lpVtbl -> get_CostPerZoneDensity(This,value) ) 
+
+#define IEvcSolver_put_FlockingSimulationInterval(This,value)	\
+    ( (This)->lpVtbl -> put_FlockingSimulationInterval(This,value) ) 
+
+#define IEvcSolver_get_FlockingSimulationInterval(This,value)	\
+    ( (This)->lpVtbl -> get_FlockingSimulationInterval(This,value) ) 
+
+#define IEvcSolver_put_FlockingSnapInterval(This,value)	\
+    ( (This)->lpVtbl -> put_FlockingSnapInterval(This,value) ) 
+
+#define IEvcSolver_get_FlockingSnapInterval(This,value)	\
+    ( (This)->lpVtbl -> get_FlockingSnapInterval(This,value) ) 
+
+#define IEvcSolver_put_FlockingEnabled(This,value)	\
+    ( (This)->lpVtbl -> put_FlockingEnabled(This,value) ) 
+
+#define IEvcSolver_get_FlockingEnabled(This,value)	\
+    ( (This)->lpVtbl -> get_FlockingEnabled(This,value) ) 
 
 #endif /* COBJMACROS */
 

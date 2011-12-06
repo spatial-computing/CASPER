@@ -99,6 +99,8 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hEditSimulationFlock, WM_SETTEXT, NULL, (LPARAM)simul);
 		delete [] simul;
 	}
+	
+	SetFlockingEnabled();
 
 	// Let the IPropertyPageImpl deal with displaying the page
 	return IPropertyPageImpl<EvcSolverPropPage>::Show(nCmdShow);
@@ -112,7 +114,7 @@ STDMETHODIMP EvcSolverPropPage::SetObjects(ULONG nObjects, IUnknown ** ppUnk)
 
 	// Loop through the objects to find one that supports
 	// the INALayer interface.
-	for (ULONG i=0; i < nObjects; i ++)
+	for (ULONG i = 0; i < nObjects; i++)
 	{
 		INALayerPtr ipNALayer(ppUnk[i]);
 		if (!ipNALayer) continue;
@@ -417,18 +419,21 @@ LRESULT EvcSolverPropPage::OnEnChangeEditZonedensity(WORD /*wNotifyCode*/, WORD 
 	return 0;
 }
 
-LRESULT EvcSolverPropPage::OnBnClickedCheckFlock(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-	SetDirty(TRUE);
-	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
-	
+void EvcSolverPropPage::SetFlockingEnabled()
+{	
 	int flag = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
 	if (flag == BST_CHECKED) flag = 1; else flag = 0;
 	
 	::SendMessage(m_hEditSnapFlock, WM_ENABLE, flag, 0);
 	::SendMessage(m_hEditSimulationFlock, WM_ENABLE, flag, 0);	
+}
 
+LRESULT EvcSolverPropPage::OnBnClickedCheckFlock(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	SetFlockingEnabled();
 	return 0;
 }
 
