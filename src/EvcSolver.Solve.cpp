@@ -822,7 +822,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		{
 			// Step progressor range = 0 through numberOfOutputSteps
 			if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-			if (FAILED(hr = ipStepProgressor->put_MaxRange(ecache->Size()))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_MaxRange(100))) return hr;
 			if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
 			if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		}
@@ -956,12 +956,19 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
 	if (this->flockingEnabled)
 	{
+		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment")); 
 		FlockingEnviroment * flock = new FlockingEnviroment(this->flockingSnapInterval, this->flockingSimulationInterval);
-		flock->Init(Evacuees);
+		flock->Init(Evacuees, ipNetworkQuery);
 
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation")); 
-		flock->RunSimulation();
+		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
+		flock->RunSimulation(ipStepProgressor);
+		
+		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Flushing flocking data"));
+		std::list<FlockingLocationPtr> * history = new std::list<FlockingLocationPtr>();
+		flock->FlushHistory(history);
+
+		// TODO: start writing into the featureclass
 	}
 
 	// timing
