@@ -274,6 +274,47 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Add the new routes layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipEdgesFeatureLayer);
 
+  /////////////////////////////////////////////////////////////////////////////////////////////
+  // flocks layer
+
+  // Get the Routes NAClass/FeatureClass
+  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnknown))) return hr;
+
+  IFeatureClassPtr ipFlocksFC(ipUnknown);
+  if (!ipRoutesFC) return E_UNEXPECTED;
+
+  // Create a new feature layer for the flocks feature class
+  IFeatureLayerPtr ipFlocksFeatureLayer(CLSID_FeatureLayer);
+  ipFlocksFeatureLayer->putref_FeatureClass(ipFlocksFC);
+  ipFlocksFeatureLayer->put_Name(CComBSTR(CS_FLOCKS_NAME));
+
+  // Give the Routes layer a simple renderer and a single symbol property page
+  CreateLineRenderer(ipSolverColor, &ipFeatureRenderer);
+
+  ipGeoFeatureLayer = ipFlocksFeatureLayer;
+  if (!ipGeoFeatureLayer) return S_OK;
+
+  if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
+
+  IUIDPtr ipSingleSymbolPropertyPageUID3(CLSID_UID);
+
+  if (FAILED(ipSingleSymbolPropertyPageUID3->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
+  {
+    // Renderer Property Pages are not installed with Engine. In this
+    // case getting the property page by PROGID is an expected failure.
+    ipSingleSymbolPropertyPageUID3 = 0; 
+  }
+
+  if (ipSingleSymbolPropertyPageUID3)
+  {
+    if (FAILED(hr = ipGeoFeatureLayer->put_RendererPropertyPageClassID(ipSingleSymbolPropertyPageUID3))) return hr;
+  }
+
+  ((IFeatureSelectionPtr)ipFlocksFeatureLayer)->putref_SelectionColor(ipSelectionColor);
+
+  // Add the new routes layer as a sub-layer in the new NALayer
+  ipNALayer->Add(ipFlocksFeatureLayer);
+
   // Return the newly created NALayer
   (*ppNALayer) = ipNALayer;
 
@@ -312,6 +353,16 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   IFeatureRendererPtr ipFeatureRenderer;
   ILayerPtr ipSubLayer;
   IGeoFeatureLayerPtr ipGeoFeatureLayer;
+  
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Flocks
+  pNALayer->get_LayerByNAClassName(CComBSTR(CS_FLOCKS_NAME), &ipSubLayer);
+  if (ipSubLayer)
+  {
+    ipGeoFeatureLayer = ipSubLayer;
+    if (FAILED(hr = CreatePointRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
+    if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
+  }
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Zones

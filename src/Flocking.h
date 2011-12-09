@@ -17,6 +17,28 @@ public:
 	double		SpeedX;
 	double		SpeedY;
 	IPointPtr	MyLocation;
+
+	// constructors
+	FlockingLocation(void)
+	{
+		MyTime = -1.0;
+		Traveled = 0.0;
+		SpeedX = 0.0;
+		SpeedY = 0.0;
+		MyLocation = 0;
+	}
+
+	FlockingLocation(const FlockingLocation &copy)
+	{
+		GroupName = copy.GroupName;
+		MyTime = copy.MyTime;
+		Traveled = copy.Traveled;
+		SpeedX = copy.SpeedX;
+		SpeedY = copy.SpeedY;
+		MyLocation = IPointPtr(copy.MyLocation);
+	}
+
+	virtual ~FlockingLocation(void) { }
 };
 
 class FlockingObject : public FlockingLocation
@@ -38,18 +60,20 @@ public:
 	// methods
 	
 	FlockingObject(EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery);
-	virtual ~FlockingObject(void);
+	virtual ~FlockingObject(void) { }
 	FLOCK_OBJ_STAT Move(std::list<FlockingObject *> * objects, double time);
 };
 
 typedef FlockingObject * FlockingObjectPtr;
 typedef FlockingLocation * FlockingLocationPtr;
 typedef std::list<FlockingObjectPtr>::iterator FlockingObjectItr;
+typedef std::list<FlockingLocationPtr>::iterator FlockingLocationItr;
 
 class FlockingEnviroment
 {
 private:
 	std::list<FlockingObjectPtr> * objects;
+	std::list<FlockingLocationPtr> * history;
 	double snapshotInterval;
 	double simulationInterval;
 	double maxPathLen;
@@ -58,7 +82,7 @@ public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval);
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery);
-	void RunSimulation(IStepProgressorPtr ipStepProgressor);
-	void FlushHistory(std::list<FlockingLocationPtr> * history);
+	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel);
+	void GetHistory(std::list<FlockingLocationPtr> ** History);
 	double static PathLength(EvcPathPtr path);
 };

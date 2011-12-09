@@ -103,10 +103,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INAClassPtr ipRoutesNAClass(ipUnk);
 	if (FAILED(hr = ipRoutesNAClass->DeleteAllRows())) return hr;
 
-	// remove any features that might have been created on previous solves
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_EDGES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
+
+	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
+	INAClassPtr ipFlocksNAClass(ipUnk);
+	if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr;
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Setup the Network Forward Star for traversal
@@ -957,18 +960,64 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (this->flockingEnabled)
 	{
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment")); 
+		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
 		FlockingEnviroment * flock = new FlockingEnviroment(this->flockingSnapInterval, this->flockingSimulationInterval);
 		flock->Init(Evacuees, ipNetworkQuery);
 
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
-		flock->RunSimulation(ipStepProgressor);
-		
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Flushing flocking data"));
-		std::list<FlockingLocationPtr> * history = new std::list<FlockingLocationPtr>();
-		flock->FlushHistory(history);
+		std::list<FlockingLocationPtr> * history = 0;
+		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel))) return hr;
+		flock->GetHistory(&history);
 
-		// TODO: start writing into the featureclass
+		// start writing into the featureclass
+		if (ipStepProgressor)
+		{			
+			ipStepProgressor->put_Message(CComBSTR(L"Writing flocking results"));
+			ipStepProgressor->put_MinRange(0);
+			ipStepProgressor->put_MaxRange(history->size());
+			ipStepProgressor->put_StepValue(1);
+			ipStepProgressor->put_Position(0);
+		}
+
+		// Get the "Flocks" NAClass feature class
+		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
+		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex;
+
+		// Create an insert cursor and feature buffer from the "EdgeStat" feature class to be used to write edges
+		if (FAILED(hr = ipFlocksFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
+		if (FAILED(hr = ipFlocksFC->CreateFeatureBuffer(&ipFeatureBuffer))) return hr;
+
+		// Query for the appropriate field index values in the "EdgeStat" feature class
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TRAVELED), &traveledFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEEDX), &speedXFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEEDY), &speedYFieldIndex))) return hr;
+
+		for(FlockingLocationItr it = history->begin(); it != history->end(); it++)
+		{
+			if (pTrackCancel)
+			{
+				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
+				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+			}
+
+			// Store the feature values on the feature buffer
+			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, CComVariant((*it)->GroupName)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant((*it)->MyTime)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant((*it)->Traveled)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->SpeedX)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->SpeedY)))) return hr;
+
+			if (ipStepProgressor) ipStepProgressor->Step();
+		}
+
+		// fluch the insert buffer
+		ipFeatureCursor->Flush();
+
+		// release
+		delete flock;
 	}
 
 	// timing

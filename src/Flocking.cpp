@@ -37,10 +37,6 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 	}
 }
 
-FlockingObject::~FlockingObject(void)
-{
-}
-
 FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double time)
 {
 	return MyStatus;
@@ -54,14 +50,18 @@ FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double Simulatio
 	snapshotInterval = abs(SnapshotInterval);
 	simulationInterval = abs(SimulationInterval);
 	objects = new std::list<FlockingObjectPtr>();
+	history = new std::list<FlockingLocationPtr>();
 	maxPathLen = 0.0;
 }
 
 FlockingEnviroment::~FlockingEnviroment(void)
 {
-	for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++) delete (*it);
+	for (FlockingObjectItr it1 = objects->begin(); it1 != objects->end(); it1++) delete (*it1);
+	for (FlockingLocationItr it2 = history->begin(); it2 != history->end(); it2++) delete (*it2);
 	objects->clear();
+	history->clear();
 	delete objects;	
+	delete history;	
 }
 
 void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery)
@@ -72,6 +72,12 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	EvcPathPtr path = 0;
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
+
+	// pre-init clean up just in case the object is being re-used
+	for (FlockingObjectItr it1 = objects->begin(); it1 != objects->end(); it1++) delete (*it1);
+	for (FlockingLocationItr it2 = history->begin(); it2 != history->end(); it2++) delete (*it2);
+	objects->clear();
+	history->clear();
 
 	for(evcItr = evcList->begin(); evcItr != evcList->end(); evcItr++)
 	{		
@@ -87,11 +93,15 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	}
 }
 
-void FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor)
+HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel)
 {
 	bool movingObjectLeft = true;
-	FLOCK_OBJ_STAT newStat;
+	FLOCK_OBJ_STAT newStat, oldStat;
 	long frontRunnerDistance = 0;
+	double lastSnapshot = 0.0;
+	bool snapshotTaken = false;
+	HRESULT hr = 0;
+	VARIANT_BOOL keepGoing;
 
 	if (ipStepProgressor)
 	{
@@ -105,20 +115,45 @@ void FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor)
 	{
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
 		{
+			if (pTrackCancel)
+			{
+				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
+				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+			}
+
+			oldStat = (*it)->MyStatus;
+
+			// pre-movement snapshot
+			if (oldStat == FLOCK_OBJ_STAT_INIT && (*it)->MyTime >= 0.0) history->push_front(new FlockingLocation(**it));
+
 			newStat = (*it)->Move(objects, time);
 			movingObjectLeft |= newStat == FLOCK_OBJ_STAT_MOVE;
 
+			// post-movement snapshot: check if we have to take a snapshot of this object
+			if ((oldStat != FLOCK_OBJ_STAT_END && newStat == FLOCK_OBJ_STAT_END) ||
+				(newStat == FLOCK_OBJ_STAT_MOVE && lastSnapshot + snapshotInterval >= time))
+			{
+				history->push_front(new FlockingLocation(**it));
+				snapshotTaken = true;
+			}
+
 			if (ipStepProgressor)
 			{
-				frontRunnerDistance = max (frontRunnerDistance, (long)((*it)->Traveled));
-				ipStepProgressor->put_StepValue(frontRunnerDistance);
+				if ((long)((*it)->Traveled) + 1 >= frontRunnerDistance)
+				{
+					frontRunnerDistance = (long)((*it)->Traveled);
+					ipStepProgressor->Step();
+				}
 			}
 		}
+		if (snapshotTaken) lastSnapshot = time;
 	}
+	return S_OK;
 }
 
-void FlockingEnviroment::FlushHistory(std::list<FlockingLocationPtr> * history)
+void FlockingEnviroment::GetHistory(std::list<FlockingLocationPtr> ** History)
 {
+	*History = history;
 }
 
 double FlockingEnviroment::PathLength(EvcPathPtr path)

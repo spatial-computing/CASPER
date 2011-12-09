@@ -23,6 +23,7 @@
 #define CS_ZONES_NAME						        L"Zones"
 #define CS_ROUTES_NAME						        L"Routes"
 #define CS_EDGES_NAME						        L"EdgeStat"
+#define CS_FLOCKS_NAME						        L"Flocks"
 
 // Generic Class Definition Field Names
 
@@ -44,6 +45,13 @@
 #define CS_FIELD_SIDE_OF_EDGE                       L"SideOfEdge"
 #define CS_FIELD_CURBAPPROACH                       L"CurbApproach"
 #define CS_FIELD_STATUS                             L"Status"
+
+// Flocking
+
+#define CS_FIELD_TRAVELED                             L"Traveled"
+#define CS_FIELD_SPEEDX                               L"SpeedX"
+#define CS_FIELD_SPEEDY                               L"SpeedY"
+#define CS_FIELD_TIME                                 L"Time"
 
 #define CS_FIELD_ReservPop                          L"ReservPop"
 #define CS_FIELD_TravCost                           L"TravCost"
