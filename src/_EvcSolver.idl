@@ -76,6 +76,7 @@ library CustomSolver
 	importlib("stdole2.tlb");
 	importlib("olepro32.dll");
 
+	importlib("\Program Files (x86)\ArcGIS\Desktop10.0\com\esrinetworkanalyst.olb");
 	[
 		version(1.0),
 		uuid(7b081f99-b691-46b1-b756-aa72868c8683),
@@ -106,6 +107,5 @@ library CustomSolver
 		[default]	interface INASymbolizer2;
 	};
 
-	importlib("\Program Files (x86)\ArcGIS\Desktop10.0\com\esrinetworkanalyst.olb");
 }
 
