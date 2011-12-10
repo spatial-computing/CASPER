@@ -1010,6 +1010,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->SpeedX)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->SpeedY)))) return hr;
 
+			// Insert the feature buffer in the insert cursor
+			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 			if (ipStepProgressor) ipStepProgressor->Step();
 		}
 

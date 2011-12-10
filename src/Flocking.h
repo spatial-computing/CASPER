@@ -2,13 +2,14 @@
 
 #include "Evacuee.h"
 #include "NAGraph.h"
+#include "SimpleVehicle.h"
 
 #define FLOCK_OBJ_STAT char
 #define FLOCK_OBJ_STAT_INIT		0x0
 #define FLOCK_OBJ_STAT_MOVE		0x1
 #define FLOCK_OBJ_STAT_END		0x2
 
-class FlockingLocation
+class FlockingLocation : public OpenSteer::SimpleVehicle
 {
 public:
 	VARIANT		GroupName;

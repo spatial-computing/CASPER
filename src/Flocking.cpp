@@ -123,13 +123,13 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 
 			oldStat = (*it)->MyStatus;
 
-			// pre-movement snapshot
+			// pre-movement snapshot: check if we have to take a snapshot of this object
 			if (oldStat == FLOCK_OBJ_STAT_INIT && (*it)->MyTime >= 0.0) history->push_front(new FlockingLocation(**it));
 
 			newStat = (*it)->Move(objects, time);
 			movingObjectLeft |= newStat == FLOCK_OBJ_STAT_MOVE;
 
-			// post-movement snapshot: check if we have to take a snapshot of this object
+			// post-movement snapshot
 			if ((oldStat != FLOCK_OBJ_STAT_END && newStat == FLOCK_OBJ_STAT_END) ||
 				(newStat == FLOCK_OBJ_STAT_MOVE && lastSnapshot + snapshotInterval >= time))
 			{
