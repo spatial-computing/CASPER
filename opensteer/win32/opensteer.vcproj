@@ -266,10 +266,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\OpenSteer\SteerTest.h"
-				>
-			</File>
-			<File
 				RelativePath="..\include\OpenSteer\Utilities.h"
 				>
 			</File>
