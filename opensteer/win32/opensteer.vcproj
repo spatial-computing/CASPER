@@ -64,6 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="true"
 				AdditionalDependencies="glut32.lib"
 				OutputFile="$(OutDir)/$(ProjectName)d.lib"
 				AdditionalLibraryDirectories="&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
@@ -134,6 +135,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="true"
 				AdditionalDependencies="glut32.lib"
 				AdditionalLibraryDirectories="&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
 			/>
@@ -176,6 +178,14 @@
 			</File>
 			<File
 				RelativePath="..\src\lq.c"
+				>
+			</File>
+			<File
+				RelativePath="..\src\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\OpenSteerDemo.cpp"
 				>
 			</File>
 			<File
@@ -229,6 +239,10 @@
 			</File>
 			<File
 				RelativePath="..\include\OpenSteer\Obstacle.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\OpenSteer\OpenSteerDemo.h"
 				>
 			</File>
 			<File
