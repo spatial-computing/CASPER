@@ -48,8 +48,8 @@
 // ----------------------------------------------------------------------------
 
 
-#include "OpenSteer/Clock.h"
-#include "OpenSteer/OpenSteerDemo.h"
+#include "Clock.h"
+#include "OpenSteerDemo.h"
 
 
 // ----------------------------------------------------------------------------

@@ -43,7 +43,7 @@
 
 #include <algorithm>
 #include <sstream>
-#include "OpenSteer/OpenSteerDemo.h"
+#include "OpenSteerDemo.h"
 
 
 // ----------------------------------------------------------------------------

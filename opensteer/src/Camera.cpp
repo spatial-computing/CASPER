@@ -40,8 +40,8 @@
 // ----------------------------------------------------------------------------
 
 
-#include "OpenSteer/Camera.h"
-#include "OpenSteer/OpenSteerDemo.h"
+#include "Camera.h"
+#include "OpenSteerDemo.h"
 
 
 // ----------------------------------------------------------------------------

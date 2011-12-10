@@ -65,7 +65,7 @@
 
 #include <stdlib.h>
 #include <float.h>
-#include "OpenSteer/lq.h"
+#include "lq.h"
 
 /* for debugging and graphical annotation (normally unused) */
 #ifdef BOIDS_LQ_DEBUG

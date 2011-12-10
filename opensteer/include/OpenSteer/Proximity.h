@@ -45,8 +45,8 @@
 
 #include <algorithm>
 #include <vector>
-#include "OpenSteer/Vec3.h"
-#include "OpenSteer/lq.h"   // XXX temp?
+#include "Vec3.h"
+#include "lq.h"   // XXX temp?
 
 
 namespace OpenSteer {

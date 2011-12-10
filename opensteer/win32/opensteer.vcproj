@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\include&quot;;&quot;$(ProjectDir)\..\include\Opensteer&quot;;&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
+				AdditionalIncludeDirectories="C:\dev\3rdParty\opensteer\include\OpenSteer;&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_DLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -114,7 +114,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\include&quot;;&quot;$(ProjectDir)\..\include\Opensteer&quot;;&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
+				AdditionalIncludeDirectories="C:\dev\3rdParty\opensteer\include\OpenSteer;&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_DLL"
 				StringPooling="true"
 				RuntimeLibrary="2"

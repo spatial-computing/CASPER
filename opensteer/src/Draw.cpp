@@ -64,10 +64,10 @@
 #endif
 
 
-#include "OpenSteer/OpenSteerDemo.h"
+#include "OpenSteerDemo.h"
 
 // To include OpenSteer::round.
-#include "OpenSteer/Utilities.h"
+#include "Utilities.h"
 
 // ----------------------------------------------------------------------------
 
