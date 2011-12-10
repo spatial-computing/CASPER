@@ -9,7 +9,7 @@
 #define FLOCK_OBJ_STAT_MOVE		0x1
 #define FLOCK_OBJ_STAT_END		0x2
 
-class FlockingLocation : public OpenSteer::SimpleVehicle
+class FlockingLocation
 {
 public:
 	VARIANT		GroupName;
@@ -42,7 +42,7 @@ public:
 	virtual ~FlockingLocation(void) { }
 };
 
-class FlockingObject : public FlockingLocation
+class FlockingObject : public FlockingLocation, public OpenSteer::SimpleVehicle
 {
 private:
 	INetworkJunctionPtr	NextVertex;	
