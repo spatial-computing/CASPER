@@ -42,10 +42,12 @@ public:
 	virtual ~FlockingLocation(void) { }
 };
 
-class FlockingObject : public FlockingLocation, public OpenSteer::SimpleVehicle
+class FlockingObject : public FlockingLocation
 {
 private:
-	INetworkJunctionPtr	NextVertex;	
+	INetworkJunctionPtr	NextVertex;
+	OpenSteer::SimpleVehicle * myVehicle;
+	OpenSteer::PolylinePathway myVehiclePath;
 
 public:
 	// properties
@@ -61,8 +63,12 @@ public:
 	// methods
 	
 	FlockingObject(EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery);
-	virtual ~FlockingObject(void) { }
 	FLOCK_OBJ_STAT Move(std::list<FlockingObject *> * objects, double time);
+
+	virtual ~FlockingObject(void)
+	{
+		delete myVehicle;
+	}
 };
 
 typedef FlockingObject * FlockingObjectPtr;

@@ -62,6 +62,12 @@ HRESULT NAEdge::QuerySourceStuff(long * sourceOID, long * sourceID, double * fro
 	return S_OK;
 }
 
+// Special function for Flocking: to check how much capacity the edge had originally
+double NAEdge::OriginalCapacity() const
+{
+	return criticalDens;
+}
+
 // Special function for CCRP: to check how much capacity id left on this edge.
 // Will be used to get max capacity available on a path
 double NAEdge::CapacityLeft() const

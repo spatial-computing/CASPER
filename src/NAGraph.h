@@ -133,6 +133,7 @@ public:
 	long EID;
 	double GetCost(double newPop, char method) const;
 	double CapacityLeft() const;
+	double OriginalCapacity() const;
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);

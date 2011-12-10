@@ -18,6 +18,9 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 	BindVertex = -1;
 	INetworkElementPtr element;
 
+	myVehicle = new OpenSteer::SimpleVehicle();
+	myVehicle->reset();
+
 	if (MyPath)
 	{
 		MyEdge = MyPath->front()->Edge;
@@ -26,6 +29,24 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 		ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element);
 		NextVertex = element;
 		MyEdge->NetEdge->QueryJunctions(0, NextVertex);
+
+		// steering lib init
+		double x,y;
+		MyLocation->QueryCoords(&x, &y);
+		myVehicle->setPosition((float)x, (float)y, 0.0f);
+
+		IPointCollectionPtr pcollect = MyPath->front()->pline;
+		long pointCount = 0;
+		IPointPtr p = 0;
+		pcollect->get_PointCount(&pointCount);		
+		OpenSteer::Vec3 * points = new OpenSteer::Vec3[pointCount];
+		for(long i = 0; i < pointCount; i++)
+		{
+			pcollect->get_Point(i, &p);
+			p->QueryCoords(&x, &y);
+			points[i].set((float)x, (float)y, 0.0f);
+		}
+		myVehiclePath.initialize(pointCount, points, MyEdge->OriginalCapacity(), false);
 	}
 	else
 	{
@@ -35,12 +56,13 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 		StartPoint = 0;
 		NextVertex = 0;
 	}
+
 }
 
 FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double time)
-{
-	//OpenSteer::Vec3 steerToFollowPath (1, 1.0,0);
-	//steerToFollowPath.
+{	
+	OpenSteer::Vec3 speed(0,0,0);
+	speed += myVehicle->steerToFollowPath(+1, 1, myVehiclePath);
 	return MyStatus;
 }
 
