@@ -39,6 +39,8 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 
 FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double time)
 {
+	//OpenSteer::Vec3 steerToFollowPath (1, 1.0,0);
+	//steerToFollowPath.
 	return MyStatus;
 }
 
