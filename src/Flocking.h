@@ -53,8 +53,9 @@ private:
 	OpenSteer::AVGroup			myNeighborVehicles;
 	OpenSteer::Vec3				* libpoints;
 	bool						newEdgeRequestFlag;
-	//bool						newNeighborListRequestFlag;
 	EvcPath::iterator			pathSegIt;
+	EvcPathPtr					myPath;
+	double						speedLimit;
 
 	// methods
 
@@ -66,16 +67,13 @@ public:
 
 	IPointPtr		StartPoint;
 	IPointPtr		FinalPoint;
-	EvcPathPtr		MyPath;
-	NAEdgePtr		MyEdge;
-	double			StartTime;
 	int				BindVertex;
 	FLOCK_OBJ_STAT	MyStatus;
 
 	// methods
 	
 	FlockingObject(EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery);
-	FLOCK_OBJ_STAT Move(std::list<FlockingObject *> * objects, double time);
+	FLOCK_OBJ_STAT Move(std::list<FlockingObject *> * objects, double deltatime);
 
 	virtual ~FlockingObject(void)
 	{

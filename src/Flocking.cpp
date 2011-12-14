@@ -2,7 +2,7 @@
 #include <cmath>
 #include "Flocking.h"
 
-///////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking object implementation
 
 FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery)
@@ -10,44 +10,31 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 	SpeedX = 0.0;
 	SpeedY = 0.0;
 	MyStatus = FLOCK_OBJ_STAT_INIT;
-	MyPath = path;
-	MyTime = 0;
-	StartTime = startTime;
+	myPath = path;
+	MyTime = startTime;
 	GroupName = groupName;
 	Traveled = 0.0;
 	BindVertex = -1;
 	INetworkElementPtr element;
+	newEdgeRequestFlag = true;
+	speedLimit = 0.0;
 
+	// build the path itterator and upcoming vertices
+	myPath->front()->pline->get_FromPoint(&StartPoint);
+	myPath->back()->pline->get_ToPoint(&FinalPoint);
+	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element);
+	NextVertex = element;
+	pathSegIt = myPath->begin();
+	(*pathSegIt)->Edge->NetEdge->QueryJunctions(0, NextVertex);
+
+	// steering lib init
+	double x, y;
 	myVehicle = new OpenSteer::SimpleVehicle();
 	myVehicle->reset();
 	myVehicle->setRadius(0.1f);
 	libpoints = new OpenSteer::Vec3[0];
-	newEdgeRequestFlag = true;
-	//newNeighborListRequestFlag = true;
-
-	if (MyPath)
-	{
-		MyEdge = MyPath->front()->Edge;
-		MyPath->front()->pline->get_FromPoint(&StartPoint);
-		MyPath->back()->pline->get_ToPoint(&FinalPoint);
-		ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element);
-		NextVertex = element;
-		MyEdge->NetEdge->QueryJunctions(0, NextVertex);
-		pathSegIt = MyPath->begin();
-
-		// steering lib init
-		double x,y;
-		MyLocation->QueryCoords(&x, &y);
-		myVehicle->setPosition((float)x, (float)y, 0.0f);
-	}
-	else
-	{
-		MyEdge = 0;
-		MyLocation = 0;
-		FinalPoint = 0;
-		StartPoint = 0;
-		NextVertex = 0;
-	}
+	MyLocation->QueryCoords(&x, &y);
+	myVehicle->setPosition((float)x, (float)y, 0.0f);	
 }
 
 bool FlockingObject::LoadNewEdge(void)
@@ -58,10 +45,10 @@ bool FlockingObject::LoadNewEdge(void)
 		IPointCollectionPtr pcollect = 0;
 		long pointCount = 0, i = 0;
 		IPointPtr p = 0;
-		double x,y;
+		double x, y;
 
 		pathSegIt++;
-		if (pathSegIt == MyPath->end()) return false;
+		if (pathSegIt == myPath->end()) return false;
 		
 		pcollect = (*pathSegIt)->pline;
 		pcollect->get_PointCount(&pointCount);
@@ -73,10 +60,17 @@ bool FlockingObject::LoadNewEdge(void)
 			p->QueryCoords(&x, &y);
 			libpoints[i].set((float)x, (float)y, 0.0f);
 		}
-		MyEdge = (*pathSegIt)->Edge;
+
+		// speed limit update
+		(*pathSegIt)->pline->get_Length(&speedLimit);
+		speedLimit = speedLimit / (*pathSegIt)->Edge->originalCost;
+
+		// update next vertex based on new edge
+		(*pathSegIt)->Edge->NetEdge->QueryJunctions(0, NextVertex);
+
+		// load new path into the steer lib
 		myVehiclePath.initialize(pointCount, libpoints, (float)((*pathSegIt)->Edge->OriginalCapacity()), false);
 		newEdgeRequestFlag = false;
-		//newNeighborListRequestFlag = true;
 	}
 	return true;
 }
@@ -86,27 +80,50 @@ bool FlockingObject::BuildNeighborList(std::list<FlockingObjectPtr> * objects)
 	myNeighborVehicles.clear();
 	for (std::list<FlockingObjectPtr>::iterator it = objects->begin(); it != objects->end(); it++)
 	{
+		// self avoid check
 		if ((*it) == this) continue;
-		if ((*it)->MyEdge->EID != MyEdge->EID || (*it)->MyEdge->Direction != MyEdge->Direction) continue;
+
+		// check if they share an edge or if they are both crossing an intersection
+		if ((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction) continue;
+
 		myNeighborVehicles.push_back((*it)->myVehicle);
 	}
 	return true;
 }
 
-FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double time)
+FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 {	
 	OpenSteer::Vec3 steer(0,0,0);
+	double x, y;
 
-	LoadNewEdge();
-	BuildNeighborList(objects);
+	// check destination arriaval
 
-	steer += myVehicle->steerToFollowPath(+1, 1, myVehiclePath);
-	steer += myVehicle->steerForSeparation(1.0f,  60.0f, myNeighborVehicles);
-	steer += myVehicle->steerForSeparation(0.2f, 270.0f, myNeighborVehicles);
+	// check time
+	MyTime += dt;
+	dt = min(dt, MyTime);
+	if (MyTime >= 0.0) MyStatus = MyStatus = FLOCK_OBJ_STAT_MOVE;
+	if (MyTime > 0 && dt > 0)
+	{
+		LoadNewEdge();
+		BuildNeighborList(objects);
+
+		// generate an steer based on current situation
+		steer += myVehicle->steerToFollowPath(+1, 1, myVehiclePath);
+		steer += myVehicle->steerForSeparation(1.0f,  60.0f, myNeighborVehicles);
+		steer += myVehicle->steerForSeparation(0.2f, 270.0f, myNeighborVehicles);
+
+		// use the steer to create speed and finally move
+		
+
+		// update coordinate and speed		
+		MyLocation->PutCoords(x, y);
+		myVehicle->setPosition((float)x, (float)y, 0.0f);
+	}
 	return MyStatus;
 }
 
-///////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking enviroment implementation
 
 FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval)
@@ -190,7 +207,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			// pre-movement snapshot: check if we have to take a snapshot of this object
 			if (oldStat == FLOCK_OBJ_STAT_INIT && (*it)->MyTime >= 0.0) history->push_front(new FlockingLocation(**it));
 
-			newStat = (*it)->Move(objects, time);
+			newStat = (*it)->Move(objects, simulationInterval);
 			movingObjectLeft |= newStat == FLOCK_OBJ_STAT_MOVE;
 
 			// post-movement snapshot
