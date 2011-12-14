@@ -20,6 +20,10 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 
 	myVehicle = new OpenSteer::SimpleVehicle();
 	myVehicle->reset();
+	myVehicle->setRadius(0.1f);
+	libpoints = new OpenSteer::Vec3[0];
+	newEdgeRequestFlag = true;
+	//newNeighborListRequestFlag = true;
 
 	if (MyPath)
 	{
@@ -29,24 +33,12 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 		ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element);
 		NextVertex = element;
 		MyEdge->NetEdge->QueryJunctions(0, NextVertex);
+		pathSegIt = MyPath->begin();
 
 		// steering lib init
 		double x,y;
 		MyLocation->QueryCoords(&x, &y);
 		myVehicle->setPosition((float)x, (float)y, 0.0f);
-
-		IPointCollectionPtr pcollect = MyPath->front()->pline;
-		long pointCount = 0;
-		IPointPtr p = 0;
-		pcollect->get_PointCount(&pointCount);		
-		OpenSteer::Vec3 * points = new OpenSteer::Vec3[pointCount];
-		for(long i = 0; i < pointCount; i++)
-		{
-			pcollect->get_Point(i, &p);
-			p->QueryCoords(&x, &y);
-			points[i].set((float)x, (float)y, 0.0f);
-		}
-		myVehiclePath.initialize(pointCount, points, MyEdge->OriginalCapacity(), false);
 	}
 	else
 	{
@@ -56,13 +48,61 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 		StartPoint = 0;
 		NextVertex = 0;
 	}
+}
 
+bool FlockingObject::LoadNewEdge(void)
+{
+	if (newEdgeRequestFlag)
+	{
+		// convert the path to Steer Library format
+		IPointCollectionPtr pcollect = 0;
+		long pointCount = 0, i = 0;
+		IPointPtr p = 0;
+		double x,y;
+
+		pathSegIt++;
+		if (pathSegIt == MyPath->end()) return false;
+		
+		pcollect = (*pathSegIt)->pline;
+		pcollect->get_PointCount(&pointCount);
+		delete [] libpoints;
+		libpoints = new OpenSteer::Vec3[pointCount];
+		for(i = 0; i < pointCount; i++)
+		{
+			pcollect->get_Point(i, &p);
+			p->QueryCoords(&x, &y);
+			libpoints[i].set((float)x, (float)y, 0.0f);
+		}
+		MyEdge = (*pathSegIt)->Edge;
+		myVehiclePath.initialize(pointCount, libpoints, (float)((*pathSegIt)->Edge->OriginalCapacity()), false);
+		newEdgeRequestFlag = false;
+		//newNeighborListRequestFlag = true;
+	}
+	return true;
+}
+
+bool FlockingObject::BuildNeighborList(std::list<FlockingObjectPtr> * objects)
+{
+	myNeighborVehicles.clear();
+	for (std::list<FlockingObjectPtr>::iterator it = objects->begin(); it != objects->end(); it++)
+	{
+		if ((*it) == this) continue;
+		if ((*it)->MyEdge->EID != MyEdge->EID || (*it)->MyEdge->Direction != MyEdge->Direction) continue;
+		myNeighborVehicles.push_back((*it)->myVehicle);
+	}
+	return true;
 }
 
 FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double time)
 {	
-	OpenSteer::Vec3 speed(0,0,0);
-	speed += myVehicle->steerToFollowPath(+1, 1, myVehiclePath);
+	OpenSteer::Vec3 steer(0,0,0);
+
+	LoadNewEdge();
+	BuildNeighborList(objects);
+
+	steer += myVehicle->steerToFollowPath(+1, 1, myVehiclePath);
+	steer += myVehicle->steerForSeparation(1.0f,  60.0f, myNeighborVehicles);
+	steer += myVehicle->steerForSeparation(0.2f, 270.0f, myNeighborVehicles);
 	return MyStatus;
 }
 

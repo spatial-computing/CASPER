@@ -45,20 +45,32 @@ public:
 class FlockingObject : public FlockingLocation
 {
 private:
-	INetworkJunctionPtr	NextVertex;
-	OpenSteer::SimpleVehicle * myVehicle;
-	OpenSteer::PolylinePathway myVehiclePath;
+	// properties
+
+	INetworkJunctionPtr			NextVertex;
+	OpenSteer::SimpleVehicle	* myVehicle;
+	OpenSteer::PolylinePathway	myVehiclePath;
+	OpenSteer::AVGroup			myNeighborVehicles;
+	OpenSteer::Vec3				* libpoints;
+	bool						newEdgeRequestFlag;
+	//bool						newNeighborListRequestFlag;
+	EvcPath::iterator			pathSegIt;
+
+	// methods
+
+	bool LoadNewEdge(void);
+	bool BuildNeighborList(std::list<FlockingObject *> * objects);
 
 public:
 	// properties
 
-	IPointPtr 	StartPoint;
-	IPointPtr	FinalPoint;
-	EvcPathPtr	MyPath;
-	NAEdgePtr	MyEdge;
-	double		StartTime;
-	int			BindVertex;
-	FLOCK_OBJ_STAT		MyStatus;
+	IPointPtr		StartPoint;
+	IPointPtr		FinalPoint;
+	EvcPathPtr		MyPath;
+	NAEdgePtr		MyEdge;
+	double			StartTime;
+	int				BindVertex;
+	FLOCK_OBJ_STAT	MyStatus;
 
 	// methods
 	
@@ -67,6 +79,7 @@ public:
 
 	virtual ~FlockingObject(void)
 	{
+		delete [] libpoints;
 		delete myVehicle;
 	}
 };
@@ -79,11 +92,11 @@ typedef std::list<FlockingLocationPtr>::iterator FlockingLocationItr;
 class FlockingEnviroment
 {
 private:
-	std::list<FlockingObjectPtr> * objects;
-	std::list<FlockingLocationPtr> * history;
-	double snapshotInterval;
-	double simulationInterval;
-	double maxPathLen;
+	std::list<FlockingObjectPtr>	* objects;
+	std::list<FlockingLocationPtr>	* history;
+	double							snapshotInterval;
+	double							simulationInterval;
+	double							maxPathLen;
 
 public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval);
