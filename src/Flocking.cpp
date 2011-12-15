@@ -21,6 +21,7 @@ FlockingObject::FlockingObject(EvcPathPtr path, float startTime, VARIANT groupNa
 	newEdgeRequestFlag = true;
 	speedLimit = 0.0;
 
+
 	// build the path itterator and upcoming vertices
 	myPath->front()->pline->get_FromPoint(&StartPoint);
 	myPath->back()->pline->get_ToPoint(&FinalPoint);
