@@ -65,8 +65,7 @@ public:
 	  COMMAND_HANDLER(IDC_EDIT_FlockSnapInterval, EN_CHANGE, OnEnChangeEditFlocksnapinterval)
 	  COMMAND_HANDLER(IDC_EDIT_FlockSimulationInterval, EN_CHANGE, OnEnChangeEditFlocksimulationinterval)
 	  CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
-    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-	COMMAND_HANDLER(IDC_COMBO_Heuristic, CBN_SELCHANGE, OnCbnSelchangeComboHeuristic)
+    MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)	
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
 	COMMAND_HANDLER(IDC_EDIT_Critical, EN_CHANGE, OnEnChangeEditCritical)
 	COMMAND_HANDLER(IDC_COMBO_METHOD, CBN_SELCHANGE, OnCbnSelchangeComboMethod)
@@ -109,7 +108,6 @@ private:
   IEvcSolverPtr			  m_ipEvcSolver;
   IDENetworkDatasetPtr    m_ipDENet;  
 
-  HWND                    m_hHeuristicCombo;
   HWND                    m_hCapCombo;
   HWND                    m_hComboMethod;
   HWND                    m_hComboCostMethod;

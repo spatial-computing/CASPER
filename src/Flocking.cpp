@@ -21,7 +21,6 @@ FlockingObject::FlockingObject(EvcPathPtr path, float startTime, VARIANT groupNa
 	newEdgeRequestFlag = true;
 	speedLimit = 0.0;
 
-
 	// build the path itterator and upcoming vertices
 	myPath->front()->pline->get_FromPoint(&StartPoint);
 	myPath->back()->pline->get_ToPoint(&FinalPoint);
@@ -37,7 +36,7 @@ FlockingObject::FlockingObject(EvcPathPtr path, float startTime, VARIANT groupNa
 	myVehicle->setRadius(0.1f);
 	libpoints = new OpenSteer::Vec3[0];
 	MyLocation->QueryCoords(&x, &y);
-	myVehicle->setPosition((float)x, (float)y, 0.0f);	
+	myVehicle->setPosition((float)x, (float)y, 0.0f);
 }
 
 bool FlockingObject::LoadNewEdge(void)

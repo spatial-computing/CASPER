@@ -245,9 +245,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	// load the mercator projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
 	ISpatialReferenceFactoryPtr pSpatRefFact = ISpatialReferenceFactoryPtr(CLSID_SpatialReferenceEnvironment);
-	pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC);
+	if (FAILED(hr = pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC))) return hr;
 	ISpatialReferencePtr ipNAContextSR = ipNAContextPC;
-
 	
 	// if (FAILED(hr = ipDEGeoDataset->get_SpatialReference(&ipNAContextSR))) return hr;
 
@@ -315,7 +314,6 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	// Set up our solver defaults
 	m_outputLineType = esriNAOutputLineTrueShapeWithMeasure;
 	costAttributeID = -1;
-	heuristicAttribIndex = -1;	
 	capAttributeID = -1;
 	SaturationPerCap = 5000.0;
 	CriticalDensPerCap = 1000.0;
@@ -518,20 +516,6 @@ STDMETHODIMP EvcSolver::get_DiscriptiveAttributesCount(int * Count)
 }
 
 // Gets the selected cost attribute back to the property page
-STDMETHODIMP EvcSolver::get_HeuristicAttribute(int * index)
-{	
-	if (index) *index = heuristicAttribIndex;	
-	return S_OK;
-}
-
-// Sets the selected cost attribute based on what user selected in property page
-STDMETHODIMP EvcSolver::put_HeuristicAttribute(int index)
-{	
-	heuristicAttribIndex = index;
-	return S_OK;
-}
-
-// Gets the selected cost attribute back to the property page
 STDMETHODIMP EvcSolver::get_CapacityAttribute(int * index)
 {	
 	int count = discriptiveAttribs.size(), i;
@@ -598,8 +582,7 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 		}
 
 		if (costAttributeID == -1) costAttribs[0]->get_ID(&costAttributeID);
-		if (capAttributeID == -1) discriptiveAttribs[0]->get_ID(&capAttributeID);
-		if (heuristicAttribIndex == -1) heuristicAttribIndex = discriptiveAttribs.size() - 1;
+		if (capAttributeID == -1) discriptiveAttribs[0]->get_ID(&capAttributeID);		
 
 		// Agents setup
 		// NOTE: this is an appropriate place to find and attach any agents used by this solver.
@@ -899,11 +882,9 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&costAttributeID, sizeof(costAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&capAttributeID, sizeof(capAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&costmethod, sizeof(costmethod), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&solvermethod, sizeof(solvermethod), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&heuristicAttribIndex, sizeof(heuristicAttribIndex), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&solvermethod, sizeof(solvermethod), &numBytes))) return hr;	
 	if (FAILED(hr = pStm->Read(&SaturationPerCap, sizeof(SaturationPerCap), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;
-
 	if (FAILED(hr = pStm->Read(&m_CreateTraversalResult, sizeof(m_CreateTraversalResult), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_FindBestSequence, sizeof(m_FindBestSequence), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_PreserveFirstStop, sizeof(m_PreserveFirstStop), &numBytes))) return hr;
@@ -937,11 +918,9 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&costAttributeID, sizeof(costAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&capAttributeID, sizeof(capAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&costmethod, sizeof(costmethod), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&solvermethod, sizeof(solvermethod), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&heuristicAttribIndex, sizeof(heuristicAttribIndex), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&solvermethod, sizeof(solvermethod), &numBytes))) return hr;	
 	if (FAILED(hr = pStm->Write(&SaturationPerCap, sizeof(SaturationPerCap), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;
-	
+	if (FAILED(hr = pStm->Write(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;	
 	if (FAILED(hr = pStm->Write(&m_CreateTraversalResult, sizeof(m_CreateTraversalResult), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_FindBestSequence, sizeof(m_FindBestSequence), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_PreserveFirstStop, sizeof(m_PreserveFirstStop), &numBytes))) return hr;

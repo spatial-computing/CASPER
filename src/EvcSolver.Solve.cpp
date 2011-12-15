@@ -554,9 +554,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// Adjust the heuristic value on the junction
 		/// TODO the new values are not being written to the junctions
-		val.dblVal = myVertex->h;
-		if (FAILED(hr = ipNetworkBackwardStarEx->AdjustJunctionAttributeValue
-			(myVertex->Junction, discriptiveAttribs[heuristicAttribIndex], esriNAATReplace, val))) return hr;
+		// val.dblVal = myVertex->h;
+		// if (FAILED(hr = ipNetworkBackwardStarEx->AdjustJunctionAttributeValue
+		// 	(myVertex->Junction, discriptiveAttribs[heuristicAttribIndex], esriNAATReplace, val))) return hr;
 
 		// The step progressor is based on discovered evacuee vertices
 		pairs = EvacueePairs->Find(myVertex->EID);

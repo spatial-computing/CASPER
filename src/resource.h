@@ -9,8 +9,6 @@
 #define IDS_HELPFILEEvcSolverPROPPAGE   108
 #define IDS_DOCSTRINGEvcSolverPROPPAGE  109
 #define IDC_SearchGroup                 210
-#define IDC_COMBO_Heuristic             214
-#define IDC_Label_Heuristic             215
 #define IDC_COMBO_METHOD                216
 #define IDC_STATIC_METHOD               217
 #define IDC_LableSat                    218

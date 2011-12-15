@@ -44,11 +44,7 @@ __interface IEvcSolver : IUnknown
 	[propget, helpstring("Lists discriptive attributes from the network dataset")]
 		HRESULT DiscriptiveAttributes([out, retval] BSTR ** names);
 	[propget, helpstring("Counts discriptive attributes from the network dataset")]
-		HRESULT DiscriptiveAttributesCount( [out, retval] int * count);
-	[propput, helpstring("Sets the selected heuristic attribute index")]
-		HRESULT HeuristicAttribute([in] int index);
-	[propget, helpstring("Gets the selected heuristic attribute index")]
-		HRESULT HeuristicAttribute([out, retval] int * index);
+		HRESULT DiscriptiveAttributesCount( [out, retval] int * count);	
 	[propput, helpstring("Sets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([in] int index);
 	[propget, helpstring("Gets the selected caspacity attribute index")]
@@ -148,8 +144,6 @@ public:
 	STDMETHOD(get_CriticalDensPerCap)(BSTR * value);
 	STDMETHOD(get_DiscriptiveAttributes)(BSTR ** names);
 	STDMETHOD(get_DiscriptiveAttributesCount)(int * count);
-	STDMETHOD(put_HeuristicAttribute)(int index);
-	STDMETHOD(get_HeuristicAttribute)(int * index);
 	STDMETHOD(put_CapacityAttribute)(int index);
 	STDMETHOD(get_CapacityAttribute)(int * index);
 	STDMETHOD(get_CostPerZoneDensity)(BSTR * value);
@@ -243,7 +237,6 @@ private:
 	esriNAOutputLineType	m_outputLineType;
 	bool					m_bPersistDirty;
 	long					costAttributeID;
-	long					heuristicAttribIndex;
 	long					capAttributeID;
 	INAStreetDirectionsAgentPtr pStreetAgent;	
 	float					SaturationPerCap;

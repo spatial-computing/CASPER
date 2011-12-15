@@ -59,12 +59,8 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		// set the loaded network discriptives
 		m_ipEvcSolver->get_DiscriptiveAttributesCount(&c);
 		m_ipEvcSolver->get_DiscriptiveAttributes(&names);
-		::SendMessage(m_hHeuristicCombo, CB_RESETCONTENT, NULL, NULL);
-		for (i = 0; i < c; i++) ::SendMessage(m_hHeuristicCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));
 		::SendMessage(m_hCapCombo, CB_RESETCONTENT, NULL, NULL);
-		for (i = 0; i < c; i++) ::SendMessage(m_hCapCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));
-		m_ipEvcSolver->get_HeuristicAttribute(&selectedIndex);
-		::SendMessage(m_hHeuristicCombo, CB_SETCURSEL, selectedIndex, 0);
+		for (i = 0; i < c; i++) ::SendMessage(m_hCapCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));		
 		m_ipEvcSolver->get_CapacityAttribute(&selectedIndex);
 		::SendMessage(m_hCapCombo, CB_SETCURSEL, selectedIndex, 0);
 		delete [] names;
@@ -250,10 +246,8 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 	IEvcSolverPtr ipSolver(vObject.punkVal);
 	int size;
 	if (ipSolver != 0)
-	{		
-		int selectedIndex = ::SendMessage(m_hHeuristicCombo, CB_GETCURSEL, 0, 0);
-		if (selectedIndex > -1) ipSolver->put_HeuristicAttribute(selectedIndex);
-		selectedIndex = ::SendMessage(m_hCapCombo, CB_GETCURSEL, 0, 0);
+	{
+		int selectedIndex = ::SendMessage(m_hCapCombo, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_CapacityAttribute(selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboMethod, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_SolverMethod((EVC_SOLVER_METHOD)selectedIndex);
@@ -332,7 +326,6 @@ STDMETHODIMP EvcSolverPropPage::Cancel()
 
 LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	m_hHeuristicCombo = GetDlgItem(IDC_COMBO_Heuristic);
 	m_hCapCombo = GetDlgItem(IDC_COMBO_CAPACITY);
 	m_hComboMethod = GetDlgItem(IDC_COMBO_METHOD);
 	m_hComboCostMethod = GetDlgItem(IDC_COMBO_CostMethod);
@@ -344,14 +337,6 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hEditSnapFlock = GetDlgItem(IDC_EDIT_FlockSnapInterval);
 	m_hEditSimulationFlock = GetDlgItem(IDC_EDIT_FlockSimulationInterval);
 	m_hCheckFlock = GetDlgItem(IDC_CHECK_Flock);
-	return 0;
-}
-
-LRESULT EvcSolverPropPage::OnCbnSelchangeComboHeuristic(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-	SetDirty(TRUE);
-	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
