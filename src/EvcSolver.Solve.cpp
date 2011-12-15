@@ -684,6 +684,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	EvcPathPtr path;
 	std::list<PathSegmentPtr>::iterator psit;
 	std::list<EvcPathPtr>::iterator pit;
+	
+	// load the mercator projection
+	IProjectedCoordinateSystemPtr ipNAContextPC;
+	ISpatialReferenceFactoryPtr pSpatRefFact = ISpatialReferenceFactoryPtr(CLSID_SpatialReferenceEnvironment);
+	if (FAILED(hr = pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC))) return hr;
+	ISpatialReferencePtr ipSpatialRef = ipNAContextPC;
 
 	// Get the "Routes" NAClass feature class
 	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
@@ -753,6 +759,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 					// get all the points from this polyline and store it in the point stack
 					_ASSERT(*type == esriGeometryPolyline);
+
+					// project to mercator
+					if (FAILED(hr = ipGeometry->Project(ipSpatialRef))) return hr;
+
 					if (*type == esriGeometryPolyline)
 					{
 						pathSegment->pline = (IPolylinePtr)ipGeometry;
@@ -882,6 +892,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				ipGeometry = ipSubCurve;
 			}
 
+			// project to mercator
+			if (FAILED(hr = ipGeometry->Project(ipSpatialRef))) return hr;
+
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, CComVariant(edge->EID)))) return hr;
@@ -927,6 +940,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				if (FAILED(hr = ipCurve->GetSubcurve(fromPosition, toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
 				ipGeometry = ipSubCurve;
 			}
+
+			// project to mercator
+			if (FAILED(hr = ipGeometry->Project(ipSpatialRef))) return hr;
 
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
