@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\dev\3rdParty\opensteer\include\OpenSteer;&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
+				AdditionalIncludeDirectories="C:\dev\3rdParty\opensteer\include\OpenSteer;&quot;C:\dev\3rdParty\glut&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_DLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -65,9 +65,8 @@
 			<Tool
 				Name="VCLibrarianTool"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="glut32.lib"
 				OutputFile="$(OutDir)\$(ProjectName).lib"
-				AdditionalLibraryDirectories="&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
+				AdditionalLibraryDirectories=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -114,7 +113,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="true"
-				AdditionalIncludeDirectories="C:\dev\3rdParty\opensteer\include\OpenSteer;&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
+				AdditionalIncludeDirectories="C:\dev\3rdParty\opensteer\include\OpenSteer;&quot;C:\dev\3rdParty\glut&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_DLL"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -136,9 +135,8 @@
 			<Tool
 				Name="VCLibrarianTool"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="glut32.lib"
 				OutputFile="$(OutDir)\$(ProjectName).lib"
-				AdditionalLibraryDirectories="&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
+				AdditionalLibraryDirectories=""
 			/>
 			<Tool
 				Name="VCALinkTool"
