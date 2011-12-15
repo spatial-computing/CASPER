@@ -5,15 +5,17 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking object implementation
 
-FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery)
+FlockingObject::FlockingObject(EvcPathPtr path, float startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery)
 {
-	SpeedX = 0.0;
-	SpeedY = 0.0;
+	// construct FlockingLocation
+	Velocity = OpenSteer::Vec3::zero;
+	MyTime = startTime;
+	Traveled = 0.0;
+
+	// init object
 	MyStatus = FLOCK_OBJ_STAT_INIT;
 	myPath = path;
-	MyTime = startTime;
 	GroupName = groupName;
-	Traveled = 0.0;
 	BindVertex = -1;
 	INetworkElementPtr element;
 	newEdgeRequestFlag = true;
@@ -91,33 +93,45 @@ bool FlockingObject::BuildNeighborList(std::list<FlockingObjectPtr> * objects)
 	return true;
 }
 
-FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
+FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, float dt)
 {	
-	OpenSteer::Vec3 steer(0,0,0);
-	double x, y;
-
 	// check destination arriaval
-
-	// check time
-	MyTime += dt;
-	dt = min(dt, MyTime);
-	if (MyTime >= 0.0) MyStatus = MyStatus = FLOCK_OBJ_STAT_MOVE;
-	if (MyTime > 0 && dt > 0)
+	if (MyStatus != FLOCK_OBJ_STAT_END)
 	{
-		LoadNewEdge();
-		BuildNeighborList(objects);
+		double dist = 0.0;
+		((IProximityOperatorPtr)(MyLocation))->ReturnDistance(this->FinalPoint, &dist);
+		if (dist <= 200.0) MyStatus = FLOCK_OBJ_STAT_END;
+		else
+		{
+			// check time
+			MyTime += dt;
+			dt = min(dt, MyTime);
+			if (MyTime >= 0.0) MyStatus = FLOCK_OBJ_STAT_MOVE;
+			if (MyTime > 0 && dt > 0)
+			{
+				LoadNewEdge();
+				BuildNeighborList(objects);
 
-		// generate an steer based on current situation
-		steer += myVehicle->steerToFollowPath(+1, 1, myVehiclePath);
-		steer += myVehicle->steerForSeparation(1.0f,  60.0f, myNeighborVehicles);
-		steer += myVehicle->steerForSeparation(0.2f, 270.0f, myNeighborVehicles);
+				// generate a steer based on current situation
+				OpenSteer::Vec3 steer = OpenSteer::Vec3::zero;
+				steer += myVehicle->steerForSeparation(1.0f,  60.0f, myNeighborVehicles);		
+				steer += myVehicle->steerForSeparation(0.2f, 270.0f, myNeighborVehicles);
+				steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 
-		// use the steer to create speed and finally move
-		
+				// use the steer to create velocity and finally move
+				OpenSteer::Vec3 pos = OpenSteer::Vec3::zero;
+				pos += myVehicle->position();
+				steer += myVehicle->velocity();
+				steer.truncateLength((float)speedLimit);
+				pos += steer * dt;
 
-		// update coordinate and speed		
-		MyLocation->PutCoords(x, y);
-		myVehicle->setPosition((float)x, (float)y, 0.0f);
+				// update coordinate and velocity
+				MyLocation->PutCoords(pos.x, pos.y);
+				myVehicle->setPosition(pos.x, pos.y, 0.0f);
+				myVehicle->setForward(steer.normalize());
+				myVehicle->setSpeed(steer.length());
+			}
+		}
 	}
 	return MyStatus;
 }
@@ -126,7 +140,7 @@ FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, doub
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking enviroment implementation
 
-FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval)
+FlockingEnviroment::FlockingEnviroment(float SnapshotInterval, float SimulationInterval)
 {
 	snapshotInterval = abs(SnapshotInterval);
 	simulationInterval = abs(SimulationInterval);
