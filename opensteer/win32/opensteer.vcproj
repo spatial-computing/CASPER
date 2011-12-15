@@ -64,9 +64,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				LinkLibraryDependencies="true"
+				LinkLibraryDependencies="false"
 				AdditionalDependencies="glut32.lib"
-				OutputFile="$(OutDir)/$(ProjectName)d.lib"
+				OutputFile="$(OutDir)\$(ProjectName).lib"
 				AdditionalLibraryDirectories="&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
 			/>
 			<Tool
@@ -135,8 +135,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				LinkLibraryDependencies="true"
+				LinkLibraryDependencies="false"
 				AdditionalDependencies="glut32.lib"
+				OutputFile="$(OutDir)\$(ProjectName).lib"
 				AdditionalLibraryDirectories="&quot;C:\dev\3rdParty\opensteer\glut-3.7.6-bin&quot;"
 			/>
 			<Tool
