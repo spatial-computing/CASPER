@@ -775,7 +775,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							pcollect->get_Point(i, &p);
 							pline->AddPoint(p);
-						}						
+						}
 					}			
 					// Final cost calculations
 					path->EvacuationCost += pathSegment->Edge->GetCost(0.0, costmethod) * pathSegment->EdgePortion;

@@ -16,18 +16,17 @@ FlockingObject::FlockingObject(EvcPathPtr path, float startTime, VARIANT groupNa
 	MyStatus = FLOCK_OBJ_STAT_INIT;
 	myPath = path;
 	GroupName = groupName;
-	BindVertex = -1;
+	BindVertex = -1l;
 	INetworkElementPtr element;
 	newEdgeRequestFlag = true;
 	speedLimit = 0.0;
 
 	// build the path itterator and upcoming vertices
-	myPath->front()->pline->get_FromPoint(&StartPoint);
+	myPath->front()->pline->get_FromPoint(&MyLocation);
 	myPath->back()->pline->get_ToPoint(&FinalPoint);
 	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element);
 	NextVertex = element;
 	pathSegIt = myPath->begin();
-	(*pathSegIt)->Edge->NetEdge->QueryJunctions(0, NextVertex);
 
 	// steering lib init
 	double x, y;
@@ -39,8 +38,9 @@ FlockingObject::FlockingObject(EvcPathPtr path, float startTime, VARIANT groupNa
 	myVehicle->setPosition((float)x, (float)y, 0.0f);
 }
 
-bool FlockingObject::LoadNewEdge(void)
+HRESULT FlockingObject::loadNewEdge(void)
 {
+	HRESULT hr = S_OK;
 	if (newEdgeRequestFlag)
 	{
 		// convert the path to Steer Library format
@@ -49,68 +49,88 @@ bool FlockingObject::LoadNewEdge(void)
 		IPointPtr p = 0;
 		double x, y;
 
-		pathSegIt++;
-		if (pathSegIt == myPath->end()) return false;
+		// check if any edge is left
+		if (pathSegIt == myPath->end())
+		{
+			MyStatus = FLOCK_OBJ_STAT_END;
+			return S_OK;
+		}
 		
 		pcollect = (*pathSegIt)->pline;
-		pcollect->get_PointCount(&pointCount);
+		if (FAILED(hr = pcollect->get_PointCount(&pointCount))) return hr;
 		delete [] libpoints;
 		libpoints = new OpenSteer::Vec3[pointCount];
 		for(i = 0; i < pointCount; i++)
 		{
-			pcollect->get_Point(i, &p);
-			p->QueryCoords(&x, &y);
+			if (FAILED(hr = pcollect->get_Point(i, &p))) return hr;
+			if (FAILED(hr = p->QueryCoords(&x, &y))) return hr;
 			libpoints[i].set((float)x, (float)y, 0.0f);
 		}
 
 		// speed limit update
-		(*pathSegIt)->pline->get_Length(&speedLimit);
+		if (FAILED(hr = (*pathSegIt)->pline->get_Length(&speedLimit))) return hr;
 		speedLimit = speedLimit / (*pathSegIt)->Edge->originalCost;
 
 		// update next vertex based on new edge
-		(*pathSegIt)->Edge->NetEdge->QueryJunctions(0, NextVertex);
+		if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, NextVertex))) return hr;
 
 		// load new path into the steer lib
 		myVehiclePath.initialize(pointCount, libpoints, (float)((*pathSegIt)->Edge->OriginalCapacity()), false);
 		newEdgeRequestFlag = false;
+		pathSegIt++;
 	}
-	return true;
+	return hr;
 }
 
-bool FlockingObject::BuildNeighborList(std::list<FlockingObjectPtr> * objects)
+HRESULT FlockingObject::buildNeighborList(std::list<FlockingObjectPtr> * objects)
 {
 	myNeighborVehicles.clear();
+	double dist = 0.0;
+	HRESULT hr = S_OK;
+	IPointPtr nextVertexPoint = IPointPtr(CLSID_Point);
+
+	if (FAILED(hr = NextVertex->QueryPoint(nextVertexPoint))) return hr;
+	if (FAILED(hr = ((IProximityOperatorPtr)(MyLocation))->ReturnDistance(nextVertexPoint, &dist))) return hr;
+	if (dist <= 200.0) NextVertex->get_EID(&BindVertex); else BindVertex = -1l;
+
 	for (std::list<FlockingObjectPtr>::iterator it = objects->begin(); it != objects->end(); it++)
 	{
 		// self avoid check
 		if ((*it) == this) continue;
 
+		// moving object check
+		if ((*it)->MyStatus != FLOCK_OBJ_STAT_MOVE) continue;
+
 		// check if they share an edge or if they are both crossing an intersection
-		if ((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction) continue;
+		if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
+			&& (BindVertex != -1l || (*it)->BindVertex != BindVertex)) continue;
 
 		myNeighborVehicles.push_back((*it)->myVehicle);
 	}
-	return true;
+	return hr;
 }
 
-FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, float dt)
+HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, float dt)
 {	
 	// check destination arriaval
+	HRESULT hr = S_OK;
 	if (MyStatus != FLOCK_OBJ_STAT_END)
 	{
 		double dist = 0.0;
-		((IProximityOperatorPtr)(MyLocation))->ReturnDistance(this->FinalPoint, &dist);
+		if (FAILED(hr = ((IProximityOperatorPtr)(MyLocation))->ReturnDistance(FinalPoint, &dist))) return hr;
 		if (dist <= 200.0) MyStatus = FLOCK_OBJ_STAT_END;
 		else
 		{
-			// check time
 			MyTime += dt;
 			dt = min(dt, MyTime);
+
+			// check time
 			if (MyTime >= 0.0) MyStatus = FLOCK_OBJ_STAT_MOVE;
 			if (MyTime > 0 && dt > 0)
 			{
-				LoadNewEdge();
-				BuildNeighborList(objects);
+				if (FAILED(hr = loadNewEdge())) return hr;
+				if (MyStatus == FLOCK_OBJ_STAT_END) return S_OK;
+				if (FAILED(hr = buildNeighborList(objects))) return hr;
 
 				// generate a steer based on current situation
 				OpenSteer::Vec3 steer = OpenSteer::Vec3::zero;
@@ -123,17 +143,18 @@ FLOCK_OBJ_STAT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, floa
 				pos += myVehicle->position();
 				steer += myVehicle->velocity();
 				steer.truncateLength((float)speedLimit);
+				Traveled += steer.length() * dt;
 				pos += steer * dt;
 
 				// update coordinate and velocity
-				MyLocation->PutCoords(pos.x, pos.y);
+				if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
 				myVehicle->setPosition(pos.x, pos.y, 0.0f);
 				myVehicle->setForward(steer.normalize());
 				myVehicle->setSpeed(steer.length());
 			}
 		}
 	}
-	return MyStatus;
+	return hr;
 }
 
 
@@ -182,7 +203,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 			size = (int)(ceil((*pathItr)->RoutedPop));
 			for (i = 0; i < size; i++)
 			{
-				objects->push_front(new FlockingObject(*pathItr, simulationInterval * i, (*evcItr)->Name, ipNetworkQuery));
+				objects->push_front(new FlockingObject(*pathItr, simulationInterval * -i, (*evcItr)->Name, ipNetworkQuery));
 			}
 		}
 	}
@@ -195,15 +216,15 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	long frontRunnerDistance = 0;
 	double lastSnapshot = 0.0;
 	bool snapshotTaken = false;
-	HRESULT hr = 0;
+	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
 
 	if (ipStepProgressor)
 	{
-		ipStepProgressor->put_MinRange(0);
-		ipStepProgressor->put_MaxRange((long)(ceil(maxPathLen)));
-		ipStepProgressor->put_StepValue(1);
-		ipStepProgressor->put_Position(0);
+		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ceil(maxPathLen))))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
 
 	for (double time = 0.0; movingObjectLeft; time += simulationInterval)
@@ -221,7 +242,8 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			// pre-movement snapshot: check if we have to take a snapshot of this object
 			if (oldStat == FLOCK_OBJ_STAT_INIT && (*it)->MyTime >= 0.0) history->push_front(new FlockingLocation(**it));
 
-			newStat = (*it)->Move(objects, simulationInterval);
+			if (FAILED(hr = (*it)->Move(objects, simulationInterval))) return hr;
+			newStat = (*it)->MyStatus;
 			movingObjectLeft |= newStat == FLOCK_OBJ_STAT_MOVE;
 
 			// post-movement snapshot
@@ -237,13 +259,13 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				if ((long)((*it)->Traveled) + 1 >= frontRunnerDistance)
 				{
 					frontRunnerDistance = (long)((*it)->Traveled);
-					ipStepProgressor->Step();
+					if (FAILED(hr = ipStepProgressor->Step())) return hr;
 				}
 			}
 		}
 		if (snapshotTaken) lastSnapshot = time;
 	}
-	return S_OK;
+	return hr;
 }
 
 void FlockingEnviroment::GetHistory(std::list<FlockingLocationPtr> ** History)

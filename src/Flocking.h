@@ -56,21 +56,20 @@ private:
 
 	// methods
 
-	bool LoadNewEdge(void);
-	bool BuildNeighborList(std::list<FlockingObject *> * objects);
+	HRESULT loadNewEdge(void);
+	HRESULT buildNeighborList(std::list<FlockingObject *> * objects);
 
 public:
 	// properties
 
-	IPointPtr		StartPoint;
 	IPointPtr		FinalPoint;
-	int				BindVertex;
+	long			BindVertex;
 	FLOCK_OBJ_STAT	MyStatus;
 
 	// methods
 	
 	FlockingObject(EvcPathPtr path, float startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery);
-	FLOCK_OBJ_STAT Move(std::list<FlockingObject *> * objects, float deltatime);
+	HRESULT Move(std::list<FlockingObject *> * objects, float deltatime);
 
 	virtual ~FlockingObject(void)
 	{
