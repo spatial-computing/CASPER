@@ -33,7 +33,9 @@ public:
 		MyTime = copy.MyTime;
 		Traveled = copy.Traveled;
 		Velocity = OpenSteer::Vec3(copy.Velocity.x, copy.Velocity.y, copy.Velocity.z);
-		MyLocation = IPointPtr(copy.MyLocation);
+		IClonePtr pointClone;
+		((IClonePtr)copy.MyLocation)->Clone(&pointClone);
+		MyLocation = pointClone;
 	}
 
 	virtual ~FlockingLocation(void) { }

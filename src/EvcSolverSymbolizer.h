@@ -75,6 +75,7 @@ private:
 
   HRESULT CreateRandomColor(IColor** ppColor);
   HRESULT CreatePointRenderer(IColor* pPointColor, IFeatureRenderer** ppFRenderer);
+  HRESULT CreateSimplePointRenderer(IColor* pPointColor, IFeatureRenderer** ppFRenderer);
   HRESULT CreateBarrierRenderer(IColor* pBarrierColor, IFeatureRenderer** ppFRenderer);
   HRESULT CreateLineRenderer(IColor* pLineColor, IFeatureRenderer** ppFeatureRenderer);
   HRESULT CreateUnlocatedSymbol(ISymbol* pLocatedMarkerSymbol, ISymbol** ppUnlocatedMarkerSymbol);

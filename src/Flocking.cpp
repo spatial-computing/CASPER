@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <cmath>
 #include "Flocking.h"
+#include <ctime>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking object implementation
@@ -23,18 +24,24 @@ FlockingObject::FlockingObject(EvcPathPtr path, float startTime, VARIANT groupNa
 
 	// build the path itterator and upcoming vertices
 	myPath->front()->pline->get_FromPoint(&MyLocation);
+
 	myPath->back()->pline->get_ToPoint(&FinalPoint);
 	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element);
 	NextVertex = element;
 	pathSegIt = myPath->begin();
 
-	// steering lib init
+	// create a little bit of randomness within initial location
 	double x, y;
+	MyLocation->QueryCoords(&x, &y);
+	x += (rand() % 20) - 10;
+	y += (rand() % 20) - 10;
+	MyLocation->PutCoords(x, y);
+
+	// steering lib init
 	myVehicle = new OpenSteer::SimpleVehicle();
 	myVehicle->reset();
 	myVehicle->setRadius(0.1f);
 	libpoints = new OpenSteer::Vec3[0];
-	MyLocation->QueryCoords(&x, &y);
 	myVehicle->setPosition((float)x, (float)y, 0.0f);
 }
 
@@ -71,7 +78,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 		if (FAILED(hr = (*pathSegIt)->pline->get_Length(&speedLimit))) return hr;
 		speedLimit = speedLimit / (*pathSegIt)->Edge->originalCost;
 
-		// update next vertex based on new edge
+		// update next vertex based on the new edge
 		if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, NextVertex))) return hr;
 
 		// load new path into the steer lib
@@ -85,12 +92,12 @@ HRESULT FlockingObject::loadNewEdge(void)
 HRESULT FlockingObject::buildNeighborList(std::list<FlockingObjectPtr> * objects)
 {
 	myNeighborVehicles.clear();
-	double dist = 0.0;
+	double dist = 300.0;
 	HRESULT hr = S_OK;
-	IPointPtr nextVertexPoint = IPointPtr(CLSID_Point);
+	IPointPtr nextVertexPoint(CLSID_Point);
 
-	if (FAILED(hr = NextVertex->QueryPoint(nextVertexPoint))) return hr;
-	if (FAILED(hr = ((IProximityOperatorPtr)(MyLocation))->ReturnDistance(nextVertexPoint, &dist))) return hr;
+	if (FAILED(hr = NextVertex->QueryPoint(nextVertexPoint))) return hr;	
+	// if (FAILED(hr = ((IProximityOperatorPtr)(MyLocation))->ReturnDistance(nextVertexPoint, &dist))) return hr;
 	if (dist <= 200.0) NextVertex->get_EID(&BindVertex); else BindVertex = -1l;
 
 	for (std::list<FlockingObjectPtr>::iterator it = objects->begin(); it != objects->end(); it++)
@@ -133,24 +140,24 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, float dt)
 				if (FAILED(hr = buildNeighborList(objects))) return hr;
 
 				// generate a steer based on current situation
-				OpenSteer::Vec3 steer = OpenSteer::Vec3::zero;
-				steer += myVehicle->steerForSeparation(1.0f,  60.0f, myNeighborVehicles);		
-				steer += myVehicle->steerForSeparation(0.2f, 270.0f, myNeighborVehicles);
-				steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
+				Velocity.set(0.0f, 0.0f, 0.0f);
+				Velocity += myVehicle->steerForSeparation(1.0f,  60.0f, myNeighborVehicles);		
+				Velocity += myVehicle->steerForSeparation(0.2f, 270.0f, myNeighborVehicles);
+				Velocity += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 
 				// use the steer to create velocity and finally move
 				OpenSteer::Vec3 pos = OpenSteer::Vec3::zero;
 				pos += myVehicle->position();
-				steer += myVehicle->velocity();
-				steer.truncateLength((float)speedLimit);
-				Traveled += steer.length() * dt;
-				pos += steer * dt;
+				Velocity += myVehicle->velocity();
+				Velocity.truncateLength((float)speedLimit);				
+				Traveled += Velocity.length() * dt;
+				pos += Velocity * dt;
 
 				// update coordinate and velocity
 				if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
 				myVehicle->setPosition(pos.x, pos.y, 0.0f);
-				myVehicle->setForward(steer.normalize());
-				myVehicle->setSpeed(steer.length());
+				myVehicle->setForward(Velocity.normalize());
+				myVehicle->setSpeed(Velocity.length());
 			}
 		}
 	}
@@ -188,6 +195,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	EvcPathPtr path = 0;
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
+	srand((unsigned int)time(NULL));
 
 	// pre-init clean up just in case the object is being re-used
 	for (FlockingObjectItr it1 = objects->begin(); it1 != objects->end(); it1++) delete (*it1);

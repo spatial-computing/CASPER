@@ -289,7 +289,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   ipFlocksFeatureLayer->put_Name(CComBSTR(CS_FLOCKS_NAME));
 
   // Give the Routes layer a simple renderer and a single symbol property page
-  CreateLineRenderer(ipSolverColor, &ipFeatureRenderer);
+  CreateSimplePointRenderer(ipSolverColor, &ipFeatureRenderer);
 
   ipGeoFeatureLayer = ipFlocksFeatureLayer;
   if (!ipGeoFeatureLayer) return S_OK;
@@ -360,7 +360,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   if (ipSubLayer)
   {
     ipGeoFeatureLayer = ipSubLayer;
-    if (FAILED(hr = CreatePointRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
+    if (FAILED(hr = CreateSimplePointRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
   
@@ -632,6 +632,29 @@ HRESULT EvcSolverSymbolizer::CreateUnlocatedSymbol(ISymbol* pLocatedMarkerSymbol
   ipMultiLayerSymbol->AddLayer((IMarkerSymbolPtr)ipCharacterMarkerSymbol);
   ((ILayerColorLockPtr)ipMultiLayerSymbol)->put_LayerColorLock(0, VARIANT_TRUE);
 
+  return S_OK;
+}
+
+HRESULT EvcSolverSymbolizer::CreateSimplePointRenderer(IColor* pPointColor, IFeatureRenderer** ppFRenderer)
+{
+  if (!pPointColor || !ppFRenderer) return E_POINTER;
+
+  ISimpleRendererPtr ipRenderer(CLSID_SimpleRenderer);
+  HRESULT     hr;
+  IColorPtr   ipErrorColor(CLSID_RgbColor);
+  ipErrorColor->put_RGB(RGB(255,0,0));
+
+  ISymbolPtr ipPointSymbol(CLSID_SimpleMarkerSymbol);
+  ISimpleMarkerSymbolPtr ipSimpleMarkerPointSymbol(ipPointSymbol);
+  ipSimpleMarkerPointSymbol->put_Style(esriSMSCircle);
+  ipSimpleMarkerPointSymbol->put_Color(pPointColor);
+  ipSimpleMarkerPointSymbol->put_Size(3);
+
+  ipRenderer->putref_Symbol(ipPointSymbol);
+
+  *ppFRenderer = (IFeatureRendererPtr)ipRenderer;
+  if (*ppFRenderer) (*ppFRenderer)->AddRef();
+  
   return S_OK;
 }
 
