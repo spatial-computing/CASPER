@@ -57,19 +57,19 @@ namespace OpenSteer {
     public:
 
         // mass (defaults to unity so acceleration=force)
-        virtual float mass (void) const = 0;
-        virtual float setMass (float) = 0;
+        virtual double mass (void) const = 0;
+        virtual double setMass (double) = 0;
 
         // size of bounding sphere, for obstacle avoidance, etc.
-        virtual float radius (void) const = 0;
-        virtual float setRadius (float) = 0;
+        virtual double radius (void) const = 0;
+        virtual double setRadius (double) = 0;
 
         // velocity of vehicle
         virtual Vec3 velocity (void) const = 0;
 
         // speed of vehicle  (may be faster than taking magnitude of velocity)
-        virtual float speed (void) const = 0;
-        virtual float setSpeed (float) = 0;
+        virtual double speed (void) const = 0;
+        virtual double setSpeed (double) = 0;
 
         // groups of (pointers to) abstract vehicles, and iterators over them
         typedef std::vector<AbstractVehicle*> group;
@@ -77,19 +77,19 @@ namespace OpenSteer {
 
         // predict position of this vehicle at some time in the future
         // (assumes velocity remains constant)
-        virtual Vec3 predictFuturePosition (const float predictionTime) const = 0;
+        virtual Vec3 predictFuturePosition (const double predictionTime) const = 0;
 
         // ----------------------------------------------------------------------
         // XXX this vehicle-model-specific functionality functionality seems out
         // XXX of place on the abstract base class, but for now it is expedient
 
         // the maximum steering force this vehicle can apply
-        virtual float maxForce (void) const = 0;
-        virtual float setMaxForce (float) = 0;
+        virtual double maxForce (void) const = 0;
+        virtual double setMaxForce (double) = 0;
 
         // the maximum speed this vehicle is allowed to move
-        virtual float maxSpeed (void) const = 0;
-        virtual float setMaxSpeed (float) = 0;
+        virtual double maxSpeed (void) const = 0;
+        virtual double setMaxSpeed (double) = 0;
     };
 
 

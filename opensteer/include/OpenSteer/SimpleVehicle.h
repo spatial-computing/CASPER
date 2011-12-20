@@ -111,10 +111,10 @@ namespace OpenSteer {
             setMass (1);          // mass (defaults to 1 so acceleration=force)
             setSpeed (0);         // speed along Forward direction.
 
-            setRadius (0.5f);     // size of bounding sphere
+            setRadius (0.5);     // size of bounding sphere
 
-            setMaxForce (0.1f);   // steering force is clipped to this magnitude
-            setMaxSpeed (1.0f);   // velocity is clipped to this magnitude
+            setMaxForce (0.1);   // steering force is clipped to this magnitude
+            setMaxSpeed (1.0);   // velocity is clipped to this magnitude
 
             // reset bookkeeping to do running averages of these quanities
             resetSmoothedPosition ();
@@ -123,65 +123,65 @@ namespace OpenSteer {
         }
 
         // get/set mass
-        float mass (void) const {return _mass;}
-        float setMass (float m) {return _mass = m;}
+        double mass (void) const {return _mass;}
+        double setMass (double m) {return _mass = m;}
 
         // get velocity of vehicle
         Vec3 velocity (void) const {return forward() * _speed;}
 
         // get/set speed of vehicle  (may be faster than taking mag of velocity)
-        float speed (void) const {return _speed;}
-        float setSpeed (float s) {return _speed = s;}
+        double speed (void) const {return _speed;}
+        double setSpeed (double s) {return _speed = s;}
 
         // size of bounding sphere, for obstacle avoidance, etc.
-        float radius (void) const {return _radius;}
-        float setRadius (float m) {return _radius = m;}
+        double radius (void) const {return _radius;}
+        double setRadius (double m) {return _radius = m;}
 
         // get/set maxForce
-        float maxForce (void) const {return _maxForce;}
-        float setMaxForce (float mf) {return _maxForce = mf;}
+        double maxForce (void) const {return _maxForce;}
+        double setMaxForce (double mf) {return _maxForce = mf;}
 
         // get/set maxSpeed
-        float maxSpeed (void) const {return _maxSpeed;}
-        float setMaxSpeed (float ms) {return _maxSpeed = ms;}
+        double maxSpeed (void) const {return _maxSpeed;}
+        double setMaxSpeed (double ms) {return _maxSpeed = ms;}
 
 
         // apply a given steering force to our momentum,
         // adjusting our orientation to maintain velocity-alignment.
-        void applySteeringForce (const Vec3& force, const float deltaTime);
+        void applySteeringForce (const Vec3& force, const double deltaTime);
 
         // the default version: keep FORWARD parallel to velocity, change
         // UP as little as possible.
         virtual void regenerateLocalSpace (const Vec3& newVelocity,
-                                           const float elapsedTime);
+                                           const double elapsedTime);
 
         // alternate version: keep FORWARD parallel to velocity, adjust UP
         // according to a no-basis-in-reality "banking" behavior, something
         // like what birds and airplanes do.  (XXX experimental cwr 6-5-03)
         void regenerateLocalSpaceForBanking (const Vec3& newVelocity,
-                                             const float elapsedTime);
+                                             const double elapsedTime);
 
         // adjust the steering force passed to applySteeringForce.
         // allows a specific vehicle class to redefine this adjustment.
         // default is to disallow backward-facing steering at low speed.
         // xxx experimental 8-20-02
         virtual Vec3 adjustRawSteeringForce (const Vec3& force,
-                                             const float deltaTime);
+                                             const double deltaTime);
 
         // apply a given braking force (for a given dt) to our momentum.
         // xxx experimental 9-6-02
-        void applyBrakingForce (const float rate, const float deltaTime);
+        void applyBrakingForce (const double rate, const double deltaTime);
 
         // predict position of this vehicle at some time in the future
         // (assumes velocity remains constant)
-        Vec3 predictFuturePosition (const float predictionTime) const;
+        Vec3 predictFuturePosition (const double predictionTime) const;
 
         // get instantaneous curvature (since last update)
-        float curvature (void) {return _curvature;}
+        double curvature (void) {return _curvature;}
 
         // get/reset smoothedCurvature, smoothedAcceleration and smoothedPosition
-        float smoothedCurvature (void) {return _smoothedCurvature;}
-        float resetSmoothedCurvature (float value = 0)
+        double smoothedCurvature (void) {return _smoothedCurvature;}
+        double resetSmoothedCurvature (double value = 0)
         {
             _lastForward = Vec3::zero;
             _lastPosition = Vec3::zero;
@@ -203,8 +203,8 @@ namespace OpenSteer {
         static int serialNumberCounter;
 
         // draw lines from vehicle's position showing its velocity and acceleration
-        void annotationVelocityAcceleration (float maxLengthA, float maxLengthV);
-        void annotationVelocityAcceleration (float maxLength)
+        void annotationVelocityAcceleration (double maxLengthA, double maxLengthV);
+        void annotationVelocityAcceleration (double maxLength)
             {annotationVelocityAcceleration (maxLength, maxLength);}
         void annotationVelocityAcceleration (void)
             {annotationVelocityAcceleration (3, 3);}
@@ -220,28 +220,28 @@ namespace OpenSteer {
 
     private:
 
-        float _mass;       // mass (defaults to unity so acceleration=force)
+        double _mass;       // mass (defaults to unity so acceleration=force)
 
-        float _radius;     // size of bounding sphere, for obstacle avoidance, etc.
+        double _radius;     // size of bounding sphere, for obstacle avoidance, etc.
 
-        float _speed;      // speed along Forward direction.  Because local space
+        double _speed;      // speed along Forward direction.  Because local space
                            // is velocity-aligned, velocity = Forward * Speed
 
-        float _maxForce;   // the maximum steering force this vehicle can apply
+        double _maxForce;   // the maximum steering force this vehicle can apply
                            // (steering force is clipped to this magnitude)
 
-        float _maxSpeed;   // the maximum speed this vehicle is allowed to move
+        double _maxSpeed;   // the maximum speed this vehicle is allowed to move
                            // (velocity is clipped to this magnitude)
 
-        float _curvature;
+        double _curvature;
         Vec3 _lastForward;
         Vec3 _lastPosition;
         Vec3 _smoothedPosition;
-        float _smoothedCurvature;
+        double _smoothedCurvature;
         Vec3 _smoothedAcceleration;
 
         // measure path curvature (1/turning-radius), maintain smoothed version
-        void measurePathCurvature (const float elapsedTime);
+        void measurePathCurvature (const double elapsedTime);
     };
 
 

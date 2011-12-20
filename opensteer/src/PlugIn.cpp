@@ -141,8 +141,8 @@ OpenSteer::PlugIn::sortBySelectionOrder (void)
         // scan over subsequent pairs, swapping if larger value is first
         for (int j = i+1; j < itemsInRegistry; j++)
         {
-            const float iKey = registry[i]->selectionOrderSortKey ();
-            const float jKey = registry[j]->selectionOrderSortKey ();
+            const double iKey = registry[i]->selectionOrderSortKey ();
+            const double jKey = registry[j]->selectionOrderSortKey ();
 
             if (iKey > jKey)
             {

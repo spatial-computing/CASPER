@@ -73,19 +73,19 @@ namespace OpenSteer {
     const Vec3 gBlue    (0, 0, 1);
     const Vec3 gMagenta (1, 0, 1);
 
-    const Vec3 gOrange (1, 0.5f, 0);
+    const Vec3 gOrange (1, 0.5, 0);
 
-    inline Vec3 grayColor (const float g) {return Vec3 (g, g, g);}
+    inline Vec3 grayColor (const double g) {return Vec3 (g, g, g);}
 
-    const Vec3 gGray10 = grayColor (0.1f);
-    const Vec3 gGray20 = grayColor (0.2f);
-    const Vec3 gGray30 = grayColor (0.3f);
-    const Vec3 gGray40 = grayColor (0.4f);
-    const Vec3 gGray50 = grayColor (0.5f);
-    const Vec3 gGray60 = grayColor (0.6f);
-    const Vec3 gGray70 = grayColor (0.7f);
-    const Vec3 gGray80 = grayColor (0.8f);
-    const Vec3 gGray90 = grayColor (0.9f);
+    const Vec3 gGray10 = grayColor (0.1);
+    const Vec3 gGray20 = grayColor (0.2);
+    const Vec3 gGray30 = grayColor (0.3);
+    const Vec3 gGray40 = grayColor (0.4);
+    const Vec3 gGray50 = grayColor (0.5);
+    const Vec3 gGray60 = grayColor (0.6);
+    const Vec3 gGray70 = grayColor (0.7);
+    const Vec3 gGray80 = grayColor (0.8);
+    const Vec3 gGray90 = grayColor (0.9);
 
 
     // ------------------------------------------------------------------------
@@ -138,7 +138,7 @@ namespace OpenSteer {
     // grid, color1 and color2 are used for alternating subsquares.)
 
 
-    void drawXZCheckerboardGrid (const float size,
+    void drawXZCheckerboardGrid (const double size,
                                  const int subsquares,
                                  const Vec3& center,
                                  const Vec3& color1,
@@ -154,7 +154,7 @@ namespace OpenSteer {
     // are drawn in the specified "color".)
 
 
-    void drawXZLineGrid (const float size,
+    void drawXZLineGrid (const double size,
                          const int subsquares,
                          const Vec3& center,
                          const Vec3& color);
@@ -164,7 +164,7 @@ namespace OpenSteer {
     // Circle/disk drawing utilities
 
 
-    void drawCircleOrDisk (const float radius,
+    void drawCircleOrDisk (const double radius,
                            const Vec3& axis,
                            const Vec3& center,
                            const Vec3& color,
@@ -172,20 +172,20 @@ namespace OpenSteer {
                            const bool filled,
                            const bool in3d);
 
-    void drawXZCircleOrDisk (const float radius,
+    void drawXZCircleOrDisk (const double radius,
                              const Vec3& center,
                              const Vec3& color,
                              const int segments,
                              const bool filled);
 
-    void draw3dCircleOrDisk (const float radius,
+    void draw3dCircleOrDisk (const double radius,
                              const Vec3& center,
                              const Vec3& axis,
                              const Vec3& color,
                              const int segments,
                              const bool filled);
 
-    inline void drawXZCircle (const float radius,
+    inline void drawXZCircle (const double radius,
                               const Vec3& center,
                               const Vec3& color,
                               const int segments)
@@ -194,7 +194,7 @@ namespace OpenSteer {
         drawXZCircleOrDisk (radius, center, color, segments, false);
     }
 
-    inline void drawXZDisk (const float radius,
+    inline void drawXZDisk (const double radius,
                             const Vec3& center,
                             const Vec3& color,
                             const int segments)
@@ -203,7 +203,7 @@ namespace OpenSteer {
         drawXZCircleOrDisk (radius, center, color, segments, true);
     }
 
-    inline void draw3dCircle (const float radius,
+    inline void draw3dCircle (const double radius,
                               const Vec3& center,
                               const Vec3& axis,
                               const Vec3& color,
@@ -213,7 +213,7 @@ namespace OpenSteer {
         draw3dCircleOrDisk (radius, center, axis, color, segments, false);
     }
 
-    inline void draw3dDisk (const float radius,
+    inline void draw3dDisk (const double radius,
                             const Vec3& center,
                             const Vec3& axis,
                             const Vec3& color,
@@ -230,7 +230,7 @@ namespace OpenSteer {
 
     void drawXZArc (const Vec3& start,
                     const Vec3& center,
-                    const float arcLength,
+                    const double arcLength,
                     const int segments,
                     const Vec3& color);
 
@@ -303,7 +303,7 @@ namespace OpenSteer {
     void drawLineAlpha (const Vec3& startPoint,
                         const Vec3& endPoint,
                         const Vec3& color,
-                        const float alpha);
+                        const double alpha);
 
 
     // ------------------------------------------------------------------------
@@ -314,7 +314,7 @@ namespace OpenSteer {
                            const Vec3& endPoint,
                            const Vec3& color);
 
-    void deferredDrawCircleOrDisk (const float radius,
+    void deferredDrawCircleOrDisk (const double radius,
                                    const Vec3& axis,
                                    const Vec3& center,
                                    const Vec3& color,
@@ -355,7 +355,7 @@ namespace OpenSteer {
     void drawXZWideLine (const Vec3& startPoint,
                          const Vec3& endPoint,
                          const Vec3& color,
-                         float width);
+                         double width);
 
 
     // ----------------------------------------------------------------------------
@@ -391,8 +391,8 @@ namespace OpenSteer {
     // accessors for GLUT's window dimensions
 
 
-    float drawGetWindowHeight (void);
-    float drawGetWindowWidth (void);
+    double drawGetWindowHeight (void);
+    double drawGetWindowWidth (void);
 
 
     // ----------------------------------------------------------------------------

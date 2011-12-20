@@ -70,28 +70,28 @@ namespace OpenSteer {
         const AbstractVehicle* vehicleToTrack;
 
         // aim at predicted position of vehicleToTrack, this far into thefuture
-        float aimLeadTime;
+        double aimLeadTime;
 
         // per frame simulation update
-        void update (const float currentTime,
-                     const float elapsedTime,
+        void update (const double currentTime,
+                     const double elapsedTime,
                      const bool simulationPaused);
-        void update (const float currentTime, const float elapsedTime)
+        void update (const double currentTime, const double elapsedTime)
         {update (currentTime, elapsedTime, false);};
 
         // helper function for "drag behind" mode
-        Vec3 constDistHelper (const float elapsedTime);
+        Vec3 constDistHelper (const double elapsedTime);
 
         // Smoothly move camera ...
         void smoothCameraMove (const Vec3& newPosition,
                                const Vec3& newTarget,
                                const Vec3& newUp,
-                               const float elapsedTime);
+                               const double elapsedTime);
 
         void doNotSmoothNextMove (void) {smoothNextMove = false;};
 
         bool smoothNextMove;
-        float smoothMoveSpeed;
+        double smoothMoveSpeed;
 
         // adjust the offset vector of the current camera mode based on a
         // "mouse adjustment vector" from OpenSteerDemo (xxx experiment 10-17-02)
@@ -164,11 +164,11 @@ namespace OpenSteer {
         Vec3 fixedUp;
 
         // "constant distance from vehicle" camera mode parameters
-        float fixedDistDistance;             // desired distance from it
-        float fixedDistVOffset;              // fixed vertical offset from it
+        double fixedDistDistance;             // desired distance from it
+        double fixedDistVOffset;              // fixed vertical offset from it
 
         // "look straight down at vehicle" camera mode parameters
-        float lookdownDistance;             // fixed vertical offset from it
+        double lookdownDistance;             // fixed vertical offset from it
 
         // "fixed local offset" camera mode parameters
         Vec3 fixedLocalOffset;

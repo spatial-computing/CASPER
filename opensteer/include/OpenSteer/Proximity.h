@@ -68,7 +68,7 @@ namespace OpenSteer {
 
         // find all neighbors within the given sphere (as center and radius)
         virtual void findNeighbors (const Vec3& center,
-                                    const float radius,
+                                    const double radius,
                                     std::vector<ContentType>& results) = 0;
 
     };
@@ -154,17 +154,17 @@ namespace OpenSteer {
 
             // find all neighbors within the given sphere (as center and radius)
             void findNeighbors (const Vec3& center,
-                                const float radius,
+                                const double radius,
                                 std::vector<ContentType>& results)
             {
                 // loop over all tokens
-                const float r2 = radius * radius;
+                const double r2 = radius * radius;
                 for (tokenIterator i = bfpd->group.begin();
                      i != bfpd->group.end();
                      i++)
                 {
                     const Vec3 offset = center - (**i).position;
-                    const float d2 = offset.lengthSquared();
+                    const double d2 = offset.lengthSquared();
 
                     // push onto result vector when within given radius
                     if (d2 < r2) results.push_back ((**i).object);
@@ -212,7 +212,7 @@ namespace OpenSteer {
                              const Vec3& dimensions,
                              const Vec3& divisions)
         {
-            const Vec3 halfsize (dimensions * 0.5f);
+            const Vec3 halfsize (dimensions * 0.5);
             const Vec3 origin (center - halfsize);
 
             lq = lqCreateDatabase (origin.x, origin.y, origin.z, 
@@ -255,7 +255,7 @@ namespace OpenSteer {
 
             // find all neighbors within the given sphere (as center and radius)
             void findNeighbors (const Vec3& center,
-                                const float radius,
+                                const double radius,
                                 std::vector<ContentType>& results)
             {
                 lqMapOverAllObjectsInLocality (lq, 
@@ -270,7 +270,7 @@ namespace OpenSteer {
             // clientQueryState
             // (parameter names commented out to prevent compiler warning from "-W")
             static void perNeighborCallBackFunction  (void* clientObject,
-                                                      float /*distanceSquared*/,
+                                                      double /*distanceSquared*/,
                                                       void* clientQueryState)
             {
                 typedef std::vector<ContentType> ctv;
@@ -300,7 +300,7 @@ namespace OpenSteer {
         
         // (parameter names commented out to prevent compiler warning from "-W")
         static void counterCallBackFunction  (void* /*clientObject*/,
-                                              float /*distanceSquared*/,
+                                              double /*distanceSquared*/,
                                               void* clientQueryState)
         {
             int& counter = *(int*)clientQueryState;

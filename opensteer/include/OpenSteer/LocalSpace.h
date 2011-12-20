@@ -155,10 +155,10 @@ namespace OpenSteer {
         Vec3 setUp       (Vec3 u) {return _up = u;};
         Vec3 setForward  (Vec3 f) {return _forward = f;};
         Vec3 setPosition (Vec3 p) {return _position = p;};
-        Vec3 setSide     (float x, float y, float z){return _side.set    (x,y,z);};
-        Vec3 setUp       (float x, float y, float z){return _up.set      (x,y,z);};
-        Vec3 setForward  (float x, float y, float z){return _forward.set (x,y,z);};
-        Vec3 setPosition (float x, float y, float z){return _position.set(x,y,z);};
+        Vec3 setSide     (double x, double y, double z){return _side.set    (x,y,z);};
+        Vec3 setUp       (double x, double y, double z){return _up.set      (x,y,z);};
+        Vec3 setForward  (double x, double y, double z){return _forward.set (x,y,z);};
+        Vec3 setPosition (double x, double y, double z){return _position.set(x,y,z);};
 
 
         // ------------------------------------------------------------------------

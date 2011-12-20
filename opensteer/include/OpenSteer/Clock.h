@@ -73,14 +73,14 @@ namespace OpenSteer {
         // update this clock, called exactly once per simulation step ("frame")
         void update (void);
 
-        // returns the number of seconds of real time (represented as a float)
+        // returns the number of seconds of real time (represented as a double)
         // since the clock was first updated.
-        float realTimeSinceFirstClockUpdate (void);
+        double realTimeSinceFirstClockUpdate (void);
 
         // force simulation time ahead, ignoring passage of real time.
         // Used for OpenSteerDemo's "single step forward" and animation mode
-        float advanceSimulationTimeOneFrame (void);
-        void advanceSimulationTime (const float seconds);
+        double advanceSimulationTimeOneFrame (void);
+        void advanceSimulationTime (const double seconds);
 
         // "wait" until next frame time
         void frameRateSync (void);
@@ -122,68 +122,68 @@ namespace OpenSteer {
         // kept (aka "non-wait time", the percentage of each frame time (time
         // step) that the CPU is busy).
     private:
-        float smoothedFPS;
-        float smoothedUsage;
+        double smoothedFPS;
+        double smoothedUsage;
         void updateSmoothedRegisters (void)
         {
-            const float rate = getSmoothingRate ();
+            const double rate = getSmoothingRate ();
             if (elapsedRealTime > 0)
                 blendIntoAccumulator (rate, 1 / elapsedRealTime, smoothedFPS);
             if (! getVariableFrameRateMode ())
                 blendIntoAccumulator (rate, getUsage (), smoothedUsage);
         }
     public:
-        float getSmoothedFPS (void) const {return smoothedFPS;}
-        float getSmoothedUsage (void) const {return smoothedUsage;}
-        float getSmoothingRate (void) const
+        double getSmoothedFPS (void) const {return smoothedFPS;}
+        double getSmoothedUsage (void) const {return smoothedUsage;}
+        double getSmoothingRate (void) const
         {
-            if (smoothedFPS == 0) return 1; else return elapsedRealTime * 1.5f;
+            if (smoothedFPS == 0) return 1; else return elapsedRealTime * 1.5;
         }
-        float getUsage (void)
+        double getUsage (void)
         {
             // run time per frame over target frame time (as a percentage)
-            return ((100 * elapsedNonWaitRealTime) / (1.0f / fixedFrameRate));
+            return ((100 * elapsedNonWaitRealTime) / (1.0 / fixedFrameRate));
         }
 
 
         // clock state member variables and public accessors for them
     private:
         // real "wall clock" time since launch
-        float totalRealTime;
+        double totalRealTime;
 
         // total time simulation has run
-        float totalSimulationTime;
+        double totalSimulationTime;
 
         // total time spent paused
-        float totalPausedTime;
+        double totalPausedTime;
 
         // sum of (non-realtime driven) advances to simulation time
-        float totalAdvanceTime;
+        double totalAdvanceTime;
 
         // interval since last simulation time
         // (xxx does this need to be stored in the instance? xxx)
-        float elapsedSimulationTime;
+        double elapsedSimulationTime;
 
         // interval since last clock update time 
         // (xxx does this need to be stored in the instance? xxx)
-        float elapsedRealTime;
+        double elapsedRealTime;
 
         // interval since last clock update,
         // exclusive of time spent waiting for frame boundary when targetFPS>0
-        float elapsedNonWaitRealTime;
+        double elapsedNonWaitRealTime;
     public:
-        float getTotalRealTime (void) {return totalRealTime;}
-        float getTotalSimulationTime (void) {return totalSimulationTime;}
-        float getTotalPausedTime (void) {return totalPausedTime;}
-        float getTotalAdvanceTime (void) {return totalAdvanceTime;}
-        float getElapsedSimulationTime (void) {return elapsedSimulationTime;}
-        float getElapsedRealTime (void) {return elapsedRealTime;}
-        float getElapsedNonWaitRealTime (void) {return elapsedNonWaitRealTime;}
+        double getTotalRealTime (void) {return totalRealTime;}
+        double getTotalSimulationTime (void) {return totalSimulationTime;}
+        double getTotalPausedTime (void) {return totalPausedTime;}
+        double getTotalAdvanceTime (void) {return totalAdvanceTime;}
+        double getElapsedSimulationTime (void) {return elapsedSimulationTime;}
+        double getElapsedRealTime (void) {return elapsedRealTime;}
+        double getElapsedNonWaitRealTime (void) {return elapsedNonWaitRealTime;}
 
 
     private:
         // "manually" advance clock by this amount on next update
-        float newAdvanceTime;
+        double newAdvanceTime;
 
         // "Calendar time" when this clock was first updated
     #ifdef _WIN32

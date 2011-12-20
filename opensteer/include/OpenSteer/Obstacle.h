@@ -75,7 +75,7 @@ namespace OpenSteer {
 
         // XXX 4-23-03: Temporary work around (see comment above)
         virtual Vec3 steerToAvoid (const AbstractVehicle& v,
-                                   const float minTimeToCollision) const = 0;
+                                   const double minTimeToCollision) const = 0;
     };
 
 
@@ -92,11 +92,11 @@ namespace OpenSteer {
     class SphericalObstacle : public Obstacle
     {
     public:
-        float radius;
+        double radius;
         Vec3 center;
 
         // constructors
-        SphericalObstacle (float r, Vec3 c) : radius(r), center (c) {}
+        SphericalObstacle (double r, Vec3 c) : radius(r), center (c) {}
         SphericalObstacle (void) : radius(1), center (Vec3::zero) {}
 
         seenFromState seenFrom (void) const {return _seenFrom;}
@@ -118,20 +118,20 @@ namespace OpenSteer {
         // xxx couldn't this be made more compact using localizePosition?
 
         Vec3 steerToAvoid (const AbstractVehicle& v,
-                           const float minTimeToCollision) const
+                           const double minTimeToCollision) const
         {
             // minimum distance to obstacle before avoidance is required
-            const float minDistanceToCollision = minTimeToCollision * v.speed();
-            const float minDistanceToCenter = minDistanceToCollision + radius;
+            const double minDistanceToCollision = minTimeToCollision * v.speed();
+            const double minDistanceToCenter = minDistanceToCollision + radius;
 
             // contact distance: sum of radii of obstacle and vehicle
-            const float totalRadius = radius + v.radius ();
+            const double totalRadius = radius + v.radius ();
 
             // obstacle center relative to vehicle position
             const Vec3 localOffset = center - v.position ();
 
             // distance along vehicle's forward axis to obstacle's center
-            const float forwardComponent = localOffset.dot (v.forward ());
+            const double forwardComponent = localOffset.dot (v.forward ());
             const Vec3 forwardOffset = forwardComponent * v.forward ();
 
             // offset from forward axis to obstacle's center

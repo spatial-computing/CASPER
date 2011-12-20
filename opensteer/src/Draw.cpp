@@ -95,10 +95,10 @@ namespace {
     initGL (void)
     {
         // background = dark gray
-        glClearColor (0.3f, 0.3f, 0.3f, 0);
+        glClearColor (0.3, 0.3, 0.3, 0);
 
         // enable depth buffer clears
-        glClearDepth (1.0f);
+        glClearDepth (1.0);
 
         // select smooth shading
         glShadeModel (GL_SMOOTH);
@@ -229,12 +229,12 @@ namespace {
         if (gMouseAdjustingCameraAngle || gMouseAdjustingCameraRadius)
         {
             // speed factors to map from mouse movement in pixels to 3d motion
-            const float dSpeed = 0.005f;
-            const float rSpeed = 0.01f;
+            const double dSpeed = 0.005;
+            const double rSpeed = 0.01;
 
             // XY distance (in pixels) that mouse moved since last update
-            const float dx = x - gMouseAdjustingCameraLastX;
-            const float dy = y - gMouseAdjustingCameraLastY;
+            const double dx = x - gMouseAdjustingCameraLastX;
+            const double dy = y - gMouseAdjustingCameraLastY;
             gMouseAdjustingCameraLastX = x;
             gMouseAdjustingCameraLastY = y;
 
@@ -290,7 +290,7 @@ namespace {
     void 
     drawDisplayPlugInName (void)
     {
-        const float h = glutGet (GLUT_WINDOW_HEIGHT);
+        const double h = glutGet (GLUT_WINDOW_HEIGHT);
         const OpenSteer::Vec3 screenLocation (10, h-20, 0);
         draw2dTextAt2dLocation (*OpenSteer::OpenSteerDemo::nameOfSelectedPlugIn (),
                                 screenLocation,
@@ -318,10 +318,10 @@ namespace {
 
 
     void 
-    writePhaseTimerReportToStream (float phaseTimer,
+    writePhaseTimerReportToStream (double phaseTimer,
                                               std::ostringstream& stream)
     {
-        // write the timer value in seconds in floating point
+        // write the timer value in seconds in doubleing point
         stream << std::setprecision (5) << std::setiosflags (std::ios::fixed);
         stream << phaseTimer;
 
@@ -340,7 +340,7 @@ namespace {
         {
             // quantify time as a percentage of frame time
             const int fps = OpenSteer::OpenSteerDemo::clock.getFixedFrameRate ();
-            stream << ((100 * phaseTimer) / (1.0f / fps));
+            stream << ((100 * phaseTimer) / (1.0 / fps));
             stream << "% of 1/";
             stream << fps;
             stream << "sec)\n";
@@ -356,9 +356,9 @@ namespace {
         // draw text showing (smoothed, rounded) "frames per second" rate
         // (and later a bunch of related stuff was dumped here, a reorg would be nice)
         
-        float gSmoothedTimerDraw = 0;
-        float gSmoothedTimerUpdate = 0;
-        float gSmoothedTimerOverhead = 0;
+        double gSmoothedTimerDraw = 0;
+        double gSmoothedTimerUpdate = 0;
+        double gSmoothedTimerOverhead = 0;
 
 
 
@@ -380,7 +380,7 @@ namespace {
 
             // target and recent average frame rates
             const int targetFPS = OpenSteer::OpenSteerDemo::clock.getFixedFrameRate ();
-            const float smoothedFPS = OpenSteer::OpenSteerDemo::clock.getSmoothedFPS ();
+            const double smoothedFPS = OpenSteer::OpenSteerDemo::clock.getSmoothedFPS ();
 
             // describe clock mode and frame rate statistics
             screenLocation.y += lh;
@@ -391,7 +391,7 @@ namespace {
                 fooStr << "animation mode (";
                 fooStr << targetFPS << " fps,";
                 fooStr << " display "<< OpenSteer::round(smoothedFPS) << " fps, ";
-                const float ratio = smoothedFPS / targetFPS;
+                const double ratio = smoothedFPS / targetFPS;
                 fooStr << (int) (100 * ratio) << "% of nominal speed)";
             }
             else
@@ -425,7 +425,7 @@ namespace {
 
                     // display message in lower left corner of window
                     // (draw in red if the instantaneous usage is 100% or more)
-                    const float usage = OpenSteer::OpenSteerDemo::clock.getUsage ();
+                    const double usage = OpenSteer::OpenSteerDemo::clock.getUsage ();
                     const OpenSteer::Vec3 color = (usage >= 100) ? OpenSteer::gRed : OpenSteer::gWhite;
                     draw2dTextAt2dLocation (xxxStr, sp, color);
                 }
@@ -435,10 +435,10 @@ namespace {
 
 
             // get smoothed phase timer information
-            const float ptd = OpenSteer::OpenSteerDemo::phaseTimerDraw();
-            const float ptu = OpenSteer::OpenSteerDemo::phaseTimerUpdate();
-            const float pto = OpenSteer::OpenSteerDemo::phaseTimerOverhead();
-            const float smoothRate = OpenSteer::OpenSteerDemo::clock.getSmoothingRate ();
+            const double ptd = OpenSteer::OpenSteerDemo::phaseTimerDraw();
+            const double ptu = OpenSteer::OpenSteerDemo::phaseTimerUpdate();
+            const double pto = OpenSteer::OpenSteerDemo::phaseTimerOverhead();
+            const double smoothRate = OpenSteer::OpenSteerDemo::clock.getSmoothingRate ();
             OpenSteer::blendIntoAccumulator (smoothRate, ptd, gSmoothedTimerDraw);
             OpenSteer::blendIntoAccumulator (smoothRate, ptu, gSmoothedTimerUpdate);
             OpenSteer::blendIntoAccumulator (smoothRate, pto, gSmoothedTimerOverhead);
@@ -721,7 +721,7 @@ OpenSteer::initializeGraphics (int argc, char **argv)
     // (center window on screen with size equal to "ws" times screen size)
     const int sw = glutGet (GLUT_SCREEN_WIDTH);
     const int sh = glutGet (GLUT_SCREEN_HEIGHT);
-    const float ws = 0.8f; // window_size / screen_size
+    const double ws = 0.8; // window_size / screen_size
     const int ww = (int) (sw * ws);
     const int wh = (int) (sh * ws);
     glutInitWindowPosition ((int) (sw * (1-ws)/2), (int) (sh * (1-ws)/2));
@@ -848,7 +848,7 @@ void
 OpenSteer::drawLineAlpha (const Vec3& startPoint,
                           const Vec3& endPoint,
                           const Vec3& color,
-                          const float alpha)
+                          const double alpha)
 {
     warnIfInUpdatePhase ("drawLineAlpha");
     glColor4f (color.x, color.y, color.z, alpha);
@@ -944,7 +944,7 @@ void
 OpenSteer::drawXZWideLine (const Vec3& startPoint,
                            const Vec3& endPoint,
                            const Vec3& color,
-                           float width)
+                           double width)
 {
     warnIfInUpdatePhase ("drawXZWideLine");
 
@@ -994,7 +994,7 @@ namespace {
 
 
 void 
-OpenSteer::drawCircleOrDisk (const float radius,
+OpenSteer::drawCircleOrDisk (const double radius,
                              const Vec3& axis,
                              const Vec3& center,
                              const Vec3& color,
@@ -1020,7 +1020,7 @@ OpenSteer::drawCircleOrDisk (const float radius,
 
     // point to be rotated about the (local) Y axis, angular step size
     Vec3 pointOnCircle (radius, 0, 0);
-    const float step = (2 * OPENSTEER_M_PI) / segments;
+    const double step = (2 * OPENSTEER_M_PI) / segments;
 
     // set drawing color
     glColor3f (color.x, color.y, color.z);
@@ -1032,7 +1032,7 @@ OpenSteer::drawCircleOrDisk (const float radius,
     if (filled) iglVertexVec3 (in3d ? ls.position() : center);
 
     // rotate p around the circle in "segments" steps
-    float sin=0, cos=0;
+    double sin=0, cos=0;
     const int vertexCount = filled ? segments+1 : segments;
     for (int i = 0; i < vertexCount; i++)
     {
@@ -1056,7 +1056,7 @@ OpenSteer::drawCircleOrDisk (const float radius,
 
 
 void 
-OpenSteer::draw3dCircleOrDisk (const float radius,
+OpenSteer::draw3dCircleOrDisk (const double radius,
                                const Vec3& center,
                                const Vec3& axis,
                                const Vec3& color,
@@ -1073,7 +1073,7 @@ OpenSteer::draw3dCircleOrDisk (const float radius,
 
 
 void 
-OpenSteer::drawXZCircleOrDisk (const float radius,
+OpenSteer::drawXZCircleOrDisk (const double radius,
                                const Vec3& center,
                                const Vec3& color,
                                const int segments,
@@ -1097,7 +1097,7 @@ OpenSteer::drawXZCircleOrDisk (const float radius,
 void 
 OpenSteer::drawXZArc (const Vec3& start,
                       const Vec3& center,
-                      const float arcLength,
+                      const double arcLength,
                       const int segments,
                       const Vec3& color)
 {
@@ -1108,11 +1108,11 @@ OpenSteer::drawXZArc (const Vec3& start,
     Vec3 spoke = start - center;
 
     // determine the angular step per segment
-    const float radius = spoke.length ();
-    const float twoPi = 2 * OPENSTEER_M_PI;
-    const float circumference = twoPi * radius;
-    const float arcAngle = twoPi * arcLength / circumference;
-    const float step = arcAngle / segments;
+    const double radius = spoke.length ();
+    const double twoPi = 2 * OPENSTEER_M_PI;
+    const double circumference = twoPi * radius;
+    const double arcAngle = twoPi * arcLength / circumference;
+    const double step = arcAngle / segments;
 
     // set drawing color
     glColor3f (color.x, color.y, color.z);
@@ -1121,7 +1121,7 @@ OpenSteer::drawXZArc (const Vec3& start,
     glBegin (GL_LINE_STRIP);
 
     // draw each segment along arc
-    float sin=0, cos=0;
+    double sin=0, cos=0;
     for (int i = 0; i < segments; i++)
     {
         // emit next point on arc
@@ -1145,15 +1145,15 @@ OpenSteer::drawBasic2dCircularVehicle (const AbstractVehicle& vehicle,
                                        const Vec3& color)
 {
     // "aspect ratio" of body (as seen from above)
-    const float x = 0.5f;
-    const float y = sqrtXXX (1 - (x * x));
+    const double x = 0.5;
+    const double y = sqrtXXX (1 - (x * x));
 
     // radius and position of vehicle
-    const float r = vehicle.radius();
+    const double r = vehicle.radius();
     const Vec3& p = vehicle.position();
 
     // shape of triangular body
-    const Vec3 u = r * 0.05f * Vec3 (0, 1, 0); // slightly up
+    const Vec3 u = r * 0.05 * Vec3 (0, 1, 0); // slightly up
     const Vec3 f = r * vehicle.forward();
     const Vec3 s = r * vehicle.side() * x;
     const Vec3 b = r * vehicle.forward() * -y;
@@ -1180,17 +1180,17 @@ OpenSteer::drawBasic3dSphericalVehicle (const AbstractVehicle& vehicle,
                                         const Vec3& color)
 {
     // "aspect ratio" of body (as seen from above)
-    const float x = 0.5f;
-    const float y = sqrtXXX (1 - (x * x));
+    const double x = 0.5;
+    const double y = sqrtXXX (1 - (x * x));
 
     // radius and position of vehicle
-    const float r = vehicle.radius();
+    const double r = vehicle.radius();
     const Vec3& p = vehicle.position();
 
     // body shape parameters
     const Vec3 f = r * vehicle.forward();
     const Vec3 s = r * vehicle.side() * x;
-    const Vec3 u = r * vehicle.up() * x * 0.5f;
+    const Vec3 u = r * vehicle.up() * x * 0.5;
     const Vec3 b = r * vehicle.forward() * -y;
 
     // vertex positions
@@ -1201,8 +1201,8 @@ OpenSteer::drawBasic3dSphericalVehicle (const AbstractVehicle& vehicle,
     const Vec3 bottom = p + b - u;
 
     // colors
-    const float j = +0.05f;
-    const float k = -0.05f;
+    const double j = +0.05;
+    const double k = -0.05;
     const Vec3 color1 = color + Vec3 (j, j, k);
     const Vec3 color2 = color + Vec3 (j, k, j);
     const Vec3 color3 = color + Vec3 (k, j, j);
@@ -1231,24 +1231,24 @@ OpenSteer::drawBasic3dSphericalVehicle (const AbstractVehicle& vehicle,
 
 
 void 
-OpenSteer::drawXZCheckerboardGrid (const float size,
+OpenSteer::drawXZCheckerboardGrid (const double size,
                                    const int subsquares,
                                    const Vec3& center,
                                    const Vec3& color1,
                                    const Vec3& color2)
 {
-    const float half = size/2;
-    const float spacing = size / subsquares;
+    const double half = size/2;
+    const double spacing = size / subsquares;
 
     beginDoubleSidedDrawing ();
     {
         bool flag1 = false;
-        float p = -half;
+        double p = -half;
         Vec3 corner;
         for (int i = 0; i < subsquares; i++)
         {
             bool flag2 = flag1;
-            float q = -half;
+            double q = -half;
             for (int j = 0; j < subsquares; j++)
             {
                 corner.set (p, 0, q);
@@ -1279,22 +1279,22 @@ OpenSteer::drawXZCheckerboardGrid (const float size,
 
 
 void 
-OpenSteer::drawXZLineGrid (const float size,
+OpenSteer::drawXZLineGrid (const double size,
                            const int subsquares,
                            const Vec3& center,
                            const Vec3& color)
 {
     warnIfInUpdatePhase ("drawXZLineGrid");
 
-    const float half = size/2;
-    const float spacing = size / subsquares;
+    const double half = size/2;
+    const double spacing = size / subsquares;
 
     // set grid drawing color
     glColor3f (color.x, color.y, color.z);
 
     // draw a square XZ grid with the given size and line count
     glBegin (GL_LINES);
-    float q = -half;
+    double q = -half;
     for (int i = 0; i < (subsquares + 1); i++)
     {
         const Vec3 x1 (q, 0, +half); // along X parallel to Z
@@ -1348,7 +1348,7 @@ OpenSteer::drawBoxOutline  (const AbstractLocalSpace& localSpace,
                             const Vec3& size,
                             const Vec3& color)
 {
-    const Vec3 s = size / 2.0f;  // half of main diagonal
+    const Vec3 s = size / 2.0;  // half of main diagonal
 
     const Vec3 a (+s.x, +s.y, +s.z);
     const Vec3 b (+s.x, -s.y, +s.z);
@@ -1439,8 +1439,8 @@ OpenSteer::drawReticle (void)
 {
     const int a = 10;
     const int b = 30;
-    const float w = glutGet (GLUT_WINDOW_WIDTH)  * 0.5f;
-    const float h = glutGet (GLUT_WINDOW_HEIGHT) * 0.5f;
+    const double w = glutGet (GLUT_WINDOW_WIDTH)  * 0.5;
+    const double h = glutGet (GLUT_WINDOW_HEIGHT) * 0.5;
 
     draw2dLine (Vec3 (w+a, h,   0), Vec3 (w+b, h,   0), gWhite);
     draw2dLine (Vec3 (w,   h+a, 0), Vec3 (w,   h+b, 0), gWhite);
@@ -1463,8 +1463,8 @@ OpenSteer::drawReticle (void)
 //     {
 //         const Vec3 p = gSelectedVehicle->position;
 //         const Vec3 f = gSelectedVehicle->forward;
-//         const Vec3 s = gSelectedVehicle->side * 0.25f;
-//         for (float i = 0; i <= 5; i++)
+//         const Vec3 s = gSelectedVehicle->side * 0.25;
+//         for (double i = 0; i <= 5; i++)
 //         {
 //             drawLine (p + (f * +i) + s, p + (f * +i) - s, gGray60);
 //             drawLine (p + (f * -i) + s, p + (f * -i) - s, gGray60);
@@ -1525,14 +1525,14 @@ OpenSteer::checkForDrawError (const char * locationDescription)
 // accessors for GLUT's window dimensions
 
 
-float 
+double 
 OpenSteer::drawGetWindowHeight (void) 
 {
     return glutGet (GLUT_WINDOW_HEIGHT);
 }
 
 
-float 
+double 
 OpenSteer::drawGetWindowWidth  (void) 
 {
     return glutGet (GLUT_WINDOW_WIDTH);
@@ -1554,7 +1554,7 @@ OpenSteer::directionFromCameraToScreenPosition (int x, int y)
     glGetDoublev (GL_MODELVIEW_MATRIX, mMat);
     glGetDoublev (GL_PROJECTION_MATRIX, pMat);
     GLdouble un0x, un0y, un0z, un1x, un1y, un1z;
-    const float h = glutGet (GLUT_WINDOW_HEIGHT);
+    const double h = glutGet (GLUT_WINDOW_HEIGHT);
 
     // Unproject mouse position at near and far clipping planes
     gluUnProject (x, h-y, 0, mMat, pMat, vp, &un0x, &un0y, &un0z);
@@ -1666,7 +1666,7 @@ namespace {
     {
     public:
 
-        static void addToBuffer (const float radius,
+        static void addToBuffer (const double radius,
                                  const OpenSteer::Vec3& axis,
                                  const OpenSteer::Vec3& center,
                                  const OpenSteer::Vec3& color,
@@ -1707,7 +1707,7 @@ namespace {
 
     private:
 
-        float radius;
+        double radius;
         OpenSteer::Vec3 axis;
         OpenSteer::Vec3 center;
         OpenSteer::Vec3 color;
@@ -1729,7 +1729,7 @@ namespace {
 
 
 void 
-OpenSteer::deferredDrawCircleOrDisk (const float radius,
+OpenSteer::deferredDrawCircleOrDisk (const double radius,
                                      const Vec3& axis,
                                      const Vec3& center,
                                      const Vec3& color,
@@ -1813,9 +1813,9 @@ OpenSteer::drawAllDeferredCirclesOrDisks (void)
 //     glLoadIdentity ();
 
 //     // set up orthogonal projection onto window's screen space
-//     const float w = glutGet (GLUT_WINDOW_WIDTH);
-//     const float h = glutGet (GLUT_WINDOW_HEIGHT);
-//     glOrtho (0.0f, w, 0.0f, h, -1.0f, 1.0f);
+//     const double w = glutGet (GLUT_WINDOW_WIDTH);
+//     const double h = glutGet (GLUT_WINDOW_HEIGHT);
+//     glOrtho (0.0, w, 0.0, h, -1.0, 1.0);
 
 //     // clear model transform
 //     glMatrixMode (GL_MODELVIEW);
@@ -1858,9 +1858,9 @@ OpenSteer::drawAllDeferredCirclesOrDisks (void)
 //     glLoadIdentity ();
 
 //     // set up orthogonal projection onto window's screen space
-//     const float w = glutGet (GLUT_WINDOW_WIDTH);
-//     const float h = glutGet (GLUT_WINDOW_HEIGHT);
-//     glOrtho (0.0f, w, 0.0f, h, -1.0f, 1.0f);
+//     const double w = glutGet (GLUT_WINDOW_WIDTH);
+//     const double h = glutGet (GLUT_WINDOW_HEIGHT);
+//     glOrtho (0.0, w, 0.0, h, -1.0, 1.0);
 
 //     // clear model transform
 //     glMatrixMode (GL_MODELVIEW);
@@ -1926,9 +1926,9 @@ OpenSteer::drawAllDeferredCirclesOrDisks (void)
 // //     glLoadIdentity ();
 
 // //     // set up orthogonal projection onto window's screen space
-// //     const float w = glutGet (GLUT_WINDOW_WIDTH);
-// //     const float h = glutGet (GLUT_WINDOW_HEIGHT);
-// //     glOrtho (0.0f, w, 0.0f, h, -1.0f, 1.0f);
+// //     const double w = glutGet (GLUT_WINDOW_WIDTH);
+// //     const double h = glutGet (GLUT_WINDOW_HEIGHT);
+// //     glOrtho (0.0, w, 0.0, h, -1.0, 1.0);
 
 // //     // clear model transform
 // //     glMatrixMode (GL_MODELVIEW);
@@ -1974,9 +1974,9 @@ OpenSteer::drawAllDeferredCirclesOrDisks (void)
 //     glLoadIdentity ();
 
 //     // set up orthogonal projection onto window's screen space
-//     const float w = glutGet (GLUT_WINDOW_WIDTH);
-//     const float h = glutGet (GLUT_WINDOW_HEIGHT);
-//     glOrtho (0.0f, w, 0.0f, h, -1.0f, 1.0f);
+//     const double w = glutGet (GLUT_WINDOW_WIDTH);
+//     const double h = glutGet (GLUT_WINDOW_HEIGHT);
+//     glOrtho (0.0, w, 0.0, h, -1.0, 1.0);
 
 //     // clear model transform
 //     glMatrixMode (GL_MODELVIEW);
@@ -2068,9 +2068,9 @@ namespace {
         glLoadIdentity ();
 
         // set up orthogonal projection onto window's screen space
-        const float w = glutGet (GLUT_WINDOW_WIDTH);
-        const float h = glutGet (GLUT_WINDOW_HEIGHT);
-        glOrtho (0.0f, w, 0.0f, h, -1.0f, 1.0f);
+        const double w = glutGet (GLUT_WINDOW_WIDTH);
+        const double h = glutGet (GLUT_WINDOW_HEIGHT);
+        glOrtho (0.0, w, 0.0, h, -1.0, 1.0);
 
         // clear model transform
         glMatrixMode (GL_MODELVIEW);

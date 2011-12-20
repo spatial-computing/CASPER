@@ -49,14 +49,14 @@ class FooPlugIn : public PlugIn
     // required methods:
     const char* name (void) {return "Foo";}
     void open (void) {...}
-    void update (const float currentTime, const float elapsedTime) {...}
-    void redraw (const float currentTime, const float elapsedTime) {...}
+    void update (const double currentTime, const double elapsedTime) {...}
+    void redraw (const double currentTime, const double elapsedTime) {...}
     void close (void) {...}
     const AVGroup& allVehicles (void) {...}
 
     // optional methods (see comments in AbstractPlugIn for explanation):
     void reset (void) {...} // default is to reset by doing close-then-open
-    float selectionOrderSortKey (void) {return 1234;}
+    double selectionOrderSortKey (void) {return 1234;}
     bool requestInitialSelection (void) {return true;}
     void handleFunctionKeys (int keyNumber) {...} // fkeys reserved for PlugIns
     void printMiniHelpForFunctionKeys (void) {...} // if fkeys are used
@@ -86,8 +86,8 @@ namespace OpenSteer {
     public:
         // generic PlugIn actions: open, update, redraw, close and reset
         virtual void open (void) = 0;
-        virtual void update (const float currentTime, const float elapsedTime) = 0;
-        virtual void redraw (const float currentTime, const float elapsedTime) = 0;
+        virtual void update (const double currentTime, const double elapsedTime) = 0;
+        virtual void redraw (const double currentTime, const double elapsedTime) = 0;
         virtual void close (void) = 0;
         virtual void reset (void) = 0;
 
@@ -96,7 +96,7 @@ namespace OpenSteer {
 
         // numeric sort key used to establish user-visible PlugIn ordering
         // ("built ins" have keys greater than 0 and less than 1)
-        virtual float selectionOrderSortKey (void) = 0;
+        virtual double selectionOrderSortKey (void) = 0;
 
         // allows a PlugIn to nominate itself as OpenSteerDemo's initially selected
         // (default) PlugIn, which is otherwise the first in "selection order"
@@ -120,8 +120,8 @@ namespace OpenSteer {
         // prototypes for function pointers used with PlugIns
         typedef void (* plugInCallBackFunction) (PlugIn& clientObject);
         typedef void (* voidCallBackFunction) (void);
-        typedef void (* timestepCallBackFunction) (const float currentTime,
-                                                   const float elapsedTime);
+        typedef void (* timestepCallBackFunction) (const double currentTime,
+                                                   const double elapsedTime);
 
         // constructor
         PlugIn (void);
@@ -133,7 +133,7 @@ namespace OpenSteer {
         void reset (void) {close (); open ();}
 
         // default sort key (after the "built ins")
-        float selectionOrderSortKey (void) {return 1.0f;}
+        double selectionOrderSortKey (void) {return 1.0;}
 
         // default is to NOT request to be initially selected
         bool requestInitialSelection (void) {return false;}

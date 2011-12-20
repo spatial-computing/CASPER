@@ -52,7 +52,7 @@
 
 
 #ifndef OPENSTEER_M_PI
-#define OPENSTEER_M_PI 3.14159265358979323846f
+#define OPENSTEER_M_PI 3.14159265358979323846
 #endif
 
 
@@ -62,7 +62,7 @@ namespace OpenSteer {
     // Generic interpolation
 
 
-    template<class T> inline T interpolate (float alpha, const T& x0, const T& x1)
+    template<class T> inline T interpolate (double alpha, const T& x0, const T& x1)
     {
         return x0 + ((x1 - x0) * alpha);
     }
@@ -72,17 +72,17 @@ namespace OpenSteer {
     // Random number utilities
 
 
-    // Returns a float randomly distributed between 0 and 1
+    // Returns a double randomly distributed between 0 and 1
 
-    inline float frandom01 (void)
+    inline double frandom01 (void)
     {
-        return (((float) rand ()) / ((float) RAND_MAX));
+        return (((double) rand ()) / ((double) RAND_MAX));
     }
 
 
-    // Returns a float randomly distributed between lowerBound and upperBound
+    // Returns a double randomly distributed between lowerBound and upperBound
 
-    inline float frandom2 (float lowerBound, float upperBound)
+    inline double frandom2 (double lowerBound, double upperBound)
     {
         return lowerBound + (frandom01 () * (upperBound - lowerBound));
     }
@@ -94,7 +94,7 @@ namespace OpenSteer {
     // the nearer bound.
 
 
-    inline float clip (const float x, const float min, const float max)
+    inline double clip (const double x, const double min, const double max)
     {
         if (x < min) return min;
         if (x > max) return max;
@@ -108,12 +108,12 @@ namespace OpenSteer {
     // Inspired by (dyna:remap-interval y y0 y1 z0 z1)
 
 
-    inline float remapInterval (float x,
-                                float in0, float in1,
-                                float out0, float out1)
+    inline double remapInterval (double x,
+                                double in0, double in1,
+                                double out0, double out1)
     {
         // uninterpolate: what is x relative to the interval in0:in1?
-        float relative = (x - in0) / (in1 - in0);
+        double relative = (x - in0) / (in1 - in0);
 
         // now interpolate between output interval based on relative x
         return interpolate (relative, out0, out1);
@@ -124,12 +124,12 @@ namespace OpenSteer {
     // out0 and out1
 
 
-    inline float remapIntervalClip (float x,
-                                    float in0, float in1,
-                                    float out0, float out1)
+    inline double remapIntervalClip (double x,
+                                    double in0, double in1,
+                                    double out0, double out1)
     {
         // uninterpolate: what is x relative to the interval in0:in1?
-        float relative = (x - in0) / (in1 - in0);
+        double relative = (x - in0) / (in1 - in0);
 
         // now interpolate between output interval based on relative x
         return interpolate (clip (relative, 0, 1), out0, out1);
@@ -143,7 +143,7 @@ namespace OpenSteer {
     //     returns +1 when above the upper bound
 
 
-    inline int intervalComparison (float x, float lowerBound, float upperBound)
+    inline int intervalComparison (double x, double lowerBound, double upperBound)
     {
         if (x < lowerBound) return -1;
         if (x > upperBound) return +1;
@@ -155,12 +155,12 @@ namespace OpenSteer {
     // ----------------------------------------------------------------------------
 
 
-    inline float scalarRandomWalk (const float initial, 
-                                   const float walkspeed,
-                                   const float min,
-                                   const float max)
+    inline double scalarRandomWalk (const double initial, 
+                                   const double walkspeed,
+                                   const double min,
+                                   const double max)
     {
-        const float next = initial + (((frandom01() * 2) - 1) * walkspeed);
+        const double next = initial + (((frandom01() * 2) - 1) * walkspeed);
         if (next < min) return min;
         if (next > max) return max;
         return next;
@@ -170,7 +170,7 @@ namespace OpenSteer {
     // ----------------------------------------------------------------------------
 
 
-    inline float square (float x)
+    inline double square (double x)
     {
         return x * x;
     }
@@ -187,7 +187,7 @@ namespace OpenSteer {
     // ----------------------------------------------------------------------------
     // blends new values into an accumulator to produce a smoothed time series
     //
-    // Modifies its third argument, a reference to the float accumulator holding
+    // Modifies its third argument, a reference to the double accumulator holding
     // the "smoothed time series."
     //
     // The first argument (smoothRate) is typically made proportional to "dt" the
@@ -196,11 +196,11 @@ namespace OpenSteer {
     // smoothing.  Useful values are "near zero".
     //
     // Usage:
-    //         blendIntoAccumulator (dt * 0.4f, currentFPS, smoothedFPS);
+    //         blendIntoAccumulator (dt * 0.4, currentFPS, smoothedFPS);
 
 
     template<class T>
-    inline void blendIntoAccumulator (const float smoothRate,
+    inline void blendIntoAccumulator (const double smoothRate,
                                       const T& newValue,
                                       T& smoothedAccumulator)
     {
@@ -219,26 +219,26 @@ namespace OpenSteer {
     // (not currently used)
 
     /*
-      inline float distance1D (const float a, const float b)
+      inline double distance1D (const double a, const double b)
       {
-          const float d = a - b;
+          const double d = a - b;
           return (d > 0) ? d : -d;
       }
 
 
-      float adjustForAngleWraparound (float newAngle,
-                                      float oldAngle,
-                                      float fullCircle)
+      double adjustForAngleWraparound (double newAngle,
+                                      double oldAngle,
+                                      double fullCircle)
       {
           // adjust newAngle for angle wraparound: consider its current value (a)
           // as well as the angle 2pi larger (b) and 2pi smaller (c).  Select the
           // one closer (magnitude of difference) to the current value of oldAngle.
-          const float a = newAngle;
-          const float b = newAngle + fullCircle;
-          const float c = newAngle - fullCircle;
-          const float ad = distance1D (a, oldAngle);
-          const float bd = distance1D (b, oldAngle);
-          const float cd = distance1D (c, oldAngle);
+          const double a = newAngle;
+          const double b = newAngle + fullCircle;
+          const double c = newAngle - fullCircle;
+          const double ad = distance1D (a, oldAngle);
+          const double bd = distance1D (b, oldAngle);
+          const double cd = distance1D (c, oldAngle);
 
           if ((bd < ad) && (bd < cd)) return b;
           if ((cd < ad) && (cd < bd)) return c;
@@ -258,31 +258,31 @@ namespace OpenSteer {
 
     #ifdef _WIN32
 
-    inline float floorXXX (float x)          {return floor (x);}
-    inline float  sqrtXXX (float x)          {return sqrt (x);}
-    inline float   sinXXX (float x)          {return sin (x);}
-    inline float   cosXXX (float x)          {return cos (x);}
-    inline float   absXXX (float x)          {return abs (x);}
+    inline double floorXXX (double x)          {return floor (x);}
+    inline double  sqrtXXX (double x)          {return sqrt (x);}
+    inline double   sinXXX (double x)          {return sin (x);}
+    inline double   cosXXX (double x)          {return cos (x);}
+    inline double   absXXX (double x)          {return abs (x);}
     inline int     absXXX (int x)            {return abs (x);}
-    inline float   maxXXX (float x, float y) {if (x > y) return x; else return y;}
-    inline float   minXXX (float x, float y) {if (x < y) return x; else return y;}
+    inline double   maxXXX (double x, double y) {if (x > y) return x; else return y;}
+    inline double   minXXX (double x, double y) {if (x < y) return x; else return y;}
 
     #else
 
-    inline float floorXXX (float x)          {return std::floor (x);}
-    inline float  sqrtXXX (float x)          {return std::sqrt (x);}
-    inline float   sinXXX (float x)          {return std::sin (x);}
-    inline float   cosXXX (float x)          {return std::cos (x);}
-    inline float   absXXX (float x)          {return std::abs (x);}
+    inline double floorXXX (double x)          {return std::floor (x);}
+    inline double  sqrtXXX (double x)          {return std::sqrt (x);}
+    inline double   sinXXX (double x)          {return std::sin (x);}
+    inline double   cosXXX (double x)          {return std::cos (x);}
+    inline double   absXXX (double x)          {return std::abs (x);}
     inline int     absXXX (int x)            {return std::abs (x);}
-    inline float   maxXXX (float x, float y) {return std::max (x, y);}
-    inline float   minXXX (float x, float y) {return std::min (x, y);}
+    inline double   maxXXX (double x, double y) {return std::max (x, y);}
+    inline double   minXXX (double x, double y) {return std::min (x, y);}
 
     #endif
 
 
     // ----------------------------------------------------------------------------
-    // round (x)  "round off" x to the nearest integer (as a float value)
+    // round (x)  "round off" x to the nearest integer (as a double value)
     //
     // This is a Gnu-sanctioned(?) post-ANSI-Standard(?) extension (as in
     // http://www.opengroup.org/onlinepubs/007904975/basedefs/math.h.html)
@@ -292,17 +292,17 @@ namespace OpenSteer {
 
     #ifdef _WIN32
 
-    inline float round (float x)
+    inline double round (double x)
     {
       if (x < 0)
-          return -floorXXX (0.5f - x);
+          return -floorXXX (0.5 - x);
       else
-          return  floorXXX (0.5f + x);
+          return  floorXXX (0.5 + x);
     }
 
     #else 
     
-    inline float round( float x )
+    inline double round( double x )
     {
         return ::round( x );
     }

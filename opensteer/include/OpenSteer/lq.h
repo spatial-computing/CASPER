@@ -130,9 +130,9 @@ typedef struct lqClientProxy
     void* object;
 
     /* the object's location ("key point") used for spatial sorting */
-    float x;
-    float y;
-    float z;
+    double x;
+    double y;
+    double z;
 } lqClientProxy;
 
 
@@ -152,8 +152,8 @@ typedef struct lqClientProxy
    contents. */
 
 
-lqDB* lqCreateDatabase (float originx, float originy, float originz,
-			float sizex,   float sizey,   float sizez,
+lqDB* lqCreateDatabase (double originx, double originy, double originz,
+			double sizex,   double sizey,   double sizez,
 			int   divx,    int   divy,    int   divz);
 
 
@@ -181,7 +181,7 @@ void lqInitClientProxy (lqClientProxy* proxy, void* clientObject);
 
 void lqUpdateForNewLocation (lqDB* lq, 
 			     lqClientProxy* object, 
-			     float x, float y, float z);
+			     double x, double y, double z);
 
 
 /* ------------------------------------------------------------------ */
@@ -206,13 +206,13 @@ void lqUpdateForNewLocation (lqDB* lq,
 
 /* type for a pointer to a function used to map over client objects */
 typedef void (* lqCallBackFunction)  (void* clientObject,
-				      float distanceSquared,
+				      double distanceSquared,
 				      void* clientQueryState);
 
 
 void lqMapOverAllObjectsInLocality (lqDB* lq, 
-				    float x, float y, float z,
-				    float radius,
+				    double x, double y, double z,
+				    double radius,
 				    lqCallBackFunction func,
 				    void* clientQueryState);
 
@@ -234,8 +234,8 @@ void lqMapOverAllObjectsInLocality (lqDB* lq,
 
 
 void* lqFindNearestNeighborWithinRadius (lqDB* lq, 
-					 float x, float y, float z,
-					 float radius,
+					 double x, double y, double z,
+					 double radius,
 					 void* ignoreObject);
 
 
@@ -263,8 +263,8 @@ void lqRemoveFromBin (lqClientProxy* object);
 
 
 void lqInitDatabase (lqDB* lq,
-		     float originx, float originy, float originz,
-		     float sizex, float sizey, float sizez,
+		     double originx, double originy, double originz,
+		     double sizex, double sizey, double sizez,
 		     int divx, int divy, int divz);
 
 
@@ -274,7 +274,7 @@ void lqInitDatabase (lqDB* lq,
    to the bin contents list.  */
 
 
-lqClientProxy** lqBinForLocation (lqDB* lq, float x, float y, float z);
+lqClientProxy** lqBinForLocation (lqDB* lq, double x, double y, double z);
 
 
 /* ------------------------------------------------------------------ */

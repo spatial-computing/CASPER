@@ -140,7 +140,7 @@ OpenSteer::Clock::update (void)
     frameRateSync ();
 
     // save previous real time to measure elapsed time
-    const float previousRealTime = totalRealTime;
+    const double previousRealTime = totalRealTime;
 
     // real "wall clock" time since this application was launched
     totalRealTime = realTimeSinceFirstClockUpdate ();
@@ -152,13 +152,13 @@ OpenSteer::Clock::update (void)
     if (paused) totalPausedTime += elapsedRealTime;
 
     // save previous simulation time to measure elapsed time
-    const float previousSimulationTime = totalSimulationTime;
+    const double previousSimulationTime = totalSimulationTime;
 
     // update total simulation time
     if (getAnimationMode ())
     {
         // for "animation mode" use fixed frame time, ignore real time
-        const float frameDuration = 1.0f / getFixedFrameRate ();
+        const double frameDuration = 1.0 / getFixedFrameRate ();
         totalSimulationTime += paused ? newAdvanceTime : frameDuration;
         if (!paused) newAdvanceTime += frameDuration - elapsedRealTime;
     }
@@ -200,10 +200,10 @@ OpenSteer::Clock::frameRateSync (void)
     if ((! getAnimationMode ()) && (! getVariableFrameRateMode ()))
     {
         // find next (real time) frame start time
-        const float targetStepSize = 1.0f / getFixedFrameRate ();
-        const float now = realTimeSinceFirstClockUpdate ();
+        const double targetStepSize = 1.0 / getFixedFrameRate ();
+        const double now = realTimeSinceFirstClockUpdate ();
         const int lastFrameCount = (int) (now / targetStepSize);
-        const float nextFrameTime = (lastFrameCount + 1) * targetStepSize;
+        const double nextFrameTime = (lastFrameCount + 1) * targetStepSize;
 
         // record usage ("busy time", "non-wait time") for OpenSteerDemo app
         elapsedNonWaitRealTime = now - totalRealTime;
@@ -219,14 +219,14 @@ OpenSteer::Clock::frameRateSync (void)
 // Used for OpenSteerDemo's "single step forward" and animation mode
 
 
-float 
+double 
 OpenSteer::Clock::advanceSimulationTimeOneFrame (void)
 {
     // decide on what frame time is (use fixed rate, average for variable rate)
-    const float fps = (getVariableFrameRateMode () ?
+    const double fps = (getVariableFrameRateMode () ?
                        getSmoothedFPS () :
                        getFixedFrameRate ());
-    const float frameTime = 1 / fps;
+    const double frameTime = 1 / fps;
 
     // bump advance time
     advanceSimulationTime (frameTime);
@@ -237,7 +237,7 @@ OpenSteer::Clock::advanceSimulationTimeOneFrame (void)
 
 
 void 
-OpenSteer::Clock::advanceSimulationTime (const float seconds)
+OpenSteer::Clock::advanceSimulationTime (const double seconds)
 {
     if (seconds < 0)
         OpenSteerDemo::errorExit ("negative arg to advanceSimulationTime.");
@@ -249,23 +249,23 @@ OpenSteer::Clock::advanceSimulationTime (const float seconds)
 namespace {
 
 // ----------------------------------------------------------------------------
-// Returns the number of seconds of real time (represented as a float) since
+// Returns the number of seconds of real time (represented as a double) since
 // the clock was first updated.
 //
 // XXX Need to revisit conditionalization on operating system.
 
 
 
-    float 
+    double 
     clockErrorExit (void)
     {
         OpenSteer::OpenSteerDemo::errorExit ("Problem reading system clock.\n");
-        return 0.0f;
+        return 0.0;
     }
 
 } // anonymous namespace
 
-float 
+double 
 OpenSteer::Clock::realTimeSinceFirstClockUpdate (void)
 #ifdef _WIN32
 {
@@ -280,7 +280,7 @@ OpenSteer::Clock::realTimeSinceFirstClockUpdate (void)
 
     // real "wall clock" time since launch
     const LONGLONG counterDifference = counter - basePerformanceCounter;
-    return ((float) counterDifference) / ((float)frequency);
+    return ((double) counterDifference) / ((double)frequency);
 }
 #else
 {
@@ -297,7 +297,7 @@ OpenSteer::Clock::realTimeSinceFirstClockUpdate (void)
 
     // real "wall clock" time since launch
     return (( t.tv_sec  - baseRealTimeSec) +
-            ((t.tv_usec - baseRealTimeUsec) / 1000000.0f));
+            ((t.tv_usec - baseRealTimeUsec) / 1000000.0));
 }
 #endif
 

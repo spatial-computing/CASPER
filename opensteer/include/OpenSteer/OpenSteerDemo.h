@@ -108,12 +108,12 @@ namespace OpenSteer {
         static void openSelectedPlugIn (void);
 
         // do a simulation update for the currently selected plug-in
-        static void updateSelectedPlugIn (const float currentTime,
-                                          const float elapsedTime);
+        static void updateSelectedPlugIn (const double currentTime,
+                                          const double elapsedTime);
 
         // redraw graphics for the currently selected plug-in
-        static void redrawSelectedPlugIn (const float currentTime,
-                                          const float elapsedTime);
+        static void redrawSelectedPlugIn (const double currentTime,
+                                          const double elapsedTime);
 
         // close the currently selected plug-in
         static void closeSelectedPlugIn (void);
@@ -129,12 +129,12 @@ namespace OpenSteer {
         static bool phaseIsUpdate   (void) {return phase == updatePhase;}
         static bool phaseIsOverhead (void) {return phase == overheadPhase;}
 
-        static float phaseTimerDraw     (void) {return phaseTimers[drawPhase];}
-        static float phaseTimerUpdate   (void) {return phaseTimers[updatePhase];}
+        static double phaseTimerDraw     (void) {return phaseTimers[drawPhase];}
+        static double phaseTimerUpdate   (void) {return phaseTimers[updatePhase];}
         // XXX get around shortcomings in current implementation, see note
         // XXX in updateSimulationAndRedraw
-        //static float phaseTimerOverhead(void){return phaseTimers[overheadPhase];}
-        static float phaseTimerOverhead (void)
+        //static double phaseTimerOverhead(void){return phaseTimers[overheadPhase];}
+        static double phaseTimerOverhead (void)
         {
             return (clock.getElapsedRealTime() -
                     (phaseTimerDraw() + phaseTimerUpdate()));
@@ -176,31 +176,31 @@ namespace OpenSteer {
         // set a certain initial camera state used by several plug-ins
         static void init2dCamera (AbstractVehicle& selected);
         static void init2dCamera (AbstractVehicle& selected,
-                                  float distance,
-                                  float elevation);
+                                  double distance,
+                                  double elevation);
         static void init3dCamera (AbstractVehicle& selected);
         static void init3dCamera (AbstractVehicle& selected,
-                                  float distance,
-                                  float elevation);
+                                  double distance,
+                                  double elevation);
 
         // set initial position of camera based on a vehicle
         static void position3dCamera (AbstractVehicle& selected);
         static void position3dCamera (AbstractVehicle& selected,
-                                      float distance,
-                                      float elevation);
+                                      double distance,
+                                      double elevation);
         static void position2dCamera (AbstractVehicle& selected);
         static void position2dCamera (AbstractVehicle& selected,
-                                      float distance,
-                                      float elevation);
+                                      double distance,
+                                      double elevation);
 
         // camera updating utility used by several (all?) plug-ins
-        static void updateCamera (const float currentTime,
-                                  const float elapsedTime,
+        static void updateCamera (const double currentTime,
+                                  const double elapsedTime,
                                   const AbstractVehicle& selected);
 
         // some camera-related default constants
-        static const float camera2dElevation;
-        static const float cameraTargetDistance;
+        static const double camera2dElevation;
+        static const double cameraTargetDistance;
         static const Vec3 cameraTargetOffset;
 
         // ------------------------------------------------ graphics and annotation
@@ -226,7 +226,7 @@ namespace OpenSteer {
         // of a given vehicle.  The circle's radius is the vehicle's radius times
         // radiusMultiplier.
         static void drawCircleHighlightOnVehicle (const AbstractVehicle& v,
-                                                  const float radiusMultiplier,
+                                                  const double radiusMultiplier,
                                                   const Vec3 color);
 
         // graphical annotation: master on/off switch
@@ -257,8 +257,8 @@ namespace OpenSteer {
         static int phase;
         static int phaseStack[];
         static int phaseStackIndex;
-        static float phaseTimers[];
-        static float phaseTimerBase;
+        static double phaseTimers[];
+        static double phaseTimerBase;
         static const int phaseStackSize;
         static void pushPhase (const int newPhase);
         static void popPhase (void);

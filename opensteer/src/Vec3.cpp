@@ -124,16 +124,16 @@ OpenSteer::randomVectorOnUnitRadiusXZDisk (void)
 OpenSteer::Vec3 
 OpenSteer::vecLimitDeviationAngleUtility (const bool insideOrOutside,
                                           const Vec3& source,
-                                          const float cosineOfConeAngle,
+                                          const double cosineOfConeAngle,
                                           const Vec3& basis)
 {
     // immediately return zero length input vectors
-    float sourceLength = source.length();
+    double sourceLength = source.length();
     if (sourceLength == 0) return source;
 
     // measure the angular diviation of "source" from "basis"
     const Vec3 direction = source / sourceLength;
-    float cosineOfSourceAngle = direction.dot (basis);
+    double cosineOfSourceAngle = direction.dot (basis);
 
     // Simply return "source" if it already meets the angle criteria.
     // (note: we hope this top "if" gets compiled out since the flag
@@ -159,7 +159,7 @@ OpenSteer::vecLimitDeviationAngleUtility (const bool insideOrOutside,
     // and lies on the intersection of a plane (formed the source and
     // basis vectors) and a cone (whose axis is "basis" and whose
     // angle corresponds to cosineOfConeAngle)
-    float perpDist = sqrtXXX (1 - (cosineOfConeAngle * cosineOfConeAngle));
+    double perpDist = sqrtXXX (1 - (cosineOfConeAngle * cosineOfConeAngle));
     const Vec3 c0 = basis * cosineOfConeAngle;
     const Vec3 c1 = unitPerp * perpDist;
     return (c0 + c1) * sourceLength;
@@ -186,9 +186,9 @@ OpenSteer::findPerpendicularIn3d (const Vec3& direction)
     const Vec3 k (0, 0, 1);
 
     // measure the projection of "direction" onto each of the axes
-    const float id = i.dot (direction);
-    const float jd = j.dot (direction);
-    const float kd = k.dot (direction);
+    const double id = i.dot (direction);
+    const double jd = j.dot (direction);
+    const double kd = k.dot (direction);
 
     // set quasiPerp to the basis which is least parallel to "direction"
     if ((id <= jd) && (id <= kd))

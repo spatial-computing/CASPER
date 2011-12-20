@@ -44,7 +44,7 @@
 /* 12- 2-00: Make lqObject "private" using lqInternalDB.              */
 /* 12- 5-00: Rename lqObject to lqDB, lqClientObject to lqClientProxy */
 /* 12- 6-00: Change lqCallBackFunction from arglist of (void*) to:    */
-/*           (void* clientObject, float distanceSquared, void*        */
+/*           (void* clientObject, double distanceSquared, void*        */
 /*           clientQueryState).  Add void* clientQueryState arg to    */
 /*           lqMapOverAllObjectsInLocality and its helper functions   */
 /*           lqMapOverAllObjectsInLocalityClipped and                 */
@@ -83,10 +83,10 @@ typedef struct lqInternalDB
 {
 
     /* the origin is the super-brick corner minimum coordinates */
-    float originx, originy, originz;
+    double originx, originy, originz;
 
     /* length of the edges of the super-brick */
-    float sizex, sizey, sizez;
+    double sizex, sizey, sizez;
 
     /* number of sub-brick divisions in each direction */
     int divx, divy, divz;
@@ -112,8 +112,8 @@ typedef struct lqInternalDB
    contents. */
 
 
-lqInternalDB* lqCreateDatabase (float originx, float originy, float originz,
-				float sizex, float sizey, float sizez,
+lqInternalDB* lqCreateDatabase (double originx, double originy, double originz,
+				double sizex, double sizey, double sizez,
 				int divx, int divy, int divz)
 {
     lqInternalDB* lq = ((lqInternalDB*) malloc (sizeof (lqInternalDB)));
@@ -144,8 +144,8 @@ void lqDeleteDatabase(lqDB* lq)
 
 
 void lqInitDatabase (lqInternalDB* lq,
-		     float originx, float originy, float originz,
-		     float sizex, float sizey, float sizez,
+		     double originx, double originy, double originz,
+		     double sizex, double sizey, double sizez,
 		     int divx, int divy, int divz)
 {
     lq->originx = originx;
@@ -183,7 +183,7 @@ void lqInitDatabase (lqInternalDB* lq,
 
 
 lqClientProxy** lqBinForLocation (lqInternalDB* lq, 
-				  float x, float y, float z)
+				  double x, double y, double z)
 {
     int i, ix, iy, iz;
 
@@ -288,7 +288,7 @@ void lqRemoveFromBin (lqClientProxy* object)
 
 void lqUpdateForNewLocation  (lqInternalDB* lq, 
 			      lqClientProxy* object, 
-			      float x, float y, float z)
+			      double x, double y, double z)
 {
     /* find bin for new location */
     lqClientProxy** newBin = lqBinForLocation (lq, x, y, z);
@@ -318,10 +318,10 @@ void lqUpdateForNewLocation  (lqInternalDB* lq,
     {                                                                 \
 	/* compute distance (squared) from this client   */           \
 	/* object to given locality sphere's centerpoint */           \
-	float dx = x - co->x;                                         \
-	float dy = y - co->y;                                         \
-	float dz = z - co->z;                                         \
-	float distanceSquared = (dx * dx) + (dy * dy) + (dz * dz);    \
+	double dx = x - co->x;                                         \
+	double dy = y - co->y;                                         \
+	double dz = z - co->z;                                         \
+	double distanceSquared = (dx * dx) + (dy * dy) + (dz * dz);    \
                                                                       \
 	/* apply function if client object within sphere */           \
 	if (distanceSquared < radiusSquared)                          \
@@ -339,8 +339,8 @@ void lqUpdateForNewLocation  (lqInternalDB* lq,
 
 
 void lqMapOverAllObjectsInLocalityClipped (lqInternalDB* lq, 
-					   float x, float y, float z,
-					   float radius,
+					   double x, double y, double z,
+					   double radius,
 					   lqCallBackFunction func,
 					   void* clientQueryState,
 					   int minBinX,
@@ -359,7 +359,7 @@ void lqMapOverAllObjectsInLocalityClipped (lqInternalDB* lq,
     int kstart = minBinZ;
     lqClientProxy* co;
     lqClientProxy** bin;
-    float radiusSquared = radius * radius;
+    double radiusSquared = radius * radius;
 
 #ifdef BOIDS_LQ_DEBUG
     if (lqAnnoteEnable) drawBallGL (x, y, z, radius);
@@ -405,13 +405,13 @@ void lqMapOverAllObjectsInLocalityClipped (lqInternalDB* lq,
 
 
 void lqMapOverAllOutsideObjects (lqInternalDB* lq, 
-				 float x, float y, float z,
-				 float radius,
+				 double x, double y, double z,
+				 double radius,
 				 lqCallBackFunction func,
 				 void* clientQueryState)
 {
     lqClientProxy* co = lq->other;
-    float radiusSquared = radius * radius;
+    double radiusSquared = radius * radius;
 
     /* traverse the "other" bin's client object list */
     lqTraverseBinClientObjectList (co,
@@ -442,8 +442,8 @@ void lqMapOverAllOutsideObjects (lqInternalDB* lq,
 
 
 void lqMapOverAllObjectsInLocality (lqInternalDB* lq, 
-				    float x, float y, float z,
-				    float radius,
+				    double x, double y, double z,
+				    double radius,
 				    lqCallBackFunction func,
 				    void* clientQueryState)
 {
@@ -505,13 +505,13 @@ typedef struct lqFindNearestState
 {
     void* ignoreObject;
     void* nearestObject;
-    float minDistanceSquared;
+    double minDistanceSquared;
 
 } lqFindNearestState;
 
 
 void lqFindNearestHelper (void* clientObject,
-			  float distanceSquared,
+			  double distanceSquared,
 			  void* clientQueryState)
 {
     lqFindNearestState* fns = (lqFindNearestState*) clientQueryState;
@@ -542,8 +542,8 @@ void lqFindNearestHelper (void* clientObject,
 
 
 void* lqFindNearestNeighborWithinRadius (lqInternalDB* lq, 
-					 float x, float y, float z,
-					 float radius,
+					 double x, double y, double z,
+					 double radius,
 					 void* ignoreObject)
 {
     /* initialize search state */

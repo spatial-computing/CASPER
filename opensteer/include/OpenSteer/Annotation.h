@@ -75,15 +75,15 @@ namespace OpenSteer {
         // XXX Annotation would "has-a" one (or more))
 
         // record a position for the current time, called once per update
-        void recordTrailVertex (const float currentTime, const Vec3 position);
+        void recordTrailVertex (const double currentTime, const Vec3 position);
 
         // draw the trail as a dotted line, fading away with age
-        void drawTrail (void) {drawTrail (grayColor (0.7f), gWhite);}
+        void drawTrail (void) {drawTrail (grayColor (0.7), gWhite);}
         void drawTrail  (const Vec3& trailColor, const Vec3& tickColor);
 
         // set trail parameters: the amount of time it represents and the
         // number of samples along its length.  re-allocates internal buffers.
-        void setTrailParameters (const float duration, const int vertexCount);
+        void setTrailParameters (const double duration, const int vertexCount);
 
         // forget trail history: used to prevent long streaks due to teleportation
         void clearTrailHistory (void);
@@ -106,7 +106,7 @@ namespace OpenSteer {
                              const Vec3& color);
 
         // draw a circle on the XZ plane
-        void annotationXZCircle (const float radius,
+        void annotationXZCircle (const double radius,
                                  const Vec3& center,
                                  const Vec3& color,
                                  const int segments)
@@ -116,7 +116,7 @@ namespace OpenSteer {
 
 
         // draw a disk on the XZ plane
-        void annotationXZDisk (const float radius,
+        void annotationXZDisk (const double radius,
                                const Vec3& center,
                                const Vec3& color,
                                const int segments)
@@ -126,7 +126,7 @@ namespace OpenSteer {
 
 
         // draw a circle perpendicular to the given axis
-        void annotation3dCircle (const float radius,
+        void annotation3dCircle (const double radius,
                                  const Vec3& center,
                                  const Vec3& axis,
                                  const Vec3& color,
@@ -137,7 +137,7 @@ namespace OpenSteer {
 
 
         // draw a disk perpendicular to the given axis
-        void annotation3dDisk (const float radius,
+        void annotation3dDisk (const double radius,
                                const Vec3& center,
                                const Vec3& axis,
                                const Vec3& color,
@@ -151,7 +151,7 @@ namespace OpenSteer {
         // ------------------------------------------------------------------------
         // support for annotation circles
 
-        void annotationXZCircleOrDisk (const float radius,
+        void annotationXZCircleOrDisk (const double radius,
                                        const Vec3& center,
                                        const Vec3& color,
                                        const int segments,
@@ -167,7 +167,7 @@ namespace OpenSteer {
         }
 
 
-        void annotation3dCircleOrDisk (const float radius,
+        void annotation3dCircleOrDisk (const double radius,
                                        const Vec3& center,
                                        const Vec3& axis,
                                        const Vec3& color,
@@ -183,7 +183,7 @@ namespace OpenSteer {
                                     true); // "in3d"
         }
 
-        void annotationCircleOrDisk (const float radius,
+        void annotationCircleOrDisk (const double radius,
                                      const Vec3& axis,
                                      const Vec3& center,
                                      const Vec3& color,
@@ -197,9 +197,9 @@ namespace OpenSteer {
         // trails
         int trailVertexCount;       // number of vertices in array (ring buffer)
         int trailIndex;             // array index of most recently recorded point
-        float trailDuration;        // duration (in seconds) of entire trail
-        float trailSampleInterval;  // desired interval between taking samples
-        float trailLastSampleTime;  // global time when lat sample was taken
+        double trailDuration;        // duration (in seconds) of entire trail
+        double trailSampleInterval;  // desired interval between taking samples
+        double trailLastSampleTime;  // global time when lat sample was taken
         int trailDottedPhase;       // dotted line: draw segment or not
         Vec3 curPosition;           // last reported position of vehicle
         Vec3* trailVertices;        // array (ring) of recent points along trail
@@ -244,7 +244,7 @@ OpenSteer::AnnotationMixin<Super>::~AnnotationMixin (void)
 
 template<class Super>
 void 
-OpenSteer::AnnotationMixin<Super>::setTrailParameters (const float duration, 
+OpenSteer::AnnotationMixin<Super>::setTrailParameters (const double duration, 
                                                        const int vertexCount)
 {
     // record new parameters
@@ -292,10 +292,10 @@ OpenSteer::AnnotationMixin<Super>::clearTrailHistory (void)
 
 template<class Super>
 void 
-OpenSteer::AnnotationMixin<Super>::recordTrailVertex (const float currentTime,
+OpenSteer::AnnotationMixin<Super>::recordTrailVertex (const double currentTime,
                                                       const Vec3 position)
 {
-    const float timeSinceLastTrailSample = currentTime - trailLastSampleTime;
+    const double timeSinceLastTrailSample = currentTime - trailLastSampleTime;
     if (timeSinceLastTrailSample > trailSampleInterval)
     {
         trailIndex = (trailIndex + 1) % trailVertexCount;
@@ -346,9 +346,9 @@ OpenSteer::AnnotationMixin<Super>::drawTrail (const Vec3& trailColor,
                 else
                 {
                     // draw trail segments with opacity decreasing with age
-                    const float minO = 0.05f; // minimum opacity
-                    const float fraction = (float) j / trailVertexCount;
-                    const float opacity = (fraction * (1 - minO)) + minO;
+                    const double minO = 0.05; // minimum opacity
+                    const double fraction = (double) j / trailVertexCount;
+                    const double opacity = (fraction * (1 - minO)) + minO;
                     drawLineAlpha (trailVertices [index],
                                    trailVertices [next],
                                    color,
@@ -399,7 +399,7 @@ OpenSteer::AnnotationMixin<Super>::annotationLine (const Vec3& startPoint,
 
 template<class Super>
 void 
-OpenSteer::AnnotationMixin<Super>::annotationCircleOrDisk (const float radius,
+OpenSteer::AnnotationMixin<Super>::annotationCircleOrDisk (const double radius,
                                                            const Vec3& axis,
                                                            const Vec3& center,
                                                            const Vec3& color,

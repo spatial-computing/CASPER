@@ -247,8 +247,8 @@ OpenSteer::OpenSteerDemo::openSelectedPlugIn (void)
 
 
 void 
-OpenSteer::OpenSteerDemo::updateSelectedPlugIn (const float currentTime,
-                                                const float elapsedTime)
+OpenSteer::OpenSteerDemo::updateSelectedPlugIn (const double currentTime,
+                                                const double elapsedTime)
 {
     // switch to Update phase
     pushPhase (updatePhase);
@@ -276,8 +276,8 @@ OpenSteer::OpenSteerDemo::updateSelectedPlugIn (const float currentTime,
 
 
 void 
-OpenSteer::OpenSteerDemo::redrawSelectedPlugIn (const float currentTime,
-                                                const float elapsedTime)
+OpenSteer::OpenSteerDemo::redrawSelectedPlugIn (const double currentTime,
+                                                const double elapsedTime)
 {
     // switch to Draw phase
     pushPhase (drawPhase);
@@ -440,13 +440,13 @@ OpenSteer::OpenSteerDemo::findVehicleNearestScreenPosition (int x, int y)
 
     // iterate over all vehicles to find the one whose center is nearest the
     // "eye-mouse" selection line
-    float minDistance = FLT_MAX;       // smallest distance found so far
+    double minDistance = FLT_MAX;       // smallest distance found so far
     AbstractVehicle* nearest = NULL;   // vehicle whose distance is smallest
     const AVGroup& vehicles = allVehiclesOfSelectedPlugIn();
     for (AVIterator i = vehicles.begin(); i != vehicles.end(); i++)
     {
         // distance from this vehicle's center to the selection line:
-        const float d = distanceFromLine ((**i).position(),
+        const double d = distanceFromLine ((**i).position(),
                                           camera.position(),
                                           direction);
 
@@ -484,8 +484,8 @@ OpenSteer::OpenSteerDemo::init3dCamera (AbstractVehicle& selected)
 
 void 
 OpenSteer::OpenSteerDemo::init3dCamera (AbstractVehicle& selected,
-                                  float distance,
-                                  float elevation)
+                                  double distance,
+                                  double elevation)
 {
     position3dCamera (selected, distance, elevation);
     camera.fixedDistDistance = distance;
@@ -502,8 +502,8 @@ OpenSteer::OpenSteerDemo::init2dCamera (AbstractVehicle& selected)
 
 void 
 OpenSteer::OpenSteerDemo::init2dCamera (AbstractVehicle& selected,
-                                  float distance,
-                                  float elevation)
+                                  double distance,
+                                  double elevation)
 {
     position2dCamera (selected, distance, elevation);
     camera.fixedDistDistance = distance;
@@ -520,8 +520,8 @@ OpenSteer::OpenSteerDemo::position3dCamera (AbstractVehicle& selected)
 
 void 
 OpenSteer::OpenSteerDemo::position3dCamera (AbstractVehicle& selected,
-                                            float distance,
-                                            float /*elevation*/)
+                                            double distance,
+                                            double /*elevation*/)
 {
     selectedVehicle = &selected;
     if (&selected)
@@ -541,8 +541,8 @@ OpenSteer::OpenSteerDemo::position2dCamera (AbstractVehicle& selected)
 
 void 
 OpenSteer::OpenSteerDemo::position2dCamera (AbstractVehicle& selected,
-                                            float distance,
-                                            float elevation)
+                                            double distance,
+                                            double elevation)
 {
     // position the camera as if in 3d:
     position3dCamera (selected, distance, elevation);
@@ -559,8 +559,8 @@ OpenSteer::OpenSteerDemo::position2dCamera (AbstractVehicle& selected,
 
 
 void 
-OpenSteer::OpenSteerDemo::updateCamera (const float currentTime,
-                                        const float elapsedTime,
+OpenSteer::OpenSteerDemo::updateCamera (const double currentTime,
+                                        const double elapsedTime,
                                         const AbstractVehicle& selected)
 {
     camera.vehicleToTrack = &selected;
@@ -572,8 +572,8 @@ OpenSteer::OpenSteerDemo::updateCamera (const float currentTime,
 // some camera-related default constants
 
 
-const float OpenSteer::OpenSteerDemo::camera2dElevation = 8;
-const float OpenSteer::OpenSteerDemo::cameraTargetDistance = 13;
+const double OpenSteer::OpenSteerDemo::camera2dElevation = 8;
+const double OpenSteer::OpenSteerDemo::cameraTargetDistance = 13;
 const OpenSteer::Vec3 OpenSteer::OpenSteerDemo::cameraTargetOffset (0, OpenSteer::OpenSteerDemo::camera2dElevation, 
                                                                     0);
 
@@ -588,13 +588,13 @@ OpenSteer::OpenSteerDemo::gridUtility (const Vec3& gridTarget)
     // round off target to the nearest multiple of 2 (because the
     // checkboard grid with a pitch of 1 tiles with a period of 2)
     // then lower the grid a bit to put it under 2d annotation lines
-    const Vec3 gridCenter ((round (gridTarget.x * 0.5f) * 2),
-                           (round (gridTarget.y * 0.5f) * 2) - .05f,
-                           (round (gridTarget.z * 0.5f) * 2));
+    const Vec3 gridCenter ((round (gridTarget.x * 0.5) * 2),
+                           (round (gridTarget.y * 0.5) * 2) - .05,
+                           (round (gridTarget.z * 0.5) * 2));
 
     // colors for checkboard
-    const Vec3 gray1 = grayColor (0.27f);
-    const Vec3 gray2 = grayColor (0.30f);
+    const Vec3 gray1 = grayColor (0.27);
+    const Vec3 gray2 = grayColor (0.30);
 
     // draw 50x50 checkerboard grid with 50 squares along each side
     drawXZCheckerboardGrid (50, 50, gridCenter, gray1, gray2);
@@ -623,7 +623,7 @@ OpenSteer::OpenSteerDemo::highlightVehicleUtility (const AbstractVehicle& vehicl
 void 
 OpenSteer::OpenSteerDemo::circleHighlightVehicleUtility (const AbstractVehicle& vehicle)
 {
-    if (&vehicle != NULL) drawXZCircle (vehicle.radius () * 1.1f,
+    if (&vehicle != NULL) drawXZCircle (vehicle.radius () * 1.1,
                                         vehicle.position(),
                                         gGray60,
                                         20);
@@ -641,7 +641,7 @@ OpenSteer::OpenSteerDemo::drawBoxHighlightOnVehicle (const AbstractVehicle& v,
 {
     if (&v)
     {
-        const float diameter = v.radius() * 2;
+        const double diameter = v.radius() * 2;
         const Vec3 size (diameter, diameter, diameter);
         drawBoxOutline (v, size, color);
     }
@@ -656,7 +656,7 @@ OpenSteer::OpenSteerDemo::drawBoxHighlightOnVehicle (const AbstractVehicle& v,
 
 void 
 OpenSteer::OpenSteerDemo::drawCircleHighlightOnVehicle (const AbstractVehicle& v,
-                                                  const float radiusMultiplier,
+                                                  const double radiusMultiplier,
                                                   const Vec3 color)
 {
     if (&v)
@@ -770,8 +770,8 @@ OpenSteer::OpenSteerDemo::popPhase (void)
 // ----------------------------------------------------------------------------
 
 
-float OpenSteer::OpenSteerDemo::phaseTimerBase = 0;
-float OpenSteer::OpenSteerDemo::phaseTimers [drawPhase+1];
+double OpenSteer::OpenSteerDemo::phaseTimerBase = 0;
+double OpenSteer::OpenSteerDemo::phaseTimers [drawPhase+1];
 
 
 void 
@@ -787,7 +787,7 @@ OpenSteer::OpenSteerDemo::initPhaseTimers (void)
 void 
 OpenSteer::OpenSteerDemo::updatePhaseTimers (void)
 {
-    const float currentRealTime = clock.realTimeSinceFirstClockUpdate();
+    const double currentRealTime = clock.realTimeSinceFirstClockUpdate();
     phaseTimers[phase] += currentRealTime - phaseTimerBase;
     phaseTimerBase = currentRealTime;
 }
