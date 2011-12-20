@@ -640,7 +640,6 @@ HRESULT EvcSolverSymbolizer::CreateSimplePointRenderer(IColor* pPointColor, IFea
   if (!pPointColor || !ppFRenderer) return E_POINTER;
 
   ISimpleRendererPtr ipRenderer(CLSID_SimpleRenderer);
-  HRESULT     hr;
   IColorPtr   ipErrorColor(CLSID_RgbColor);
   ipErrorColor->put_RGB(RGB(255,0,0));
 

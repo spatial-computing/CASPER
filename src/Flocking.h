@@ -13,7 +13,7 @@ class FlockingLocation
 {
 public:
 	VARIANT			GroupName;
-	float			MyTime;
+	double			MyTime;
 	double			Traveled;
 	IPointPtr		MyLocation;
 	OpenSteer::Vec3	Velocity;
@@ -46,7 +46,8 @@ class FlockingObject : public FlockingLocation
 private:
 	// properties
 
-	INetworkJunctionPtr			NextVertex;
+	INetworkJunctionPtr			nextVertex;
+	IPointPtr					nextVertexPoint;
 	OpenSteer::SimpleVehicle	* myVehicle;
 	OpenSteer::PolylinePathway	myVehiclePath;
 	OpenSteer::AVGroup			myNeighborVehicles;
@@ -55,6 +56,7 @@ private:
 	EvcPath::iterator			pathSegIt;
 	EvcPathPtr					myPath;
 	double						speedLimit;
+	ISpatialReferencePtr		metricProjection;
 
 	// methods
 
@@ -70,8 +72,8 @@ public:
 
 	// methods
 	
-	FlockingObject(EvcPathPtr path, float startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery);
-	HRESULT Move(std::list<FlockingObject *> * objects, float deltatime);
+	FlockingObject(EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection);
+	HRESULT Move(std::list<FlockingObject *> * objects, double deltatime);
 
 	virtual ~FlockingObject(void)
 	{
@@ -90,12 +92,12 @@ class FlockingEnviroment
 private:
 	std::list<FlockingObjectPtr>	* objects;
 	std::list<FlockingLocationPtr>	* history;
-	float							snapshotInterval;
-	float							simulationInterval;
+	double							snapshotInterval;
+	double							simulationInterval;
 	double							maxPathLen;
 
 public:
-	FlockingEnviroment(float SnapshotInterval, float SimulationInterval);
+	FlockingEnviroment(double SnapshotInterval, double SimulationInterval);
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery);
 	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel);

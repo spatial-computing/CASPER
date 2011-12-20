@@ -977,7 +977,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
-		FlockingEnviroment * flock = new FlockingEnviroment(this->flockingSnapInterval, this->flockingSimulationInterval);
+		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval);
 		flock->Init(Evacuees, ipNetworkQuery);
 
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
