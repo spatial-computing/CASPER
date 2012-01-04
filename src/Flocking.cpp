@@ -6,12 +6,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking object implementation
 
-FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection)
+FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection)
 {
 	// construct FlockingLocation	
 	MyTime = startTime;
 	Traveled = 0.0;
 	metricProjection = MetricProjection;
+	ID = id;
 
 	// init object
 	MyStatus = FLOCK_OBJ_STAT_INIT;
@@ -46,6 +47,8 @@ FlockingObject::FlockingObject(EvcPathPtr path, double startTime, VARIANT groupN
 	myVehicle->setRadius(0.1);
 	libpoints = new OpenSteer::Vec3[0];
 	myVehicle->setPosition(x, y, 0.0);
+	myVehicle->setForward(Velocity.normalize());
+	myVehicle->setSpeed(Velocity.length());
 }
 
 HRESULT FlockingObject::loadNewEdge(void)
@@ -130,7 +133,7 @@ HRESULT FlockingObject::buildNeighborList(std::list<FlockingObjectPtr> * objects
 	for (std::list<FlockingObjectPtr>::iterator it = objects->begin(); it != objects->end(); it++)
 	{
 		// self avoid check
-		if ((*it) == this) continue;
+		if ((*it)->ID == ID) continue;
 
 		// moving object check
 		if ((*it)->MyStatus != FLOCK_OBJ_STAT_MOVE) continue;
@@ -218,7 +221,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 {
 	EvacueePtr evc = 0;
 	EvacueeListItr evcItr;
-	int i = 0, size = 0;
+	int i = 0, size = 0, id = 0;
 	EvcPathPtr path = 0;
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
@@ -244,13 +247,13 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 			size = (int)(ceil((*pathItr)->RoutedPop));
 			for (i = 0; i < size; i++)
 			{
-				objects->push_front(new FlockingObject(*pathItr, simulationInterval * -i, (*evcItr)->Name, ipNetworkQuery, metricProjection));
+				objects->push_front(new FlockingObject(id++, *pathItr, simulationInterval * -i, (*evcItr)->Name, ipNetworkQuery, metricProjection));
 			}
 		}
 	}
 }
 
-HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel)
+HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost)
 {
 	bool movingObjectLeft = true;
 	FLOCK_OBJ_STAT newStat, oldStat;
@@ -268,7 +271,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
 
-	for (double time = 0.0; movingObjectLeft; time += simulationInterval)
+	for (double time = 0.0; movingObjectLeft && time <= maxCost; time += simulationInterval)
 	{
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
 		{

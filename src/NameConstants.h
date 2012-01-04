@@ -30,6 +30,7 @@
 #define CS_FIELD_SHAPE                              L"Shape"
 #define CS_FIELD_OID                                L"ObjectID"
 #define CS_FIELD_NAME                               L"Name"
+#define CS_FIELD_ID                                 L"ID"
 #define CS_FIELD_E_TIME                             L"EvacCost"
 #define CS_FIELD_E_ORG                              L"OrgCost"
 #define CS_FIELD_E_POP	                            L"Pop"
@@ -48,10 +49,10 @@
 
 // Flocking
 
-#define CS_FIELD_TRAVELED                             L"Traveled"
-#define CS_FIELD_SPEEDX                               L"SpeedX"
-#define CS_FIELD_SPEEDY                               L"SpeedY"
-#define CS_FIELD_TIME                                 L"Time"
+#define CS_FIELD_TRAVELED                           L"Traveled"
+#define CS_FIELD_SPEEDX                             L"SpeedX"
+#define CS_FIELD_SPEEDY                             L"SpeedY"
+#define CS_FIELD_TIME                               L"Time"
 
 #define CS_FIELD_ReservPop                          L"ReservPop"
 #define CS_FIELD_TravCost                           L"TravCost"

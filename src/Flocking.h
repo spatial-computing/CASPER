@@ -17,6 +17,7 @@ public:
 	double			Traveled;
 	IPointPtr		MyLocation;
 	OpenSteer::Vec3	Velocity;
+	int				ID;
 
 	// constructors
 	FlockingLocation(void)
@@ -25,6 +26,7 @@ public:
 		Traveled = 0.0;
 		Velocity = OpenSteer::Vec3::zero;
 		MyLocation = 0;
+		ID = -1;
 	}
 
 	FlockingLocation(const FlockingLocation &copy)
@@ -36,6 +38,7 @@ public:
 		IClonePtr pointClone;
 		((IClonePtr)copy.MyLocation)->Clone(&pointClone);
 		MyLocation = pointClone;
+		ID = copy.ID;
 	}
 
 	virtual ~FlockingLocation(void) { }
@@ -72,7 +75,7 @@ public:
 
 	// methods
 	
-	FlockingObject(EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection);
+	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection);
 	HRESULT Move(std::list<FlockingObject *> * objects, double deltatime);
 
 	virtual ~FlockingObject(void)
@@ -100,7 +103,7 @@ public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval);
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery);
-	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel);
+	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost);
 	void GetHistory(std::list<FlockingLocationPtr> ** History);
 	double static PathLength(EvcPathPtr path);
 };

@@ -342,7 +342,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	EvacueeList * Evacuees = new EvacueeList(), * sortedEvacuees = new EvacueeList();
 	Evacuee * currentEvacuee;
 	VARIANT evName, pop;
-	long nameFieldIndex = 0, popFieldIndex = 0;
+	long nameFieldIndex = 0l, popFieldIndex = 0l;
 
 	// pre-process evacuee NALayer primary field index
 	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;		
@@ -684,6 +684,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	EvcPathPtr path;
 	std::list<PathSegmentPtr>::iterator psit;
 	std::list<EvcPathPtr>::iterator pit;
+	double maxCost = 0.0;
 	
 	// load the mercator projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
@@ -795,6 +796,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 				// Insert the feature buffer in the insert cursor
 				if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
+
+				maxCost = max(maxCost, path->EvacuationCost);
 			}
 		}
 	}
@@ -982,7 +985,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
 		std::list<FlockingLocationPtr> * history = 0;
-		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel))) return hr;
+		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 3.0))) return hr;
 		flock->GetHistory(&history);
 
 		// start writing into the featureclass
@@ -997,7 +1000,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// Get the "Flocks" NAClass feature class
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
-		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex;
+		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex;
 
 		// Create an insert cursor and feature buffer from the "EdgeStat" feature class to be used to write edges
 		if (FAILED(hr = ipFlocksFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
@@ -1005,6 +1008,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// Query for the appropriate field index values in the "EdgeStat" feature class
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_ID), &idFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TRAVELED), &traveledFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEEDX), &speedXFieldIndex))) return hr;
@@ -1020,6 +1024,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant((*it)->ID)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, CComVariant((*it)->GroupName)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant((*it)->MyTime)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant((*it)->Traveled)))) return hr;

@@ -1448,6 +1448,12 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_ID));
+	ipFieldEdit->put_Type(esriFieldTypeInteger);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_TIME));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldsEdit->AddField(ipFieldEdit);
@@ -1474,6 +1480,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OID), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_ID), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_NAME), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TIME), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SPEEDX), esriNAFieldTypeOutput);
