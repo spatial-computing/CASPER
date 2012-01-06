@@ -18,13 +18,58 @@
 // EvcSolver
 
 /////////////////////////////////////////////////////////////////////
-// INARouteSolver
+// INASolverOutputGeneralization
+STDMETHODIMP EvcSolver::put_OutputGeometryPrecision(VARIANT value)
+{
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_OutputGeometryPrecision(VARIANT * value)
+{
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_OutputGeometryPrecisionUnits(esriUnits value)
+{
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_OutputGeometryPrecisionUnits(esriUnits * value)
+{
+	return S_OK;
+}
+
+/////////////////////////////////////////////////////////////////////
+// INARouteSolver2
+
+STDMETHODIMP EvcSolver::get_StartTime(DATE * Value)
+{
+	if (!Value) return E_POINTER;
+	*Value = 0.0;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_StartTime(DATE Value)
+{
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_UseStartTime(VARIANT_BOOL * Value)
+{
+	if (!Value) return E_POINTER;
+	*Value = VARIANT_FALSE;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_UseStartTime(VARIANT_BOOL Value)
+{
+	return S_OK;
+}
 
 STDMETHODIMP EvcSolver::get_OutputLines(esriNAOutputLineType * Value)
 {
 	if (!Value) return E_POINTER;
 	*Value = m_outputLineType;
-
 	return S_OK;
 }
 
@@ -107,6 +152,66 @@ STDMETHODIMP EvcSolver::put_FindBestSequence(VARIANT_BOOL Value)
 
 /////////////////////////////////////////////////////////////////////
 // INASolver
+
+STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, IGPMessages* pMessages)
+{
+	// Bind() is a method used to re-associate the solver with a given network dataset and its schema. Calling Bind()
+	// on the solver re-attaches the solver to the NAContext based on the current network dataset settings.
+	// This is typically used to update the solver and its context based on changes in the network dataset's available
+	// restrictions, hierarchy attributes, cost attributes, etc.	
+
+	// load network attributes for later configuration and usage
+	// this will be used to load restriction and also to load proper impedance (cost) value
+
+	INetworkAttribute2Ptr networkAttrib = 0;
+	long count, i;
+	HRESULT hr;
+	esriNetworkAttributeUsageType utype;
+	esriNetworkAttributeDataType dtype;	
+	IUnknownPtr unk;
+
+	if (pNetwork)
+	{
+		if (FAILED(hr = pNetwork->get_Attributes(&allAttribs))) return hr;
+		if (FAILED(hr = allAttribs->get_Count(&count))) return hr;
+
+		turnAttribs.clear();
+		costAttribs.clear();
+		discriptiveAttribs.clear();
+
+		for (i = 0; i < count; i++)
+		{
+			if (FAILED(hr = allAttribs->get_Element(i, &unk))) return hr;
+			networkAttrib = unk;
+			if (FAILED(hr = networkAttrib->get_UsageType(&utype))) return hr;
+			if (FAILED(hr = networkAttrib->get_DataType(&dtype))) return hr;
+			if (utype == esriNAUTRestriction) turnAttribs.insert(turnAttribs.end(), networkAttrib);
+			if (utype == esriNAUTCost) costAttribs.insert(costAttribs.end(), networkAttrib);
+			if (utype == esriNAUTDescriptor && (dtype == esriNADTDouble || dtype == esriNADTInteger))
+				discriptiveAttribs.insert(discriptiveAttribs.end(), networkAttrib);
+		}
+
+		if (costAttributeID == -1) costAttribs[0]->get_ID(&costAttributeID);
+		if (capAttributeID == -1) discriptiveAttribs[0]->get_ID(&capAttributeID);		
+
+		// Agents setup
+		// NOTE: this is an appropriate place to find and attach any agents used by this solver.
+		// For example, the route solver would attach the directions agent.
+		INamedSetPtr agents;
+		IUnknownPtr pStreet;
+		INAContextHelperPtr ipContextHelper(pContext);
+		if (FAILED(hr = pContext->get_Agents(&agents))) return hr;	
+		if (FAILED(hr = agents->get_ItemByName(L"StreetDirectionsAgent", &pStreet))) return hr;
+		if (!pStreet)
+		{
+			pStreetAgent = INAStreetDirectionsAgentPtr(CLSID_NAStreetDirectionsAgent);
+			((INAAgentPtr)pStreetAgent)->Initialize(pNetwork, ipContextHelper);	
+			if (FAILED(hr = agents->Add(L"StreetDirectionsAgent", pStreetAgent))) return hr;
+		}
+		else pStreetAgent = pStreet;
+	}
+	return S_OK;  
+}
 
 STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
 {
@@ -360,6 +465,7 @@ STDMETHODIMP EvcSolver::get_FlockingEnabled(VARIANT_BOOL * value)
 STDMETHODIMP EvcSolver::put_FlockingEnabled(VARIANT_BOOL value)
 {
 	flockingEnabled = value;
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
@@ -372,6 +478,7 @@ STDMETHODIMP EvcSolver::get_ExportEdgeStat(VARIANT_BOOL * value)
 STDMETHODIMP EvcSolver::put_ExportEdgeStat(VARIANT_BOOL value)
 {
 	exportEdgeStat = value;
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
@@ -384,6 +491,7 @@ STDMETHODIMP EvcSolver::get_SeparableEvacuee(VARIANT_BOOL * value)
 STDMETHODIMP EvcSolver::put_SeparableEvacuee(VARIANT_BOOL value)
 {
 	separable = value;
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
@@ -396,6 +504,7 @@ STDMETHODIMP EvcSolver::get_CostMethod(EVC_SOLVER_METHOD * value)
 STDMETHODIMP EvcSolver::put_CostMethod(EVC_SOLVER_METHOD value)
 {
 	costmethod = value;
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
@@ -408,6 +517,7 @@ STDMETHODIMP EvcSolver::get_SolverMethod(EVC_SOLVER_METHOD * value)
 STDMETHODIMP EvcSolver::put_SolverMethod(EVC_SOLVER_METHOD value)
 {
 	solvermethod = value;
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
@@ -464,30 +574,35 @@ STDMETHODIMP EvcSolver::get_CostPerZoneDensity(BSTR * value)
 STDMETHODIMP EvcSolver::put_FlockingSnapInterval(BSTR value)
 {	
 	swscanf_s(value, L"%f", &flockingSnapInterval);
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_FlockingSimulationInterval(BSTR value)
 {	
 	swscanf_s(value, L"%f", &flockingSimulationInterval);
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_SaturationPerCap(BSTR value)
 {	
 	swscanf_s(value, L"%f", &SaturationPerCap);
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_CriticalDensPerCap(BSTR value)
 {	
 	swscanf_s(value, L"%f", &CriticalDensPerCap);
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_CostPerZoneDensity(BSTR value)
 {	
 	swscanf_s(value, L"%f", &costPerDensity);
+	m_bPersistDirty = true;
 	return S_OK;
 }
 
@@ -541,66 +656,6 @@ STDMETHODIMP EvcSolver::put_CapacityAttribute(int index)
 	if (FAILED(hr = discriptiveAttribs[index]->get_ID(&capAttributeID))) return hr;
 	m_bPersistDirty = true;
 	return S_OK;
-}
-
-STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, IGPMessages* pMessages)
-{
-	// Bind() is a method used to re-associate the solver with a given network dataset and its schema. Calling Bind()
-	// on the solver re-attaches the solver to the NAContext based on the current network dataset settings.
-	// This is typically used to update the solver and its context based on changes in the network dataset's available
-	// restrictions, hierarchy attributes, cost attributes, etc.	
-
-	// load network attributes for later configuration and usage
-	// this will be used to load restriction and also to load proper impedance (cost) value
-
-	INetworkAttribute2Ptr networkAttrib = 0;
-	long count, i;
-	HRESULT hr;
-	esriNetworkAttributeUsageType utype;
-	esriNetworkAttributeDataType dtype;	
-	IUnknownPtr unk;
-
-	if (pNetwork)
-	{
-		if (FAILED(hr = pNetwork->get_Attributes(&allAttribs))) return hr;
-		if (FAILED(hr = allAttribs->get_Count(&count))) return hr;
-
-		turnAttribs.clear();
-		costAttribs.clear();
-		discriptiveAttribs.clear();
-
-		for (i = 0; i < count; i++)
-		{
-			if (FAILED(hr = allAttribs->get_Element(i, &unk))) return hr;
-			networkAttrib = unk;
-			if (FAILED(hr = networkAttrib->get_UsageType(&utype))) return hr;
-			if (FAILED(hr = networkAttrib->get_DataType(&dtype))) return hr;
-			if (utype == esriNAUTRestriction) turnAttribs.insert(turnAttribs.end(), networkAttrib);
-			if (utype == esriNAUTCost) costAttribs.insert(costAttribs.end(), networkAttrib);
-			if (utype == esriNAUTDescriptor && (dtype == esriNADTDouble || dtype == esriNADTInteger))
-				discriptiveAttribs.insert(discriptiveAttribs.end(), networkAttrib);
-		}
-
-		if (costAttributeID == -1) costAttribs[0]->get_ID(&costAttributeID);
-		if (capAttributeID == -1) discriptiveAttribs[0]->get_ID(&capAttributeID);		
-
-		// Agents setup
-		// NOTE: this is an appropriate place to find and attach any agents used by this solver.
-		// For example, the route solver would attach the directions agent.
-		INamedSetPtr agents;
-		IUnknownPtr pStreet;
-		INAContextHelperPtr ipContextHelper(pContext);
-		if (FAILED(hr = pContext->get_Agents(&agents))) return hr;	
-		if (FAILED(hr = agents->get_ItemByName(L"StreetDirectionsAgent", &pStreet))) return hr;
-		if (!pStreet)
-		{
-			pStreetAgent = INAStreetDirectionsAgentPtr(CLSID_NAStreetDirectionsAgent);
-			((INAAgentPtr)pStreetAgent)->Initialize(pNetwork, ipContextHelper);	
-			if (FAILED(hr = agents->Add(L"StreetDirectionsAgent", pStreetAgent))) return hr;
-		}
-		else pStreetAgent = pStreet;
-	}
-	return S_OK;  
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -743,7 +798,7 @@ STDMETHODIMP EvcSolver::get_RestrictionAttributeNames(IStringArray ** ppAttribut
 {
 	int count = turnAttribs.size(), i;
 	HRESULT hr;
-	BSTR  name;
+	BSTR name;
 	IStringArrayPtr names(CLSID_StrArray);
 
 	for (i = 0; i < count; i++)
@@ -840,6 +895,7 @@ STDMETHODIMP EvcSolver::put_MaxValueForHierarchy(long level, long value)
 {
 	return E_NOTIMPL; // This solver does not support hierarchy attributes
 }
+
 STDMETHODIMP EvcSolver::get_MaxValueForHierarchy(long level, long * pValue)
 {
 	return E_NOTIMPL; // This solver does not support hierarchy attributes

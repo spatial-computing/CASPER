@@ -19,7 +19,7 @@
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
 #endif
 
-#define EVC_SOLVER_METHOD char
+#define EVC_SOLVER_METHOD			char
 #define EVC_SOLVER_METHOD_SP		0x0
 #define EVC_SOLVER_METHOD_CCRP		0x1
 #define EVC_SOLVER_METHOD_CASPER	0x2
@@ -96,10 +96,11 @@ __interface IEvcSolver : IUnknown
 ]
 class ATL_NO_VTABLE EvcSolver :
 	public IEvcSolver,
-	public INARouteSolver,
+	public INARouteSolver2,
 	public INASolver,
 	public INASolverSettings2,
-	public IPersistStream
+	public IPersistStream,
+	public INASolverOutputGeneralization
 {
 public:
 	EvcSolver() :
@@ -128,6 +129,12 @@ public:
 	  }
 
 public:
+	// INASolverOutputGeneralization
+	STDMETHOD(put_OutputGeometryPrecision)(VARIANT value);
+	STDMETHOD(get_OutputGeometryPrecision)(VARIANT * value);
+	STDMETHOD(put_OutputGeometryPrecisionUnits)(esriUnits value);
+	STDMETHOD(get_OutputGeometryPrecisionUnits)(esriUnits * value);
+
 	// IEvcSolver	
 	
 	STDMETHOD(put_ExportEdgeStat)(VARIANT_BOOL value);
@@ -155,7 +162,7 @@ public:
 	STDMETHOD(get_FlockingSimulationInterval)(BSTR * value);
 	STDMETHOD(put_FlockingSimulationInterval)(BSTR value);
 
-	// INARouteSolver
+	// INARouteSolver2
 
 	STDMETHOD(get_OutputLines)(esriNAOutputLineType* pVal);
 	STDMETHOD(put_OutputLines)(esriNAOutputLineType newVal);
@@ -169,6 +176,10 @@ public:
 	STDMETHOD(put_PreserveLastStop)(VARIANT_BOOL Value);
 	STDMETHOD(get_UseTimeWindows)(VARIANT_BOOL * Value);
 	STDMETHOD(put_UseTimeWindows)(VARIANT_BOOL Value);
+	STDMETHOD(get_StartTime)(DATE * Value);
+	STDMETHOD(put_StartTime)(DATE Value);
+	STDMETHOD(get_UseStartTime)(VARIANT_BOOL * Value);
+	STDMETHOD(put_UseStartTime)(VARIANT_BOOL Value);
 
 	// INASolver 
 
