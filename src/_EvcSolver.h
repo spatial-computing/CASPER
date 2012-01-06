@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Wed Dec 14 18:42:09 2011
+/* at Thu Jan 05 20:57:10 2012
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -132,12 +132,6 @@ EXTERN_C const IID IID_IEvcSolver;
         virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_DiscriptiveAttributesCount( 
             /* [retval][out] */ int *count) = 0;
         
-        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_HeuristicAttribute( 
-            /* [in] */ int index) = 0;
-        
-        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_HeuristicAttribute( 
-            /* [retval][out] */ int *index) = 0;
-        
         virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_CapacityAttribute( 
             /* [in] */ int index) = 0;
         
@@ -235,14 +229,6 @@ EXTERN_C const IID IID_IEvcSolver;
         /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_DiscriptiveAttributesCount )( 
             IEvcSolver * This,
             /* [retval][out] */ int *count);
-        
-        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_HeuristicAttribute )( 
-            IEvcSolver * This,
-            /* [in] */ int index);
-        
-        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_HeuristicAttribute )( 
-            IEvcSolver * This,
-            /* [retval][out] */ int *index);
         
         /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_CapacityAttribute )( 
             IEvcSolver * This,
@@ -356,12 +342,6 @@ EXTERN_C const IID IID_IEvcSolver;
 
 #define IEvcSolver_get_DiscriptiveAttributesCount(This,count)	\
     ( (This)->lpVtbl -> get_DiscriptiveAttributesCount(This,count) ) 
-
-#define IEvcSolver_put_HeuristicAttribute(This,index)	\
-    ( (This)->lpVtbl -> put_HeuristicAttribute(This,index) ) 
-
-#define IEvcSolver_get_HeuristicAttribute(This,index)	\
-    ( (This)->lpVtbl -> get_HeuristicAttribute(This,index) ) 
 
 #define IEvcSolver_put_CapacityAttribute(This,index)	\
     ( (This)->lpVtbl -> put_CapacityAttribute(This,index) ) 
