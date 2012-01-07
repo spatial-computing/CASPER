@@ -94,9 +94,10 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_FlockingSimulationInterval(&simul);
 		::SendMessage(m_hEditSimulationFlock, WM_SETTEXT, NULL, (LPARAM)simul);
 		delete [] simul;
+
+		SetFlockingEnabled();
+		SetDirty(FALSE);
 	}
-	
-	SetFlockingEnabled();
 
 	// Let the IPropertyPageImpl deal with displaying the page
 	return IPropertyPageImpl<EvcSolverPropPage>::Show(nCmdShow);
@@ -344,7 +345,7 @@ LRESULT EvcSolverPropPage::OnEnChangeEditSat(WORD /*wNotifyCode*/, WORD /*wID*/,
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -352,7 +353,7 @@ LRESULT EvcSolverPropPage::OnEnChangeEditCritical(WORD /*wNotifyCode*/, WORD /*w
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -360,7 +361,7 @@ LRESULT EvcSolverPropPage::OnCbnSelchangeComboMethod(WORD /*wNotifyCode*/, WORD 
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -368,7 +369,7 @@ LRESULT EvcSolverPropPage::OnCbnSelchangeComboCostmethod(WORD /*wNotifyCode*/, W
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -376,7 +377,7 @@ LRESULT EvcSolverPropPage::OnCbnSelchangeComboCapacity(WORD /*wNotifyCode*/, WOR
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -384,7 +385,7 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckSeparable(WORD /*wNotifyCode*/, WORD 
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -392,7 +393,7 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckEdgestat(WORD /*wNotifyCode*/, WORD /
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -400,7 +401,7 @@ LRESULT EvcSolverPropPage::OnEnChangeEditZonedensity(WORD /*wNotifyCode*/, WORD 
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -417,7 +418,7 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckFlock(WORD /*wNotifyCode*/, WORD /*wI
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	SetFlockingEnabled();
 	return 0;
 }
@@ -426,7 +427,7 @@ LRESULT EvcSolverPropPage::OnEnChangeEditFlocksnapinterval(WORD /*wNotifyCode*/,
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }
 
@@ -434,6 +435,6 @@ LRESULT EvcSolverPropPage::OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyC
 {
 	SetDirty(TRUE);
 	//refresh property sheet
-	m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }

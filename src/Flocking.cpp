@@ -32,14 +32,14 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	nextVertex = element;
 	pathSegIt = myPath->begin();
 
-	// create a little bit of randomness within initial location
+	// create a little bit of randomness within initial location and velocity
 	double x, y, dx, dy;
 	MyLocation->QueryCoords(&x, &y);
 	dx = (rand() % 50) - 25;
 	dy = (rand() % 50) - 25;
 	MyLocation->PutCoords(x + dx, y + dy);
 	Velocity = OpenSteer::Vec3(dx, dy, 0.0);
-	Velocity *= 10.0;
+	// Velocity *= 10.0;
 
 	// steering lib init
 	myVehicle = new OpenSteer::SimpleVehicle();
@@ -171,6 +171,7 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 
 				// generate a steer based on current situation
 				Velocity.set(0.0, 0.0, 0.0);
+				myVehicle->setSpeed(speedLimit);
 				Velocity += myVehicle->steerForSeparation(1.0,  60.0, myNeighborVehicles);		
 				Velocity += myVehicle->steerForSeparation(0.2, 270.0, myNeighborVehicles);
 				Velocity += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);

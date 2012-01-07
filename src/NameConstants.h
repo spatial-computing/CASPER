@@ -50,9 +50,10 @@
 // Flocking
 
 #define CS_FIELD_TRAVELED                           L"Traveled"
-#define CS_FIELD_SPEEDX                             L"SpeedX"
-#define CS_FIELD_SPEEDY                             L"SpeedY"
-#define CS_FIELD_TIME                               L"Time"
+#define CS_FIELD_VelocityX                          L"VelocX"
+#define CS_FIELD_VelocityY                          L"VelocY"
+#define CS_FIELD_SPEED                              L"Speed"
+#define CS_FIELD_COST                               L"Cost"
 
 #define CS_FIELD_ReservPop                          L"ReservPop"
 #define CS_FIELD_TravCost                           L"TravCost"

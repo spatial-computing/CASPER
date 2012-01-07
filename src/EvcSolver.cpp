@@ -434,8 +434,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	exportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
-	flockingSnapInterval = 1.0f;
-	flockingSimulationInterval = 0.1f;
+	flockingSnapInterval = 0.1f;
+	flockingSimulationInterval = 0.01f;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -1510,19 +1510,25 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_TIME));
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_COST));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_SPEEDX));
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_VelocityX));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_SPEEDY));
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_VelocityY));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_SPEED));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
@@ -1538,9 +1544,10 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_ID), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_NAME), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TIME), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SPEEDX), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SPEEDY), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_COST), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_VelocityX), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_VelocityY), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SPEED), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TRAVELED), esriNAFieldTypeOutput);
 
 	ipClassDefEdit->put_IsInput(VARIANT_FALSE);

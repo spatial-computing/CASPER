@@ -985,7 +985,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
 		std::list<FlockingLocationPtr> * history = 0;
-		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 3.0))) return hr;
+		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 5.0))) return hr;
 		flock->GetHistory(&history);
 
 		// start writing into the featureclass
@@ -1000,7 +1000,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// Get the "Flocks" NAClass feature class
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
-		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex;
+		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex;
 
 		// Create an insert cursor and feature buffer from the "EdgeStat" feature class to be used to write edges
 		if (FAILED(hr = ipFlocksFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
@@ -1009,10 +1009,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// Query for the appropriate field index values in the "EdgeStat" feature class
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_ID), &idFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_COST), &timeFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TRAVELED), &traveledFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEEDX), &speedXFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEEDY), &speedYFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_VelocityX), &speedXFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_VelocityY), &speedYFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEED), &speedFieldIndex))) return hr;
 
 		for(FlockingLocationItr it = history->begin(); it != history->end(); it++)
 		{
@@ -1030,6 +1031,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant((*it)->Traveled)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->Velocity.x)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->Velocity.y)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant((*it)->Velocity.length())))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
