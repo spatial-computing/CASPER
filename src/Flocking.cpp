@@ -30,7 +30,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	myPath->back()->pline->get_ToPoint(&FinalPoint);
 	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element);
 	nextVertex = element;
-	pathSegIt = myPath->begin();
+	initPathIterator = true;
 
 	// create a little bit of randomness within initial location and velocity
 	double x, y, dx, dy;
@@ -39,7 +39,6 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	dy = (rand() % 50) - 25;
 	MyLocation->PutCoords(x + dx, y + dy);
 	Velocity = OpenSteer::Vec3(dx, dy, 0.0);
-	// Velocity *= 10.0;
 
 	// steering lib init
 	myVehicle = new OpenSteer::SimpleVehicle();
@@ -61,6 +60,14 @@ HRESULT FlockingObject::loadNewEdge(void)
 		long pointCount = 0, i = 0;
 		IPointPtr p = 0;
 		double x, y;
+
+		if (initPathIterator)
+		{
+			pathSegIt = myPath->begin();
+			initPathIterator = false;
+			MyStatus = FLOCK_OBJ_STAT_MOVE;
+		}
+		else pathSegIt++;
 
 		// check if any edge is left
 		if (pathSegIt == myPath->end())
@@ -92,16 +99,15 @@ HRESULT FlockingObject::loadNewEdge(void)
 
 		if (nextVertexPoint == 0)
 		{
-			// update next vertex based on the new edge
+			// update next vertex based on the new edge and direction
 			nextVertexPoint = IPointPtr(CLSID_Point);
-			if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;		
+			if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;			
 			if (FAILED(hr = nextVertex->QueryPoint(nextVertexPoint))) return hr;
 			if (FAILED(hr = nextVertexPoint->Project(metricProjection))) return hr;
 		}
 
-		// load new path into the steer lib
-		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity(), false);
-		pathSegIt++;
+		// load new edge points into the steer library
+		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * 5.0, false);
 		newEdgeRequestFlag = false;
 	}
 	return hr;
@@ -113,17 +119,20 @@ HRESULT FlockingObject::buildNeighborList(std::list<FlockingObjectPtr> * objects
 	double dist = 0.0;
 	HRESULT hr = S_OK;
 	if (FAILED(hr = ((IProximityOperatorPtr)(nextVertexPoint))->ReturnDistance(MyLocation, &dist))) return hr;
-	if (dist <= 30.0)
+	if (dist <= 20.0)
 	{
-		if (BindVertex == -1l) newEdgeRequestFlag = true;
-		if (FAILED(hr = nextVertex->get_EID(&BindVertex))) return hr;
+		if (BindVertex == -1l)
+		{
+			newEdgeRequestFlag = true;
+			if (FAILED(hr = nextVertex->get_EID(&BindVertex))) return hr;
+		}
 	}
 	else
 	{
 		if (BindVertex != -1l)
 		{
-			// update next vertex based on the new edge
-			if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;		
+			// update next vertex based on the new edge and direction
+			if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;			
 			if (FAILED(hr = nextVertex->QueryPoint(nextVertexPoint))) return hr;
 			if (FAILED(hr = nextVertexPoint->Project(metricProjection))) return hr;
 			BindVertex = -1l;
@@ -155,14 +164,13 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 	{
 		double dist = 0.0;
 		if (FAILED(hr = ((IProximityOperatorPtr)(MyLocation))->ReturnDistance(FinalPoint, &dist))) return hr;
-		if (dist <= 100.0) MyStatus = FLOCK_OBJ_STAT_END;
+		if (dist <= 50.0) MyStatus = FLOCK_OBJ_STAT_END;
 		else
 		{
 			MyTime += dt;
 			dt = min(dt, MyTime);
 
 			// check time
-			if (MyTime >= 0.0) MyStatus = FLOCK_OBJ_STAT_MOVE;
 			if (MyTime > 0 && dt > 0)
 			{
 				if (FAILED(hr = loadNewEdge())) return hr;
@@ -194,7 +202,6 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 	}
 	return hr;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking enviroment implementation

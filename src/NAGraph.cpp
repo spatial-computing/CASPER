@@ -9,7 +9,8 @@
 NAEdge::NAEdge(const NAEdge& cpy)
 {
 	reservations = new std::vector<EdgeReservation>(*(cpy.reservations));
-	NetEdge = cpy.NetEdge;	
+	NetEdge = cpy.NetEdge;
+	capacity = cpy.capacity;
 	ReservedPop = cpy.ReservedPop;
 	originalCost = cpy.originalCost;	
 	criticalDens = cpy.criticalDens;
@@ -28,7 +29,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 	LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
 	ReservedPop = 0.0;
-	// cachedCost = originalCost;
+	capacity = 1.0;
 
 	if (FAILED(edge->get_AttributeValue(capacityAttribID, &vcap)) ||	
 		FAILED(edge->get_AttributeValue(costAttribID, &vcost)) ||	
@@ -40,16 +41,14 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 		saturationDens = -1;
 		originalCost = -1;
 		EID = -1;
-		// Direction = 0;
 	}
 	else
 	{
 		originalCost = max(0.0, vcost.dblVal);
-		double Capacity = 1.0;
-		if (vcap.vt == VT_R8) Capacity = max(1.0, vcap.dblVal);
-		else if (vcap.vt == VT_I4) Capacity = max(1, vcap.intVal);
-		criticalDens = CriticalDensPerCap * Capacity;
-		saturationDens = SaturationDensPerCap * Capacity;
+		if (vcap.vt == VT_R8) capacity = max(1.0, vcap.dblVal);
+		else if (vcap.vt == VT_I4) capacity = max(1, vcap.intVal);
+		criticalDens = CriticalDensPerCap * capacity;
+		saturationDens = SaturationDensPerCap * capacity;
 	}
 }
 
@@ -65,7 +64,7 @@ HRESULT NAEdge::QuerySourceStuff(long * sourceOID, long * sourceID, double * fro
 // Special function for Flocking: to check how much capacity the edge had originally
 double NAEdge::OriginalCapacity() const
 {
-	return criticalDens;
+	return capacity;
 }
 
 // Special function for CCRP: to check how much capacity id left on this edge.

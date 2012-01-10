@@ -123,6 +123,7 @@ private:
 	double ReservedPop;
 	double saturationDens;
 	double criticalDens;
+	double capacity;
 
 public:
 	double originalCost;

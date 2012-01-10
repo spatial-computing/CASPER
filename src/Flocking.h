@@ -60,6 +60,7 @@ private:
 	EvcPathPtr					myPath;
 	double						speedLimit;
 	ISpatialReferencePtr		metricProjection;
+	bool						initPathIterator;
 
 	// methods
 

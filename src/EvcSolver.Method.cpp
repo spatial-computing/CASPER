@@ -87,7 +87,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				tempEvc->g = evc->g;
 				tempEvc->Junction = evc->Junction;
 				tempEvc->Previous = 0;
-				_ASSERT(tempEvc->h + tempEvc->g < 20.0);
 				myEdge = tempEvc->GetBehindEdge();
 
 				if (myEdge) heap->Insert(myEdge);
