@@ -118,40 +118,52 @@ HRESULT FlockingObject::buildNeighborList(std::list<FlockingObjectPtr> * objects
 	myNeighborVehicles.clear();
 	double dist = 0.0;
 	HRESULT hr = S_OK;
-	if (FAILED(hr = ((IProximityOperatorPtr)(nextVertexPoint))->ReturnDistance(MyLocation, &dist))) return hr;
-	if (dist <= 20.0)
+
+	if (MyStatus == FLOCK_OBJ_STAT_END)
 	{
-		if (BindVertex == -1l)
+		for (std::list<FlockingObjectPtr>::iterator it = objects->begin(); it != objects->end(); it++)
 		{
-			newEdgeRequestFlag = true;
-			if (FAILED(hr = nextVertex->get_EID(&BindVertex))) return hr;
+			// self avoid check
+			if ((*it)->ID != ID) myNeighborVehicles.push_back((*it)->myVehicle);
 		}
 	}
 	else
 	{
-		if (BindVertex != -1l)
+		if (FAILED(hr = ((IProximityOperatorPtr)(nextVertexPoint))->ReturnDistance(MyLocation, &dist))) return hr;
+		if (dist <= 20.0)
 		{
-			// update next vertex based on the new edge and direction
-			if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;			
-			if (FAILED(hr = nextVertex->QueryPoint(nextVertexPoint))) return hr;
-			if (FAILED(hr = nextVertexPoint->Project(metricProjection))) return hr;
-			BindVertex = -1l;
+			if (BindVertex == -1l)
+			{
+				newEdgeRequestFlag = true;
+				if (FAILED(hr = nextVertex->get_EID(&BindVertex))) return hr;
+			}
 		}
-	}
+		else
+		{
+			if (BindVertex != -1l)
+			{
+				// update next vertex based on the new edge and direction
+				if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;			
+				if (FAILED(hr = nextVertex->QueryPoint(nextVertexPoint))) return hr;
+				if (FAILED(hr = nextVertexPoint->Project(metricProjection))) return hr;
+				BindVertex = -1l;
+			}
+		}
 
-	for (std::list<FlockingObjectPtr>::iterator it = objects->begin(); it != objects->end(); it++)
-	{
-		// self avoid check
-		if ((*it)->ID == ID) continue;
+		for (std::list<FlockingObjectPtr>::iterator it = objects->begin(); it != objects->end(); it++)
+		{
+			// self avoid check
+			if ((*it)->ID == ID) continue;
 
-		// moving object check
-		if ((*it)->MyStatus != FLOCK_OBJ_STAT_MOVE) continue;
+			// moving object check
+			if ((*it)->MyStatus != FLOCK_OBJ_STAT_MOVE) continue;
 
-		// check if they share an edge or if they are both crossing an intersection
-		if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
-			&& (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
+			// check if they share an edge or if they are both crossing an intersection
+			if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
+				&& (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
 
-		myNeighborVehicles.push_back((*it)->myVehicle);
+			myNeighborVehicles.push_back((*it)->myVehicle);
+		}
 	}
 	return hr;
 }
@@ -160,45 +172,57 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 {	
 	// check destination arriaval
 	HRESULT hr = S_OK;
-	if (MyStatus != FLOCK_OBJ_STAT_END)
+	if (MyStatus == FLOCK_OBJ_STAT_END)
+	{
+		if (FAILED(hr = buildNeighborList(objects))) return hr;
+
+		// generate a steer based on current situation
+		Velocity.set(0.0, 0.0, 0.0);
+		myVehicle->setSpeed(speedLimit);
+		Velocity += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]);
+		Velocity += myVehicle->steerForSeparation(10.0, 360.0, myNeighborVehicles);
+
+		// use the steer to create velocity and finally move
+		Velocity += myVehicle->velocity();
+		Velocity.truncateLength(speedLimit);
+	}
+	else
 	{
 		double dist = 0.0;
 		if (FAILED(hr = ((IProximityOperatorPtr)(MyLocation))->ReturnDistance(FinalPoint, &dist))) return hr;
 		if (dist <= 50.0) MyStatus = FLOCK_OBJ_STAT_END;
-		else
+		
+		MyTime += dt;
+		dt = min(dt, MyTime);
+
+		// check time
+		if (MyTime > 0 && dt > 0)
 		{
-			MyTime += dt;
-			dt = min(dt, MyTime);
+			if (FAILED(hr = loadNewEdge())) return hr;
+			if (MyStatus == FLOCK_OBJ_STAT_END) return S_OK;          //////////// ???????
+			if (FAILED(hr = buildNeighborList(objects))) return hr;
 
-			// check time
-			if (MyTime > 0 && dt > 0)
-			{
-				if (FAILED(hr = loadNewEdge())) return hr;
-				if (MyStatus == FLOCK_OBJ_STAT_END) return S_OK;
-				if (FAILED(hr = buildNeighborList(objects))) return hr;
+			// generate a steer based on current situation
+			Velocity.set(0.0, 0.0, 0.0);
+			myVehicle->setSpeed(speedLimit);
+			Velocity += myVehicle->steerForSeparation(10.0, 60.0, myNeighborVehicles);		
+			Velocity += myVehicle->steerForSeparation(1.0, 270.0, myNeighborVehicles);
+			Velocity += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);				
 
-				// generate a steer based on current situation
-				Velocity.set(0.0, 0.0, 0.0);
-				myVehicle->setSpeed(speedLimit);
-				Velocity += myVehicle->steerForSeparation(1.0,  60.0, myNeighborVehicles);		
-				Velocity += myVehicle->steerForSeparation(0.2, 270.0, myNeighborVehicles);
-				Velocity += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
-
-				// use the steer to create velocity and finally move
-				OpenSteer::Vec3 pos = OpenSteer::Vec3::zero;
-				pos += myVehicle->position();
-				Velocity += myVehicle->velocity();
-				Velocity.truncateLength(speedLimit);				
-				Traveled += Velocity.length() * dt;
-				pos += Velocity * dt;
-
-				// update coordinate and velocity
-				if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
-				myVehicle->setPosition(pos.x, pos.y, 0.0);
-				myVehicle->setForward(Velocity.normalize());
-				myVehicle->setSpeed(Velocity.length());
-			}
+			// use the steer to create velocity and finally move
+			Velocity += myVehicle->velocity();
+			Velocity.truncateLength(speedLimit);				
+			Traveled += Velocity.length() * dt;
 		}
+
+		// update coordinate and velocity
+		OpenSteer::Vec3 pos = OpenSteer::Vec3::zero;
+		pos += myVehicle->position();
+		pos += Velocity * dt;
+		if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
+		myVehicle->setPosition(pos.x, pos.y, 0.0);
+		myVehicle->setForward(Velocity.normalize());
+		myVehicle->setSpeed(Velocity.length());					
 	}
 	return hr;
 }
