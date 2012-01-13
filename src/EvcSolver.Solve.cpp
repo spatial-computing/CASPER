@@ -13,6 +13,7 @@
 #include "NameConstants.h"
 #include "float.h"  // for FLT_MAX, etc.
 #include <cmath>   // for HUGE_VAL
+#include <ctime>
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 #include "Flocking.h"
@@ -1000,20 +1001,50 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// Get the "Flocks" NAClass feature class
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
-		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex;
+		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex;
+		double costPerDay = 1.0;
+		double startTime = 0.0;
+		SYSTEMTIME now = time(NULL);
+		INetworkAttributePtr costAttrib;
+		esriNetworkAttributeUnits unit;
+		
 
-		// Create an insert cursor and feature buffer from the "EdgeStat" feature class to be used to write edges
+		// read cost attribute unit
+		if (FAILED(hr = ipNetworkDataset->get_Attribute(costAttributeID, &costAttrib))) return hr;
+		if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
+		switch (unit)
+		{
+		case esriNAUSeconds:
+			costPerDay = 1.0 / (3600.0 * 24.0);
+		case esriNAUMinutes:
+			costPerDay = 1.0 / (60.0 * 24.0);
+			break;
+		case esriNAUHours:
+			costPerDay = 1.0 / 24.0;
+			break;
+		case esriNAUDays:
+			costPerDay = 1.0;
+			break;
+		}
+
+		// Create an insert cursor and feature buffer from the "Flocks" feature class to be used to write edges
 		if (FAILED(hr = ipFlocksFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
 		if (FAILED(hr = ipFlocksFC->CreateFeatureBuffer(&ipFeatureBuffer))) return hr;
 
 		// Query for the appropriate field index values in the "EdgeStat" feature class
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_ID), &idFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_COST), &timeFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_COST), &costFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TRAVELED), &traveledFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_VelocityX), &speedXFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_VelocityY), &speedYFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEED), &speedFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
+
+		IFeaturePtr f;
+		VARIANT val;
+		if (FAILED(hr = ipFlocksFC->GetFeature(1, &f))) return hr;
+		if (FAILED(hr = f->get_Value(timeFieldIndex, &val))) return hr;
 
 		for(FlockingLocationItr it = history->begin(); it != history->end(); it++)
 		{
@@ -1027,11 +1058,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant((*it)->ID)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, CComVariant((*it)->GroupName)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant((*it)->MyTime)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, CComVariant((*it)->MyTime)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant((*it)->Traveled)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->Velocity.x)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->Velocity.y)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant((*it)->Velocity.length())))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(startTime + (*it)->MyTime * costPerSec, VT_DATE)))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;

@@ -324,7 +324,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 
 			// post-movement snapshot
 			if ((oldStat != FLOCK_OBJ_STAT_END && newStat == FLOCK_OBJ_STAT_END) ||
-				(newStat == FLOCK_OBJ_STAT_MOVE && lastSnapshot + snapshotInterval >= time))
+				(newStat != FLOCK_OBJ_STAT_INIT && lastSnapshot + snapshotInterval >= time))
 			{
 				history->push_front(new FlockingLocation(**it));
 				snapshotTaken = true;
