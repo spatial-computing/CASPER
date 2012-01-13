@@ -1004,10 +1004,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex;
 		double costPerDay = 1.0;
 		double startTime = 0.0;
-		SYSTEMTIME now = time(NULL);
 		INetworkAttributePtr costAttrib;
-		esriNetworkAttributeUnits unit;
-		
+		esriNetworkAttributeUnits unit;		
 
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_Attribute(costAttributeID, &costAttrib))) return hr;
@@ -1041,11 +1039,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEED), &speedFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
 
-		IFeaturePtr f;
-		VARIANT val;
-		if (FAILED(hr = ipFlocksFC->GetFeature(1, &f))) return hr;
-		if (FAILED(hr = f->get_Value(timeFieldIndex, &val))) return hr;
-
 		for(FlockingLocationItr it = history->begin(); it != history->end(); it++)
 		{
 			if (pTrackCancel)
@@ -1063,7 +1056,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->Velocity.x)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->Velocity.y)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant((*it)->Velocity.length())))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(startTime + (*it)->MyTime * costPerSec, VT_DATE)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(startTime + (*it)->MyTime * costPerDay, VT_DATE)))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
