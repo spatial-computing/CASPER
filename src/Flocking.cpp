@@ -180,11 +180,20 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 		Velocity.set(0.0, 0.0, 0.0);
 		myVehicle->setSpeed(speedLimit);
 		Velocity += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]);
-		Velocity += myVehicle->steerForSeparation(10.0, 360.0, myNeighborVehicles);
+		Velocity += 10.0 * myVehicle->steerForSeparation(10.0, 360.0, myNeighborVehicles);
 
 		// use the steer to create velocity and finally move
 		Velocity += myVehicle->velocity();
 		Velocity.truncateLength(speedLimit);
+
+		// update coordinate and velocity
+		OpenSteer::Vec3 pos = OpenSteer::Vec3::zero;
+		pos += myVehicle->position();
+		pos += Velocity * dt;
+		if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
+		myVehicle->setPosition(pos.x, pos.y, 0.0);
+		myVehicle->setForward(Velocity.normalize());
+		myVehicle->setSpeed(Velocity.length());	
 	}
 	else
 	{
@@ -206,23 +215,23 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 			Velocity.set(0.0, 0.0, 0.0);
 			myVehicle->setSpeed(speedLimit);
 			Velocity += myVehicle->steerForSeparation(10.0, 60.0, myNeighborVehicles);		
-			Velocity += myVehicle->steerForSeparation(1.0, 270.0, myNeighborVehicles);
+			Velocity += 3.0 * myVehicle->steerForSeparation(1.0, 270.0, myNeighborVehicles);
 			Velocity += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);				
 
 			// use the steer to create velocity and finally move
 			Velocity += myVehicle->velocity();
 			Velocity.truncateLength(speedLimit);				
 			Traveled += Velocity.length() * dt;
-		}
 
-		// update coordinate and velocity
-		OpenSteer::Vec3 pos = OpenSteer::Vec3::zero;
-		pos += myVehicle->position();
-		pos += Velocity * dt;
-		if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
-		myVehicle->setPosition(pos.x, pos.y, 0.0);
-		myVehicle->setForward(Velocity.normalize());
-		myVehicle->setSpeed(Velocity.length());					
+			// update coordinate and velocity
+			OpenSteer::Vec3 pos = OpenSteer::Vec3::zero;
+			pos += myVehicle->position();
+			pos += Velocity * dt;
+			if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
+			myVehicle->setPosition(pos.x, pos.y, 0.0);
+			myVehicle->setForward(Velocity.normalize());
+			myVehicle->setSpeed(Velocity.length());	
+		}				
 	}
 	return hr;
 }

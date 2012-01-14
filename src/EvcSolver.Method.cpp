@@ -119,7 +119,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				// Remove the next junction EID from the top of the stack
 				myEdge = heap->DeleteMin();
 				myVertex = myEdge->ToVertex;
-				_ASSERT(myVertex->EID != 10118);
 				if (FAILED(hr = closedList->Insert(myEdge)))
 				{
 					// closedList violation happened

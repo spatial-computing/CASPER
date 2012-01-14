@@ -17,6 +17,7 @@
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 #include "Flocking.h"
+#include <ATLComTime.h>
 
 STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, ITrackCancel* pTrackCancel, VARIANT_BOOL* pIsPartialSolution)
 {
@@ -1003,9 +1004,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
 		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex;
 		double costPerDay = 1.0;
-		double startTime = 0.0;
 		INetworkAttributePtr costAttrib;
-		esriNetworkAttributeUnits unit;		
+		esriNetworkAttributeUnits unit;
+		COleDateTime d = COleDateTime(time(NULL));
 
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_Attribute(costAttributeID, &costAttrib))) return hr;
@@ -1056,17 +1057,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->Velocity.x)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->Velocity.y)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant((*it)->Velocity.length())))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(startTime + (*it)->MyTime * costPerDay, VT_DATE)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(d.m_dt + (*it)->MyTime * costPerDay, VT_DATE)))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 			if (ipStepProgressor) ipStepProgressor->Step();
 		}
 
-		// fluch the insert buffer
+		// fluch the insert buffer and release
 		ipFeatureCursor->Flush();
-
-		// release
 		delete flock;
 	}
 
