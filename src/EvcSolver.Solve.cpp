@@ -738,11 +738,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				path->OrginalCost = 0.0;
 				path->EvacuationCost = 0.0;
 				pline = IPointCollectionPtr(CLSID_Polyline);
+				pointCount = -1;
 
 				for (psit = path->begin(); psit != path->end(); psit++)
 				{
 					// take a path segment from the stack
 					pathSegment = *psit;
+					pointCount = -1;
 
 					// retrive street shape for this segment
 					if (FAILED(hr = ipFeatureClassContainer->get_ClassByID(pathSegment->SourceID, &ipNetworkSourceFC))) return hr;
@@ -786,8 +788,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				}
 
 				// Add the last point of the last path segment to the polyline
-				pcollect->get_Point(pointCount, &p);
-				pline->AddPoint(p);
+				if (pointCount > -1)
+				{
+					pcollect->get_Point(pointCount, &p);
+					pline->AddPoint(p);
+				}
 
 				// Store the feature values on the feature buffer
 				if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
@@ -840,7 +845,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		{
 			// Step progressor range = 0 through numberOfOutputSteps
 			if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-			if (FAILED(hr = ipStepProgressor->put_MaxRange(100))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_MaxRange(ecache->Size()))) return hr;
 			if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
 			if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		}
