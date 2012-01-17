@@ -1012,9 +1012,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		INetworkAttributePtr costAttrib;
 		esriNetworkAttributeUnits unit;
 		COleDateTime d = COleDateTime(time(NULL));
+		double assumedSpeed = 5.0; // mps
 
 		// read cost attribute unit
-		if (FAILED(hr = ipNetworkDataset->get_Attribute(costAttributeID, &costAttrib))) return hr;
+		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
 		if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
 		switch (unit)
 		{
@@ -1026,9 +1027,32 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		case esriNAUHours:
 			costPerDay = 1.0 / 24.0;
 			break;
-		case esriNAUDays:
-			costPerDay = 1.0;
+		case esriNAUInches:
+			costPerDay = 39.370079 * assumedSpeed / (3600.0 * 24.0);
 			break;
+		case esriNAUFeet:
+			costPerDay = 3.28084 * assumedSpeed / (3600.0 * 24.0);
+			break;
+		case esriNAUYards:
+			costPerDay = 0.000621 * assumedSpeed / (3600.0 * 24.0);
+			break;
+		case esriNAUMiles:
+			costPerDay = assumedSpeed / (3600.0 * 24.0 * 1000.0);
+			break;
+		case esriNAUMillimeters:
+			costPerDay = 1000.0 * assumedSpeed / (3600.0 * 24.0);
+			break;
+		case esriNAUCentimeters:
+			costPerDay = 100.0 * assumedSpeed / (3600.0 * 24.0);
+			break;
+		case esriNAUMeters:
+			costPerDay = assumedSpeed / (3600.0 * 24.0);
+			break;
+		case esriNAUKilometers:
+			costPerDay = assumedSpeed / (3600.0 * 24.0 * 1000.0);
+			break;
+		case esriNAUDecimeters:
+			costPerDay = assumedSpeed / (3600.0 * 24.0 * 10.0);
 		}
 
 		// Create an insert cursor and feature buffer from the "Flocks" feature class to be used to write edges
