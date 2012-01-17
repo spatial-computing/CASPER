@@ -184,7 +184,7 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 
 		// use the steer to create velocity and finally move
 		Velocity += myVehicle->velocity();
-		Velocity.truncateLength(speedLimit);
+		Velocity.truncateLength(speedLimit / 2.0);
 
 		// update coordinate and velocity
 		OpenSteer::Vec3 pos = OpenSteer::Vec3::zero;
