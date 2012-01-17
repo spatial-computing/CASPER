@@ -180,7 +180,7 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 		Velocity.set(0.0, 0.0, 0.0);
 		myVehicle->setSpeed(speedLimit);
 		Velocity += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]);
-		Velocity += 10.0 * myVehicle->steerForSeparation(10.0, 360.0, myNeighborVehicles);
+		Velocity += 2.0 * myVehicle->steerForSeparation(10.0, 360.0, myNeighborVehicles);
 
 		// use the steer to create velocity and finally move
 		Velocity += myVehicle->velocity();
@@ -215,7 +215,7 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 			Velocity.set(0.0, 0.0, 0.0);
 			myVehicle->setSpeed(speedLimit);
 			Velocity += myVehicle->steerForSeparation(10.0, 60.0, myNeighborVehicles);		
-			Velocity += 3.0 * myVehicle->steerForSeparation(1.0, 270.0, myNeighborVehicles);
+			Velocity += myVehicle->steerForSeparation(1.0, 270.0, myNeighborVehicles);
 			Velocity += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);				
 
 			// use the steer to create velocity and finally move
