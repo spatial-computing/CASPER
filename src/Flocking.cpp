@@ -35,8 +35,8 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	// create a little bit of randomness within initial location and velocity
 	double x, y, dx, dy;
 	MyLocation->QueryCoords(&x, &y);
-	dx = (rand() % 100) - 50;
-	dy = (rand() % 100) - 50;
+	dx = (rand() % 50) - 25;
+	dy = (rand() % 50) - 25;
 	MyLocation->PutCoords(x + dx, y + dy);
 	Velocity = OpenSteer::Vec3(-dx, -dy, 0.0);
 
@@ -48,7 +48,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	myVehicle->setPosition(x + dx, y + dy, 0.0);
 	myVehicle->setForward(Velocity.normalize());
 	myVehicle->setSpeed(Velocity.length());
-	myVehicle->setMaxForce(10.0);
+	myVehicle->setMaxForce(85000.0);
 	myVehicle->setMass(1.0);
 }
 
@@ -184,7 +184,7 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 		myVehicle->setMaxSpeed(speedLimit / 2.0);
 		//Velocity += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]);
 		//Velocity += 2.0 * myVehicle->steerForSeparation(10.0, 360.0, myNeighborVehicles);
-		myVehicle->applySteeringForce(myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]), dt);
+		myVehicle->applySteeringForce(myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]) / dt, dt);
 
 		// use the steer to create velocity and finally move
 		//Velocity += myVehicle->velocity();
@@ -216,7 +216,7 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 
 			// generate a steer based on current situation
 			//Velocity.set(0.0, 0.0, 0.0);
-			//myVehicle->setSpeed(speedLimit);
+			myVehicle->setSpeed(speedLimit);
 			myVehicle->setMaxSpeed(speedLimit);
 
 			//// Apply steer for seperation in front
@@ -231,7 +231,7 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 
 			// Apply steer to follow the path
 			//Velocity = myVehicle->velocity() + myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
-			myVehicle->applySteeringForce(myVehicle->steerToFollowPath(+1, dt, myVehiclePath), dt);
+			myVehicle->applySteeringForce(myVehicle->steerToFollowPath(+1, dt, myVehiclePath) / dt, dt);
 
 			// Finilize velocity and finally move
 			//Velocity.truncateLength(speedLimit);
