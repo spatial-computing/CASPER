@@ -48,7 +48,6 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	myVehicle->setPosition(x + dx, y + dy, 0.0);
 	myVehicle->setForward(Velocity.normalize());
 	myVehicle->setSpeed(Velocity.length());
-	myVehicle->setMaxForce(85000.0);
 	myVehicle->setMass(1.0);
 }
 
@@ -132,7 +131,7 @@ HRESULT FlockingObject::buildNeighborList(std::list<FlockingObjectPtr> * objects
 	else
 	{
 		if (FAILED(hr = ((IProximityOperatorPtr)(nextVertexPoint))->ReturnDistance(MyLocation, &dist))) return hr;
-		if (dist <= 20.0)
+		if (dist <= 30.0)
 		{
 			if (BindVertex == -1l)
 			{
@@ -174,35 +173,28 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 {	
 	// check destination arriaval
 	HRESULT hr = S_OK;
+	OpenSteer::Vec3 steer = OpenSteer::Vec3::zero, pos = OpenSteer::Vec3::zero;
+	double dist = 0.0;
+	myVehicle->setMaxForce(150000.0/* / (dt * dt)*/);
+
+	// check distance to safe zone
+	if (FAILED(hr = ((IProximityOperatorPtr)(MyLocation))->ReturnDistance(FinalPoint, &dist))) return hr;
+
 	if (MyStatus == FLOCK_OBJ_STAT_END)
 	{
 		if (FAILED(hr = buildNeighborList(objects))) return hr;
 
 		// generate a steer based on current situation
-		//Velocity.set(0.0, 0.0, 0.0);
-		//myVehicle->setSpeed(speedLimit);
 		myVehicle->setMaxSpeed(speedLimit / 2.0);
-		//Velocity += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]);
-		//Velocity += 2.0 * myVehicle->steerForSeparation(10.0, 360.0, myNeighborVehicles);
-		myVehicle->applySteeringForce(myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]) / dt, dt);
-
-		// use the steer to create velocity and finally move
-		//Velocity += myVehicle->velocity();
-		//Velocity.truncateLength(speedLimit / 2.0);
-
-		// update coordinate and velocity
-		OpenSteer::Vec3 pos = myVehicle->position();
-		//pos += Velocity * dt;
-		if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
-		//myVehicle->setPosition(pos.x, pos.y, 0.0);
-		//myVehicle->setForward(Velocity.normalize());
-		//myVehicle->setSpeed(Velocity.length());	
+		steer += myVehicle->steerToAvoidCloseNeighbors (10.0, myNeighborVehicles);
+		if (dist < 50.0) steer += myVehicle->steerForWander(dt);
+		else steer += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]);
+		myVehicle->applySteeringForce(steer / dt, dt);
+	
 	}
 	else
 	{
-		double dist = 0.0;
-		if (FAILED(hr = ((IProximityOperatorPtr)(MyLocation))->ReturnDistance(FinalPoint, &dist))) return hr;
-		if (dist <= 50.0) MyStatus = FLOCK_OBJ_STAT_END;
+		if (dist < 50.0) MyStatus = FLOCK_OBJ_STAT_END;
 		
 		MyTime += dt;
 		dt = min(dt, MyTime);
@@ -211,44 +203,26 @@ HRESULT FlockingObject::Move(std::list<FlockingObjectPtr> * objects, double dt)
 		if (MyTime > 0 && dt > 0)
 		{
 			if (FAILED(hr = loadNewEdge())) return hr;
-			if (MyStatus == FLOCK_OBJ_STAT_END) return S_OK;          //////////// ???????
+			if (MyStatus == FLOCK_OBJ_STAT_END) return S_OK;
 			if (FAILED(hr = buildNeighborList(objects))) return hr;
 
 			// generate a steer based on current situation
-			//Velocity.set(0.0, 0.0, 0.0);
-			myVehicle->setSpeed(speedLimit);
 			myVehicle->setMaxSpeed(speedLimit);
+			myVehicle->setSpeed(speedLimit * 1.1);
 
-			//// Apply steer for seperation in front
-			//Velocity = myVehicle->velocity() + myVehicle->steerForSeparation(10.0, 60.0, myNeighborVehicles);
-			//myVehicle->setForward(Velocity.normalize());
-			//myVehicle->setSpeed(Velocity.length());
+			steer += myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
+			steer += myVehicle->steerForSeparation(15.0, 60.0, myNeighborVehicles);
+			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
+			myVehicle->applySteeringForce(steer / dt, dt);
 
-			//// Apply steer for seperation for closeby neighbors
-			//Velocity = myVehicle->velocity() + myVehicle->steerForSeparation(1.0, 270.0, myNeighborVehicles);
-			//myVehicle->setForward(Velocity.normalize());
-			//myVehicle->setSpeed(Velocity.length());
-
-			// Apply steer to follow the path
-			//Velocity = myVehicle->velocity() + myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
-			myVehicle->applySteeringForce(myVehicle->steerToFollowPath(+1, dt, myVehiclePath) / dt, dt);
-
-			// Finilize velocity and finally move
-			//Velocity.truncateLength(speedLimit);
-			//myVehicle->setForward(Velocity.normalize());
-			//myVehicle->setSpeed(Velocity.length());
 			Traveled += myVehicle->speed() * dt;
-
-			// update coordinate and velocity
-			OpenSteer::Vec3 pos = myVehicle->position();
-			//pos += Velocity * dt;
-			if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
-			//myVehicle->setPosition(pos.x, pos.y, 0.0);
-			//myVehicle->setForward(Velocity.normalize());
-			//myVehicle->setSpeed(Velocity.length());	
 		}				
 	}
+	// update coordinate and velocity
+	pos = myVehicle->position();
+	if (FAILED(hr = MyLocation->PutCoords(pos.x, pos.y))) return hr;
 	Velocity = myVehicle->velocity();
+
 	return hr;
 }
 

@@ -50,7 +50,7 @@
 // Flocking
 
 #define CS_FIELD_TRAVELED                           L"Traveled"
-#define CS_FIELD_TIME                               L"Time"
+#define CS_FIELD_TIME                               L"MyTime"
 #define CS_FIELD_VelocityX                          L"VelocX"
 #define CS_FIELD_VelocityY                          L"VelocY"
 #define CS_FIELD_SPEED                              L"Speed"

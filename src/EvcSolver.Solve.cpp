@@ -1008,11 +1008,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// Get the "Flocks" NAClass feature class
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
 		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex;
-		double costPerDay = 1.0;
+		double costPerDay = 1.0, costPerSec = 1.0;
 		INetworkAttributePtr costAttrib;
 		esriNetworkAttributeUnits unit;
-		COleDateTime d = COleDateTime(time(NULL));
+		time_t baseTime = time(NULL), thisTime = 0;
+		// COleDateTime d = COleDateTime(time(NULL));
 		double assumedSpeed = 5.0; // mps
+		char * thisTimeBuf = new char[25];
 
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
@@ -1054,6 +1056,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		case esriNAUDecimeters:
 			costPerDay = assumedSpeed / (3600.0 * 24.0 * 10.0);
 		}
+		costPerSec = costPerDay * (3600.0 * 24.0);
 
 		// Create an insert cursor and feature buffer from the "Flocks" feature class to be used to write edges
 		if (FAILED(hr = ipFlocksFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
@@ -1077,6 +1080,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
 			}
 
+			thisTime = baseTime + time_t((*it)->MyTime * costPerSec);
+			strftime (thisTimeBuf, 25, "%Y/%m/%d %H:%M:%S", localtime(&thisTime));
+
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant((*it)->ID)))) return hr;
@@ -1086,7 +1092,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->Velocity.x)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->Velocity.y)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant((*it)->Velocity.length())))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(d.m_dt + (*it)->MyTime * costPerDay, VT_DATE)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(BSTR(thisTimeBuf))))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
@@ -1096,6 +1102,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// fluch the insert buffer and release
 		ipFeatureCursor->Flush();
 		delete flock;
+		delete [] thisTimeBuf;
 	}
 
 	// timing

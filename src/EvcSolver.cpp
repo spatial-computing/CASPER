@@ -536,7 +536,7 @@ STDMETHODIMP EvcSolver::get_FlockingSnapInterval(BSTR * value)
 	if (value)
 	{
 		*value = new WCHAR[100];
-		swprintf_s(*value, 100, L"%.2f", flockingSnapInterval);
+		swprintf_s(*value, 100, L"%.3f", flockingSnapInterval);
 	}
 	return S_OK;
 }
@@ -546,7 +546,7 @@ STDMETHODIMP EvcSolver::get_FlockingSimulationInterval(BSTR * value)
 	if (value)
 	{
 		*value = new WCHAR[100];
-		swprintf_s(*value, 100, L"%.2f", flockingSimulationInterval);
+		swprintf_s(*value, 100, L"%.3f", flockingSimulationInterval);
 	}
 	return S_OK;
 }
@@ -1541,7 +1541,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_TIME));
-	ipFieldEdit->put_Type(esriFieldTypeDate);
+	ipFieldEdit->put_Type(esriFieldTypeString);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipClassDefEdit->putref_Fields(ipFields);
