@@ -36,7 +36,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// this method should be available to call
 	// NOTE: for consistency within custom applications, similar validation checks should also be implemented
 	// before calling the Solve method on any solver  
-
+	USES_CONVERSION;
 	HRESULT hr;
 	long i;
 
@@ -1014,7 +1014,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		time_t baseTime = time(NULL), thisTime = 0;
 		// COleDateTime d = COleDateTime(time(NULL));
 		double assumedSpeed = 5.0; // mps
-		char * thisTimeBuf = new char[25];
+		wchar_t * thisTimeBuf = new wchar_t[25];
+		tm local;
 
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
@@ -1077,11 +1078,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (pTrackCancel)
 			{
 				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
-				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+				if (keepGoing == VARIANT_FALSE) return E_ABORT;
 			}
 
+			// generate time as unicode string
 			thisTime = baseTime + time_t((*it)->MyTime * costPerSec);
-			strftime (thisTimeBuf, 25, "%Y/%m/%d %H:%M:%S", localtime(&thisTime));
+			localtime_s(&local, &thisTime);
+			wcsftime(thisTimeBuf, 25, L"%Y/%m/%d %H:%M:%S", &local);
 
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
@@ -1099,7 +1102,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (ipStepProgressor) ipStepProgressor->Step();
 		}
 
-		// fluch the insert buffer and release
+		// flush the insert buffer and release
 		ipFeatureCursor->Flush();
 		delete flock;
 		delete [] thisTimeBuf;
