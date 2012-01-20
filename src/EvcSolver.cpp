@@ -609,6 +609,21 @@ STDMETHODIMP EvcSolver::put_CostPerZoneDensity(BSTR value)
 
 // returns the name of the heuristic attributes loaded from the network dataset.
 // this will be called from the property page so the user can select.
+STDMETHODIMP EvcSolver::get_CostAttributes(BSTR ** Names)
+{
+	int count = costAttribs.size(), i;
+	HRESULT hr;
+	BSTR * names = new BSTR[count];
+
+	for (i = 0; i < count; i++) if (FAILED(hr = costAttribs[i]->get_Name(&(names[i])))) return hr;	
+
+	*Names = names;
+
+	return S_OK;
+}
+
+// returns the name of the heuristic attributes loaded from the network dataset.
+// this will be called from the property page so the user can select.
 STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(BSTR ** Names)
 {
 	int count = discriptiveAttribs.size(), i;
@@ -619,6 +634,14 @@ STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(BSTR ** Names)
 
 	*Names = names;
 
+	return S_OK;
+}
+
+// returns the count of available heuristic attributes from the network dataset to the property page
+STDMETHODIMP EvcSolver::get_CostAttributesCount(int * Count)
+{
+	int count = costAttribs.size();
+	*Count = count;
 	return S_OK;
 }
 
@@ -649,11 +672,39 @@ STDMETHODIMP EvcSolver::get_CapacityAttribute(int * index)
 	return S_OK;
 }
 
+// Gets the selected cost attribute back to the property page
+STDMETHODIMP EvcSolver::get_CostAttribute(int * index)
+{	
+	int count = costAttribs.size(), i;
+	HRESULT hr;
+	long ID;
+
+	for (i = 0; i < count; i++)
+	{
+		if (FAILED(hr = costAttribs[i]->get_ID(&ID))) return hr;
+		if (costAttributeID == ID)
+		{
+			if (index) *index = i;
+			break;
+		}
+	}
+	return S_OK;
+}
+
 // Sets the selected cost attribute based on what user selected in property page
 STDMETHODIMP EvcSolver::put_CapacityAttribute(int index)
 {		
 	HRESULT hr;
 	if (FAILED(hr = discriptiveAttribs[index]->get_ID(&capAttributeID))) return hr;
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
+// Sets the selected cost attribute based on what user selected in property page
+STDMETHODIMP EvcSolver::put_CostAttribute(int index)
+{		
+	HRESULT hr;
+	if (FAILED(hr = costAttribs[index]->get_ID(&costAttributeID))) return hr;
 	m_bPersistDirty = true;
 	return S_OK;
 }

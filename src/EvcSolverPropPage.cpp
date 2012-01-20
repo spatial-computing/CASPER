@@ -56,13 +56,22 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hComboCostMethod, CB_ADDSTRING, NULL, (LPARAM)(_T("CASPER")));
 		::SendMessage(m_hComboCostMethod, CB_SETCURSEL, (WPARAM)method, 0);
 
-		// set the loaded network discriptives
+		// set the loaded network discriptive attribs
 		m_ipEvcSolver->get_DiscriptiveAttributesCount(&c);
 		m_ipEvcSolver->get_DiscriptiveAttributes(&names);
 		::SendMessage(m_hCapCombo, CB_RESETCONTENT, NULL, NULL);
 		for (i = 0; i < c; i++) ::SendMessage(m_hCapCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));		
 		m_ipEvcSolver->get_CapacityAttribute(&selectedIndex);
 		::SendMessage(m_hCapCombo, CB_SETCURSEL, selectedIndex, 0);
+		delete [] names;
+
+		// set the loaded network cost attribs
+		m_ipEvcSolver->get_CostAttributesCount(&c);
+		m_ipEvcSolver->get_CostAttributes(&names);
+		::SendMessage(m_hCostCombo, CB_RESETCONTENT, NULL, NULL);
+		for (i = 0; i < c; i++) ::SendMessage(m_hCostCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));		
+		m_ipEvcSolver->get_CostAttribute(&selectedIndex);
+		::SendMessage(m_hCostCombo, CB_SETCURSEL, selectedIndex, 0);
 		delete [] names;
 
 		// critical density
@@ -248,8 +257,11 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 	int size;
 	if (ipSolver != 0)
 	{
+		// save data from drop boxes
 		int selectedIndex = ::SendMessage(m_hCapCombo, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_CapacityAttribute(selectedIndex);
+		selectedIndex = ::SendMessage(m_hCostCombo, CB_GETCURSEL, 0, 0);
+		if (selectedIndex > -1) ipSolver->put_CostAttribute(selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboMethod, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_SolverMethod((EVC_SOLVER_METHOD)selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboCostMethod, CB_GETCURSEL, 0, 0);
@@ -328,6 +340,7 @@ STDMETHODIMP EvcSolverPropPage::Cancel()
 LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	m_hCapCombo = GetDlgItem(IDC_COMBO_CAPACITY);
+	m_hCostCombo = GetDlgItem(IDC_COMBO_COST);
 	m_hComboMethod = GetDlgItem(IDC_COMBO_METHOD);
 	m_hComboCostMethod = GetDlgItem(IDC_COMBO_CostMethod);
 	m_hEditCritical = GetDlgItem(IDC_EDIT_Critical);
@@ -374,6 +387,14 @@ LRESULT EvcSolverPropPage::OnCbnSelchangeComboCostmethod(WORD /*wNotifyCode*/, W
 }
 
 LRESULT EvcSolverPropPage::OnCbnSelchangeComboCapacity(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnCbnSelchangeCostCapacity(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

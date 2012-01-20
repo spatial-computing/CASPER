@@ -32,6 +32,8 @@
 #define IDC_STATIC_FlockSnapInterval    235
 #define IDC_EDIT_FlockSimulationInterval 236
 #define IDC_STATIC_FlockSimulationInterval 237
+#define IDC_STATIC_Cost                 238
+#define IDC_COMBO_COST                  239
 
 // Next default values for new objects
 // 

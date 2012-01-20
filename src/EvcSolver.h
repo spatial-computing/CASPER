@@ -44,7 +44,7 @@ __interface IEvcSolver : IUnknown
 	[propget, helpstring("Lists discriptive attributes from the network dataset")]
 		HRESULT DiscriptiveAttributes([out, retval] BSTR ** names);
 	[propget, helpstring("Counts discriptive attributes from the network dataset")]
-		HRESULT DiscriptiveAttributesCount( [out, retval] int * count);	
+		HRESULT DiscriptiveAttributesCount([out, retval] int * count);
 	[propput, helpstring("Sets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([in] int index);
 	[propget, helpstring("Gets the selected caspacity attribute index")]
@@ -81,6 +81,16 @@ __interface IEvcSolver : IUnknown
 		HRESULT FlockingEnabled([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the flocking mode")]
 		HRESULT FlockingEnabled([out, retval] VARIANT_BOOL * value);
+
+	/// replacement for ISolverSetting2 functionality until I found that bug
+	[propput, helpstring("Sets the selected cost attribute index")]
+		HRESULT CostAttribute([in] int index);
+	[propget, helpstring("Gets the selected cost attribute index")]
+		HRESULT CostAttribute([out, retval] int * index);
+	[propget, helpstring("Lists impedence attributes from the network dataset")]
+		HRESULT CostAttributes([out, retval] BSTR ** names);
+	[propget, helpstring("Counts impedence attributes from the network dataset")]
+		HRESULT CostAttributesCount([out, retval] int * count);
 };
 
 // EvcSolver
@@ -96,7 +106,7 @@ __interface IEvcSolver : IUnknown
 ]
 class ATL_NO_VTABLE EvcSolver :
 	public IEvcSolver,
-	public INARouteSolver2,
+	/// public INARouteSolver2,
 	public INASolver,
 	public INASolverSettings2,
 	public IPersistStream,
@@ -161,6 +171,12 @@ public:
 	STDMETHOD(put_FlockingSnapInterval)(BSTR value);
 	STDMETHOD(get_FlockingSimulationInterval)(BSTR * value);
 	STDMETHOD(put_FlockingSimulationInterval)(BSTR value);
+
+	/// replacement for ISolverSetting2 functionality until I found that bug
+	STDMETHOD(put_CostAttribute)(int index);
+	STDMETHOD(get_CostAttribute)(int * index);
+	STDMETHOD(get_CostAttributes)(BSTR ** names);
+	STDMETHOD(get_CostAttributesCount)(int * count);
 
 	// INARouteSolver2
 
