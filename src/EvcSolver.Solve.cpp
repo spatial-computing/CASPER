@@ -36,7 +36,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// this method should be available to call
 	// NOTE: for consistency within custom applications, similar validation checks should also be implemented
 	// before calling the Solve method on any solver  
-	USES_CONVERSION;
+
 	HRESULT hr;
 	long i;
 
