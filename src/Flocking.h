@@ -14,6 +14,7 @@ class FlockingLocation
 public:
 	VARIANT			GroupName;
 	double			MyTime;
+	double			GTime;
 	double			Traveled;
 	IPointPtr		MyLocation;
 	OpenSteer::Vec3	Velocity;
@@ -23,6 +24,7 @@ public:
 	FlockingLocation(void)
 	{
 		MyTime = -1.0;
+		GTime = -1.0;
 		Traveled = 0.0;
 		Velocity = OpenSteer::Vec3::zero;
 		MyLocation = 0;
@@ -33,6 +35,7 @@ public:
 	{
 		GroupName = copy.GroupName;
 		MyTime = copy.MyTime;
+		GTime = copy.GTime;
 		Traveled = copy.Traveled;
 		Velocity = OpenSteer::Vec3(copy.Velocity.x, copy.Velocity.y, copy.Velocity.z);
 		IClonePtr pointClone;
@@ -65,7 +68,7 @@ private:
 	// methods
 
 	HRESULT loadNewEdge(void);
-	HRESULT buildNeighborList(std::list<FlockingObject *> * objects);
+	HRESULT buildNeighborList(std::vector<FlockingObject *> * objects);
 
 public:
 	// properties
@@ -77,7 +80,8 @@ public:
 	// methods
 	
 	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection);
-	HRESULT Move(std::list<FlockingObject *> * objects, double deltatime);
+	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
+	static HRESULT DetectColision(std::vector<FlockingObject *> * objects, bool * colid);
 
 	virtual ~FlockingObject(void)
 	{
@@ -88,14 +92,15 @@ public:
 
 typedef FlockingObject * FlockingObjectPtr;
 typedef FlockingLocation * FlockingLocationPtr;
-typedef std::list<FlockingObjectPtr>::iterator FlockingObjectItr;
+typedef std::vector<FlockingObjectPtr>::iterator FlockingObjectItr;
 typedef std::list<FlockingLocationPtr>::iterator FlockingLocationItr;
 
 class FlockingEnviroment
 {
 private:
-	std::list<FlockingObjectPtr>	* objects;
+	std::vector<FlockingObjectPtr>	* objects;
 	std::list<FlockingLocationPtr>	* history;
+	std::list<double>				* colisions;
 	double							snapshotInterval;
 	double							simulationInterval;
 	double							maxPathLen;
@@ -105,6 +110,6 @@ public:
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery);
 	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost);
-	void GetHistory(std::list<FlockingLocationPtr> ** History);
+	void GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** colisionTimes);
 	double static PathLength(EvcPathPtr path);
 };

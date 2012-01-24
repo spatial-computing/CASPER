@@ -983,6 +983,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Perform flocking simulation if requested
 
 	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
+	CString colMsgString;
+	std::list<FlockingLocationPtr> * history = 0;
+	std::list<double> * colisionTimes = 0;
+
 	if (this->flockingEnabled)
 	{
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
@@ -991,9 +995,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		flock->Init(Evacuees, ipNetworkQuery);
 
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
-		std::list<FlockingLocationPtr> * history = 0;
 		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 5.0))) return hr;
-		flock->GetHistory(&history);
+		flock->GetResult(&history, &colisionTimes);
 
 		// start writing into the featureclass
 		if (ipStepProgressor)
@@ -1012,7 +1015,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		INetworkAttributePtr costAttrib;
 		esriNetworkAttributeUnits unit;
 		time_t baseTime = time(NULL), thisTime = 0;
-		// COleDateTime d = COleDateTime(time(NULL));
 		double assumedSpeed = 5.0; // mps
 		wchar_t * thisTimeBuf = new wchar_t[25];
 		tm local;
@@ -1082,7 +1084,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 
 			// generate time as unicode string
-			thisTime = baseTime + time_t((*it)->MyTime * costPerSec);
+			thisTime = baseTime + time_t((*it)->GTime * costPerSec);
 			localtime_s(&local, &thisTime);
 			wcsftime(thisTimeBuf, 25, L"%Y/%m/%d %H:%M:%S", &local);
 
@@ -1100,6 +1102,19 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 			if (ipStepProgressor) ipStepProgressor->Step();
+		}
+
+		// colision messaging
+		colMsgString.Empty();
+
+		// message about colisions
+		if (colisionTimes && colisionTimes->size() > 0)
+		{
+			for (std::list<double>::iterator ct = colisionTimes->begin(); ct != colisionTimes->end(); ct++)
+			{
+				if (colMsgString.IsEmpty()) colMsgString.AppendFormat(_T("%.3f"), *ct);
+				else colMsgString.AppendFormat(_T(", %.3f"), *ct);
+			}
 		}
 
 		// flush the insert buffer and release
@@ -1125,6 +1140,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
+
+	if (!(colMsgString.IsEmpty()))
+	{
+		pMessages->AddWarning(CComBSTR(_T("Some colisions have been reported at the following intervals:")));
+		pMessages->AddWarning(CComBSTR(colMsgString));
+	}
 
 	// clear and release evacuees and their paths
 	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
