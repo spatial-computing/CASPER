@@ -227,11 +227,11 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 	return hr;
 }
 
-HRESULT FlockingObject::Detectcollision(std::vector<FlockingObjectPtr> * objects, bool * collided)
+HRESULT FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects, bool * collided)
 {	
 	HRESULT hr = S_OK;
 
-	// colllision detection
+	// collision detection
 	FlockingObjectPtr n1;
 	OpenSteer::AbstractVehicle * n2;
 	size_t i, j, k = objects->size();
