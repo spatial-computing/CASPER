@@ -985,7 +985,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
 	CString colMsgString;
 	std::list<FlockingLocationPtr> * history = 0;
-	std::list<double> * colisionTimes = 0;
+	std::list<double> * collisionTimes = 0;
 
 	if (this->flockingEnabled)
 	{
@@ -996,7 +996,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
 		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 5.0))) return hr;
-		flock->GetResult(&history, &colisionTimes);
+		flock->GetResult(&history, &collisionTimes);
 
 		// start writing into the featureclass
 		if (ipStepProgressor)
@@ -1104,13 +1104,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (ipStepProgressor) ipStepProgressor->Step();
 		}
 
-		// colision messaging
+		// collision messaging
 		colMsgString.Empty();
 
-		// message about colisions
-		if (colisionTimes && colisionTimes->size() > 0)
+		// message about collisions
+		if (collisionTimes && collisionTimes->size() > 0)
 		{
-			for (std::list<double>::iterator ct = colisionTimes->begin(); ct != colisionTimes->end(); ct++)
+			for (std::list<double>::iterator ct = collisionTimes->begin(); ct != collisionTimes->end(); ct++)
 			{
 				if (colMsgString.IsEmpty()) colMsgString.AppendFormat(_T("%.3f"), *ct);
 				else colMsgString.AppendFormat(_T(", %.3f"), *ct);
@@ -1143,7 +1143,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	if (!(colMsgString.IsEmpty()))
 	{
-		pMessages->AddWarning(CComBSTR(_T("Some colisions have been reported at the following intervals:")));
+		pMessages->AddWarning(CComBSTR(_T("Some collisions have been reported at the following intervals:")));
 		pMessages->AddWarning(CComBSTR(colMsgString));
 	}
 

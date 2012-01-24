@@ -211,7 +211,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			myVehicle->setMaxSpeed(speedLimit);
 			myVehicle->setSpeed(speedLimit * 1.1);
 
-			steer += myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
+			steer += 2.0 * myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
 			steer += myVehicle->steerForSeparation(15.0, 60.0, myNeighborVehicles);
 			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 			myVehicle->applySteeringForce(steer / dt, dt);
@@ -227,7 +227,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 	return hr;
 }
 
-HRESULT FlockingObject::DetectColision(std::vector<FlockingObjectPtr> * objects, bool * colid)
+HRESULT FlockingObject::Detectcollision(std::vector<FlockingObjectPtr> * objects, bool * collided)
 {	
 	HRESULT hr = S_OK;
 
@@ -235,7 +235,7 @@ HRESULT FlockingObject::DetectColision(std::vector<FlockingObjectPtr> * objects,
 	FlockingObjectPtr n1;
 	OpenSteer::AbstractVehicle * n2;
 	size_t i, j, k = objects->size();
-	bool colided = false;
+	bool collide = false;
 	OpenSteer::Vec3 offset;
 	OpenSteer::AVGroup::iterator git;
 	
@@ -249,11 +249,11 @@ HRESULT FlockingObject::DetectColision(std::vector<FlockingObjectPtr> * objects,
 			offset = n1->myVehicle->position() - n2->position();
 			if (offset.length() < n1->myVehicle->radius() + n2->radius())
 			{
-				colided = true;
+				collide = true;
 			}
 		}
 	}
-	*colid = colided;
+	*collided = collide;
 	return hr;
 }
 
@@ -267,7 +267,7 @@ FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double Simulatio
 	simulationInterval = abs(SimulationInterval);
 	objects = new std::vector<FlockingObjectPtr>();
 	history = new std::list<FlockingLocationPtr>();
-	colisions = new std::list<double>();
+	collisions = new std::list<double>();
 	maxPathLen = 0.0;
 }
 
@@ -277,10 +277,10 @@ FlockingEnviroment::~FlockingEnviroment(void)
 	for (FlockingLocationItr it2 = history->begin(); it2 != history->end(); it2++) delete (*it2);
 	objects->clear();
 	history->clear();
-	colisions->clear();
+	collisions->clear();
 	delete objects;	
 	delete history;
-	delete colisions;
+	delete collisions;
 }
 
 void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery)
@@ -304,7 +304,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	for (FlockingLocationItr it2 = history->begin(); it2 != history->end(); it2++) delete (*it2);
 	objects->clear();
 	history->clear();
-	colisions->clear();
+	collisions->clear();
 
 	for(evcItr = evcList->begin(); evcItr != evcList->end(); evcItr++)
 	{		
@@ -376,17 +376,17 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			}
 		}
 		if (snapshotTaken) lastSnapshot = time;
-		bool colid = false;
-		FlockingObject::DetectColision(objects, &colid);
-		if (colid) colisions->push_back(time);
+		bool collided = false;
+		FlockingObject::DetectCollision(objects, &collided);
+		if (collided) collisions->push_back(time);
 	}
 	return hr;
 }
 
-void FlockingEnviroment::GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** colisionTimes)
+void FlockingEnviroment::GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes)
 {
 	*History = history;
-	*colisionTimes = colisions;
+	*collisionTimes = collisions;
 }
 
 double FlockingEnviroment::PathLength(EvcPathPtr path)

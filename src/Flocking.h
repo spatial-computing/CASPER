@@ -81,7 +81,7 @@ public:
 	
 	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
-	static HRESULT DetectColision(std::vector<FlockingObject *> * objects, bool * colid);
+	static HRESULT DetectCollision(std::vector<FlockingObject *> * objects, bool * collided);
 
 	virtual ~FlockingObject(void)
 	{
@@ -100,7 +100,7 @@ class FlockingEnviroment
 private:
 	std::vector<FlockingObjectPtr>	* objects;
 	std::list<FlockingLocationPtr>	* history;
-	std::list<double>				* colisions;
+	std::list<double>				* collisions;
 	double							snapshotInterval;
 	double							simulationInterval;
 	double							maxPathLen;
@@ -110,6 +110,6 @@ public:
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery);
 	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost);
-	void GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** colisionTimes);
+	void GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes);
 	double static PathLength(EvcPathPtr path);
 };
