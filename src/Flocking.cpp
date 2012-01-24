@@ -211,7 +211,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			myVehicle->setMaxSpeed(speedLimit);
 			myVehicle->setSpeed(speedLimit * 1.1);
 
-			steer += 2.0 * myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
+			steer += 3.0 * myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
 			steer += myVehicle->steerForSeparation(15.0, 60.0, myNeighborVehicles);
 			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 			myVehicle->applySteeringForce(steer / dt, dt);
