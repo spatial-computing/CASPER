@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Thu Jan 19 16:21:39 2012
+/* at Mon Jan 23 19:10:30 2012
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -50,7 +50,7 @@
 #include "_EvcSolver.h"
 
 #define TYPE_FORMAT_STRING_SIZE   77                                
-#define PROC_FORMAT_STRING_SIZE   865                               
+#define PROC_FORMAT_STRING_SIZE   1009                              
 #define EXPR_FORMAT_STRING_SIZE   1                                 
 #define TRANSMIT_AS_TABLE_SIZE    0            
 #define WIRE_MARSHAL_TABLE_SIZE   1            
@@ -842,6 +842,129 @@ static const _EvcSolver_MIDL_PROC_FORMAT_STRING _EvcSolver__MIDL_ProcFormatStrin
 /* 862 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
 
+	/* Procedure put_CostAttribute */
+
+/* 864 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 866 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 870 */	NdrFcShort( 0x1b ),	/* 27 */
+/* 872 */	NdrFcShort( 0xc ),	/* x86 Stack size/offset = 12 */
+/* 874 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 876 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 878 */	0x44,		/* Oi2 Flags:  has return, has ext, */
+			0x2,		/* 2 */
+/* 880 */	0x8,		/* 8 */
+			0x1,		/* Ext Flags:  new corr desc, */
+/* 882 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 884 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 886 */	NdrFcShort( 0x0 ),	/* 0 */
+
+	/* Parameter index */
+
+/* 888 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
+/* 890 */	NdrFcShort( 0x4 ),	/* x86 Stack size/offset = 4 */
+/* 892 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Return value */
+
+/* 894 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+/* 896 */	NdrFcShort( 0x8 ),	/* x86 Stack size/offset = 8 */
+/* 898 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure get_CostAttribute */
+
+/* 900 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 902 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 906 */	NdrFcShort( 0x1c ),	/* 28 */
+/* 908 */	NdrFcShort( 0xc ),	/* x86 Stack size/offset = 12 */
+/* 910 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 912 */	NdrFcShort( 0x24 ),	/* 36 */
+/* 914 */	0x44,		/* Oi2 Flags:  has return, has ext, */
+			0x2,		/* 2 */
+/* 916 */	0x8,		/* 8 */
+			0x1,		/* Ext Flags:  new corr desc, */
+/* 918 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 920 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 922 */	NdrFcShort( 0x0 ),	/* 0 */
+
+	/* Parameter index */
+
+/* 924 */	NdrFcShort( 0x2150 ),	/* Flags:  out, base type, simple ref, srv alloc size=8 */
+/* 926 */	NdrFcShort( 0x4 ),	/* x86 Stack size/offset = 4 */
+/* 928 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Return value */
+
+/* 930 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+/* 932 */	NdrFcShort( 0x8 ),	/* x86 Stack size/offset = 8 */
+/* 934 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure get_CostAttributes */
+
+/* 936 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 938 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 942 */	NdrFcShort( 0x1d ),	/* 29 */
+/* 944 */	NdrFcShort( 0xc ),	/* x86 Stack size/offset = 12 */
+/* 946 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 948 */	NdrFcShort( 0x8 ),	/* 8 */
+/* 950 */	0x45,		/* Oi2 Flags:  srv must size, has return, has ext, */
+			0x2,		/* 2 */
+/* 952 */	0x8,		/* 8 */
+			0x3,		/* Ext Flags:  new corr desc, clt corr check, */
+/* 954 */	NdrFcShort( 0xd ),	/* 13 */
+/* 956 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 958 */	NdrFcShort( 0x0 ),	/* 0 */
+
+	/* Parameter names */
+
+/* 960 */	NdrFcShort( 0x2013 ),	/* Flags:  must size, must free, out, srv alloc size=8 */
+/* 962 */	NdrFcShort( 0x4 ),	/* x86 Stack size/offset = 4 */
+/* 964 */	NdrFcShort( 0x38 ),	/* Type Offset=56 */
+
+	/* Return value */
+
+/* 966 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+/* 968 */	NdrFcShort( 0x8 ),	/* x86 Stack size/offset = 8 */
+/* 970 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Procedure get_CostAttributesCount */
+
+/* 972 */	0x33,		/* FC_AUTO_HANDLE */
+			0x6c,		/* Old Flags:  object, Oi2 */
+/* 974 */	NdrFcLong( 0x0 ),	/* 0 */
+/* 978 */	NdrFcShort( 0x1e ),	/* 30 */
+/* 980 */	NdrFcShort( 0xc ),	/* x86 Stack size/offset = 12 */
+/* 982 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 984 */	NdrFcShort( 0x24 ),	/* 36 */
+/* 986 */	0x44,		/* Oi2 Flags:  has return, has ext, */
+			0x2,		/* 2 */
+/* 988 */	0x8,		/* 8 */
+			0x1,		/* Ext Flags:  new corr desc, */
+/* 990 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 992 */	NdrFcShort( 0x0 ),	/* 0 */
+/* 994 */	NdrFcShort( 0x0 ),	/* 0 */
+
+	/* Parameter count */
+
+/* 996 */	NdrFcShort( 0x2150 ),	/* Flags:  out, base type, simple ref, srv alloc size=8 */
+/* 998 */	NdrFcShort( 0x4 ),	/* x86 Stack size/offset = 4 */
+/* 1000 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
+	/* Return value */
+
+/* 1002 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
+/* 1004 */	NdrFcShort( 0x8 ),	/* x86 Stack size/offset = 8 */
+/* 1006 */	0x8,		/* FC_LONG */
+			0x0,		/* 0 */
+
 			0x0
         }
     };
@@ -961,7 +1084,11 @@ static const unsigned short IEvcSolver_FormatStringOffsetTable[] =
     720,
     756,
     792,
-    828
+    828,
+    864,
+    900,
+    936,
+    972
     };
 
 static const MIDL_STUBLESS_PROXY_INFO IEvcSolver_ProxyInfo =
@@ -985,7 +1112,7 @@ static const MIDL_SERVER_INFO IEvcSolver_ServerInfo =
     0,
     0,
     0};
-CINTERFACE_PROXY_VTABLE(27) _IEvcSolverProxyVtbl = 
+CINTERFACE_PROXY_VTABLE(31) _IEvcSolverProxyVtbl = 
 {
     &IEvcSolver_ProxyInfo,
     &IID_IEvcSolver,
@@ -1015,14 +1142,18 @@ CINTERFACE_PROXY_VTABLE(27) _IEvcSolverProxyVtbl =
     (void *) (INT_PTR) -1 /* IEvcSolver::put_FlockingSnapInterval */ ,
     (void *) (INT_PTR) -1 /* IEvcSolver::get_FlockingSnapInterval */ ,
     (void *) (INT_PTR) -1 /* IEvcSolver::put_FlockingEnabled */ ,
-    (void *) (INT_PTR) -1 /* IEvcSolver::get_FlockingEnabled */
+    (void *) (INT_PTR) -1 /* IEvcSolver::get_FlockingEnabled */ ,
+    (void *) (INT_PTR) -1 /* IEvcSolver::put_CostAttribute */ ,
+    (void *) (INT_PTR) -1 /* IEvcSolver::get_CostAttribute */ ,
+    (void *) (INT_PTR) -1 /* IEvcSolver::get_CostAttributes */ ,
+    (void *) (INT_PTR) -1 /* IEvcSolver::get_CostAttributesCount */
 };
 
 const CInterfaceStubVtbl _IEvcSolverStubVtbl =
 {
     &IID_IEvcSolver,
     &IEvcSolver_ServerInfo,
-    27,
+    31,
     0, /* pure interpreted */
     CStdStubBuffer_METHODS
 };

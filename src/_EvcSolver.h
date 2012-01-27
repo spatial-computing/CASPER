@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Thu Jan 19 16:21:39 2012
+/* at Mon Jan 23 19:10:30 2012
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -63,18 +63,6 @@ typedef struct EvcSolver EvcSolver;
 #endif 	/* __EvcSolver_FWD_DEFINED__ */
 
 
-#ifndef __EvcSolverPropPage_FWD_DEFINED__
-#define __EvcSolverPropPage_FWD_DEFINED__
-
-#ifdef __cplusplus
-typedef class EvcSolverPropPage EvcSolverPropPage;
-#else
-typedef struct EvcSolverPropPage EvcSolverPropPage;
-#endif /* __cplusplus */
-
-#endif 	/* __EvcSolverPropPage_FWD_DEFINED__ */
-
-
 #ifndef __EvcSolverSymbolizer_FWD_DEFINED__
 #define __EvcSolverSymbolizer_FWD_DEFINED__
 
@@ -85,6 +73,18 @@ typedef struct EvcSolverSymbolizer EvcSolverSymbolizer;
 #endif /* __cplusplus */
 
 #endif 	/* __EvcSolverSymbolizer_FWD_DEFINED__ */
+
+
+#ifndef __EvcSolverPropPage_FWD_DEFINED__
+#define __EvcSolverPropPage_FWD_DEFINED__
+
+#ifdef __cplusplus
+typedef class EvcSolverPropPage EvcSolverPropPage;
+#else
+typedef struct EvcSolverPropPage EvcSolverPropPage;
+#endif /* __cplusplus */
+
+#endif 	/* __EvcSolverPropPage_FWD_DEFINED__ */
 
 
 /* header files for imported files */
@@ -185,6 +185,18 @@ EXTERN_C const IID IID_IEvcSolver;
         
         virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_FlockingEnabled( 
             /* [retval][out] */ VARIANT_BOOL *value) = 0;
+        
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_CostAttribute( 
+            /* [in] */ int index) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_CostAttribute( 
+            /* [retval][out] */ int *index) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_CostAttributes( 
+            /* [retval][out] */ BSTR **names) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_CostAttributesCount( 
+            /* [retval][out] */ int *count) = 0;
         
     };
     
@@ -302,6 +314,22 @@ EXTERN_C const IID IID_IEvcSolver;
             IEvcSolver * This,
             /* [retval][out] */ VARIANT_BOOL *value);
         
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_CostAttribute )( 
+            IEvcSolver * This,
+            /* [in] */ int index);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_CostAttribute )( 
+            IEvcSolver * This,
+            /* [retval][out] */ int *index);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_CostAttributes )( 
+            IEvcSolver * This,
+            /* [retval][out] */ BSTR **names);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_CostAttributesCount )( 
+            IEvcSolver * This,
+            /* [retval][out] */ int *count);
+        
         END_INTERFACE
     } IEvcSolverVtbl;
 
@@ -397,6 +425,18 @@ EXTERN_C const IID IID_IEvcSolver;
 #define IEvcSolver_get_FlockingEnabled(This,value)	\
     ( (This)->lpVtbl -> get_FlockingEnabled(This,value) ) 
 
+#define IEvcSolver_put_CostAttribute(This,index)	\
+    ( (This)->lpVtbl -> put_CostAttribute(This,index) ) 
+
+#define IEvcSolver_get_CostAttribute(This,index)	\
+    ( (This)->lpVtbl -> get_CostAttribute(This,index) ) 
+
+#define IEvcSolver_get_CostAttributes(This,names)	\
+    ( (This)->lpVtbl -> get_CostAttributes(This,names) ) 
+
+#define IEvcSolver_get_CostAttributesCount(This,count)	\
+    ( (This)->lpVtbl -> get_CostAttributesCount(This,count) ) 
+
 #endif /* COBJMACROS */
 
 
@@ -426,20 +466,20 @@ class DECLSPEC_UUID("7b081f99-b691-46b1-b756-aa72868c8683")
 EvcSolver;
 #endif
 
-EXTERN_C const CLSID CLSID_EvcSolverPropPage;
-
-#ifdef __cplusplus
-
-class DECLSPEC_UUID("cd267b89-0144-4e7c-929e-bcd5d82f4c4d")
-EvcSolverPropPage;
-#endif
-
 EXTERN_C const CLSID CLSID_EvcSolverSymbolizer;
 
 #ifdef __cplusplus
 
 class DECLSPEC_UUID("6e127557-b452-444d-ac96-3a96a40c4071")
 EvcSolverSymbolizer;
+#endif
+
+EXTERN_C const CLSID CLSID_EvcSolverPropPage;
+
+#ifdef __cplusplus
+
+class DECLSPEC_UUID("cd267b89-0144-4e7c-929e-bcd5d82f4c4d")
+EvcSolverPropPage;
 #endif
 #endif /* __CustomSolver_LIBRARY_DEFINED__ */
 
