@@ -211,9 +211,13 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			myVehicle->setMaxSpeed(speedLimit);
 			myVehicle->setSpeed(speedLimit * 1.1);
 
-			steer += 3.0 * myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
-			steer += myVehicle->steerForSeparation(15.0, 60.0, myNeighborVehicles);
-			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
+			steer = myVehicle->steerToAvoidCloseNeighbors (0.5, myNeighborVehicles);
+			if (steer.length() == 0.0)
+			{
+				steer = 2.0 * myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
+				steer += myVehicle->steerForSeparation(15.0, 60.0, myNeighborVehicles);
+				steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
+			}
 			myVehicle->applySteeringForce(steer / dt, dt);
 
 			Traveled += myVehicle->speed() * dt;
@@ -283,7 +287,7 @@ FlockingEnviroment::~FlockingEnviroment(void)
 	delete collisions;
 }
 
-void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery)
+void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec)
 {
 	EvacueePtr evc = 0;
 	EvacueeListItr evcItr;
@@ -292,6 +296,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
 	srand((unsigned int)time(NULL));
+	double flockInitGap = ceil(5.0 * costPerSec / simulationInterval) * simulationInterval;
 	
 	// metric projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
@@ -314,7 +319,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 			size = (int)(ceil((*pathItr)->RoutedPop));
 			for (i = 0; i < size; i++)
 			{
-				objects->push_back(new FlockingObject(id++, *pathItr, simulationInterval * -i, (*evcItr)->Name, ipNetworkQuery, metricProjection));
+				objects->push_back(new FlockingObject(id++, *pathItr, flockInitGap * -i, (*evcItr)->Name, ipNetworkQuery, metricProjection));
 			}
 		}
 	}

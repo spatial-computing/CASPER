@@ -108,7 +108,7 @@ private:
 public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval);
 	virtual ~FlockingEnviroment(void);
-	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery);
+	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec);
 	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost);
 	void GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes);
 	double static PathLength(EvcPathPtr path);

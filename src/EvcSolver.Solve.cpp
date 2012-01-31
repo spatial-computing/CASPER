@@ -989,25 +989,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	if (this->flockingEnabled)
 	{
-		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
-		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval);
-		flock->Init(Evacuees, ipNetworkQuery);
-
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
-		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 5.0))) return hr;
-		flock->GetResult(&history, &collisionTimes);
-
-		// start writing into the featureclass
-		if (ipStepProgressor)
-		{			
-			ipStepProgressor->put_Message(CComBSTR(L"Writing flocking results"));
-			ipStepProgressor->put_MinRange(0);
-			ipStepProgressor->put_MaxRange(history->size());
-			ipStepProgressor->put_StepValue(1);
-			ipStepProgressor->put_Position(0);
-		}
-
 		// Get the "Flocks" NAClass feature class
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
 		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex;
@@ -1025,41 +1006,62 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		switch (unit)
 		{
 		case esriNAUSeconds:
-			costPerDay = 1.0 / (3600.0 * 24.0);
+			costPerDay = 3600.0 * 24.0;
 		case esriNAUMinutes:
-			costPerDay = 1.0 / (60.0 * 24.0);
+			costPerDay = 60.0 * 24.0;
 			break;
 		case esriNAUHours:
-			costPerDay = 1.0 / 24.0;
+			costPerDay = 24.0;
 			break;
 		case esriNAUInches:
-			costPerDay = 39.370079 * assumedSpeed / (3600.0 * 24.0);
+			costPerDay = 39.370079 * assumedSpeed * 3600.0 * 24.0;
 			break;
 		case esriNAUFeet:
-			costPerDay = 3.28084 * assumedSpeed / (3600.0 * 24.0);
+			costPerDay = 3.28084 * assumedSpeed * 3600.0 * 24.0;
 			break;
 		case esriNAUYards:
-			costPerDay = 0.000621 * assumedSpeed / (3600.0 * 24.0);
+			costPerDay = 1.093613 * assumedSpeed * 3600.0 * 24.0;
 			break;
 		case esriNAUMiles:
-			costPerDay = assumedSpeed / (3600.0 * 24.0 * 1000.0);
+			costPerDay = 0.000621 * assumedSpeed * 3600.0 * 24.0;
 			break;
 		case esriNAUMillimeters:
-			costPerDay = 1000.0 * assumedSpeed / (3600.0 * 24.0);
+			costPerDay = 1000.0 * assumedSpeed * 3600.0 * 24.0;
 			break;
 		case esriNAUCentimeters:
-			costPerDay = 100.0 * assumedSpeed / (3600.0 * 24.0);
+			costPerDay = 100.0 * assumedSpeed * 3600.0 * 24.0;
 			break;
 		case esriNAUMeters:
-			costPerDay = assumedSpeed / (3600.0 * 24.0);
+			costPerDay = assumedSpeed * 3600.0 * 24.0;
 			break;
 		case esriNAUKilometers:
-			costPerDay = assumedSpeed / (3600.0 * 24.0 * 1000.0);
+			costPerDay = 0.001 * assumedSpeed * 3600.0 * 24.0;
 			break;
 		case esriNAUDecimeters:
-			costPerDay = assumedSpeed / (3600.0 * 24.0 * 10.0);
+			costPerDay = 0.1 * assumedSpeed * 3600.0 * 24.0;
 		}
-		costPerSec = costPerDay * (3600.0 * 24.0);
+		costPerSec = costPerDay / (3600.0 * 24.0);
+
+		// init
+		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
+		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
+		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval);
+		flock->Init(Evacuees, ipNetworkQuery, costPerSec);
+
+		// run simulation
+		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
+		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 5.0))) return hr;
+		flock->GetResult(&history, &collisionTimes);
+
+		// start writing into the featureclass
+		if (ipStepProgressor)
+		{			
+			ipStepProgressor->put_Message(CComBSTR(L"Writing flocking results"));
+			ipStepProgressor->put_MinRange(0);
+			ipStepProgressor->put_MaxRange(history->size());
+			ipStepProgressor->put_StepValue(1);
+			ipStepProgressor->put_Position(0);
+		}
 
 		// Create an insert cursor and feature buffer from the "Flocks" feature class to be used to write edges
 		if (FAILED(hr = ipFlocksFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
@@ -1084,7 +1086,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 
 			// generate time as unicode string
-			thisTime = baseTime + time_t((*it)->GTime * costPerSec);
+			thisTime = baseTime + time_t((*it)->GTime / costPerSec);
 			localtime_s(&local, &thisTime);
 			wcsftime(thisTimeBuf, 25, L"%Y/%m/%d %H:%M:%S", &local);
 
