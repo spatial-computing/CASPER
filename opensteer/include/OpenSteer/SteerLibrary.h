@@ -463,7 +463,14 @@ steerToFollowPath (const int direction,
     if ((outside < 0) && rightway)
     {
         // all is well, return zero steering
-        return Vec3::zero;
+		// return Vec3::zero;
+		// added by Kaveh: to make movement parallel to the path
+
+		Vec3 newDir = tangent / tangent.length();
+		Vec3 target = position() + (speed() * predictionTime * newDir);
+
+        // return steering to seek target on path
+        return 0.5 * steerForSeek (target);
     }
     else
     {
