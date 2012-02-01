@@ -1003,43 +1003,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
 		if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
-		switch (unit)
-		{
-		case esriNAUSeconds:
-			costPerDay = 3600.0 * 24.0;
-		case esriNAUMinutes:
-			costPerDay = 60.0 * 24.0;
-			break;
-		case esriNAUHours:
-			costPerDay = 24.0;
-			break;
-		case esriNAUInches:
-			costPerDay = 39.370079 * assumedSpeed * 3600.0 * 24.0;
-			break;
-		case esriNAUFeet:
-			costPerDay = 3.28084 * assumedSpeed * 3600.0 * 24.0;
-			break;
-		case esriNAUYards:
-			costPerDay = 1.093613 * assumedSpeed * 3600.0 * 24.0;
-			break;
-		case esriNAUMiles:
-			costPerDay = 0.000621 * assumedSpeed * 3600.0 * 24.0;
-			break;
-		case esriNAUMillimeters:
-			costPerDay = 1000.0 * assumedSpeed * 3600.0 * 24.0;
-			break;
-		case esriNAUCentimeters:
-			costPerDay = 100.0 * assumedSpeed * 3600.0 * 24.0;
-			break;
-		case esriNAUMeters:
-			costPerDay = assumedSpeed * 3600.0 * 24.0;
-			break;
-		case esriNAUKilometers:
-			costPerDay = 0.001 * assumedSpeed * 3600.0 * 24.0;
-			break;
-		case esriNAUDecimeters:
-			costPerDay = 0.1 * assumedSpeed * 3600.0 * 24.0;
-		}
+		costPerDay = GetUnitPerDay(unit, assumedSpeed);
 		costPerSec = costPerDay / (3600.0 * 24.0);
 
 		// init
@@ -1050,7 +1014,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// run simulation
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
-		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 5.0))) return hr;
+		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 50.0))) return hr;
 		flock->GetResult(&history, &collisionTimes);
 
 		// start writing into the featureclass
@@ -1162,4 +1126,49 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	delete safeZoneList;
 	delete sortedEvacuees;
 	return S_OK;
+}
+
+double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed)
+{	
+	double costPerDay;
+
+	switch (unit)
+	{
+	case esriNAUSeconds:
+		costPerDay = 3600.0 * 24.0;
+	case esriNAUMinutes:
+		costPerDay = 60.0 * 24.0;
+		break;
+	case esriNAUHours:
+		costPerDay = 24.0;
+		break;
+	case esriNAUInches:
+		costPerDay = 39.370079 * assumedSpeed * 3600.0 * 24.0;
+		break;
+	case esriNAUFeet:
+		costPerDay = 3.28084 * assumedSpeed * 3600.0 * 24.0;
+		break;
+	case esriNAUYards:
+		costPerDay = 1.093613 * assumedSpeed * 3600.0 * 24.0;
+		break;
+	case esriNAUMiles:
+		costPerDay = 0.000621 * assumedSpeed * 3600.0 * 24.0;
+		break;
+	case esriNAUMillimeters:
+		costPerDay = 1000.0 * assumedSpeed * 3600.0 * 24.0;
+		break;
+	case esriNAUCentimeters:
+		costPerDay = 100.0 * assumedSpeed * 3600.0 * 24.0;
+		break;
+	case esriNAUMeters:
+		costPerDay = assumedSpeed * 3600.0 * 24.0;
+		break;
+	case esriNAUKilometers:
+		costPerDay = 0.001 * assumedSpeed * 3600.0 * 24.0;
+		break;
+	case esriNAUDecimeters:
+		costPerDay = 0.1 * assumedSpeed * 3600.0 * 24.0;
+	}
+
+	return costPerDay;
 }

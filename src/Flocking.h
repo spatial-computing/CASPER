@@ -69,6 +69,7 @@ private:
 
 	HRESULT loadNewEdge(void);
 	HRESULT buildNeighborList(std::vector<FlockingObject *> * objects);
+	bool DetectMyCollision();
 
 public:
 	// properties

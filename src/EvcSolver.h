@@ -324,3 +324,7 @@ private:
 	ITrackCancelPtr m_ipTrackCancel;
 	IProgressorPtr  m_ipProgressor;
 };
+
+
+// Unility functions
+double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);

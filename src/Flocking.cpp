@@ -190,8 +190,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 		steer += myVehicle->steerToAvoidCloseNeighbors (10.0, myNeighborVehicles);
 		if (dist < 50.0) steer += myVehicle->steerForWander(dt);
 		else steer += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]);
-		myVehicle->applySteeringForce(steer / dt, dt);
-	
+		myVehicle->applySteeringForce(steer / dt, dt);	
 	}
 	else
 	{
@@ -209,19 +208,18 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 
 			// generate a steer based on current situation
 			myVehicle->setMaxSpeed(speedLimit);
-			myVehicle->setSpeed(speedLimit * 1.1);
+			myVehicle->setSpeed(speedLimit * 1.0);
 
-			steer = myVehicle->steerToAvoidCloseNeighbors (0.5, myNeighborVehicles);
-			if (steer.length() == 0.0)
-			{
-				steer = 2.0 * myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
-				steer += myVehicle->steerForSeparation(15.0, 60.0, myNeighborVehicles);
-				steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
-			}
+			steer  = 2.0 * myVehicle->steerToAvoidCloseNeighbors (5.0, myNeighborVehicles);
+			steer += myVehicle->steerForSeparation(20.0, 60.0, myNeighborVehicles);
+			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
+			
+			// backup the position in case we needed to back off from a collision
+			pos = myVehicle->position();
 			myVehicle->applySteeringForce(steer / dt, dt);
-
-			Traveled += myVehicle->speed() * dt;
-		}				
+			if (DetectMyCollision()) myVehicle->setPosition(pos);			
+			else Traveled += myVehicle->speed() * dt;			
+		}
 	}
 	// update coordinate and velocity
 	pos = myVehicle->position();
@@ -231,33 +229,36 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 	return hr;
 }
 
+bool FlockingObject::DetectMyCollision()
+{
+	OpenSteer::AbstractVehicle * n;
+	OpenSteer::AVGroup::iterator git;
+	OpenSteer::Vec3 offset;
+	bool collide = false;
+
+	for (git = myNeighborVehicles.begin(); git != myNeighborVehicles.end(); git++)
+	{
+		n = *git;
+		offset = myVehicle->position() - n->position();
+		if (offset.length() < myVehicle->radius() + n->radius()) collide = true;		
+	}
+	return collide;
+}
+
 HRESULT FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects, bool * collided)
 {	
 	HRESULT hr = S_OK;
 
 	// collision detection
-	FlockingObjectPtr n1;
-	OpenSteer::AbstractVehicle * n2;
-	size_t i, j, k = objects->size();
-	bool collide = false;
-	OpenSteer::Vec3 offset;
-	OpenSteer::AVGroup::iterator git;
+	FlockingObjectPtr n;
+	size_t i, k = objects->size();
 	
 	for (i = 0; i < k; i++)
 	{
-		n1 = objects->at(i);
-		if (n1->MyStatus == FLOCK_OBJ_STAT_MOVE) continue;
-		for (git = n1->myNeighborVehicles.begin(); git != n1->myNeighborVehicles.end(); git++)
-		{
-			n2 = *git;
-			offset = n1->myVehicle->position() - n2->position();
-			if (offset.length() < n1->myVehicle->radius() + n2->radius())
-			{
-				collide = true;
-			}
-		}
+		n = objects->at(i);
+		if (n->MyStatus != FLOCK_OBJ_STAT_MOVE) continue;
+		if (n->DetectMyCollision()) *collided = true;
 	}
-	*collided = collide;
 	return hr;
 }
 
@@ -296,7 +297,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
 	srand((unsigned int)time(NULL));
-	double flockInitGap = ceil(5.0 * costPerSec / simulationInterval) * simulationInterval;
+	double flockInitGap = ceil(3.0 * costPerSec / simulationInterval) * simulationInterval;
 	
 	// metric projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
