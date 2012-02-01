@@ -328,7 +328,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 
 HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost)
 {
-	bool movingObjectLeft = true;
+	movingObjectLeft = true;
 	FLOCK_OBJ_STAT newStat, oldStat;
 	long frontRunnerDistance = 0;
 	double lastSnapshot = 0.0;
@@ -389,10 +389,11 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	return hr;
 }
 
-void FlockingEnviroment::GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes)
+void FlockingEnviroment::GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft)
 {
 	*History = history;
 	*collisionTimes = collisions;
+	*MovingObjectLeft = movingObjectLeft
 }
 
 double FlockingEnviroment::PathLength(EvcPathPtr path)

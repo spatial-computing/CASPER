@@ -983,7 +983,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Perform flocking simulation if requested
 
 	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
-	CString colMsgString;
+	CString colMsgString, ending;
 	std::list<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
 
@@ -997,6 +997,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		esriNetworkAttributeUnits unit;
 		time_t baseTime = time(NULL), thisTime = 0;
 		double assumedSpeed = 5.0; // mps
+		double movingObjectLeft;
 		wchar_t * thisTimeBuf = new wchar_t[25];
 		tm local;
 
@@ -1015,7 +1016,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// run simulation
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
 		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 50.0))) return hr;
-		flock->GetResult(&history, &collisionTimes);
+		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
 
 		// start writing into the featureclass
 		if (ipStepProgressor)
@@ -1072,6 +1073,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// collision messaging
 		colMsgString.Empty();
+		ending.Empty();
 
 		// message about collisions
 		if (collisionTimes && collisionTimes->size() > 0)
@@ -1082,6 +1084,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				else colMsgString.AppendFormat(_T(", %.3f"), *ct);
 			}
 		}
+
+		if (movingObjectLeft) ending = _T("Max simulation time reached therefore not all objects get to a safe area. Probebly the predicted evacuation time was too low.");
 
 		// flush the insert buffer and release
 		ipFeatureCursor->Flush();
@@ -1112,6 +1116,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		pMessages->AddWarning(CComBSTR(_T("Some collisions have been reported at the following intervals:")));
 		pMessages->AddWarning(CComBSTR(colMsgString));
 	}
+
+	if (!(ending.IsEmpty())) pMessages->AddWarning(CComBSTR(ending));
 
 	// clear and release evacuees and their paths
 	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
