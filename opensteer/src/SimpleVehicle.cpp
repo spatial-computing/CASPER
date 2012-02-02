@@ -181,7 +181,7 @@ OpenSteer::SimpleVehicle::applySteeringForce (const Vec3& force,
     // (rate is proportional to time step, then clipped into useful range)
     if (elapsedTime > 0)
     {
-		const double smoothRate = clip (speed() * elapsedTime / 4.0, 0.3, 0.9);
+		const double smoothRate = clip (speed() * elapsedTime / 4.0, 0.3, 0.8);
         blendIntoAccumulator (smoothRate,
                               newAcceleration,
                               _smoothedAcceleration);
