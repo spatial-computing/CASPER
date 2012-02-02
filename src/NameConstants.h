@@ -34,7 +34,7 @@
 #define CS_FIELD_E_TIME                             L"EvacCost"
 #define CS_FIELD_E_ORG                              L"OrgCost"
 #define CS_FIELD_E_POP	                            L"Pop"
-#define CS_FIELD_Capacity                           L"Capacity"
+#define CS_FIELD_CAP                                L"Capacity"
 
 // NALocation Field Names
 

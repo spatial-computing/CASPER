@@ -158,7 +158,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 			if ((*it)->ID == ID) continue;
 
 			// moving object check
-			if ((*it)->MyStatus != FLOCK_OBJ_STAT_MOVE) continue;
+			if ((*it)->MyStatus != FLOCK_OBJ_STAT_MOVE && (*it)->MyStatus != FLOCK_OBJ_STAT_STOP) continue;
 
 			// check if they share an edge or if they are both crossing an intersection
 			if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
@@ -217,8 +217,16 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			// backup the position in case we needed to back off from a collision
 			pos = myVehicle->position();
 			myVehicle->applySteeringForce(steer / dt, dt);
-			if (DetectMyCollision()) myVehicle->setPosition(pos);			
-			else Traveled += myVehicle->speed() * dt;			
+			if (DetectMyCollision())
+			{
+				myVehicle->setPosition(pos);
+				MyStatus = FLOCK_OBJ_STAT_STOP;
+			}
+			else
+			{
+				Traveled += myVehicle->speed() * dt;
+				MyStatus = FLOCK_OBJ_STAT_MOVE;
+			}
 		}
 	}
 	// update coordinate and velocity
@@ -256,7 +264,7 @@ HRESULT FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects
 	for (i = 0; i < k; i++)
 	{
 		n = objects->at(i);
-		if (n->MyStatus != FLOCK_OBJ_STAT_MOVE) continue;
+		if (n->MyStatus != FLOCK_OBJ_STAT_MOVE && n->MyStatus != FLOCK_OBJ_STAT_STOP) continue;
 		if (n->DetectMyCollision()) *collided = true;
 	}
 	return hr;
@@ -328,7 +336,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 
 HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost)
 {
-	movingObjectLeft = true;
+	movingObjectLeft = false;
 	FLOCK_OBJ_STAT newStat, oldStat;
 	long frontRunnerDistance = 0;
 	double lastSnapshot = 0.0;
@@ -362,7 +370,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 
 			if (FAILED(hr = (*it)->Move(objects, simulationInterval))) return hr;
 			newStat = (*it)->MyStatus;
-			movingObjectLeft |= newStat == FLOCK_OBJ_STAT_MOVE;
+			movingObjectLeft |= newStat != FLOCK_OBJ_STAT_END;
 
 			// post-movement snapshot
 			if ((oldStat != FLOCK_OBJ_STAT_END && newStat == FLOCK_OBJ_STAT_END) ||
@@ -393,7 +401,7 @@ void FlockingEnviroment::GetResult(std::list<FlockingLocationPtr> ** History, st
 {
 	*History = history;
 	*collisionTimes = collisions;
-	*MovingObjectLeft = movingObjectLeft
+	*MovingObjectLeft = movingObjectLeft;
 }
 
 double FlockingEnviroment::PathLength(EvcPathPtr path)

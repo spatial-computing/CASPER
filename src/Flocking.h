@@ -7,7 +7,8 @@
 #define FLOCK_OBJ_STAT char
 #define FLOCK_OBJ_STAT_INIT		0x0
 #define FLOCK_OBJ_STAT_MOVE		0x1
-#define FLOCK_OBJ_STAT_END		0x2
+#define FLOCK_OBJ_STAT_STOP		0x2
+#define FLOCK_OBJ_STAT_END		0x3
 
 class FlockingLocation
 {
@@ -19,6 +20,7 @@ public:
 	IPointPtr		MyLocation;
 	OpenSteer::Vec3	Velocity;
 	int				ID;
+	FLOCK_OBJ_STAT	MyStatus;
 
 	// constructors
 	FlockingLocation(void)
@@ -29,6 +31,7 @@ public:
 		Velocity = OpenSteer::Vec3::zero;
 		MyLocation = 0;
 		ID = -1;
+		MyStatus = FLOCK_OBJ_STAT_INIT;
 	}
 
 	FlockingLocation(const FlockingLocation &copy)
@@ -42,6 +45,7 @@ public:
 		((IClonePtr)copy.MyLocation)->Clone(&pointClone);
 		MyLocation = pointClone;
 		ID = copy.ID;
+		MyStatus = copy.MyStatus;
 	}
 
 	virtual ~FlockingLocation(void) { }
@@ -76,7 +80,6 @@ public:
 
 	IPointPtr		FinalPoint;
 	long			BindVertex;
-	FLOCK_OBJ_STAT	MyStatus;
 
 	// methods
 	

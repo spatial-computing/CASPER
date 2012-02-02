@@ -991,13 +991,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		// Get the "Flocks" NAClass feature class
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
-		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex;
+		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex, statFieldIndex;
 		double costPerDay = 1.0, costPerSec = 1.0;
 		INetworkAttributePtr costAttrib;
 		esriNetworkAttributeUnits unit;
 		time_t baseTime = time(NULL), thisTime = 0;
 		double assumedSpeed = 5.0; // mps
-		double movingObjectLeft;
+		bool movingObjectLeft;
 		wchar_t * thisTimeBuf = new wchar_t[25];
 		tm local;
 
@@ -1041,6 +1041,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_VelocityY), &speedYFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEED), &speedFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_STATUS), &statFieldIndex))) return hr;
 
 		for(FlockingLocationItr it = history->begin(); it != history->end(); it++)
 		{
@@ -1065,6 +1066,28 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->Velocity.y)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant((*it)->Velocity.length())))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(thisTimeBuf)))) return hr;
+
+			// print out the status
+			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT)
+			{
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("I"))))) return hr;
+			}
+			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_MOVE)
+			{
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("M"))))) return hr;
+			}
+			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_END)
+			{
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("E"))))) return hr;
+			}
+			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_STOP)
+			{
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("S"))))) return hr;
+			}
+			else
+			{
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T(""))))) return hr;
+			}
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
