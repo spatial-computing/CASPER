@@ -33,6 +33,7 @@ class ATL_NO_VTABLE EvcSolverPropPage :
 {
 public:
   EvcSolverPropPage()
+	  : pppp(0)
   {
     m_dwTitleID = IDS_TITLEEvcSolverPROPPAGE;
     m_dwHelpFileID = IDS_HELPFILEEvcSolverPROPPAGE;
@@ -143,4 +144,6 @@ public:
 	LRESULT OnEnChangeEditFlockinterval2(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditFlocksnapinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+protected:
+	int pppp;
 };

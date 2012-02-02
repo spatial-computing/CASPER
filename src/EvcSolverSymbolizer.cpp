@@ -276,8 +276,8 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   // flocks layer
-
-  // Get the Routes NAClass/FeatureClass
+#if !defined(_PUBLISH)
+  // Get the flocks NAClass/FeatureClass
   if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipFlocksFC(ipUnknown);
@@ -312,9 +312,9 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   ((IFeatureSelectionPtr)ipFlocksFeatureLayer)->putref_SelectionColor(ipSelectionColor);
 
-  // Add the new routes layer as a sub-layer in the new NALayer
+  // Add the new flocks layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipFlocksFeatureLayer);
-
+#endif
   // Return the newly created NALayer
   (*ppNALayer) = ipNALayer;
 
@@ -356,6 +356,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Flocks
+#if !defined(_PUBLISH)
   pNALayer->get_LayerByNAClassName(CComBSTR(CS_FLOCKS_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
@@ -363,7 +364,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = CreateSimplePointRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
-  
+#endif  
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Zones
   pNALayer->get_LayerByNAClassName(CComBSTR(CS_ZONES_NAME), &ipSubLayer);

@@ -351,6 +351,27 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hEditSnapFlock = GetDlgItem(IDC_EDIT_FlockSnapInterval);
 	m_hEditSimulationFlock = GetDlgItem(IDC_EDIT_FlockSimulationInterval);
 	m_hCheckFlock = GetDlgItem(IDC_CHECK_Flock);
+
+	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
+	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
+	HWND m_hlblSnapFlock = GetDlgItem(IDC_STATIC_FlockSnapInterval);
+
+#ifndef _PUBLISH
+	::ShowWindow(m_hGroupFlock, SW_SHOW);
+	::ShowWindow(m_hEditSnapFlock, SW_SHOW);
+	::ShowWindow(m_hEditSimulationFlock, SW_SHOW);
+	::ShowWindow(m_hCheckFlock, SW_SHOW);
+	::ShowWindow(m_hlblSimulationFlock, SW_SHOW);
+	::ShowWindow(m_hlblSnapFlock, SW_SHOW);
+#else
+	::ShowWindow(m_hGroupFlock, SW_HIDE);
+	::ShowWindow(m_hEditSnapFlock, SW_HIDE);
+	::ShowWindow(m_hEditSimulationFlock, SW_HIDE);
+	::ShowWindow(m_hCheckFlock, SW_HIDE);
+	::ShowWindow(m_hlblSimulationFlock, SW_HIDE);
+	::ShowWindow(m_hlblSnapFlock, SW_HIDE);
+#endif
+
 	return 0;
 }
 

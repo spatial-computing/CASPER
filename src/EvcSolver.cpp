@@ -376,10 +376,10 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	ipNAClassDefinitions->get_ItemByName(CComBSTR(CS_EDGES_NAME), &ipUnknown);
 	ipEdgeStatClassDef = ipUnknown;
-
+#if !defined(_PUBLISH)
 	ipNAClassDefinitions->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnknown);
 	ipFlocksClassDef = ipUnknown;
-
+#endif
 	// Create a context and initialize it
 	INAContextPtr     ipNAContext(CLSID_NAContext);
 	INAContextEditPtr ipNAContextEdit(ipNAContext);
@@ -401,8 +401,10 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	ipNAClasses->Add(CComBSTR(CS_ROUTES_NAME), (IUnknownPtr)ipNAClass);
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipEdgeStatClassDef, &ipNAClass))) return hr;
 	ipNAClasses->Add(CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipNAClass);
+#if !defined(_PUBLISH)
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipFlocksClassDef, &ipNAClass))) return hr;
 	ipNAClasses->Add(CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipNAClass);
+#endif
 
 	// NOTE: this is an appropriate place to set up any hierarchy defaults if your
 	// solver supports using a hierarchy attribute (this solver does not). This is
