@@ -136,11 +136,103 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="&quot;C:\Program Files (x86)\ArcGIS\DeveloperKit10.0\include&quot;;C:\dev\3rdParty\opensteer\include\OpenSteer"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;"
+				RuntimeLibrary="2"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
+				PrecompiledHeaderThrough=""
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_UNICODE;UNICODE;NDEBUG;"
+				AdditionalIncludeDirectories="$(IntDir);"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				RegisterOutput="false"
+				PerUserRedirection="true"
+				AdditionalDependencies="opensteer.lib glut32.lib"
+				AdditionalLibraryDirectories="&quot;C:\Program Files (x86)\ArcGIS\Desktop10.0\com&quot;;&quot;C:\dev\3rdParty\opensteer\win32\$(ConfigurationName)&quot;;&quot;C:\dev\3rdParty\glut&quot;"
+				MergedIDLBaseFileName="_EvcSolver.idl"
+				GenerateDebugInformation="false"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="0"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Performing Custom Post-Build Step"
+				CommandLine="&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Publish|Win32"
+			OutputDirectory="..\bin\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfATL="2"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				Description="Performing Custom Pre-Build Step"
+				CommandLine="if exist &quot;$(TargetPath)&quot; (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s /u)"
+				ExcludedFromBuild="false"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+				Description=""
+				CommandLine=""
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="3"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="&quot;C:\Program Files (x86)\ArcGIS\DeveloperKit10.0\include&quot;;C:\dev\3rdParty\opensteer\include\OpenSteer"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;_PUBLISH;"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"

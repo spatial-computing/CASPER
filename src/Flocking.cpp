@@ -336,7 +336,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 
 HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost)
 {
-	movingObjectLeft = false;
+	movingObjectLeft = true;
 	FLOCK_OBJ_STAT newStat, oldStat;
 	long frontRunnerDistance = 0;
 	double lastSnapshot = 0.0;
@@ -354,6 +354,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 
 	for (double time = 0.0; movingObjectLeft && time <= maxCost; time += simulationInterval)
 	{
+		movingObjectLeft = false;
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
 		{
 			if (pTrackCancel)

@@ -987,6 +987,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::list<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
 
+#if defined(_PUBLISH)
+	this->flockingEnabled = false;
+#endif
+
 	if (this->flockingEnabled)
 	{
 		// Get the "Flocks" NAClass feature class

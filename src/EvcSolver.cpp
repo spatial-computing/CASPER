@@ -1620,7 +1620,9 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_IsOutput(VARIANT_TRUE);
 
 	ipClassDefEdit->put_Name(CComBSTR(CS_FLOCKS_NAME));
+#if !defined(_PUBLISH)
 	ipClassDefinitions->Add(CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipClassDef);
+#endif
 
 	// Return the class definitions once we have finished
 	ipClassDefinitions->AddRef();

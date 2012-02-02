@@ -68,7 +68,7 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "ESRI"
+            VALUE "CompanyName", "USC SSI"
             VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
             VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "EvcSolver.dll"
@@ -121,12 +121,14 @@ BEGIN
     GROUPBOX        "Safe Zone Options",IDC_ZoneOptions,201,49,190,37
     LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,216,66,117,8
     EDITTEXT        IDC_EDIT_ZoneDensity,340,63,46,14,ES_AUTOHSCROLL | ES_NUMBER
+#if !defined(_PUBLISH)
     GROUPBOX        "Flocking Model Options",IDC_FlockOptions,201,89,191,68
     CONTROL         "Flocking enabled?",IDC_CHECK_Flock,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,215,105,74,14
     EDITTEXT        IDC_EDIT_FlockSnapInterval,339,118,45,14,ES_AUTOHSCROLL
     LTEXT           "Snapshot Interval:",IDC_STATIC_FlockSnapInterval,215,121,59,8
     EDITTEXT        IDC_EDIT_FlockSimulationInterval,339,136,45,14,ES_AUTOHSCROLL
     LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,215,139,60,8
+#endif
     LTEXT           "Impedance Network Attribute:",IDC_STATIC_Cost,19,46,104,8
     COMBOBOX        IDC_COMBO_COST,127,44,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 END
@@ -174,7 +176,8 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
+
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
