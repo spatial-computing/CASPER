@@ -199,7 +199,7 @@
 		</Configuration>
 		<Configuration
 			Name="Publish|Win32"
-			OutputDirectory="..\bin\$(ConfigurationName)"
+			OutputDirectory="..\Package\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="2"
