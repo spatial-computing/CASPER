@@ -68,7 +68,7 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "USC SSI"
+            VALUE "CompanyName", "ESRI"
             VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
             VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "EvcSolver.dll"
@@ -96,39 +96,39 @@ IDR_CUSTOMSOLVER        REGISTRY                "EvcSolver.rgs"
 // Dialog
 //
 
-IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 190
+IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 205
 STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "General Options",IDC_SearchGroup,7,10,190,129
-    LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,23,158,119,8
-    EDITTEXT        IDC_EDIT_SAT,145,155,46,14,ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX        "General Options",IDC_SearchGroup,7,10,190,146
+    LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,218,64,119,8
+    EDITTEXT        IDC_EDIT_SAT,340,61,46,14,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,26,117,8
     EDITTEXT        IDC_EDIT_Critical,340,23,46,14,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Capacity Network Attribute:",IDC_STATIC_Capacity,20,26,104,8
-    COMBOBOX        IDC_COMBO_CAPACITY,127,24,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,66,102,8
-    COMBOBOX        IDC_COMBO_METHOD,127,64,63,50,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Cost Calculation Method:",IDC_STATIC,20,86,102,8
-    COMBOBOX        IDC_COMBO_CostMethod,127,84,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Capacity Network Attribute:",IDC_STATIC_Capacity,20,31,104,8
+    COMBOBOX        IDC_COMBO_CAPACITY,127,29,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,81,102,8
+    COMBOBOX        IDC_COMBO_METHOD,127,79,63,50,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Cost Calculation Method:",IDC_STATIC,20,103,102,8
+    COMBOBOX        IDC_COMBO_CostMethod,127,101,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Treat the population at each location as separable",IDC_CHECK_SEPARABLE,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,105,173,12
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,124,173,12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,121,169,14
-    GROUPBOX        "CASPER Options",IDC_CASPEROptions,7,142,190,36
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,140,169,14
+    GROUPBOX        "CASPER Options",IDC_CASPEROptions,202,48,190,36
     GROUPBOX        "Capacity Options",IDC_CapacityOptions,202,11,190,35
-    GROUPBOX        "Safe Zone Options",IDC_ZoneOptions,201,49,190,37
-    LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,216,66,117,8
-    EDITTEXT        IDC_EDIT_ZoneDensity,340,63,46,14,ES_AUTOHSCROLL | ES_NUMBER
-    GROUPBOX        "Flocking Model Options",IDC_FlockOptions,201,89,191,68,NOT WS_VISIBLE
-    CONTROL         "Flocking enabled?",IDC_CHECK_Flock,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,215,105,74,14
-    EDITTEXT        IDC_EDIT_FlockSnapInterval,339,118,45,14,ES_AUTOHSCROLL
-    LTEXT           "Snapshot Interval:",IDC_STATIC_FlockSnapInterval,215,121,59,8
-    EDITTEXT        IDC_EDIT_FlockSimulationInterval,339,136,45,14,ES_AUTOHSCROLL
-    LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,215,139,60,8
-    LTEXT           "Impedance Network Attribute:",IDC_STATIC_Cost,19,46,104,8
-    COMBOBOX        IDC_COMBO_COST,127,44,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Safe Zone Options",IDC_ZoneOptions,202,87,190,37
+    LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,217,104,117,8
+    EDITTEXT        IDC_EDIT_ZoneDensity,341,101,46,14,ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX        "Flocking Model Options",IDC_FlockOptions,201,127,191,68
+    CONTROL         "Flocking enabled?",IDC_CHECK_Flock,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,215,143,74,14
+    EDITTEXT        IDC_EDIT_FlockSnapInterval,342,156,45,14,ES_AUTOHSCROLL
+    LTEXT           "Snapshot Interval:",IDC_STATIC_FlockSnapInterval,215,159,59,8
+    EDITTEXT        IDC_EDIT_FlockSimulationInterval,342,174,45,14,ES_AUTOHSCROLL
+    LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,215,177,60,8
+    LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,19,57,104,8
+    COMBOBOX        IDC_COMBO_COST,127,55,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 END
 
 
@@ -145,7 +145,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 396
         TOPMARGIN, 7
-        BOTTOMMARGIN, 183
+        BOTTOMMARGIN, 198
     END
 END
 #endif    // APSTUDIO_INVOKED
