@@ -690,6 +690,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::list<PathSegmentPtr>::iterator psit;
 	std::list<EvcPathPtr>::iterator pit;
 	double maxCost = 0.0;
+	bool sourceNotFoundFlag = false;
 	
 	// load the mercator projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
@@ -751,7 +752,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 					// retrive street shape for this segment
 					if (FAILED(hr = ipFeatureClassContainer->get_ClassByID(pathSegment->SourceID, &ipNetworkSourceFC))) return hr;
-					if (!ipNetworkSourceFC) continue;
+					if (!ipNetworkSourceFC)
+					{
+						if (!sourceNotFoundFlag)
+						{
+							sourceNotFoundFlag = true;
+							pMessages->AddWarning(CComBSTR(_T("A network source could not be found by class ID.")));
+						}
+						continue;
+					}
 					if (FAILED(hr = ipNetworkSourceFC->GetFeature(pathSegment->SourceOID, &ipSourceFeature))) return hr;
 					if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
 
