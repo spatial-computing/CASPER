@@ -356,7 +356,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
 	HWND m_hlblSnapFlock = GetDlgItem(IDC_STATIC_FlockSnapInterval);
 
-#ifndef _PUBLISH
+#ifdef _FLOCK
 	::ShowWindow(m_hGroupFlock, SW_SHOW);
 	::ShowWindow(m_hEditSnapFlock, SW_SHOW);
 	::ShowWindow(m_hEditSimulationFlock, SW_SHOW);

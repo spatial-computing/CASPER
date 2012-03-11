@@ -276,7 +276,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   /////////////////////////////////////////////////////////////////////////////////////////////
   // flocks layer
-#if !defined(_PUBLISH)
+#if defined(_FLOCK)
   // Get the flocks NAClass/FeatureClass
   if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnknown))) return hr;
 
@@ -356,7 +356,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Flocks
-#if !defined(_PUBLISH)
+#if defined(_FLOCK)
   pNALayer->get_LayerByNAClassName(CComBSTR(CS_FLOCKS_NAME), &ipSubLayer);
   if (ipSubLayer)
   {

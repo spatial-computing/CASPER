@@ -108,7 +108,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_EDGES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
-#if !defined(_PUBLISH)
+#if defined(_FLOCK)
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
 	INAClassPtr ipFlocksNAClass(ipUnk);
 	if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr;
@@ -999,7 +999,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::list<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
 
-#if defined(_PUBLISH)
+#ifndef _FLOCK
 	this->flockingEnabled = false;
 #endif
 
