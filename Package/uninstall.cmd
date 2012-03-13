@@ -86,7 +86,7 @@ IF %PROCESSOR_ARCHITECTURE%==x86 (
   SET asm="C:\Program Files (x86)\Common Files\ArcGIS\bin\ESRIRegAsm.exe"
 )
 
-SET bin="%~dp0bin\EvcSolver.dll"
+SET bin="%~dp0EvcSolver.dll"
 if not exist %asm% (goto :nofile)
 if not exist %bin% (goto :nofile)
 
