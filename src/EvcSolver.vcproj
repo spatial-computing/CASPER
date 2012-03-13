@@ -26,7 +26,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Performing Custom Pre-Build Step"
-				CommandLine="if exist &quot;$(TargetPath)&quot; (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s /u)"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)"
 				ExcludedFromBuild="false"
 			/>
 			<Tool
@@ -101,7 +101,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Performing Custom Post-Build Step"
-				CommandLine="&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s"
 			/>
 		</Configuration>
 		<Configuration
@@ -116,7 +116,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Performing Custom Pre-Build Step"
-				CommandLine="if exist &quot;$(TargetPath)&quot; (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s /u)"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)"
 				ExcludedFromBuild="false"
 			/>
 			<Tool
@@ -193,7 +193,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Performing Custom Post-Build Step"
-				CommandLine="&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s"
 			/>
 		</Configuration>
 		<Configuration
@@ -208,7 +208,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Performing Custom Pre-Build Step"
-				CommandLine="if exist &quot;$(TargetPath)&quot; (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s /u)"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)"
 				ExcludedFromBuild="false"
 			/>
 			<Tool
@@ -285,7 +285,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Performing Custom Post-Build Step"
-				CommandLine="&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s"
 			/>
 		</Configuration>
 		<Configuration
@@ -299,7 +299,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Performing Custom Pre-Build Step"
-				CommandLine="if exist &quot;$(TargetPath)&quot; (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s /u)"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)"
 				ExcludedFromBuild="false"
 			/>
 			<Tool
@@ -374,7 +374,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Performing Custom Post-Build Step"
-				CommandLine="&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  &quot;$(TargetPath)&quot; /s"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s"
 			/>
 		</Configuration>
 	</Configurations>

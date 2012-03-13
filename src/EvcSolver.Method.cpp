@@ -40,15 +40,15 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		// Step progressor range = 0 through numberOfOutputSteps
 		if (solvermethod == EVC_SOLVER_METHOD_CASPER)
 		{
-			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Starting CASPER search")))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CASPER search")))) return hr;
 		}
 		else if (solvermethod == EVC_SOLVER_METHOD_SP)
 		{
-			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Starting SP search")))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing SP search")))) return hr;
 		}
 		else
 		{
-			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Starting CCRP search")))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CCRP search")))) return hr;
 		}		
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_MaxRange(sortedEvacuees->size()))) return hr;

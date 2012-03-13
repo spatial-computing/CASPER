@@ -673,10 +673,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 
 	// looping through processed evacuees and generate routes in output featureclass
-	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);
-	IFeatureClassPtr ipNetworkSourceFC;
 	PathSegment * pathSegment;
-	INetworkSourcePtr ipNetworkSource;
 	IFeaturePtr ipSourceFeature;
 	IGeometryPtr ipGeometry;
 	ICurvePtr  ipSubCurve;
@@ -691,6 +688,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::list<EvcPathPtr>::iterator pit;
 	double maxCost = 0.0;
 	bool sourceNotFoundFlag = false;
+	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);
+	IFeatureClassPtr ipNetworkSourceFC;
+	INetworkSourcePtr ipNetworkSource;
+	BSTR sourceName;
 	
 	// load the mercator projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
@@ -751,13 +752,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					pointCount = -1;
 
 					// retrive street shape for this segment
-					if (FAILED(hr = ipFeatureClassContainer->get_ClassByID(pathSegment->SourceID, &ipNetworkSourceFC))) return hr;
+					if (FAILED(hr = ipNetworkDataset->get_SourceByID(pathSegment->SourceID, &ipNetworkSource))) return hr;
+					if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
+					if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
 					if (!ipNetworkSourceFC)
 					{
 						if (!sourceNotFoundFlag)
 						{
 							sourceNotFoundFlag = true;
-							pMessages->AddWarning(CComBSTR(_T("A network source could not be found by class ID.")));
+							pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));							
 						}
 						continue;
 					}
@@ -900,8 +903,19 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 			// retrive street shape for this edge
 			if (FAILED(hr = edge->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
-			if (FAILED(hr = ipFeatureClassContainer->get_ClassByID(sourceID, &ipNetworkSourceFC))) return hr;
-			if (!ipNetworkSourceFC) continue;
+			if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
+			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
+			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
+			// if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSourceFC))) return hr;
+			if (!ipNetworkSourceFC)
+			{
+				if (!sourceNotFoundFlag)
+				{
+					sourceNotFoundFlag = true;
+					pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));							
+				}
+				continue;
+			}
 			if (FAILED(hr = ipNetworkSourceFC->GetFeature(sourceOID, &ipSourceFeature))) return hr;
 			if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
 
@@ -949,8 +963,19 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 			// retrive street shape for this edge
 			if (FAILED(hr = edge->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
-			if (FAILED(hr = ipFeatureClassContainer->get_ClassByID(sourceID, &ipNetworkSourceFC))) return hr;
-			if (!ipNetworkSourceFC) continue;
+			if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
+			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
+			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;			
+			// if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSourceFC))) return hr;
+			if (!ipNetworkSourceFC)
+			{
+				if (!sourceNotFoundFlag)
+				{
+					sourceNotFoundFlag = true;
+					pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));							
+				}
+				continue;
+			}
 			if (FAILED(hr = ipNetworkSourceFC->GetFeature(sourceOID, &ipSourceFeature))) return hr;
 			if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
 
@@ -1143,10 +1168,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	CString formatString;
 	CString msgString;
-
+#ifdef _FLOCK
 	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f");
 	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
+#else
+	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f");
+	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
+		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
+#endif
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
 
