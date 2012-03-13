@@ -13,7 +13,7 @@ Requirements:
 - Network Analyst Extension
 
 Installation:
-In order to install, first unzip the downloaded file. Next, execute the "install.cmd" script. This script needs to be run as an administrator in Windows Visa and later operating systems.
+In order to install, first unzip the downloaded file. Next, execute the "install.cmd" script. This script needs to be run as an administrator in Windows Visa and later operating systems. Make sure any previous ArcCASPER installation is completely uninstalled and removed.
 
 Acknowledgement:
 I would like to thank ESRI APL team to help me develop this tool for the general use.

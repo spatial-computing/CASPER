@@ -62,7 +62,35 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Publish|Win32"
+			Name="ReleaseNoFlock|Win32"
+			>
+			<DebugSettings
+				Command="C:\Program Files (x86)\ArcGIS\Desktop10.0\Bin\ArcMap.exe"
+				WorkingDirectory=""
+				CommandArguments="&quot;C:\dev\CPP\USCGISResearchLab\ArcCASPER\data\map.mxd&quot;"
+				Attach="false"
+				DebuggerType="3"
+				Remote="1"
+				RemoteMachine="GIS-LAB-PC-16"
+				RemoteCommand=""
+				HttpUrl=""
+				PDBPath=""
+				SQLDebugging=""
+				Environment=""
+				EnvironmentMerge="true"
+				DebuggerFlavor="0"
+				MPIRunCommand=""
+				MPIRunArguments=""
+				MPIRunWorkingDirectory=""
+				ApplicationCommand=""
+				ApplicationArguments=""
+				ShimCommand=""
+				MPIAcceptMode=""
+				MPIAcceptFilter=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="DebugNoFlock|Win32"
 			>
 			<DebugSettings
 				Command="C:\Program Files (x86)\ArcGIS\Desktop10.0\Bin\ArcMap.exe"
