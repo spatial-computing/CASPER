@@ -16,7 +16,7 @@ Installation:
 In order to install, first unzip the downloaded file. Next, execute the "install.cmd" script. This script needs to be run as an administrator in Windows Visa and later operating systems. Make sure any previous ArcCASPER installation is completely uninstalled and removed.
 
 Acknowledgement:
-I would like to thank ESRI APL team to help me develop this tool for the general use.
+I would like to thank ESRI APL team to help me develop this tool.
 
 Copyright / Permissions:
 ArcCASPER is released under Creative Commons Attribution-Only license.
