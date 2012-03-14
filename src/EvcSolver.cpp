@@ -436,6 +436,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	exportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
+	twoWayShareCapacity = VARIANT_TRUE;
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
 
@@ -467,6 +468,19 @@ STDMETHODIMP EvcSolver::get_FlockingEnabled(VARIANT_BOOL * value)
 STDMETHODIMP EvcSolver::put_FlockingEnabled(VARIANT_BOOL value)
 {
 	flockingEnabled = value;
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_TwoWayShareCapacity(VARIANT_BOOL * value)
+{
+	*value = twoWayShareCapacity;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_TwoWayShareCapacity(VARIANT_BOOL value)
+{
+	twoWayShareCapacity = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -1006,6 +1020,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&flockingEnabled, sizeof(flockingEnabled), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingSnapInterval, sizeof(flockingSnapInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 
 	m_bPersistDirty = false;
 
@@ -1042,6 +1057,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&flockingEnabled, sizeof(flockingEnabled), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingSnapInterval, sizeof(flockingSnapInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	
 	return S_OK;
 }

@@ -47,6 +47,9 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_FlockingEnabled(&val);
 		if (val) ::SendMessage(m_hCheckFlock, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hCheckFlock, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+		m_ipEvcSolver->get_TwoWayShareCapacity(&val);
+		if (val) ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+		else  ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 
 		// set the solver cost method names
 		m_ipEvcSolver->get_CostMethod(&method);
@@ -272,6 +275,8 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		ipSolver->put_ExportEdgeStat(selectedIndex == BST_CHECKED);
 		selectedIndex = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
 		ipSolver->put_FlockingEnabled(selectedIndex == BST_CHECKED);
+		selectedIndex = ::SendMessage(m_hCheckShareCap, BM_GETCHECK, 0, 0);
+		ipSolver->put_TwoWayShareCapacity(selectedIndex == BST_CHECKED);
 		
 		// critical density per capacity
 		BSTR critical;
@@ -339,6 +344,12 @@ STDMETHODIMP EvcSolverPropPage::Cancel()
 
 LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+	int cmdShow = 0;;
+#ifdef _FLOCK
+	cmdShow = SW_SHOW;
+#else
+	cmdShow = SW_HIDE;	
+#endif
 	m_hCapCombo = GetDlgItem(IDC_COMBO_CAPACITY);
 	m_hCostCombo = GetDlgItem(IDC_COMBO_COST);
 	m_hComboMethod = GetDlgItem(IDC_COMBO_METHOD);
@@ -351,28 +362,29 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hEditSnapFlock = GetDlgItem(IDC_EDIT_FlockSnapInterval);
 	m_hEditSimulationFlock = GetDlgItem(IDC_EDIT_FlockSimulationInterval);
 	m_hCheckFlock = GetDlgItem(IDC_CHECK_Flock);
+	m_hCheckShareCap = GetDlgItem(IDC_CHECK_SHARECAP);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
 	HWND m_hlblSnapFlock = GetDlgItem(IDC_STATIC_FlockSnapInterval);
 
-#ifdef _FLOCK
-	::ShowWindow(m_hGroupFlock, SW_SHOW);
-	::ShowWindow(m_hEditSnapFlock, SW_SHOW);
-	::ShowWindow(m_hEditSimulationFlock, SW_SHOW);
-	::ShowWindow(m_hCheckFlock, SW_SHOW);
-	::ShowWindow(m_hlblSimulationFlock, SW_SHOW);
-	::ShowWindow(m_hlblSnapFlock, SW_SHOW);
-#else
-	::ShowWindow(m_hGroupFlock, SW_HIDE);
-	::ShowWindow(m_hEditSnapFlock, SW_HIDE);
-	::ShowWindow(m_hEditSimulationFlock, SW_HIDE);
-	::ShowWindow(m_hCheckFlock, SW_HIDE);
-	::ShowWindow(m_hlblSimulationFlock, SW_HIDE);
-	::ShowWindow(m_hlblSnapFlock, SW_HIDE);
-#endif
+	::ShowWindow(m_hGroupFlock, cmdShow);
+	::ShowWindow(m_hEditSnapFlock, cmdShow);
+	::ShowWindow(m_hEditSimulationFlock, cmdShow);
+	::ShowWindow(m_hCheckFlock, cmdShow);
+	::ShowWindow(m_hlblSimulationFlock, cmdShow);
+	::ShowWindow(m_hlblSnapFlock, cmdShow);
 
 	return 0;
+}
+
+void EvcSolverPropPage::SetFlockingEnabled()
+{	
+	int flag = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
+	if (flag == BST_CHECKED) flag = 1; else flag = 0;
+	
+	::SendMessage(m_hEditSnapFlock, WM_ENABLE, flag, 0);
+	::SendMessage(m_hEditSimulationFlock, WM_ENABLE, flag, 0);	
 }
 
 LRESULT EvcSolverPropPage::OnEnChangeEditSat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -447,15 +459,6 @@ LRESULT EvcSolverPropPage::OnEnChangeEditZonedensity(WORD /*wNotifyCode*/, WORD 
 	return 0;
 }
 
-void EvcSolverPropPage::SetFlockingEnabled()
-{	
-	int flag = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
-	if (flag == BST_CHECKED) flag = 1; else flag = 0;
-	
-	::SendMessage(m_hEditSnapFlock, WM_ENABLE, flag, 0);
-	::SendMessage(m_hEditSimulationFlock, WM_ENABLE, flag, 0);	
-}
-
 LRESULT EvcSolverPropPage::OnBnClickedCheckFlock(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
@@ -474,6 +477,14 @@ LRESULT EvcSolverPropPage::OnEnChangeEditFlocksnapinterval(WORD /*wNotifyCode*/,
 }
 
 LRESULT EvcSolverPropPage::OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

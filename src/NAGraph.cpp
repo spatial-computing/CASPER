@@ -4,32 +4,46 @@
 #include <cmath>
 
 ///////////////////////////////////////////////////////////////////////
+// EdgeReservations Methods
+
+EdgeReservations::EdgeReservations(double capacity, double CriticalDensPerCap, double SaturationDensPerCap)
+{
+	List = new std::vector<EdgeReservation>();
+	ReservedPop = 0.0;
+	Capacity = capacity;	
+	CriticalDens = CriticalDensPerCap * capacity;
+	SaturationDens = SaturationDensPerCap * capacity;
+}
+
+EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
+{
+	List = new std::vector<EdgeReservation>(*(cpy.List));
+	ReservedPop = cpy.ReservedPop;
+	Capacity = cpy.Capacity;	
+	CriticalDens = cpy.CriticalDens;
+	SaturationDens = cpy.SaturationDens;
+}
+
+///////////////////////////////////////////////////////////////////////
 // NAEdge Methods
 
 NAEdge::NAEdge(const NAEdge& cpy)
 {
-	reservations = new std::vector<EdgeReservation>(*(cpy.reservations));
+	reservations = new EdgeReservations(*(cpy.reservations));
 	NetEdge = cpy.NetEdge;
-	capacity = cpy.capacity;
-	ReservedPop = cpy.ReservedPop;
-	originalCost = cpy.originalCost;	
-	criticalDens = cpy.criticalDens;
-	saturationDens = cpy.saturationDens;
+	originalCost = cpy.originalCost;
 	Direction = cpy.Direction;
 	EID = cpy.EID;
 	ToVertex = cpy.ToVertex;
 	LastExteriorEdge = cpy.LastExteriorEdge;
 }
 
-NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap,
-	double SaturationDensPerCap)
+NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap)
 {
-	reservations = new std::vector<EdgeReservation>();
 	this->NetEdge = edge;
 	LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
-	ReservedPop = 0.0;
-	capacity = 1.0;
+	double capacity = 1.0;
 
 	if (FAILED(edge->get_AttributeValue(capacityAttribID, &vcap)) ||	
 		FAILED(edge->get_AttributeValue(costAttribID, &vcost)) ||	
@@ -37,19 +51,16 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 		FAILED(edge->get_Direction(&Direction)))
 	{
 		NetEdge = 0;
-		criticalDens = -1;
-		saturationDens = -1;
-		originalCost = -1;
+		reservations = 0;
 		EID = -1;
 	}
 	else
 	{
-		// _ASSERT(vcost.dblVal >= 0.0);
+		_ASSERT(vcost.dblVal >= 0.0);
 		originalCost = max(0.0, vcost.dblVal);
 		if (vcap.vt == VT_R8) capacity = max(1.0, vcap.dblVal);
 		else if (vcap.vt == VT_I4) capacity = max(1, vcap.intVal);
-		criticalDens = CriticalDensPerCap * capacity;
-		saturationDens = SaturationDensPerCap * capacity;
+		reservations = new EdgeReservations(capacity, CriticalDensPerCap, SaturationDensPerCap);
 	}
 }
 
@@ -65,14 +76,14 @@ HRESULT NAEdge::QuerySourceStuff(long * sourceOID, long * sourceID, double * fro
 // Special function for Flocking: to check how much capacity the edge had originally
 double NAEdge::OriginalCapacity() const
 {
-	return capacity;
+	return reservations->Capacity;
 }
 
 // Special function for CCRP: to check how much capacity id left on this edge.
 // Will be used to get max capacity available on a path
 double NAEdge::CapacityLeft() const
 {
-	return criticalDens - ReservedPop;
+	return reservations->CriticalDens - reservations->ReservedPop;
 }
 
 // This is where the actual capacity aware part is happening:
@@ -84,16 +95,16 @@ double NAEdge::GetCost(double newPop, char method) const
 	switch (method)
 	{
 	case 0x2: // casper method
-		newPop = newPop + ReservedPop - criticalDens;
+		newPop = newPop + reservations->ReservedPop - reservations->CriticalDens;
 		if (newPop > 0)
 		{
-			speedPercent = exp(-newPop / saturationDens);
+			speedPercent = exp(-newPop / reservations->SaturationDens);
 			speedPercent = min(1.0, max(0.001, speedPercent));
 			newCost = originalCost / speedPercent;
 		}
 		break;
 	case 0x1: // CCRP method
-		newPop = newPop + ReservedPop - criticalDens;
+		newPop = newPop + reservations->ReservedPop - reservations->CriticalDens;
 		if (newPop > 0) newCost *= 1000.0;		
 		break;
 	}
@@ -102,43 +113,14 @@ double NAEdge::GetCost(double newPop, char method) const
 
 void NAEdge::AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population)
 {
-	reservations->insert(reservations->end(), EdgeReservation(evacuee, fromCost, toCost));
-	ReservedPop += population;
+	reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
+	reservations->ReservedPop += population;
 }
 
 /////////////////////////////////////////////////////////////
 // NAEdgeCache
 
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
-/*
-NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
-{
-	NAEdgePtr n = 0;
-	long EID;
-	NAEdgeTable * cache = 0;
-	esriNetworkEdgeDirection dir;
-
-	if (FAILED(edge->get_EID(&EID))) return 0;
-	if (FAILED(edge->get_Direction(&dir))) return 0;
-
-	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
-	else cache = cacheAgainst;
-
-	NAEdgeTableItr it = cache->find(EID);
-
-	if (it == cache->end())
-	{
-		n = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap);
-		cache->insert(NAEdgeTablePair(n));
-	}
-	else
-	{
-		n = new NAEdge(*(it->second));
-		sideCache->insert(sideCache->end(), n);
-	}
-	return n;
-}
-*/
 NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 {
 	NAEdgePtr n = 0;

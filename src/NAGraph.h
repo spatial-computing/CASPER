@@ -111,6 +111,29 @@ public:
 	}
 };
 
+class EdgeReservations
+{
+public:	
+	std::vector<EdgeReservation> * List;
+	double ReservedPop;
+	double SaturationDens;
+	double CriticalDens;
+	double Capacity;
+	EdgeReservations(double capacity, double CriticalDensPerCap, double SaturationDensPerCap);
+	EdgeReservations(const EdgeReservations& cpy);
+	
+	void Clear()
+	{
+		List->clear();
+	}
+	
+	~EdgeReservations(void)
+	{
+		Clear();
+		delete List;
+	}
+};
+
 // The NAEdge class is what sits on top of the INetworkEdge interface and holds extra
 // information about each edge which are helpful for CASPER algorithm.
 // Capacity: road initial capacity
@@ -119,11 +142,7 @@ public:
 class NAEdge
 {
 private:	
-	std::vector<EdgeReservation> * reservations;
-	double ReservedPop;
-	double saturationDens;
-	double criticalDens;
-	double capacity;
+	EdgeReservations * reservations;	
 
 public:
 	double originalCost;
@@ -138,21 +157,14 @@ public:
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
-	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap,
-		double SaturationDensPerCap);
+	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap);
 	NAEdge(const NAEdge& cpy);
 
-	void Clear()
-	{
-		reservations->clear();
-	}
-
-	double GetReservedPop() const { return ReservedPop; }
+	double GetReservedPop() const { return reservations->ReservedPop; }
 	bool LessThan(NAEdge * other) { return ToVertex->g + ToVertex->h < other->ToVertex->g + other->ToVertex->h; }
 
 	~NAEdge(void)
 	{
-		Clear();
 		delete reservations;
 	}
 };

@@ -76,11 +76,15 @@ __interface IEvcSolver : IUnknown
 	[propput, helpstring("Sets the flocking snapshot interval in minutes")]
 		HRESULT FlockingSnapInterval([in] BSTR value);
 	[propget, helpstring("Gets the flocking snapshot interval in minutes")]
-		HRESULT FlockingSnapInterval([out, retval] BSTR * value);		
+		HRESULT FlockingSnapInterval([out, retval] BSTR * value);
 	[propput, helpstring("Sets the flocking mode to on/off")]
 		HRESULT FlockingEnabled([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the flocking mode")]
 		HRESULT FlockingEnabled([out, retval] VARIANT_BOOL * value);
+	[propput, helpstring("Sets the two way road capacity sharing")]
+		HRESULT TwoWayShareCapacity([in] VARIANT_BOOL value);
+	[propget, helpstring("Gets the two way road capacity sharing")]
+		HRESULT TwoWayShareCapacity([out, retval] VARIANT_BOOL * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
@@ -167,6 +171,8 @@ public:
 	STDMETHOD(put_CostPerZoneDensity)(BSTR value);
 	STDMETHOD(get_FlockingEnabled)(VARIANT_BOOL * value);
 	STDMETHOD(put_FlockingEnabled)(VARIANT_BOOL value);
+	STDMETHOD(get_TwoWayShareCapacity)(VARIANT_BOOL * value);
+	STDMETHOD(put_TwoWayShareCapacity)(VARIANT_BOOL value);
 	STDMETHOD(get_FlockingSnapInterval)(BSTR * value);
 	STDMETHOD(put_FlockingSnapInterval)(BSTR value);
 	STDMETHOD(get_FlockingSimulationInterval)(BSTR * value);
@@ -274,6 +280,7 @@ private:
 	VARIANT_BOOL			flockingEnabled;
 	float					flockingSnapInterval;
 	float					flockingSimulationInterval;
+	bool					twoWayShareCapacity;
 	
 	VARIANT_BOOL separable;
 	VARIANT_BOOL exportEdgeStat;

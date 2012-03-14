@@ -65,6 +65,7 @@ public:
 	  COMMAND_HANDLER(IDC_CHECK_Flock, BN_CLICKED, OnBnClickedCheckFlock)
 	  COMMAND_HANDLER(IDC_EDIT_FlockSnapInterval, EN_CHANGE, OnEnChangeEditFlocksnapinterval)
 	  COMMAND_HANDLER(IDC_EDIT_FlockSimulationInterval, EN_CHANGE, OnEnChangeEditFlocksimulationinterval)
+	  COMMAND_HANDLER(IDC_CHECK_SHARECAP, BN_CLICKED, OnBnClickedCheckSharecap)
 	  CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
     MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)	
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
@@ -122,6 +123,7 @@ private:
   HWND                    m_hEditSnapFlock;
   HWND                    m_hEditSimulationFlock;
   HWND                    m_hCheckFlock;
+  HWND                    m_hCheckShareCap;
 
   void SetFlockingEnabled();
 
@@ -146,4 +148,6 @@ public:
 	LRESULT OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 protected:
 	int pppp;
+public:
+	LRESULT OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };

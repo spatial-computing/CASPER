@@ -34,6 +34,8 @@
 #define IDC_STATIC_FlockSimulationInterval 237
 #define IDC_STATIC_Cost                 238
 #define IDC_COMBO_COST                  239
+#define IDC_CHECK_EDGESTAT2             240
+#define IDC_CHECK_SHARECAP              240
 
 // Next default values for new objects
 // 
