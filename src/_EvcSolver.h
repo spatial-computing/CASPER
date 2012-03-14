@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Mon Mar 12 19:42:19 2012
+/* at Tue Mar 13 17:51:37 2012
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -186,6 +186,12 @@ EXTERN_C const IID IID_IEvcSolver;
         virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_FlockingEnabled( 
             /* [retval][out] */ VARIANT_BOOL *value) = 0;
         
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_TwoWayShareCapacity( 
+            /* [in] */ VARIANT_BOOL value) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_TwoWayShareCapacity( 
+            /* [retval][out] */ VARIANT_BOOL *value) = 0;
+        
         virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_CostAttribute( 
             /* [in] */ int index) = 0;
         
@@ -314,6 +320,14 @@ EXTERN_C const IID IID_IEvcSolver;
             IEvcSolver * This,
             /* [retval][out] */ VARIANT_BOOL *value);
         
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_TwoWayShareCapacity )( 
+            IEvcSolver * This,
+            /* [in] */ VARIANT_BOOL value);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_TwoWayShareCapacity )( 
+            IEvcSolver * This,
+            /* [retval][out] */ VARIANT_BOOL *value);
+        
         /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_CostAttribute )( 
             IEvcSolver * This,
             /* [in] */ int index);
@@ -424,6 +438,12 @@ EXTERN_C const IID IID_IEvcSolver;
 
 #define IEvcSolver_get_FlockingEnabled(This,value)	\
     ( (This)->lpVtbl -> get_FlockingEnabled(This,value) ) 
+
+#define IEvcSolver_put_TwoWayShareCapacity(This,value)	\
+    ( (This)->lpVtbl -> put_TwoWayShareCapacity(This,value) ) 
+
+#define IEvcSolver_get_TwoWayShareCapacity(This,value)	\
+    ( (This)->lpVtbl -> get_TwoWayShareCapacity(This,value) ) 
 
 #define IEvcSolver_put_CostAttribute(This,index)	\
     ( (This)->lpVtbl -> put_CostAttribute(This,index) ) 
