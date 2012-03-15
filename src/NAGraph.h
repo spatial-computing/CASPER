@@ -134,6 +134,12 @@ public:
 	}
 };
 
+// EdgeReservations hash map
+typedef EdgeReservations * EdgeReservationsPtr;
+typedef public stdext::hash_map<long, EdgeReservationsPtr> NAResTable;
+typedef stdext::hash_map<long, EdgeReservationsPtr>::iterator NAResTableItr;
+typedef std::pair<long, EdgeReservationsPtr> NAResTablePair;
+
 // The NAEdge class is what sits on top of the INetworkEdge interface and holds extra
 // information about each edge which are helpful for CASPER algorithm.
 // Capacity: road initial capacity
@@ -157,16 +163,16 @@ public:
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
-	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap);
+	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable);
 	NAEdge(const NAEdge& cpy);
 
 	double GetReservedPop() const { return reservations->ReservedPop; }
 	bool LessThan(NAEdge * other) { return ToVertex->g + ToVertex->h < other->ToVertex->g + other->ToVertex->h; }
 
-	~NAEdge(void)
-	{
-		delete reservations;
-	}
+	//~NAEdge(void)
+	//{
+	//	delete reservations;
+	//}
 };
 
 typedef NAEdge * NAEdgePtr;
@@ -240,17 +246,20 @@ public:
 class NAEdgeCache
 {
 private:
-	NAEdgeTable * cacheAlong;
-	NAEdgeTable * cacheAgainst;
-	std::vector<NAEdge *> * sideCache;
-	long capacityAttribID;
-	long costAttribID;
-	double saturationPerCap;
-	double criticalDensPerCap;
+	NAEdgeTable				* cacheAlong;
+	NAEdgeTable				* cacheAgainst;
+	std::vector<NAEdgePtr>	* sideCache;
+	long					capacityAttribID;
+	long					costAttribID;
+	double					saturationPerCap;
+	double					criticalDensPerCap;
+	bool					twoWayRoadsShareCap;
+	NAResTable				* resTableAlong;
+	NAResTable				* resTableAgainst;
 
 public:
 
-	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap)
+	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap)
 	{
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
@@ -259,7 +268,12 @@ public:
 		saturationPerCap = SaturationPerCap;
 		criticalDensPerCap = CriticalDensPerCap;
 		if (saturationPerCap > criticalDensPerCap) saturationPerCap -= criticalDensPerCap;
-		sideCache = new std::vector<NAEdge *>();
+		sideCache = new std::vector<NAEdgePtr>();
+		twoWayRoadsShareCap = TwoWayRoadsShareCap;
+
+		resTableAlong = new NAResTable();
+		if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
+		else resTableAgainst = new NAResTable();
 	}
 
 	~NAEdgeCache(void) 
@@ -267,7 +281,9 @@ public:
 		Clear();
 		delete sideCache;
 		delete cacheAlong; 
-		delete cacheAgainst; 
+		delete cacheAgainst;
+		delete resTableAlong;
+		if (!twoWayRoadsShareCap) delete resTableAgainst;
 	}
 
 	NAEdgePtr New(INetworkEdgePtr edge, bool replace = false);

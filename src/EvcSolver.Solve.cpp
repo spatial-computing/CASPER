@@ -212,7 +212,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// This will particularly be helpful with the heuristic calculator part of the algorithm.
 	// if (FAILED(hr = heuristicAttribs[heuristicAttribIndex]->get_ID(&capAttributeID))) return hr;  	
 	NAVertexCache * vcache = new NAVertexCache();
-	NAEdgeCache   * ecache = new NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap);
+	NAEdgeCache   * ecache = new NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE);
 
 	// Vertex table structures
 	NAVertexTable * safeZoneList = new NAVertexTable();
@@ -1051,7 +1051,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// init
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
-		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval);
+		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, twoWayShareCapacity == VARIANT_TRUE);
 		flock->Init(Evacuees, ipNetworkQuery, costPerSec);
 
 		// run simulation

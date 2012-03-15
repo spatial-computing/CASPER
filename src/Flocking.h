@@ -109,9 +109,10 @@ private:
 	double							simulationInterval;
 	double							maxPathLen;
 	bool							movingObjectLeft;
+	bool							twoWayRoadsShareCap;
 
 public:
-	FlockingEnviroment(double SnapshotInterval, double SimulationInterval);
+	FlockingEnviroment(double SnapshotInterval, double SimulationInterval, bool TwoWayRoadsShareCap);
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec);
 	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost);

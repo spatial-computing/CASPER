@@ -274,7 +274,7 @@ HRESULT FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking enviroment implementation
 
-FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval)
+FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval, bool TwoWayRoadsShareCap)
 {
 	snapshotInterval = abs(SnapshotInterval);
 	simulationInterval = abs(SimulationInterval);
@@ -282,6 +282,7 @@ FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double Simulatio
 	history = new std::list<FlockingLocationPtr>();
 	collisions = new std::list<double>();
 	maxPathLen = 0.0;
+	twoWayRoadsShareCap = TwoWayRoadsShareCap;
 }
 
 FlockingEnviroment::~FlockingEnviroment(void)

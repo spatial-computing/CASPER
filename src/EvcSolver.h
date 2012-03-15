@@ -280,8 +280,8 @@ private:
 	VARIANT_BOOL			flockingEnabled;
 	float					flockingSnapInterval;
 	float					flockingSimulationInterval;
-	bool					twoWayShareCapacity;
-	
+
+	VARIANT_BOOL twoWayShareCapacity;	
 	VARIANT_BOOL separable;
 	VARIANT_BOOL exportEdgeStat;
 	VARIANT_BOOL m_CreateTraversalResult;

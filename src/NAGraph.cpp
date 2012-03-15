@@ -29,7 +29,7 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 
 NAEdge::NAEdge(const NAEdge& cpy)
 {
-	reservations = new EdgeReservations(*(cpy.reservations));
+	reservations = cpy.reservations;
 	NetEdge = cpy.NetEdge;
 	originalCost = cpy.originalCost;
 	Direction = cpy.Direction;
@@ -38,7 +38,7 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	LastExteriorEdge = cpy.LastExteriorEdge;
 }
 
-NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap)
+NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable)
 {
 	this->NetEdge = edge;
 	LastExteriorEdge = 0;
@@ -60,7 +60,17 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 		originalCost = max(0.0, vcost.dblVal);
 		if (vcap.vt == VT_R8) capacity = max(1.0, vcap.dblVal);
 		else if (vcap.vt == VT_I4) capacity = max(1, vcap.intVal);
-		reservations = new EdgeReservations(capacity, CriticalDensPerCap, SaturationDensPerCap);
+
+		NAResTableItr it = resTable->find(EID);
+		if (it == resTable->end())
+		{
+			reservations = new EdgeReservations(capacity, CriticalDensPerCap, SaturationDensPerCap);
+			resTable->insert(NAResTablePair(EID, reservations));
+		}
+		else
+		{
+			reservations = it->second;
+		}
 	}
 }
 
@@ -126,19 +136,28 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 	NAEdgePtr n = 0;
 	long EID;
 	NAEdgeTable * cache = 0;
+	NAResTable  * resTable = 0;
 	esriNetworkEdgeDirection dir;
 
 	if (FAILED(edge->get_EID(&EID))) return 0;
 	if (FAILED(edge->get_Direction(&dir))) return 0;
 
-	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
-	else cache = cacheAgainst;
+	if (dir == esriNEDAlongDigitized)
+	{
+		cache = cacheAlong;
+		resTable = resTableAlong;
+	}
+	else
+	{
+		cache = cacheAgainst;
+		resTable = resTableAgainst;
+	}
 
 	NAEdgeTableItr it = cache->find(EID);	
 
 	if (it == cache->end())
 	{
-		n = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap);
+		n = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable);
 		cache->insert(NAEdgeTablePair(n));
 	}
 	else
@@ -146,7 +165,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 		if (replace)
 		{
 			delete it->second;
-			it->second = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap);
+			it->second = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable);
 		}
 		else it->second->NetEdge = edge;
 		n = it->second;
@@ -162,6 +181,13 @@ void NAEdgeCache::Clear()
 	cacheAgainst->clear();
 	for(std::vector<NAEdgePtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) delete (*i);
 	sideCache->clear();
+	for(NAResTableItr ires = resTableAlong->begin(); ires != resTableAlong->end(); ires++) delete (*ires).second;
+	resTableAlong->clear();
+	if (!twoWayRoadsShareCap)
+	{
+		for(NAResTableItr ires = resTableAgainst->begin(); ires != resTableAgainst->end(); ires++) delete (*ires).second;
+		resTableAgainst->clear();
+	}
 }
 
 ///////////////////////////////////////////////
