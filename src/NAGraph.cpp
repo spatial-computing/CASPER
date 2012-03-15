@@ -176,13 +176,15 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 void NAEdgeCache::Clear()
 {
 	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) delete (*cit).second;
-	cacheAlong->clear();
 	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) delete (*cit).second;
-	cacheAgainst->clear();
 	for(std::vector<NAEdgePtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) delete (*i);
-	sideCache->clear();
 	for(NAResTableItr ires = resTableAlong->begin(); ires != resTableAlong->end(); ires++) delete (*ires).second;
+
+	cacheAlong->clear();
+	cacheAgainst->clear();
 	resTableAlong->clear();
+	sideCache->clear();
+
 	if (!twoWayRoadsShareCap)
 	{
 		for(NAResTableItr ires = resTableAgainst->begin(); ires != resTableAgainst->end(); ires++) delete (*ires).second;
