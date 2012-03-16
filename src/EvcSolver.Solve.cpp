@@ -221,7 +221,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
 
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Computing evacuation route(s)")); // add more specific information here if appropriate
-	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Colecting safe zone point(s)")); // add more specific information here if appropriate
+	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting safe zone point(s)")); // add more specific information here if appropriate
 
 	///////////////////////////
 	// here we begin collecting safe zone points for all the evacuees
@@ -620,7 +620,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					neighbor->h = myVertex->h + currentEdge->originalCost;
 					neighbor->Previous = myVertex;
 					if (FAILED(hr = heap->DecreaseKey(currentEdge))) return hr;	
-					vcache->UdateHeuristic(neighbor);			
+					vcache->UpdateHeuristic(neighbor);			
 				}
 			}
 			else // unvisited vertex. create new and insert in heap
@@ -630,7 +630,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				neighbor->h = myVertex->h + currentEdge->originalCost;
 				neighbor->Previous = myVertex;
 				heap->Insert(currentEdge);
-				vcache->UdateHeuristic(neighbor);
+				vcache->UpdateHeuristic(neighbor);
 			}
 		}
 	}
@@ -869,8 +869,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		IFeatureClassPtr ipEdgesFC(ipEdgesNAClass);
 		NAEdgePtr edge;
 		double resPop;
-		long sourceIDFieldIndex, sourceOIDFieldIndex, resPopFieldIndex, travCostFieldIndex,
-			orgCostFieldIndex, dirFieldIndex, eidFieldIndex;
+		long sourceIDFieldIndex, sourceOIDFieldIndex, resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, dirFieldIndex, eidFieldIndex;
 
 		// Create an insert cursor and feature buffer from the "EdgeStat" feature class to be used to write edges
 		if (FAILED(hr = ipEdgesFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
@@ -906,7 +905,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
 			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
 			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
-			// if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSourceFC))) return hr;
 			if (!ipNetworkSourceFC)
 			{
 				if (!sourceNotFoundFlag)
@@ -965,8 +963,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = edge->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
 			if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
 			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
-			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;			
-			// if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSourceFC))) return hr;
+			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
 			if (!ipNetworkSourceFC)
 			{
 				if (!sourceNotFoundFlag)

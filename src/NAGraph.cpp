@@ -115,7 +115,7 @@ double NAEdge::GetCost(double newPop, char method) const
 		break;
 	case 0x1: // CCRP method
 		newPop = newPop + reservations->ReservedPop - reservations->CriticalDens;
-		if (newPop > 0) newCost *= 1000.0;		
+		if (newPop > 0) newCost *= 1000.0;
 		break;
 	}
 	return newCost;
@@ -239,7 +239,7 @@ void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 	BehindEdge->ToVertex = this;
 }
 
-void NAVertexCache::UdateHeuristic(NAVertexPtr vertex)
+void NAVertexCache::UpdateHeuristic(NAVertexPtr vertex)
 {
 	NAVertexPtr a = Get(vertex->EID);
 	a->h = min(a->h, vertex->h);

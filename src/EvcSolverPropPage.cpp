@@ -39,16 +39,16 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		// set flags
 		VARIANT_BOOL val;
 		m_ipEvcSolver->get_SeparableEvacuee(&val);
-		if (val) ::SendMessage(m_hSeparable, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+		if (val == VARIANT_TRUE) ::SendMessage(m_hSeparable, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hSeparable, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 		m_ipEvcSolver->get_ExportEdgeStat(&val);
-		if (val) ::SendMessage(m_hEdgeStat, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+		if (val == VARIANT_TRUE) ::SendMessage(m_hEdgeStat, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hEdgeStat, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 		m_ipEvcSolver->get_FlockingEnabled(&val);
-		if (val) ::SendMessage(m_hCheckFlock, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+		if (val == VARIANT_TRUE) ::SendMessage(m_hCheckFlock, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hCheckFlock, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 		m_ipEvcSolver->get_TwoWayShareCapacity(&val);
-		if (val) ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+		if (val == VARIANT_TRUE) ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 
 		// set the solver cost method names
@@ -269,14 +269,23 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex > -1) ipSolver->put_SolverMethod((EVC_SOLVER_METHOD)selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboCostMethod, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_CostMethod((EVC_SOLVER_METHOD)selectedIndex);
+
+		// flags
 		selectedIndex = ::SendMessage(m_hSeparable, BM_GETCHECK, 0, 0);
-		ipSolver->put_SeparableEvacuee(selectedIndex == BST_CHECKED);
+		if (selectedIndex == BST_CHECKED) ipSolver->put_SeparableEvacuee(VARIANT_TRUE);
+		else ipSolver->put_SeparableEvacuee(VARIANT_FALSE);
+
 		selectedIndex = ::SendMessage(m_hEdgeStat, BM_GETCHECK, 0, 0);
-		ipSolver->put_ExportEdgeStat(selectedIndex == BST_CHECKED);
+		if (selectedIndex == BST_CHECKED) ipSolver->put_ExportEdgeStat(VARIANT_TRUE);
+		else ipSolver->put_ExportEdgeStat(VARIANT_FALSE);
+
 		selectedIndex = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
-		ipSolver->put_FlockingEnabled(selectedIndex == BST_CHECKED);
+		if (selectedIndex == BST_CHECKED) ipSolver->put_FlockingEnabled(VARIANT_TRUE);
+		else ipSolver->put_FlockingEnabled(VARIANT_FALSE);
+
 		selectedIndex = ::SendMessage(m_hCheckShareCap, BM_GETCHECK, 0, 0);
-		ipSolver->put_TwoWayShareCapacity(selectedIndex == BST_CHECKED);
+		if (selectedIndex == BST_CHECKED) ipSolver->put_TwoWayShareCapacity(VARIANT_TRUE);
+		else ipSolver->put_TwoWayShareCapacity(VARIANT_FALSE);
 		
 		// critical density per capacity
 		BSTR critical;

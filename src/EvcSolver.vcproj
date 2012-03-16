@@ -26,7 +26,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Performing Custom Pre-Build Step"
-				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)&#x0D;&#x0A;"
 				ExcludedFromBuild="false"
 			/>
 			<Tool
@@ -51,7 +51,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="1"
+				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -101,7 +101,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Performing Custom Post-Build Step"
-				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -116,7 +116,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Performing Custom Pre-Build Step"
-				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)&#x0D;&#x0A;"
 				ExcludedFromBuild="false"
 			/>
 			<Tool
@@ -193,7 +193,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Performing Custom Post-Build Step"
-				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -208,7 +208,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Performing Custom Pre-Build Step"
-				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)&#x0D;&#x0A;"
 				ExcludedFromBuild="false"
 			/>
 			<Tool
@@ -285,7 +285,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Performing Custom Post-Build Step"
-				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -299,7 +299,7 @@
 			<Tool
 				Name="VCPreBuildEventTool"
 				Description="Performing Custom Pre-Build Step"
-				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;if exist $(TargetFileName) (&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s /u)&#x0D;&#x0A;"
 				ExcludedFromBuild="false"
 			/>
 			<Tool
@@ -324,7 +324,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="1"
+				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -374,7 +374,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Performing Custom Post-Build Step"
-				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s"
+				CommandLine="cd &quot;$(OutDir)&quot;&#x0D;&#x0A;cd ..&#x0D;&#x0A;copy /Y &quot;$(TargetDir)$(TargetName).*&quot; *.*&#x0D;&#x0A;&quot;$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe&quot; /p:desktop  $(TargetFileName) /s&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

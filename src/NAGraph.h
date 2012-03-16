@@ -69,7 +69,7 @@ public:
 	}
 	
 	NAVertexPtr New(INetworkJunctionPtr junction);
-	void NAVertexCache::UdateHeuristic(NAVertexPtr vertex);
+	void NAVertexCache::UpdateHeuristic(NAVertexPtr vertex);
 	NAVertexPtr Get(long eid);
 	void Clear();
 };
