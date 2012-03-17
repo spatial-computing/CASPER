@@ -306,7 +306,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
 	srand((unsigned int)time(NULL));
-	double flockInitGap = ceil(3.0 * costPerSec / simulationInterval) * simulationInterval;
+	double flockInitGap = ceil(costPerSec / simulationInterval) * simulationInterval;
 	
 	// metric projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
