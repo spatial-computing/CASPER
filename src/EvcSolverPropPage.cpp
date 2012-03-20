@@ -107,6 +107,12 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hEditSimulationFlock, WM_SETTEXT, NULL, (LPARAM)simul);
 		delete [] simul;
 
+		// set init delay cost per population
+		BSTR delay;
+		m_ipEvcSolver->get_InitDelayCostPerPop(&delay);
+		::SendMessage(m_hEditInitCost, WM_SETTEXT, NULL, (LPARAM)delay);
+		delete [] delay;
+
 		SetFlockingEnabled();
 		SetDirty(FALSE);
 	}
@@ -294,6 +300,14 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditCritical, WM_GETTEXT, size + 1, (LPARAM)critical);
 		ipSolver->put_CriticalDensPerCap(critical);
 		delete [] critical;
+		
+		// init delay cost per population
+		BSTR delay;
+		size = ::SendMessage(m_hEditInitCost, WM_GETTEXTLENGTH, 0, 0);
+		delay = new WCHAR[size + 1];
+		::SendMessage(m_hEditInitCost, WM_GETTEXT, size + 1, (LPARAM)delay);
+		ipSolver->put_InitDelayCostPerPop(delay);
+		delete [] delay;
 
 		// saturation density per capacity
 		BSTR sat;
@@ -372,6 +386,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hEditSimulationFlock = GetDlgItem(IDC_EDIT_FlockSimulationInterval);
 	m_hCheckFlock = GetDlgItem(IDC_CHECK_Flock);
 	m_hCheckShareCap = GetDlgItem(IDC_CHECK_SHARECAP);
+	m_hEditInitCost = GetDlgItem(IDC_EDIT_INITDELAY);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
@@ -494,6 +509,14 @@ LRESULT EvcSolverPropPage::OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyC
 }
 
 LRESULT EvcSolverPropPage::OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnEnChangeEditInitDelay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

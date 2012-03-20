@@ -809,6 +809,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					pline->AddPoint(p);
 				}
 
+				// att the initial delay cost
+				path->EvacuationCost += path->RoutedPop * initDelayCostPerPop;
+
 				// Store the feature values on the feature buffer
 				if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
 				if (FAILED(hr = ipFeatureBuffer->put_Value(evNameFieldIndex, currentEvacuee->Name))) return hr;
@@ -1048,7 +1051,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// init
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
-		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, twoWayShareCapacity == VARIANT_TRUE);
+		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop);
 		flock->Init(Evacuees, ipNetworkQuery, costPerSec);
 
 		// run simulation

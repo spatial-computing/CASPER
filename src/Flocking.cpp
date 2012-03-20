@@ -274,7 +274,7 @@ HRESULT FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking enviroment implementation
 
-FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval, bool TwoWayRoadsShareCap)
+FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval, bool TwoWayRoadsShareCap, double InitDelayCostPerPop)
 {
 	snapshotInterval = abs(SnapshotInterval);
 	simulationInterval = abs(SimulationInterval);
@@ -282,6 +282,7 @@ FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double Simulatio
 	history = new std::list<FlockingLocationPtr>();
 	collisions = new std::list<double>();
 	maxPathLen = 0.0;
+	initDelayCostPerPop = InitDelayCostPerPop;
 	twoWayRoadsShareCap = TwoWayRoadsShareCap;
 }
 
@@ -306,7 +307,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
 	srand((unsigned int)time(NULL));
-	double flockInitGap = ceil(costPerSec / simulationInterval) * simulationInterval;
+	double flockInitGap = ceil(initDelayCostPerPop / costPerSec) * simulationInterval;
 	
 	// metric projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
@@ -314,7 +315,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC);
 	ISpatialReferencePtr metricProjection = ipNAContextPC;
 
-	// pre-init clean up just in case the object is being re-used
+	// pre-init clean up just in case the enviroment is being re-used
 	for (FlockingObjectItr it1 = objects->begin(); it1 != objects->end(); it1++) delete (*it1);
 	for (FlockingLocationItr it2 = history->begin(); it2 != history->end(); it2++) delete (*it2);
 	objects->clear();

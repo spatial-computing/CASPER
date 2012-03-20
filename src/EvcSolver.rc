@@ -101,7 +101,7 @@ STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "General Options",IDC_SearchGroup,7,10,190,161
+    GROUPBOX        "General Options",IDC_SearchGroup,7,11,190,184
     LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,218,64,119,8
     EDITTEXT        IDC_EDIT_SAT,340,61,46,14,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,26,117,8
@@ -113,9 +113,9 @@ BEGIN
     LTEXT           "Cost Calculation Method:",IDC_STATIC,20,103,102,8
     COMBOBOX        IDC_COMBO_CostMethod,127,101,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Treat the population at each location as separable",IDC_CHECK_SEPARABLE,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,124,173,12
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,148,173,12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,140,169,13
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,164,169,13
     GROUPBOX        "CASPER Options",IDC_CASPEROptions,202,48,190,36
     GROUPBOX        "Capacity Options",IDC_CapacityOptions,202,11,190,35
     GROUPBOX        "Safe Zone Options",IDC_ZoneOptions,202,87,190,37
@@ -129,7 +129,9 @@ BEGIN
     LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,215,177,60,8
     LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,19,57,104,8
     COMBOBOX        IDC_COMBO_COST,127,55,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,156,169,13
+    CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,180,169,13
+    LTEXT           "Init Delay Cost Per Population:",IDC_STATIC_INITDELAY,20,126,102,8
+    EDITTEXT        IDC_EDIT_INITDELAY,127,124,63,14,ES_AUTOHSCROLL
 END
 
 
@@ -175,7 +177,8 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
+
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

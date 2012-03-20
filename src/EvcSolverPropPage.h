@@ -64,7 +64,7 @@ public:
 	  COMMAND_HANDLER(IDC_EDIT_ZoneDensity, EN_CHANGE, OnEnChangeEditZonedensity)
 	  COMMAND_HANDLER(IDC_CHECK_Flock, BN_CLICKED, OnBnClickedCheckFlock)
 	  COMMAND_HANDLER(IDC_EDIT_FlockSnapInterval, EN_CHANGE, OnEnChangeEditFlocksnapinterval)
-	  COMMAND_HANDLER(IDC_EDIT_FlockSimulationInterval, EN_CHANGE, OnEnChangeEditFlocksimulationinterval)
+	  COMMAND_HANDLER(IDC_EDIT_INITDELAY, EN_CHANGE, OnEnChangeEditInitDelay)
 	  COMMAND_HANDLER(IDC_CHECK_SHARECAP, BN_CLICKED, OnBnClickedCheckSharecap)
 	  CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
     MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)	
@@ -124,6 +124,7 @@ private:
   HWND                    m_hEditSimulationFlock;
   HWND                    m_hCheckFlock;
   HWND                    m_hCheckShareCap;
+  HWND                    m_hEditInitCost;
 
   void SetFlockingEnabled();
 
@@ -143,11 +144,10 @@ public:
 	LRESULT OnEnChangeEditZonedensity(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedCheckFlock(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditFlockinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnEnChangeEditFlockinterval2(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditFlocksnapinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnEnChangeEditInitDelay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 protected:
 	int pppp;
-public:
-	LRESULT OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };

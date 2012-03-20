@@ -85,6 +85,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT TwoWayShareCapacity([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the two way road capacity sharing")]
 		HRESULT TwoWayShareCapacity([out, retval] VARIANT_BOOL * value);
+	[propput, helpstring("Sets the initial delay cost per population")]
+		HRESULT InitDelayCostPerPop([in] BSTR value);
+	[propget, helpstring("Gets the initial delay cost per population")]
+		HRESULT InitDelayCostPerPop([out, retval] BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
@@ -177,6 +181,8 @@ public:
 	STDMETHOD(put_FlockingSnapInterval)(BSTR value);
 	STDMETHOD(get_FlockingSimulationInterval)(BSTR * value);
 	STDMETHOD(put_FlockingSimulationInterval)(BSTR value);
+	STDMETHOD(get_InitDelayCostPerPop)(BSTR * value);
+	STDMETHOD(put_InitDelayCostPerPop)(BSTR value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	STDMETHOD(put_CostAttribute)(int index);
@@ -280,6 +286,7 @@ private:
 	VARIANT_BOOL			flockingEnabled;
 	float					flockingSnapInterval;
 	float					flockingSimulationInterval;
+	float					initDelayCostPerPop;
 
 	VARIANT_BOOL twoWayShareCapacity;	
 	VARIANT_BOOL separable;

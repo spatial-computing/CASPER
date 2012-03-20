@@ -439,6 +439,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	twoWayShareCapacity = VARIANT_TRUE;
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
+	initDelayCostPerPop = 1.0f / 60.0f;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -587,9 +588,26 @@ STDMETHODIMP EvcSolver::get_CostPerZoneDensity(BSTR * value)
 	return S_OK;
 }
 
+STDMETHODIMP EvcSolver::get_InitDelayCostPerPop(BSTR * value)
+{	
+	if (value)
+	{
+		*value = new WCHAR[100];
+		swprintf_s(*value, 100, L"%.2f", initDelayCostPerPop);
+	}
+	return S_OK;
+}
+
 STDMETHODIMP EvcSolver::put_FlockingSnapInterval(BSTR value)
 {	
 	swscanf_s(value, L"%f", &flockingSnapInterval);
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_InitDelayCostPerPop(BSTR value)
+{	
+	swscanf_s(value, L"%f", &initDelayCostPerPop);
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -1021,6 +1039,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&flockingSnapInterval, sizeof(flockingSnapInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 
 	m_bPersistDirty = false;
 
@@ -1058,6 +1077,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&flockingSnapInterval, sizeof(flockingSnapInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	
 	return S_OK;
 }

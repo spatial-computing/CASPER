@@ -34,8 +34,10 @@
 #define IDC_STATIC_FlockSimulationInterval 237
 #define IDC_STATIC_Cost                 238
 #define IDC_COMBO_COST                  239
-#define IDC_CHECK_EDGESTAT2             240
 #define IDC_CHECK_SHARECAP              240
+#define IDC_STATIC_INITDELAY            241
+#define IDC_EDIT1                       242
+#define IDC_EDIT_INITDELAY              242
 
 // Next default values for new objects
 // 
@@ -43,7 +45,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        203
 #define _APS_NEXT_COMMAND_VALUE         32768
-#define _APS_NEXT_CONTROL_VALUE         236
+#define _APS_NEXT_CONTROL_VALUE         243
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
