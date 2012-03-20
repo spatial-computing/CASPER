@@ -392,7 +392,11 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				}
 			}
 		}
-		if (snapshotTaken) nextSnapshot = time + snapshotInterval;
+		if (snapshotTaken)
+		{
+			nextSnapshot = time + snapshotInterval;
+			snapshotTaken = false;
+		}
 		bool collided = false;
 		FlockingObject::DetectCollision(objects, &collided);
 		if (collided) collisions->push_back(time);
