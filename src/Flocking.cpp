@@ -341,7 +341,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	movingObjectLeft = true;
 	FLOCK_OBJ_STAT newStat, oldStat;
 	long frontRunnerDistance = 0;
-	double lastSnapshot = 0.0;
+	double nextSnapshot = 0.0;
 	bool snapshotTaken = false;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
@@ -377,7 +377,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 
 			// post-movement snapshot
 			if ((oldStat != FLOCK_OBJ_STAT_END && newStat == FLOCK_OBJ_STAT_END) ||
-				(newStat != FLOCK_OBJ_STAT_INIT && lastSnapshot + snapshotInterval >= time))
+				(newStat != FLOCK_OBJ_STAT_INIT && nextSnapshot <= time))
 			{
 				history->push_front(new FlockingLocation(**it));
 				snapshotTaken = true;
@@ -392,7 +392,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				}
 			}
 		}
-		if (snapshotTaken) lastSnapshot = time;
+		if (snapshotTaken) nextSnapshot = time + snapshotInterval;
 		bool collided = false;
 		FlockingObject::DetectCollision(objects, &collided);
 		if (collided) collisions->push_back(time);
