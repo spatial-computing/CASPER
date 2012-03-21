@@ -67,13 +67,17 @@ interface IEvcSolver : IUnknown {
 	[propput,helpstring("Sets the two way road capacity sharing")] HRESULT  TwoWayShareCapacity([in] VARIANT_BOOL value);
 #line 87 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propget,helpstring("Gets the two way road capacity sharing")] HRESULT  TwoWayShareCapacity([out,retval] VARIANT_BOOL *value);
+#line 89 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the initial delay cost per population")] HRESULT  InitDelayCostPerPop([in] BSTR value);
 #line 91 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the selected cost attribute index")] HRESULT  CostAttribute([in] int index);
-#line 93 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected cost attribute index")] HRESULT  CostAttribute([out,retval] int *index);
+	[propget,helpstring("Gets the initial delay cost per population")] HRESULT  InitDelayCostPerPop([out,retval] BSTR *value);
 #line 95 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Lists impedence attributes from the network dataset")] HRESULT  CostAttributes([out,retval] BSTR **names);
+	[propput,helpstring("Sets the selected cost attribute index")] HRESULT  CostAttribute([in] int index);
 #line 97 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the selected cost attribute index")] HRESULT  CostAttribute([out,retval] int *index);
+#line 99 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Lists impedence attributes from the network dataset")] HRESULT  CostAttributes([out,retval] BSTR **names);
+#line 101 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propget,helpstring("Counts impedence attributes from the network dataset")] HRESULT  CostAttributesCount([out,retval] int *count);
 };
 
@@ -90,7 +94,7 @@ library CustomSolver
 		uuid(7b081f99-b691-46b1-b756-aa72868c8683),
 		helpstring("EvcSolver Class")
 	] 
-#line 111 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+#line 115 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	coclass EvcSolver {
 		[default]	interface IEvcSolver;
 	};
