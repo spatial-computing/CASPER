@@ -1032,7 +1032,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		// Get the "Flocks" NAClass feature class
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
-		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex, statFieldIndex;
+		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex, statFieldIndex, ptimeFieldIndex;
 		double costPerDay = 1.0, costPerSec = 1.0;
 		INetworkAttributePtr costAttrib;
 		esriNetworkAttributeUnits unit;
@@ -1082,6 +1082,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_VelocityY), &speedYFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEED), &speedFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_PTIME), &ptimeFieldIndex))) return hr;
 		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_STATUS), &statFieldIndex))) return hr;
 
 		for(FlockingLocationItr it = history->begin(); it != history->end(); it++)
@@ -1107,6 +1108,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->Velocity.y)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant((*it)->Velocity.length())))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(thisTimeBuf)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, CComVariant((*it)->GTime / (costPerSec * 60.0))))) return hr;
 
 			// print out the status
 			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT)
