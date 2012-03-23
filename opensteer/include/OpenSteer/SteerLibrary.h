@@ -467,10 +467,10 @@ steerToFollowPath (const int direction,
 		// added by Kaveh: to make movement parallel to the path
 
 		Vec3 newDir = tangent / tangent.length();
-		Vec3 target = position() + (speed() * predictionTime * newDir);
+		Vec3 target = position() + (speed() * newDir);
 
         // return steering to seek target on path
-        return 0.5 * steerForSeek (target);
+        return steerForSeek (target);
     }
     else
     {
