@@ -348,7 +348,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	if (ipStepProgressor)
 	{
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ceil(predictedCost))))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ceil(predictedCost/simulationInterval))))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
@@ -387,7 +387,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 		}
 		if (ipStepProgressor)
 		{
-			if (FAILED(hr = ipStepProgressor->put_Position((long)(ceil(time))))) return hr;
+			if (FAILED(hr = ipStepProgressor->Step())) return hr;
 		}
 		
 		if (snapshotTaken)

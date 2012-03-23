@@ -99,13 +99,15 @@ double NAEdge::CapacityLeft() const
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
-double NAEdge::GetCost(double newPop, char method) const
+double NAEdge::GetCost(double newPop, char method, double InitDelayCostPerPop) const
 {
-	double newCost = originalCost, speedPercent = 1.0;
+	double newCost = originalCost, speedPercent = 1.0;	
+	if (InitDelayCostPerPop > 0.0) newPop = min(newPop, originalCost / InitDelayCostPerPop);
+	newPop = newPop + reservations->ReservedPop - reservations->CriticalDens;
+
 	switch (method)
 	{
 	case 0x2: // casper method
-		newPop = newPop + reservations->ReservedPop - reservations->CriticalDens;
 		if (newPop > 0)
 		{
 			speedPercent = exp(-newPop / reservations->SaturationDens);
@@ -114,17 +116,18 @@ double NAEdge::GetCost(double newPop, char method) const
 		}
 		break;
 	case 0x1: // CCRP method
-		newPop = newPop + reservations->ReservedPop - reservations->CriticalDens;
 		if (newPop > 0) newCost *= 1000.0;
 		break;
 	}
 	return newCost;
 }
 
-void NAEdge::AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population)
+void NAEdge::AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population, double InitDelayCostPerPop)
 {
 	reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
-	reservations->ReservedPop += population;
+	double newPop = population;
+	if (InitDelayCostPerPop > 0.0) newPop = min(newPop, originalCost / InitDelayCostPerPop);
+	reservations->ReservedPop += newPop;
 }
 
 /////////////////////////////////////////////////////////////

@@ -422,8 +422,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	m_outputLineType = esriNAOutputLineTrueShapeWithMeasure;
 	costAttributeID = -1;
 	capAttributeID = -1;
-	SaturationPerCap = 5000.0;
-	CriticalDensPerCap = 1000.0;
+	SaturationPerCap = 500.0;
+	CriticalDensPerCap = 100.0;
 	solvermethod = EVC_SOLVER_METHOD_CASPER;
 	costmethod = EVC_SOLVER_METHOD_CASPER;
 	

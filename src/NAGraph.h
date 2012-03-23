@@ -157,12 +157,12 @@ public:
 	INetworkEdgePtr NetEdge;
 	INetworkEdgePtr LastExteriorEdge;	
 	long EID;
-	double GetCost(double newPop, char method) const;
+	double GetCost(double newPop, char method, double InitDelayCostPerPop) const;
 	double CapacityLeft() const;
 	double OriginalCapacity() const;
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
-	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
+	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population, double InitDelayCostPerPop);
 	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable);
 	NAEdge(const NAEdge& cpy);
 
