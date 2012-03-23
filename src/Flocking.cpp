@@ -340,7 +340,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 {
 	movingObjectLeft = true;
 	FLOCK_OBJ_STAT newStat, oldStat;
-	long frontRunnerDistance = 0;
+	double backRunnerDistance = 0.0;
 	double nextSnapshot = 0.0;
 	bool snapshotTaken = false;
 	HRESULT hr = S_OK;
@@ -357,6 +357,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	for (double time = 0.0; movingObjectLeft && time <= maxCost; time += simulationInterval)
 	{
 		movingObjectLeft = false;
+		backRunnerDistance = maxPathLen;
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
 		{
 			if (pTrackCancel)
@@ -382,16 +383,13 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				history->push_front(new FlockingLocation(**it));
 				snapshotTaken = true;
 			}
-
-			if (ipStepProgressor)
-			{
-				if ((long)((*it)->Traveled) + 1 >= frontRunnerDistance)
-				{
-					frontRunnerDistance = (long)((*it)->Traveled);
-					if (FAILED(hr = ipStepProgressor->Step())) return hr;
-				}
-			}
+			backRunnerDistance = min(backRunnerDistance, (*it)->Traveled);
 		}
+		if (ipStepProgressor)
+		{
+			if (FAILED(hr = ipStepProgressor->put_Position((long)(ceil(backRunnerDistance))))) return hr;
+		}
+		
 		if (snapshotTaken)
 		{
 			nextSnapshot = time + snapshotInterval;
