@@ -336,11 +336,10 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	}
 }
 
-HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double maxCost)
+HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double predictedCost)
 {
 	movingObjectLeft = true;
 	FLOCK_OBJ_STAT newStat, oldStat;
-	double backRunnerDistance = 0.0;
 	double nextSnapshot = 0.0;
 	bool snapshotTaken = false;
 	HRESULT hr = S_OK;
@@ -349,15 +348,17 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	if (ipStepProgressor)
 	{
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ceil(maxPathLen))))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ceil(predictedCost))))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
 
-	for (double time = 0.0; movingObjectLeft && time <= maxCost; time += simulationInterval)
+	// just to make sure we do our best to finish the simulation with no moving object event after the predicted cost
+	predictedCost *= 5.0;
+
+	for (double time = 0.0; movingObjectLeft && time <= predictedCost; time += simulationInterval)
 	{
 		movingObjectLeft = false;
-		backRunnerDistance = maxPathLen;
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
 		{
 			if (pTrackCancel)
@@ -383,11 +384,10 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				history->push_front(new FlockingLocation(**it));
 				snapshotTaken = true;
 			}
-			backRunnerDistance = min(backRunnerDistance, (*it)->Traveled);
 		}
 		if (ipStepProgressor)
 		{
-			if (FAILED(hr = ipStepProgressor->put_Position((long)(ceil(backRunnerDistance))))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_Position((long)(ceil(time))))) return hr;
 		}
 		
 		if (snapshotTaken)

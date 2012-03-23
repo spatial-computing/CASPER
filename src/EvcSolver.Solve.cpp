@@ -686,7 +686,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	EvcPathPtr path;
 	std::list<PathSegmentPtr>::iterator psit;
 	std::list<EvcPathPtr>::iterator pit;
-	double maxCost = 0.0;
+	double predictedCost = 0.0;
 	bool sourceNotFoundFlag = false;
 	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);
 	IFeatureClassPtr ipNetworkSourceFC;
@@ -822,7 +822,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				// Insert the feature buffer in the insert cursor
 				if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 
-				maxCost = max(maxCost, path->EvacuationCost);
+				predictedCost = max(predictedCost, path->EvacuationCost);
 			}
 		}
 	}
@@ -1056,7 +1056,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// run simulation
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
-		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, maxCost * 50.0))) return hr;
+		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, predictedCost))) return hr;
 		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
 
 		// start writing into the featureclass
