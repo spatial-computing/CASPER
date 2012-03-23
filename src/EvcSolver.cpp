@@ -553,7 +553,7 @@ STDMETHODIMP EvcSolver::get_FlockingSnapInterval(BSTR * value)
 	if (value)
 	{
 		*value = new WCHAR[100];
-		swprintf_s(*value, 100, L"%.3f", flockingSnapInterval);
+		swprintf_s(*value, 100, L"%.4f", flockingSnapInterval);
 	}
 	return S_OK;
 }
@@ -563,7 +563,7 @@ STDMETHODIMP EvcSolver::get_FlockingSimulationInterval(BSTR * value)
 	if (value)
 	{
 		*value = new WCHAR[100];
-		swprintf_s(*value, 100, L"%.3f", flockingSimulationInterval);
+		swprintf_s(*value, 100, L"%.4f", flockingSimulationInterval);
 	}
 	return S_OK;
 }
@@ -593,7 +593,7 @@ STDMETHODIMP EvcSolver::get_InitDelayCostPerPop(BSTR * value)
 	if (value)
 	{
 		*value = new WCHAR[100];
-		swprintf_s(*value, 100, L"%.2f", initDelayCostPerPop);
+		swprintf_s(*value, 100, L"%.4f", initDelayCostPerPop);
 	}
 	return S_OK;
 }
