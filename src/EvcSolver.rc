@@ -68,13 +68,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "ESRI"
+            VALUE "CompanyName", "USC SSI"
             VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
             VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "EvcSolver.dll"
             VALUE "OriginalFilename", "EvcSolver.dll"
             VALUE "ProductName", "EvcSolver"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "ProductVersion", "1.1.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -177,8 +177,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
