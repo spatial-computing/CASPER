@@ -148,7 +148,8 @@ typedef std::pair<long, EdgeReservationsPtr> NAResTablePair;
 class NAEdge
 {
 private:	
-	EdgeReservations * reservations;	
+	EdgeReservations * reservations;
+	double initDelayCostPerPop;
 
 public:
 	double originalCost;
@@ -157,13 +158,13 @@ public:
 	INetworkEdgePtr NetEdge;
 	INetworkEdgePtr LastExteriorEdge;	
 	long EID;
-	double GetCost(double newPop, char method, double InitDelayCostPerPop) const;
+	double GetCost(double newPop, char method) const;
 	double CapacityLeft() const;
 	double OriginalCapacity() const;
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
-	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population, double InitDelayCostPerPop);
-	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable);
+	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
+	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable, double InitDelayCostPerPop);
 	NAEdge(const NAEdge& cpy);
 
 	double GetReservedPop() const { return reservations->ReservedPop; }
@@ -256,11 +257,13 @@ private:
 	bool					twoWayRoadsShareCap;
 	NAResTable				* resTableAlong;
 	NAResTable				* resTableAgainst;
+	double					initDelayCostPerPop;
 
 public:
 
-	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap)
+	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop)
 	{
+		initDelayCostPerPop = InitDelayCostPerPop;
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
 		cacheAlong = new stdext::hash_map<long, NAEdgePtr>();

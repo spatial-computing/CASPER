@@ -36,14 +36,16 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	EID = cpy.EID;
 	ToVertex = cpy.ToVertex;
 	LastExteriorEdge = cpy.LastExteriorEdge;
+	initDelayCostPerPop = cpy.initDelayCostPerPop;
 }
 
-NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable)
+NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable, double InitDelayCostPerPop)
 {
 	this->NetEdge = edge;
 	LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
 	double capacity = 1.0;
+	initDelayCostPerPop = InitDelayCostPerPop;
 
 	if (FAILED(edge->get_AttributeValue(capacityAttribID, &vcap)) ||	
 		FAILED(edge->get_AttributeValue(costAttribID, &vcost)) ||	
@@ -99,10 +101,10 @@ double NAEdge::CapacityLeft() const
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
-double NAEdge::GetCost(double newPop, char method, double InitDelayCostPerPop) const
+double NAEdge::GetCost(double newPop, char method) const
 {
 	double newCost = originalCost, speedPercent = 1.0;	
-	if (InitDelayCostPerPop > 0.0) newPop = min(newPop, originalCost / InitDelayCostPerPop);
+	if (initDelayCostPerPop > 0.0) newPop = min(newPop, originalCost / initDelayCostPerPop);
 	newPop = newPop + reservations->ReservedPop - reservations->CriticalDens;
 
 	switch (method)
@@ -122,11 +124,11 @@ double NAEdge::GetCost(double newPop, char method, double InitDelayCostPerPop) c
 	return newCost;
 }
 
-void NAEdge::AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population, double InitDelayCostPerPop)
+void NAEdge::AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population)
 {
 	reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
 	double newPop = population;
-	if (InitDelayCostPerPop > 0.0) newPop = min(newPop, originalCost / InitDelayCostPerPop);
+	if (initDelayCostPerPop > 0.0) newPop = min(newPop, originalCost / initDelayCostPerPop);
 	reservations->ReservedPop += newPop;
 }
 
@@ -160,7 +162,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 
 	if (it == cache->end())
 	{
-		n = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable);
+		n = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop);
 		cache->insert(NAEdgeTablePair(n));
 	}
 	else
@@ -168,7 +170,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 		if (replace)
 		{
 			delete it->second;
-			it->second = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable);
+			it->second = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop);
 		}
 		else it->second->NetEdge = edge;
 		n = it->second;
