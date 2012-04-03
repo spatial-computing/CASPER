@@ -7,7 +7,7 @@
 // Flocking object implementation
 
 FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
-							   ISpatialReferencePtr MetricProjection, FlockProfile * flockProfile)
+							   ISpatialReferencePtr MetricProjection, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
 {
 	// construct FlockingLocation	
 	MyTime = startTime;
@@ -16,6 +16,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	metricProjection = MetricProjection;
 	ID = id;
 	myProfile = flockProfile;
+	twoWayRoadsShareCap = TwoWayRoadsShareCap;
 
 	// init object
 	MyStatus = FLOCK_OBJ_STAT_INIT;
@@ -111,7 +112,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 		}
 
 		// load new edge points into the steer library
-		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius, false);
+		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius * 1.5, false);
 		newEdgeRequestFlag = false;
 	}
 	return hr;
@@ -163,8 +164,15 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 			if ((*it)->MyStatus != FLOCK_OBJ_STAT_MOVE && (*it)->MyStatus != FLOCK_OBJ_STAT_STOP) continue;
 
 			// check if they share an edge or if they are both crossing an intersection
-			if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
-				&& (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
+			if (twoWayRoadsShareCap)
+			{
+				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID) && (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
+			}
+			else
+			{
+				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
+					&& (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
+			}
 
 			myNeighborVehicles.push_back((*it)->myVehicle);
 		}
@@ -244,20 +252,24 @@ bool FlockingObject::DetectMyCollision()
 	OpenSteer::AbstractVehicle * n;
 	OpenSteer::AVGroup::iterator git;
 	OpenSteer::Vec3 offset;
-	bool collide = false;
+	bool collided = false;
 
 	for (git = myNeighborVehicles.begin(); git != myNeighborVehicles.end(); git++)
 	{
 		n = *git;
 		offset = myVehicle->position() - n->position();
-		if (offset.length() < myVehicle->radius() + n->radius()) collide = true;		
+		if (offset.length() < myVehicle->radius() + n->radius())
+		{
+			collided = true;
+			break;
+		}
 	}
-	return collide;
+	return collided;
 }
 
-HRESULT FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects, bool * collided)
+bool FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects)
 {	
-	HRESULT hr = S_OK;
+	bool collided = false;
 
 	// collision detection
 	FlockingObjectPtr n;
@@ -267,16 +279,20 @@ HRESULT FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects
 	{
 		n = objects->at(i);
 		if (n->MyStatus != FLOCK_OBJ_STAT_MOVE && n->MyStatus != FLOCK_OBJ_STAT_STOP) continue;
-		if (n->DetectMyCollision()) *collided = true;
+		if (n->DetectMyCollision())
+		{
+			collided = true;
+			break;
+		}
 	}
-	return hr;
+	return collided;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking enviroment implementation
 
-FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval, bool TwoWayRoadsShareCap, double InitDelayCostPerPop)
+FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval, double InitDelayCostPerPop)
 {
 	snapshotInterval = abs(SnapshotInterval);
 	simulationInterval = abs(SimulationInterval);
@@ -285,7 +301,6 @@ FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double Simulatio
 	collisions = new std::list<double>();
 	maxPathLen = 0.0;
 	initDelayCostPerPop = InitDelayCostPerPop;
-	twoWayRoadsShareCap = TwoWayRoadsShareCap;
 }
 
 FlockingEnviroment::~FlockingEnviroment(void)
@@ -300,7 +315,7 @@ FlockingEnviroment::~FlockingEnviroment(void)
 	delete collisions;
 }
 
-void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec, FlockProfile * flockProfile)
+void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
 {
 	EvacueePtr evc = 0;
 	EvacueeListItr evcItr;
@@ -332,7 +347,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 			size = (int)(ceil((*pathItr)->RoutedPop));
 			for (i = 0; i < size; i++)
 			{
-				objects->push_back(new FlockingObject(id++, *pathItr, flockInitGap * -i, (*evcItr)->Name, ipNetworkQuery, metricProjection, flockProfile));
+				objects->push_back(new FlockingObject(id++, *pathItr, flockInitGap * -i, (*evcItr)->Name, ipNetworkQuery, metricProjection, flockProfile, TwoWayRoadsShareCap));
 			}
 		}
 	}
@@ -394,9 +409,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			nextSnapshot = time + snapshotInterval;
 			snapshotTaken = false;
 		}
-		bool collided = false;
-		FlockingObject::DetectCollision(objects, &collided);
-		if (collided) collisions->push_back(time);
+		if (FlockingObject::DetectCollision(objects)) collisions->push_back(time);
 	}
 	return hr;
 }

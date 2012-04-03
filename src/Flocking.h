@@ -41,21 +41,21 @@ public:
 			Radius = 1.0;
 			CloseNeighborDistance = 5.0;
 			NeighborDistance = 20.0;
-			UsualSpeed = 5.0;
+			UsualSpeed = 10.0;
 			break;
 		case FLOCK_PROFILE_PERSON:
-			Mass = 1.0;
+			Mass = 0.1;
 			Radius = 0.2;
 			CloseNeighborDistance = 1.0;
 			NeighborDistance = 2.0;
 			UsualSpeed = 1.0;
 			break;
 		case FLOCK_PROFILE_BIKE:
-			Mass = 2.0;
+			Mass = 0.2;
 			Radius = 0.5;
 			CloseNeighborDistance = 2.0;
 			NeighborDistance = 5.0;
-			UsualSpeed = 2.0;
+			UsualSpeed = 5.0;
 			break;
 		}
 	}
@@ -120,6 +120,7 @@ private:
 	ISpatialReferencePtr		metricProjection;
 	bool						initPathIterator;
 	FlockProfile				* myProfile;
+	bool						twoWayRoadsShareCap;
 
 	// methods
 
@@ -135,9 +136,10 @@ public:
 
 	// methods
 	
-	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection, FlockProfile * profile);
+	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
+		ISpatialReferencePtr MetricProjection, FlockProfile * profile, bool TwoWayRoadsShareCap);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
-	static HRESULT DetectCollision(std::vector<FlockingObject *> * objects, bool * collided);
+	static bool DetectCollision(std::vector<FlockingObject *> * objects);
 
 	virtual ~FlockingObject(void)
 	{
@@ -162,12 +164,11 @@ private:
 	double							maxPathLen;
 	double							initDelayCostPerPop;
 	bool							movingObjectLeft;
-	bool							twoWayRoadsShareCap;
 
 public:
-	FlockingEnviroment(double SnapshotInterval, double SimulationInterval, bool TwoWayRoadsShareCap, double InitDelayCostPerPop);
+	FlockingEnviroment(double SnapshotInterval, double SimulationInterval, double InitDelayCostPerPop);
 	virtual ~FlockingEnviroment(void);
-	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec, FlockProfile * profile);
+	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec, FlockProfile * profile, bool TwoWayRoadsShareCap);
 	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double predictedCost);
 	void GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft);
 	double static PathLength(EvcPathPtr path);
