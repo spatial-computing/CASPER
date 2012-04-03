@@ -39,8 +39,8 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	// create a little bit of randomness within initial location and velocity
 	double x, y, dx, dy;
 	MyLocation->QueryCoords(&x, &y);
-	dx = (rand() % (int)(myProfile->ZoneRadius)) - ((int)(myProfile->ZoneRadius) / 2);
-	dy = (rand() % (int)(myProfile->ZoneRadius)) - ((int)(myProfile->ZoneRadius) / 2);
+	dx = (rand() % (int)(myProfile->ZoneRadius)) - (myProfile->ZoneRadius / 2.0);
+	dy = (rand() % (int)(myProfile->ZoneRadius)) - (myProfile->ZoneRadius / 2.0);
 	MyLocation->PutCoords(x + dx, y + dy);
 	Velocity = OpenSteer::Vec3(-dx, -dy, 0.0);
 
@@ -220,8 +220,8 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			myVehicle->setMaxSpeed(speedLimit);
 			myVehicle->setSpeed(speedLimit);
 
-			steer  = 2.0 * myVehicle->steerToAvoidCloseNeighbors (myProfile->CloseNeighborDistance, myNeighborVehicles);
-			steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);
+			steer  = myVehicle->steerToAvoidCloseNeighbors(myProfile->CloseNeighborDistance, myNeighborVehicles);
+			// steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);
 			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 			
 			// backup the position in case we needed to back off from a collision
@@ -288,7 +288,6 @@ bool FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects)
 	return collided;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Flocking enviroment implementation
 
@@ -324,7 +323,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
 	srand((unsigned int)time(NULL));
-	double flockInitGap = ceil(initDelayCostPerPop / costPerSec) * simulationInterval;
+	// double flockInitGap = ceil(initDelayCostPerPop / costPerSec) * simulationInterval;
 	
 	// metric projection
 	IProjectedCoordinateSystemPtr ipNAContextPC;
@@ -347,7 +346,8 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 			size = (int)(ceil((*pathItr)->RoutedPop));
 			for (i = 0; i < size; i++)
 			{
-				objects->push_back(new FlockingObject(id++, *pathItr, flockInitGap * -i, (*evcItr)->Name, ipNetworkQuery, metricProjection, flockProfile, TwoWayRoadsShareCap));
+				objects->push_back(new FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name,
+								   ipNetworkQuery, metricProjection, flockProfile, TwoWayRoadsShareCap));
 			}
 		}
 	}
