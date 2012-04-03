@@ -112,8 +112,8 @@ BEGIN
     COMBOBOX        IDC_COMBO_METHOD,127,79,63,50,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Cost Calculation Method:",IDC_STATIC,20,103,102,8
     COMBOBOX        IDC_COMBO_CostMethod,127,101,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Treat the population at each location as separable",IDC_CHECK_SEPARABLE,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,161,173,12
+    CONTROL         "Population at each location is separable",IDC_CHECK_SEPARABLE,
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,161,147,12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,177,169,13
     GROUPBOX        "CASPER Options",IDC_CASPEROptions,202,48,190,36
@@ -127,14 +127,14 @@ BEGIN
     LTEXT           "Snapshot Interval:",IDC_STATIC_FlockSnapInterval,215,159,59,8
     EDITTEXT        IDC_EDIT_FlockSimulationInterval,341,174,46,14,ES_AUTOHSCROLL
     LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,215,177,60,8
-    LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,19,57,104,8
+    LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,20,57,104,8
     COMBOBOX        IDC_COMBO_COST,127,55,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,193,169,13
     LTEXT           "Init Delay Cost Per Population:",IDC_STATIC_INITDELAY,20,126,102,8
     EDITTEXT        IDC_EDIT_INITDELAY,127,124,63,14,ES_AUTOHSCROLL
     LTEXT           "Flocking Profile:",IDC_STATIC_FlockProfile,215,196,61,8
     COMBOBOX        IDC_COMBO_PROFILE,341,194,46,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "",IDC_STATIC_LINE,19,148,170,3,0,WS_EX_DLGMODALFRAME
+    GROUPBOX        "",IDC_STATIC_LINE,19,145,171,6
 END
 
 

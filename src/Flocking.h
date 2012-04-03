@@ -37,7 +37,7 @@ public:
 		switch (profile)
 		{
 		case FLOCK_PROFILE_CAR:
-			Mass = 5.0;
+			Mass = 1.0;
 			Radius = 1.0;
 			CloseNeighborDistance = 5.0;
 			NeighborDistance = 20.0;
