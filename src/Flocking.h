@@ -10,6 +10,57 @@
 #define FLOCK_OBJ_STAT_STOP		0x2
 #define FLOCK_OBJ_STAT_END		0x3
 
+#define FLOCK_PROFILE char
+#define FLOCK_PROFILE_CAR		0x0
+#define FLOCK_PROFILE_PERSON	0x1
+#define FLOCK_PROFILE_BIKE		0x2
+
+class FlockProfile
+{
+public:
+	double			Mass;
+	double			Radius;
+	double			CloseNeighborDistance;
+	double			NeighborDistance;
+	double			UsualSpeed;
+	double			IntersectionRadius;
+	double			ZoneRadius;
+	double			MaxForce;
+
+	~FlockProfile(void) { }
+
+	FlockProfile(FLOCK_PROFILE profile)
+	{
+		IntersectionRadius = 30.0;
+		ZoneRadius = 50.0;
+		MaxForce = 150000.0;
+		switch (profile)
+		{
+		case FLOCK_PROFILE_CAR:
+			Mass = 5.0;
+			Radius = 1.0;
+			CloseNeighborDistance = 5.0;
+			NeighborDistance = 20.0;
+			UsualSpeed = 5.0;
+			break;
+		case FLOCK_PROFILE_PERSON:
+			Mass = 1.0;
+			Radius = 0.2;
+			CloseNeighborDistance = 1.0;
+			NeighborDistance = 2.0;
+			UsualSpeed = 1.0;
+			break;
+		case FLOCK_PROFILE_BIKE:
+			Mass = 2.0;
+			Radius = 0.5;
+			CloseNeighborDistance = 2.0;
+			NeighborDistance = 5.0;
+			UsualSpeed = 2.0;
+			break;
+		}
+	}
+};
+
 class FlockingLocation
 {
 public:
@@ -68,6 +119,7 @@ private:
 	double						speedLimit;
 	ISpatialReferencePtr		metricProjection;
 	bool						initPathIterator;
+	FlockProfile				* myProfile;
 
 	// methods
 
@@ -83,7 +135,7 @@ public:
 
 	// methods
 	
-	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection);
+	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery, ISpatialReferencePtr MetricProjection, FlockProfile * profile);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
 	static HRESULT DetectCollision(std::vector<FlockingObject *> * objects, bool * collided);
 
@@ -115,7 +167,7 @@ private:
 public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval, bool TwoWayRoadsShareCap, double InitDelayCostPerPop);
 	virtual ~FlockingEnviroment(void);
-	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec);
+	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec, FlockProfile * profile);
 	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double predictedCost);
 	void GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft);
 	double static PathLength(EvcPathPtr path);

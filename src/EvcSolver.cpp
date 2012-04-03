@@ -192,7 +192,7 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 		}
 
 		if (costAttributeID == -1) costAttribs[0]->get_ID(&costAttributeID);
-		if (capAttributeID == -1) discriptiveAttribs[0]->get_ID(&capAttributeID);		
+		if (capAttributeID  == -1) discriptiveAttribs[0]->get_ID(&capAttributeID);		
 
 		// Agents setup
 		// NOTE: this is an appropriate place to find and attach any agents used by this solver.
@@ -426,6 +426,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	CriticalDensPerCap = 100.0;
 	solvermethod = EVC_SOLVER_METHOD_CASPER;
 	costmethod = EVC_SOLVER_METHOD_CASPER;
+	flockingProfile = FLOCK_PROFILE_CAR;
 	
 	m_CreateTraversalResult = VARIANT_TRUE;
 	m_FindBestSequence = VARIANT_FALSE;
@@ -521,6 +522,19 @@ STDMETHODIMP EvcSolver::get_CostMethod(EVC_SOLVER_METHOD * value)
 STDMETHODIMP EvcSolver::put_CostMethod(EVC_SOLVER_METHOD value)
 {
 	costmethod = value;
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_FlockingProfile(FLOCK_PROFILE * value)
+{
+	*value = flockingProfile;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_FlockingProfile(FLOCK_PROFILE value)
+{
+	flockingProfile = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -1040,6 +1054,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;	
 
 	m_bPersistDirty = false;
 
@@ -1061,7 +1076,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&costAttributeID, sizeof(costAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&capAttributeID, sizeof(capAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&costmethod, sizeof(costmethod), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&solvermethod, sizeof(solvermethod), &numBytes))) return hr;	
+	if (FAILED(hr = pStm->Write(&solvermethod, sizeof(solvermethod), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&SaturationPerCap, sizeof(SaturationPerCap), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;	
 	if (FAILED(hr = pStm->Write(&m_CreateTraversalResult, sizeof(m_CreateTraversalResult), &numBytes))) return hr;
@@ -1078,6 +1093,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
 	
 	return S_OK;
 }

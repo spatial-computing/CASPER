@@ -38,6 +38,9 @@
 #define IDC_STATIC_INITDELAY            241
 #define IDC_EDIT1                       242
 #define IDC_EDIT_INITDELAY              242
+#define IDC_STATIC_FlockProfile         243
+#define IDC_COMBO_PROFILE               244
+#define IDC_STATIC_LINE                 245
 
 // Next default values for new objects
 // 
@@ -45,7 +48,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        203
 #define _APS_NEXT_COMMAND_VALUE         32768
-#define _APS_NEXT_CONTROL_VALUE         243
+#define _APS_NEXT_CONTROL_VALUE         246
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

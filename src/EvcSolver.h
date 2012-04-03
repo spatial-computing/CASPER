@@ -14,6 +14,7 @@
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 #include "Evacuee.h"
 #include "NAGraph.h"
+#include "Flocking.h"
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -89,6 +90,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT InitDelayCostPerPop([in] BSTR value);
 	[propget, helpstring("Gets the initial delay cost per population")]
 		HRESULT InitDelayCostPerPop([out, retval] BSTR * value);
+	[propput, helpstring("Sets the flocking profile")]
+		HRESULT FlockingProfile([in] FLOCK_PROFILE value);
+	[propget, helpstring("Gets the selected flocking profile")]
+		HRESULT FlockingProfile([out, retval] FLOCK_PROFILE * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
@@ -155,34 +160,36 @@ public:
 
 	// IEvcSolver	
 	
-	STDMETHOD(put_ExportEdgeStat)(VARIANT_BOOL value);
+	STDMETHOD(put_ExportEdgeStat)(VARIANT_BOOL   value);
 	STDMETHOD(get_ExportEdgeStat)(VARIANT_BOOL * value);
-	STDMETHOD(put_SeparableEvacuee)(VARIANT_BOOL value);
+	STDMETHOD(put_SeparableEvacuee)(VARIANT_BOOL   value);
 	STDMETHOD(get_SeparableEvacuee)(VARIANT_BOOL * value);
-	STDMETHOD(put_SolverMethod)(EVC_SOLVER_METHOD value);
+	STDMETHOD(put_SolverMethod)(EVC_SOLVER_METHOD   value);
 	STDMETHOD(get_SolverMethod)(EVC_SOLVER_METHOD * value);
-	STDMETHOD(put_CostMethod)(EVC_SOLVER_METHOD value);
+	STDMETHOD(put_CostMethod)(EVC_SOLVER_METHOD   value);
 	STDMETHOD(get_CostMethod)(EVC_SOLVER_METHOD * value);
-	STDMETHOD(put_SaturationPerCap)(BSTR value);
+	STDMETHOD(put_SaturationPerCap)(BSTR   value);
 	STDMETHOD(get_SaturationPerCap)(BSTR * value);
-	STDMETHOD(put_CriticalDensPerCap)(BSTR value);
+	STDMETHOD(put_CriticalDensPerCap)(BSTR   value);
 	STDMETHOD(get_CriticalDensPerCap)(BSTR * value);
 	STDMETHOD(get_DiscriptiveAttributes)(BSTR ** names);
 	STDMETHOD(get_DiscriptiveAttributesCount)(int * count);
-	STDMETHOD(put_CapacityAttribute)(int index);
+	STDMETHOD(put_CapacityAttribute)(int   index);
 	STDMETHOD(get_CapacityAttribute)(int * index);
 	STDMETHOD(get_CostPerZoneDensity)(BSTR * value);
-	STDMETHOD(put_CostPerZoneDensity)(BSTR value);
+	STDMETHOD(put_CostPerZoneDensity)(BSTR   value);
 	STDMETHOD(get_FlockingEnabled)(VARIANT_BOOL * value);
-	STDMETHOD(put_FlockingEnabled)(VARIANT_BOOL value);
+	STDMETHOD(put_FlockingEnabled)(VARIANT_BOOL   value);
 	STDMETHOD(get_TwoWayShareCapacity)(VARIANT_BOOL * value);
-	STDMETHOD(put_TwoWayShareCapacity)(VARIANT_BOOL value);
+	STDMETHOD(put_TwoWayShareCapacity)(VARIANT_BOOL   value);
 	STDMETHOD(get_FlockingSnapInterval)(BSTR * value);
-	STDMETHOD(put_FlockingSnapInterval)(BSTR value);
+	STDMETHOD(put_FlockingSnapInterval)(BSTR   value);
 	STDMETHOD(get_FlockingSimulationInterval)(BSTR * value);
-	STDMETHOD(put_FlockingSimulationInterval)(BSTR value);
+	STDMETHOD(put_FlockingSimulationInterval)(BSTR   value);
 	STDMETHOD(get_InitDelayCostPerPop)(BSTR * value);
-	STDMETHOD(put_InitDelayCostPerPop)(BSTR value);
+	STDMETHOD(put_InitDelayCostPerPop)(BSTR   value);
+	STDMETHOD(put_FlockingProfile)(FLOCK_PROFILE   value);
+	STDMETHOD(get_FlockingProfile)(FLOCK_PROFILE * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	STDMETHOD(put_CostAttribute)(int index);
@@ -287,6 +294,7 @@ private:
 	float					flockingSnapInterval;
 	float					flockingSimulationInterval;
 	float					initDelayCostPerPop;
+	FLOCK_PROFILE			flockingProfile;
 
 	VARIANT_BOOL twoWayShareCapacity;	
 	VARIANT_BOOL separable;
@@ -339,6 +347,5 @@ private:
 	IProgressorPtr  m_ipProgressor;
 };
 
-
-// Unility functions
+// Utility functions
 double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);

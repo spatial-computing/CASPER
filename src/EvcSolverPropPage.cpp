@@ -36,6 +36,15 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hComboMethod, CB_ADDSTRING, NULL, (LPARAM)(_T("CASPER")));
 		::SendMessage(m_hComboMethod, CB_SETCURSEL, (WPARAM)method, 0);
 
+		// set the flocking profile names
+		FLOCK_PROFILE profile;
+		m_ipEvcSolver->get_FlockingProfile(&profile);
+		::SendMessage(m_hcmbFlockProfile, CB_RESETCONTENT, NULL, NULL);
+		::SendMessage(m_hcmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Car")));
+		::SendMessage(m_hcmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Person")));
+		::SendMessage(m_hcmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Bike")));
+		::SendMessage(m_hcmbFlockProfile, CB_SETCURSEL, (WPARAM)profile, 0);
+
 		// set flags
 		VARIANT_BOOL val;
 		m_ipEvcSolver->get_SeparableEvacuee(&val);
@@ -275,6 +284,8 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex > -1) ipSolver->put_SolverMethod((EVC_SOLVER_METHOD)selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboCostMethod, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_CostMethod((EVC_SOLVER_METHOD)selectedIndex);
+		selectedIndex = ::SendMessage(m_hcmbFlockProfile, CB_GETCURSEL, 0, 0);
+		if (selectedIndex > -1) ipSolver->put_FlockingProfile((FLOCK_PROFILE)selectedIndex);
 
 		// flags
 		selectedIndex = ::SendMessage(m_hSeparable, BM_GETCHECK, 0, 0);
@@ -367,7 +378,7 @@ STDMETHODIMP EvcSolverPropPage::Cancel()
 
 LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	int cmdShow = 0;;
+	int cmdShow = 0;
 #ifdef _FLOCK
 	cmdShow = SW_SHOW;
 #else
@@ -387,10 +398,12 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCheckFlock = GetDlgItem(IDC_CHECK_Flock);
 	m_hCheckShareCap = GetDlgItem(IDC_CHECK_SHARECAP);
 	m_hEditInitCost = GetDlgItem(IDC_EDIT_INITDELAY);
+	m_hcmbFlockProfile = GetDlgItem(IDC_COMBO_PROFILE);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
 	HWND m_hlblSnapFlock = GetDlgItem(IDC_STATIC_FlockSnapInterval);
+	HWND m_hlblFlockProfile = GetDlgItem(IDC_STATIC_FlockProfile);
 
 	::ShowWindow(m_hGroupFlock, cmdShow);
 	::ShowWindow(m_hEditSnapFlock, cmdShow);
@@ -398,6 +411,8 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	::ShowWindow(m_hCheckFlock, cmdShow);
 	::ShowWindow(m_hlblSimulationFlock, cmdShow);
 	::ShowWindow(m_hlblSnapFlock, cmdShow);
+	::ShowWindow(m_hlblFlockProfile, cmdShow);
+	::ShowWindow(m_hcmbFlockProfile, cmdShow);
 
 	return 0;
 }
@@ -517,6 +532,14 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /
 }
 
 LRESULT EvcSolverPropPage::OnEnChangeEditInitDelay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnCbnSelchangeComboProfile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

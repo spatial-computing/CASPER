@@ -1037,7 +1037,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		INetworkAttributePtr costAttrib;
 		esriNetworkAttributeUnits unit;
 		time_t baseTime = time(NULL), thisTime = 0;
-		double assumedSpeed = 5.0; // mps
+		FlockProfile flockProfile(flockingProfile);
 		bool movingObjectLeft;
 		wchar_t * thisTimeBuf = new wchar_t[25];
 		tm local;
@@ -1045,14 +1045,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
 		if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
-		costPerDay = GetUnitPerDay(unit, assumedSpeed);
+		costPerDay = GetUnitPerDay(unit, flockProfile.UsualSpeed);
 		costPerSec = costPerDay / (3600.0 * 24.0);
 
 		// init
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
 		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop);
-		flock->Init(Evacuees, ipNetworkQuery, costPerSec);
+		flock->Init(Evacuees, ipNetworkQuery, costPerSec, &flockProfile);
 
 		// run simulation
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));

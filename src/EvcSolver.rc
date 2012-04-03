@@ -96,12 +96,12 @@ IDR_CUSTOMSOLVER        REGISTRY                "EvcSolver.rgs"
 // Dialog
 //
 
-IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 205
+IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 222
 STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "General Options",IDC_SearchGroup,7,11,190,184
+    GROUPBOX        "General Options",IDC_SearchGroup,7,12,190,199
     LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,218,64,119,8
     EDITTEXT        IDC_EDIT_SAT,340,61,46,14,ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,26,117,8
@@ -113,25 +113,28 @@ BEGIN
     LTEXT           "Cost Calculation Method:",IDC_STATIC,20,103,102,8
     COMBOBOX        IDC_COMBO_CostMethod,127,101,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Treat the population at each location as separable",IDC_CHECK_SEPARABLE,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,148,173,12
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,161,173,12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,164,169,13
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,177,169,13
     GROUPBOX        "CASPER Options",IDC_CASPEROptions,202,48,190,36
     GROUPBOX        "Capacity Options",IDC_CapacityOptions,202,11,190,35
     GROUPBOX        "Safe Zone Options",IDC_ZoneOptions,202,87,190,37
     LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,217,104,117,8
-    EDITTEXT        IDC_EDIT_ZoneDensity,341,101,46,14,ES_AUTOHSCROLL | ES_NUMBER
-    GROUPBOX        "Flocking Model Options",IDC_FlockOptions,201,127,191,68
+    EDITTEXT        IDC_EDIT_ZoneDensity,340,101,46,14,ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX        "Flocking Model Options",IDC_FlockOptions,201,127,191,84
     CONTROL         "Flocking enabled?",IDC_CHECK_Flock,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,215,143,74,14
-    EDITTEXT        IDC_EDIT_FlockSnapInterval,342,156,45,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_FlockSnapInterval,341,156,46,14,ES_AUTOHSCROLL
     LTEXT           "Snapshot Interval:",IDC_STATIC_FlockSnapInterval,215,159,59,8
-    EDITTEXT        IDC_EDIT_FlockSimulationInterval,342,174,45,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_FlockSimulationInterval,341,174,46,14,ES_AUTOHSCROLL
     LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,215,177,60,8
     LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,19,57,104,8
     COMBOBOX        IDC_COMBO_COST,127,55,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,180,169,13
+    CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,193,169,13
     LTEXT           "Init Delay Cost Per Population:",IDC_STATIC_INITDELAY,20,126,102,8
     EDITTEXT        IDC_EDIT_INITDELAY,127,124,63,14,ES_AUTOHSCROLL
+    LTEXT           "Flocking Profile:",IDC_STATIC_FlockProfile,215,196,61,8
+    COMBOBOX        IDC_COMBO_PROFILE,341,194,46,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "",IDC_STATIC_LINE,19,148,170,3,0,WS_EX_DLGMODALFRAME
 END
 
 
@@ -148,7 +151,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 396
         TOPMARGIN, 7
-        BOTTOMMARGIN, 198
+        BOTTOMMARGIN, 215
     END
 END
 #endif    // APSTUDIO_INVOKED
