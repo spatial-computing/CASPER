@@ -74,8 +74,8 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	for (double radius = 0.0; possibleCollision; radius += 10.0)
 	{	
 		dx = DoubleRangedRand(-10.0, 10.0);
-		dy = DoubleRangedRand(-10.0, 10.0);		
 		if (dx >= 0.0) dx += radius; else dx -= radius;
+		dy = DoubleRangedRand(-10.0, 10.0);
 		if (dy >= 0.0) dy += radius; else dy -= radius;
 
 		myVehicle->setPosition(x + dx, y + dy, 0.0);
@@ -189,7 +189,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 			if ((*it)->ID == ID) continue;
 
 			// moving object check
-			if ((*it)->MyStatus != FLOCK_OBJ_STAT_MOVE && (*it)->MyStatus != FLOCK_OBJ_STAT_STOP) continue;
+			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT || (*it)->MyStatus == FLOCK_OBJ_STAT_END) continue;
 
 			// check if they share an edge or if they are both crossing an intersection
 			if (twoWayRoadsShareCap)
@@ -306,11 +306,11 @@ bool FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects)
 	for (i = 0; i < k; i++)
 	{
 		n = objects->at(i);
-		if (n->MyStatus != FLOCK_OBJ_STAT_MOVE && n->MyStatus != FLOCK_OBJ_STAT_STOP) continue;
+		if (n->MyStatus == FLOCK_OBJ_STAT_INIT || n->MyStatus == FLOCK_OBJ_STAT_END) continue;
 		if (n->DetectMyCollision())
 		{
 			collided = true;
-			break;
+			n->MyStatus = FLOCK_OBJ_STAT_COLLID;
 		}
 	}
 	return collided;
@@ -324,7 +324,7 @@ FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double Simulatio
 	snapshotInterval = abs(SnapshotInterval);
 	simulationInterval = abs(SimulationInterval);
 	objects = new std::vector<FlockingObjectPtr>();
-	history = new std::list<FlockingLocationPtr>();
+	history = new std::vector<FlockingLocationPtr>();
 	collisions = new std::list<double>();
 	maxPathLen = 0.0;
 	initDelayCostPerPop = InitDelayCostPerPop;
@@ -389,6 +389,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	bool snapshotTaken = false;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
+	std::vector<FlockingObjectPtr> * snapshotTempList = new std::vector<FlockingObjectPtr>();
 
 	if (ipStepProgressor)
 	{
@@ -412,37 +413,50 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
 			}
 
-			oldStat = (*it)->MyStatus;
 			(*it)->GTime = time;
-
-			// pre-movement snapshot: check if we have to take a snapshot of this object
-			if (oldStat == FLOCK_OBJ_STAT_INIT && (*it)->MyTime >= 0.0) history->push_front(new FlockingLocation(**it));
-
+			oldStat = (*it)->MyStatus;
 			if (FAILED(hr = (*it)->Move(objects, simulationInterval))) return hr;
 			newStat = (*it)->MyStatus;
-			movingObjectLeft |= newStat != FLOCK_OBJ_STAT_END;
 
-			// post-movement snapshot
-			if ((oldStat != FLOCK_OBJ_STAT_END && newStat == FLOCK_OBJ_STAT_END) ||
-				(newStat != FLOCK_OBJ_STAT_INIT && nextSnapshot <= time))
+			// Check if we have to take a snapshot of this object
+			if ((oldStat == FLOCK_OBJ_STAT_INIT && newStat != FLOCK_OBJ_STAT_INIT) || // pre-movement snapshot
+				(oldStat != FLOCK_OBJ_STAT_END && newStat == FLOCK_OBJ_STAT_END)) // post-movement snapshot
 			{
-				history->push_front(new FlockingLocation(**it));
+				snapshotTempList->push_back(*it);
+			}
+			else if (newStat != FLOCK_OBJ_STAT_INIT && nextSnapshot <= time)
+			{
+				snapshotTempList->push_back(*it);
 				snapshotTaken = true;
 			}
+
+			movingObjectLeft |= newStat != FLOCK_OBJ_STAT_END;
 		}
-		if (ipStepProgressor) { if (FAILED(hr = ipStepProgressor->Step())) return hr; }
-		
+
+		// see if any collisions happended and update status if nessecery
+		if (FlockingObject::DetectCollision(objects)) collisions->push_back(time);
+
+		// flush the snapshot objects into history
+		for (FlockingObjectItr it = snapshotTempList->begin(); it != snapshotTempList->end(); it++)
+		{
+			history->push_back(new FlockingLocation(**it));
+		}
+		snapshotTempList->clear();
+
 		if (snapshotTaken)
 		{
 			nextSnapshot = time + snapshotInterval;
 			snapshotTaken = false;
 		}
-		if (FlockingObject::DetectCollision(objects)) collisions->push_back(time);
+		if (ipStepProgressor) { if (FAILED(hr = ipStepProgressor->Step())) return hr; }
 	}
+
+	delete snapshotTempList;
+
 	return hr;
 }
 
-void FlockingEnviroment::GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft)
+void FlockingEnviroment::GetResult(std::vector<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft)
 {
 	*History = history;
 	*collisionTimes = collisions;

@@ -1021,7 +1021,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
 	CString colMsgString, ending;
-	std::list<FlockingLocationPtr> * history = 0;
+	std::vector<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
 
 #ifndef _FLOCK
@@ -1126,6 +1126,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_STOP)
 			{
 				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("S"))))) return hr;
+			}
+			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_COLLID)
+			{
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("C"))))) return hr;
 			}
 			else
 			{

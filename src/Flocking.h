@@ -8,7 +8,8 @@
 #define FLOCK_OBJ_STAT_INIT		0x0
 #define FLOCK_OBJ_STAT_MOVE		0x1
 #define FLOCK_OBJ_STAT_STOP		0x2
-#define FLOCK_OBJ_STAT_END		0x3
+#define FLOCK_OBJ_STAT_COLLID	0x3
+#define FLOCK_OBJ_STAT_END		0x4
 
 #define FLOCK_PROFILE char
 #define FLOCK_PROFILE_CAR		0x0
@@ -154,25 +155,25 @@ public:
 typedef FlockingObject * FlockingObjectPtr;
 typedef FlockingLocation * FlockingLocationPtr;
 typedef std::vector<FlockingObjectPtr>::iterator FlockingObjectItr;
-typedef std::list<FlockingLocationPtr>::iterator FlockingLocationItr;
+typedef std::vector<FlockingLocationPtr>::iterator FlockingLocationItr;
 
 class FlockingEnviroment
 {
 private:
-	std::vector<FlockingObjectPtr>	* objects;
-	std::list<FlockingLocationPtr>	* history;
-	std::list<double>				* collisions;
-	double							snapshotInterval;
-	double							simulationInterval;
-	double							maxPathLen;
-	double							initDelayCostPerPop;
-	bool							movingObjectLeft;
+	std::vector<FlockingObjectPtr>	 * objects;
+	std::vector<FlockingLocationPtr> * history;
+	std::list<double>			 	 * collisions;
+	double						 	 snapshotInterval;
+	double						 	 simulationInterval;
+	double						 	 maxPathLen;
+	double						 	 initDelayCostPerPop;
+	bool							 movingObjectLeft;
 
 public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval, double InitDelayCostPerPop);
 	virtual ~FlockingEnviroment(void);
 	void Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec, FlockProfile * profile, bool TwoWayRoadsShareCap);
 	HRESULT RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double predictedCost);
-	void GetResult(std::list<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft);
+	void GetResult(std::vector<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft);
 	double static PathLength(EvcPathPtr path);
 };
