@@ -59,10 +59,20 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	myVehicle->setSpeed(Velocity.length());
 }
 
-void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors, double x, double y, double & dx, double & dy)
+void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors, double x1, double y1, double & dx, double & dy)
 {
 	myNeighborVehicles.clear();
 	bool possibleCollision = true;
+	IPointPtr p = 0;
+	double x2, y2;
+	((IPointCollectionPtr)(myPath->front()->pline))->get_Point(1, &p);
+	MyLocation->QueryCoords(&x2, &y2);
+
+	OpenSteer::Vec3 loc(x1, y1, 0.0);
+	OpenSteer::Vec3 move(x2 - x1, y2 - y1, 0.0);
+	move = move.normalize();
+	OpenSteer::Vec3 dir;
+	dir.cross(move, OpenSteer::Vec3(0.0, 0.0, 1.0));
 
 	for (FlockingObjectItr it = neighbors->begin(); it != neighbors->end(); it++)
 	{
@@ -71,14 +81,11 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	}
 
 	// create a little bit of randomness within initial location and velocity while avoiding collision
-	for (double radius = 0.0; possibleCollision; radius += 10.0)
+	for (double radius = 10.0; possibleCollision; radius += 10.0)
 	{	
-		dx = DoubleRangedRand(-10.0, 10.0);
-		if (dx >= 0.0) dx += radius; else dx -= radius;
-		dy = DoubleRangedRand(-10.0, 10.0);
-		if (dy >= 0.0) dy += radius; else dy -= radius;
-
-		myVehicle->setPosition(x + dx, y + dy, 0.0);
+		dx = radius + DoubleRangedRand(0.0, 10.0);
+		dy = radius + DoubleRangedRand(0.0, 10.0);
+		myVehicle->setPosition(loc - dx * move + dy * dir);
 		possibleCollision = DetectMyCollision();
 	}	
 }
