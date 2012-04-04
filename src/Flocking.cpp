@@ -7,7 +7,7 @@
 // Flocking object implementation
 
 FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
-							   ISpatialReferencePtr MetricProjection, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
+							   ISpatialReferencePtr MetricProjection, FlockProfile * flockProfile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors)
 {
 	// construct FlockingLocation	
 	MyTime = startTime;
@@ -36,23 +36,51 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	nextVertex = element;
 	initPathIterator = true;
 
-	// create a little bit of randomness within initial location and velocity
-	double x, y, dx, dy;
-	MyLocation->QueryCoords(&x, &y);
-	dx = (rand() % (int)(myProfile->ZoneRadius)) - (myProfile->ZoneRadius / 2.0);
-	dy = (rand() % (int)(myProfile->ZoneRadius)) - (myProfile->ZoneRadius / 2.0);
-	MyLocation->PutCoords(x + dx, y + dy);
-	Velocity = OpenSteer::Vec3(-dx, -dy, 0.0);
-
 	// steering lib init
 	libpoints = new OpenSteer::Vec3[0];
 	myVehicle = new OpenSteer::SimpleVehicle();
 	myVehicle->reset();
 	myVehicle->setRadius(myProfile->Radius);
-	myVehicle->setPosition(x + dx, y + dy, 0.0);
+	
 	myVehicle->setForward(Velocity.normalize());
 	myVehicle->setSpeed(Velocity.length());
 	myVehicle->setMass(myProfile->Mass);
+
+	// init location
+	double x, y, dx, dy;
+	MyLocation->QueryCoords(&x, &y);
+	GetMyInitLocation(neighbors, x, y, dx, dy);	
+	MyLocation->PutCoords(x + dx, y + dy);
+	Velocity = OpenSteer::Vec3(-dx, -dy, 0.0);
+
+	// steering lib modify
+	myVehicle->setPosition(x + dx, y + dy, 0.0);
+	myVehicle->setForward(Velocity.normalize());
+	myVehicle->setSpeed(Velocity.length());
+}
+
+void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors, double x, double y, double & dx, double & dy)
+{
+	myNeighborVehicles.clear();
+	bool possibleCollision = true;
+
+	for (FlockingObjectItr it = neighbors->begin(); it != neighbors->end(); it++)
+	{
+		// same group check
+		if (wcscmp((*it)->GroupName.bstrVal, GroupName.bstrVal) == 0) myNeighborVehicles.push_back((*it)->myVehicle);
+	}
+
+	// create a little bit of randomness within initial location and velocity while avoiding collision
+	for (double radius = 0.0; possibleCollision; radius += 10.0)
+	{	
+		dx = DoubleRangedRand(-10.0, 10.0);
+		dy = DoubleRangedRand(-10.0, 10.0);		
+		if (dx >= 0.0) dx += radius; else dx -= radius;
+		if (dy >= 0.0) dy += radius; else dy -= radius;
+
+		myVehicle->setPosition(x + dx, y + dy, 0.0);
+		possibleCollision = DetectMyCollision();
+	}	
 }
 
 HRESULT FlockingObject::loadNewEdge(void)
@@ -221,7 +249,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			myVehicle->setSpeed(speedLimit);
 
 			steer  = myVehicle->steerToAvoidCloseNeighbors(myProfile->CloseNeighborDistance, myNeighborVehicles);
-			// steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);
+			steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);
 			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 			
 			// backup the position in case we needed to back off from a collision
@@ -347,7 +375,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 			for (i = 0; i < size; i++)
 			{
 				objects->push_back(new FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name,
-								   ipNetworkQuery, metricProjection, flockProfile, TwoWayRoadsShareCap));
+								   ipNetworkQuery, metricProjection, flockProfile, TwoWayRoadsShareCap, objects));
 			}
 		}
 	}

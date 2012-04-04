@@ -15,6 +15,8 @@
 #define FLOCK_PROFILE_PERSON	0x1
 #define FLOCK_PROFILE_BIKE		0x2
 
+#define DoubleRangedRand(range_min, range_max)	((double)(rand()) * ((range_max) - (range_min)) / (RAND_MAX + 1.0) + (range_min))
+
 class FlockProfile
 {
 public:
@@ -127,6 +129,7 @@ private:
 	HRESULT loadNewEdge(void);
 	HRESULT buildNeighborList(std::vector<FlockingObject *> * objects);
 	bool DetectMyCollision();
+	void GetMyInitLocation(std::vector<FlockingObject *> * neighbors, double x, double y, double & dx, double & dy);
 
 public:
 	// properties
@@ -137,7 +140,7 @@ public:
 	// methods
 	
 	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
-		ISpatialReferencePtr MetricProjection, FlockProfile * profile, bool TwoWayRoadsShareCap);
+		ISpatialReferencePtr MetricProjection, FlockProfile * profile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
 	static bool DetectCollision(std::vector<FlockingObject *> * objects);
 
