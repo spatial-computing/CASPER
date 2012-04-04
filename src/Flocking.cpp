@@ -67,7 +67,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	IPointPtr p = 0;
 	double x2, y2;
 	((IPointCollectionPtr)(myPath->front()->pline))->get_Point(1, &p);
-	MyLocation->QueryCoords(&x2, &y2);
+	p->QueryCoords(&x2, &y2);
 
 	OpenSteer::Vec3 loc(x1, y1, 0.0);
 	OpenSteer::Vec3 move(x2 - x1, y2 - y1, 0.0);
@@ -85,10 +85,13 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	for (double radius = 10.0; possibleCollision; radius += 10.0)
 	{	
 		dx = radius + DoubleRangedRand(0.0, 10.0);
-		dy = radius + DoubleRangedRand(0.0, 10.0);
-		myVehicle->setPosition(loc - dx * move + dy * dir);
+		dy = 10.0 + DoubleRangedRand(0.0, radius);
+		myVehicle->setPosition(loc + dx * dir - dy * move);
 		possibleCollision = DetectMyCollision();
-	}	
+	}
+	dx = myVehicle->position().x - x1;
+	dy = myVehicle->position().y - y1;
+	myNeighborVehicles.clear();
 }
 
 HRESULT FlockingObject::loadNewEdge(void)
