@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Thu Mar 22 19:17:49 2012
+/* at Wed Apr 04 15:06:49 2012
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -198,6 +198,12 @@ EXTERN_C const IID IID_IEvcSolver;
         virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_InitDelayCostPerPop( 
             /* [retval][out] */ BSTR *value) = 0;
         
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_FlockingProfile( 
+            /* [in] */ unsigned char value) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_FlockingProfile( 
+            /* [retval][out] */ unsigned char *value) = 0;
+        
         virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_CostAttribute( 
             /* [in] */ int index) = 0;
         
@@ -342,6 +348,14 @@ EXTERN_C const IID IID_IEvcSolver;
             IEvcSolver * This,
             /* [retval][out] */ BSTR *value);
         
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_FlockingProfile )( 
+            IEvcSolver * This,
+            /* [in] */ unsigned char value);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_FlockingProfile )( 
+            IEvcSolver * This,
+            /* [retval][out] */ unsigned char *value);
+        
         /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_CostAttribute )( 
             IEvcSolver * This,
             /* [in] */ int index);
@@ -464,6 +478,12 @@ EXTERN_C const IID IID_IEvcSolver;
 
 #define IEvcSolver_get_InitDelayCostPerPop(This,value)	\
     ( (This)->lpVtbl -> get_InitDelayCostPerPop(This,value) ) 
+
+#define IEvcSolver_put_FlockingProfile(This,value)	\
+    ( (This)->lpVtbl -> put_FlockingProfile(This,value) ) 
+
+#define IEvcSolver_get_FlockingProfile(This,value)	\
+    ( (This)->lpVtbl -> get_FlockingProfile(This,value) ) 
 
 #define IEvcSolver_put_CostAttribute(This,index)	\
     ( (This)->lpVtbl -> put_CostAttribute(This,index) ) 
