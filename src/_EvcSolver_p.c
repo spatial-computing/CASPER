@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Wed Apr 04 15:06:49 2012
+/* at Sun Apr 08 19:52:19 2012
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -538,7 +538,7 @@ static const _EvcSolver_MIDL_PROC_FORMAT_STRING _EvcSolver__MIDL_ProcFormatStrin
 /* 502 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
 
-	/* Procedure put_CostMethod */
+	/* Procedure put_TrafficModel */
 
 /* 504 */	0x33,		/* FC_AUTO_HANDLE */
 			0x6c,		/* Old Flags:  object, Oi2 */
@@ -569,7 +569,7 @@ static const _EvcSolver_MIDL_PROC_FORMAT_STRING _EvcSolver__MIDL_ProcFormatStrin
 /* 538 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
 
-	/* Procedure get_CostMethod */
+	/* Procedure get_TrafficModel */
 
 /* 540 */	0x33,		/* FC_AUTO_HANDLE */
 			0x6c,		/* Old Flags:  object, Oi2 */
@@ -1323,8 +1323,8 @@ CINTERFACE_PROXY_VTABLE(37) _IEvcSolverProxyVtbl =
     (void *) (INT_PTR) -1 /* IEvcSolver::get_ExportEdgeStat */ ,
     (void *) (INT_PTR) -1 /* IEvcSolver::put_SolverMethod */ ,
     (void *) (INT_PTR) -1 /* IEvcSolver::get_SolverMethod */ ,
-    (void *) (INT_PTR) -1 /* IEvcSolver::put_CostMethod */ ,
-    (void *) (INT_PTR) -1 /* IEvcSolver::get_CostMethod */ ,
+    (void *) (INT_PTR) -1 /* IEvcSolver::put_TrafficModel */ ,
+    (void *) (INT_PTR) -1 /* IEvcSolver::get_TrafficModel */ ,
     (void *) (INT_PTR) -1 /* IEvcSolver::put_CostPerZoneDensity */ ,
     (void *) (INT_PTR) -1 /* IEvcSolver::get_CostPerZoneDensity */ ,
     (void *) (INT_PTR) -1 /* IEvcSolver::put_FlockingSimulationInterval */ ,

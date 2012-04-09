@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Wed Apr 04 15:06:49 2012
+/* at Sun Apr 08 19:52:19 2012
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -156,10 +156,10 @@ EXTERN_C const IID IID_IEvcSolver;
         virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_SolverMethod( 
             /* [retval][out] */ unsigned char *value) = 0;
         
-        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_CostMethod( 
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_TrafficModel( 
             /* [in] */ unsigned char value) = 0;
         
-        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_CostMethod( 
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_TrafficModel( 
             /* [retval][out] */ unsigned char *value) = 0;
         
         virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_CostPerZoneDensity( 
@@ -292,11 +292,11 @@ EXTERN_C const IID IID_IEvcSolver;
             IEvcSolver * This,
             /* [retval][out] */ unsigned char *value);
         
-        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_CostMethod )( 
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_TrafficModel )( 
             IEvcSolver * This,
             /* [in] */ unsigned char value);
         
-        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_CostMethod )( 
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_TrafficModel )( 
             IEvcSolver * This,
             /* [retval][out] */ unsigned char *value);
         
@@ -437,11 +437,11 @@ EXTERN_C const IID IID_IEvcSolver;
 #define IEvcSolver_get_SolverMethod(This,value)	\
     ( (This)->lpVtbl -> get_SolverMethod(This,value) ) 
 
-#define IEvcSolver_put_CostMethod(This,value)	\
-    ( (This)->lpVtbl -> put_CostMethod(This,value) ) 
+#define IEvcSolver_put_TrafficModel(This,value)	\
+    ( (This)->lpVtbl -> put_TrafficModel(This,value) ) 
 
-#define IEvcSolver_get_CostMethod(This,value)	\
-    ( (This)->lpVtbl -> get_CostMethod(This,value) ) 
+#define IEvcSolver_get_TrafficModel(This,value)	\
+    ( (This)->lpVtbl -> get_TrafficModel(This,value) ) 
 
 #define IEvcSolver_put_CostPerZoneDensity(This,value)	\
     ( (This)->lpVtbl -> put_CostPerZoneDensity(This,value) ) 
