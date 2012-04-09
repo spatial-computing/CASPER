@@ -20,11 +20,6 @@
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
 #endif
 
-#define EVC_SOLVER_METHOD			char
-#define EVC_SOLVER_METHOD_SP		0x0
-#define EVC_SOLVER_METHOD_CCRP		0x1
-#define EVC_SOLVER_METHOD_CASPER	0x2
-
 // IEvcSolver
 [
 	object,
@@ -63,9 +58,9 @@ __interface IEvcSolver : IUnknown
 	[propget, helpstring("Gets the selected solver method")]
 		HRESULT SolverMethod([out, retval] EVC_SOLVER_METHOD * value);
 	[propput, helpstring("Sets the cost method")]
-		HRESULT CostMethod([in] EVC_SOLVER_METHOD value);
+		HRESULT TrafficModel([in] EVC_TRAFFIC_MODEL value);
 	[propget, helpstring("Gets the selected cost method")]
-		HRESULT CostMethod([out, retval] EVC_SOLVER_METHOD * value);
+		HRESULT TrafficModel([out, retval] EVC_TRAFFIC_MODEL * value);
 	[propput, helpstring("Sets the cost per safe zone density")]
 		HRESULT CostPerZoneDensity([in] BSTR value);
 	[propget, helpstring("Gets the cost per safe zone density")]
@@ -166,8 +161,8 @@ public:
 	STDMETHOD(get_SeparableEvacuee)(VARIANT_BOOL * value);
 	STDMETHOD(put_SolverMethod)(EVC_SOLVER_METHOD   value);
 	STDMETHOD(get_SolverMethod)(EVC_SOLVER_METHOD * value);
-	STDMETHOD(put_CostMethod)(EVC_SOLVER_METHOD   value);
-	STDMETHOD(get_CostMethod)(EVC_SOLVER_METHOD * value);
+	STDMETHOD(put_TrafficModel)(EVC_TRAFFIC_MODEL   value);
+	STDMETHOD(get_TrafficModel)(EVC_TRAFFIC_MODEL * value);
 	STDMETHOD(put_SaturationPerCap)(BSTR   value);
 	STDMETHOD(get_SaturationPerCap)(BSTR * value);
 	STDMETHOD(put_CriticalDensPerCap)(BSTR   value);
@@ -288,7 +283,7 @@ private:
 	float					SaturationPerCap;
 	float					CriticalDensPerCap;
 	EVC_SOLVER_METHOD		solvermethod;
-	EVC_SOLVER_METHOD		costmethod;
+	EVC_TRAFFIC_MODEL		trafficModel;
 	float					costPerDensity;
 	VARIANT_BOOL			flockingEnabled;
 	float					flockingSnapInterval;

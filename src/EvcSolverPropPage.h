@@ -73,7 +73,7 @@ public:
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
 	COMMAND_HANDLER(IDC_EDIT_Critical, EN_CHANGE, OnEnChangeEditCritical)
   	COMMAND_HANDLER(IDC_COMBO_METHOD, CBN_SELCHANGE, OnCbnSelchangeComboMethod)
-  	COMMAND_HANDLER(IDC_COMBO_CostMethod, CBN_SELCHANGE, OnCbnSelchangeComboCostmethod)
+  	COMMAND_HANDLER(IDC_COMBO_TRAFFICMODEL, CBN_SELCHANGE, OnCbnSelchangeComboCostmethod)
   	COMMAND_HANDLER(IDC_COMBO_CAPACITY, CBN_SELCHANGE, OnCbnSelchangeComboCapacity)
 	COMMAND_HANDLER(IDC_COMBO_COST, CBN_SELCHANGE, OnCbnSelchangeCostCapacity)
 	COMMAND_HANDLER(IDC_CHECK_SEPARABLE, BN_CLICKED, OnBnClickedCheckSeparable)
@@ -116,7 +116,7 @@ private:
   HWND                    m_hCapCombo;
   HWND                    m_hCostCombo;
   HWND                    m_hComboMethod;
-  HWND                    m_hComboCostMethod;
+  HWND                    m_hComboTrafficModel;
   HWND                    m_hEditCritical;
   HWND                    m_hEditSat;
   HWND                    m_hSeparable;

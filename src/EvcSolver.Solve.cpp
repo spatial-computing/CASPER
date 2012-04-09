@@ -212,7 +212,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// This will particularly be helpful with the heuristic calculator part of the algorithm.
 	// if (FAILED(hr = heuristicAttribs[heuristicAttribIndex]->get_ID(&capAttributeID))) return hr;  	
 	NAVertexCache * vcache = new NAVertexCache();
-	NAEdgeCache   * ecache = new NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE, this->initDelayCostPerPop);
+	NAEdgeCache   * ecache = new NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop, trafficModel);
 
 	// Vertex table structures
 	NAVertexTable * safeZoneList = new NAVertexTable();
@@ -798,7 +798,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						}
 					}			
 					// Final cost calculations
-					path->EvacuationCost += pathSegment->Edge->GetCost(0.0, costmethod) * pathSegment->EdgePortion;
+					path->EvacuationCost += pathSegment->Edge->GetCurrentCost() * pathSegment->EdgePortion;
 					path->OrginalCost    += pathSegment->Edge->originalCost * pathSegment->EdgePortion;
 				}
 

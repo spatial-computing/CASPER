@@ -235,29 +235,19 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (BetterSafeZone)
 			{
 				// First find out about remaining limit of this path
-				temp = finalVertex;
-				if (!separable || solvermethod == EVC_SOLVER_METHOD_SP)
-				{
-					population2Route = populationLeft;
-					populationLeft   = 0.0;
-				}
-				else
+				temp             = finalVertex;
+				population2Route = populationLeft;
+				populationLeft   = 0.0;
+				if (separable)				
 				{
 					while (temp->Previous)
 					{
-						population2Route = max(population2Route, temp->GetBehindEdge()->CapacityLeft());
+						population2Route = min(population2Route, temp->GetBehindEdge()->LeftCapacity());
 						temp = temp->Previous;
 					}
-					if (population2Route == 0.0)
-					{
-						population2Route = populationLeft;
-						populationLeft = 0.0;
-					}
-					else
-					{
-						population2Route = min(population2Route, populationLeft);
-						populationLeft  -= population2Route;
-					}
+					if (population2Route <= 0.0) population2Route = populationLeft;
+					population2Route = min(population2Route, populationLeft);
+					populationLeft  -= population2Route;					
 				}
 
 				// create a new path for this portion of the population

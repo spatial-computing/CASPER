@@ -6,6 +6,20 @@ class Evacuee;
 class NAEdge;
 #define MAX_COST 1000000000.0
 
+#define EVC_SOLVER_METHOD			char
+#define EVC_SOLVER_METHOD_SP		0x0
+#define EVC_SOLVER_METHOD_CCRP		0x1
+#define EVC_SOLVER_METHOD_CASPER	0x2
+
+#define EVC_TRAFFIC_MODEL			char
+#define EVC_TRAFFIC_MODEL_FLAT		0x0
+#define EVC_TRAFFIC_MODEL_STEP		0x1
+#define EVC_TRAFFIC_MODEL_LINEAR	0x2
+#define EVC_TRAFFIC_MODEL_EXP		0x3
+#define EVC_TRAFFIC_MODEL_SQRT		0x4
+
+#define ln2 0.3010299956639811
+
 // The NAVertex class is what sits on top of the INetworkJunction interface and holds extra
 // information about each junction/vertex which are helpful for CASPER algorithm.
 // g: cost from source
@@ -150,6 +164,8 @@ class NAEdge
 private:	
 	EdgeReservations * reservations;
 	double initDelayCostPerPop;
+	EVC_TRAFFIC_MODEL trafficModel;
+	double GetTrafficSpeedRatio(double newPop) const;
 
 public:
 	double originalCost;
@@ -158,13 +174,15 @@ public:
 	INetworkEdgePtr NetEdge;
 	INetworkEdgePtr LastExteriorEdge;	
 	long EID;
-	double GetCost(double newPop, char method) const;
-	double CapacityLeft() const;
+	double GetCost(double newPop, EVC_SOLVER_METHOD method) const;
+	double GetCurrentCost() const;
+	double LeftCapacity() const;
 	double OriginalCapacity() const;
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
-	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable, double InitDelayCostPerPop);
+	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
+		double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel);
 	NAEdge(const NAEdge& cpy);
 
 	double GetReservedPop() const { return reservations->ReservedPop; }
@@ -258,10 +276,12 @@ private:
 	NAResTable				* resTableAlong;
 	NAResTable				* resTableAgainst;
 	double					initDelayCostPerPop;
+	EVC_TRAFFIC_MODEL		trafficModel;
 
 public:
 
-	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop)
+	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap,
+		double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 	{
 		initDelayCostPerPop = InitDelayCostPerPop;
 		capacityAttribID = CapacityAttribID;

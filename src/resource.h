@@ -15,7 +15,7 @@
 #define IDC_EDIT_SAT                    219
 #define IDC_LableCritical               220
 #define IDC_EDIT_Critical               221
-#define IDC_COMBO_CostMethod            222
+#define IDC_COMBO_TRAFFICMODEL            222
 #define IDC_COMBO_CAPACITY              223
 #define IDC_LableZoneDensity            224
 #define IDC_STATIC_Capacity             225

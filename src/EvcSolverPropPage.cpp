@@ -60,13 +60,16 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		if (val == VARIANT_TRUE) ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 
-		// set the solver cost method names
-		m_ipEvcSolver->get_CostMethod(&method);
-		::SendMessage(m_hComboCostMethod, CB_RESETCONTENT, NULL, NULL);
-		::SendMessage(m_hComboCostMethod, CB_ADDSTRING, NULL, (LPARAM)(_T("SP")));
-		::SendMessage(m_hComboCostMethod, CB_ADDSTRING, NULL, (LPARAM)(_T("CCRP")));
-		::SendMessage(m_hComboCostMethod, CB_ADDSTRING, NULL, (LPARAM)(_T("CASPER")));
-		::SendMessage(m_hComboCostMethod, CB_SETCURSEL, (WPARAM)method, 0);
+		// set the solver traffic model names
+		EVC_TRAFFIC_MODEL model;
+		m_ipEvcSolver->get_TrafficModel(&model);
+		::SendMessage(m_hComboTrafficModel, CB_RESETCONTENT, NULL, NULL);
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("FLAT")));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("STEP")));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("LINEAR")));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("EXP")));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("SQRT")));
+		::SendMessage(m_hComboTrafficModel, CB_SETCURSEL, (WPARAM)model, 0);
 
 		// set the loaded network discriptive attribs
 		m_ipEvcSolver->get_DiscriptiveAttributesCount(&c);
@@ -282,8 +285,8 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex > -1) ipSolver->put_CostAttribute(selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboMethod, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_SolverMethod((EVC_SOLVER_METHOD)selectedIndex);
-		selectedIndex = ::SendMessage(m_hComboCostMethod, CB_GETCURSEL, 0, 0);
-		if (selectedIndex > -1) ipSolver->put_CostMethod((EVC_SOLVER_METHOD)selectedIndex);
+		selectedIndex = ::SendMessage(m_hComboTrafficModel, CB_GETCURSEL, 0, 0);
+		if (selectedIndex > -1) ipSolver->put_TrafficModel((EVC_TRAFFIC_MODEL)selectedIndex);
 		selectedIndex = ::SendMessage(m_hcmbFlockProfile, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_FlockingProfile((FLOCK_PROFILE)selectedIndex);
 
@@ -387,7 +390,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCapCombo = GetDlgItem(IDC_COMBO_CAPACITY);
 	m_hCostCombo = GetDlgItem(IDC_COMBO_COST);
 	m_hComboMethod = GetDlgItem(IDC_COMBO_METHOD);
-	m_hComboCostMethod = GetDlgItem(IDC_COMBO_CostMethod);
+	m_hComboTrafficModel = GetDlgItem(IDC_COMBO_TRAFFICMODEL);
 	m_hEditCritical = GetDlgItem(IDC_EDIT_Critical);
 	m_hEditSat = GetDlgItem(IDC_EDIT_SAT);
 	m_hSeparable = GetDlgItem(IDC_CHECK_SEPARABLE);
