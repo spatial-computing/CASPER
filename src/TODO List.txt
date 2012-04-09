@@ -6,4 +6,4 @@
 
 + fix remaining cost of each edge for pop seperation
 - fix multi-part turn to be accurate
-- drop menu to select traffic model instead of cost calc model.
++ drop menu to select traffic model instead of cost calc model.
