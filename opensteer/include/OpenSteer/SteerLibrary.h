@@ -470,7 +470,7 @@ steerToFollowPath (const int direction,
 		Vec3 target = position() + (speed() * newDir);
 
         // return steering to seek target on path
-        return steerForSeek (target);
+        return 0.5 * steerForSeek (target);
     }
     else
     {
