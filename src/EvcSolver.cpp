@@ -346,14 +346,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	// Get the NDS SpatialRef, that will be the same for the context as well as all spatial NAClasses
 	IDEGeoDatasetPtr ipDEGeoDataset(pNetwork);
 	if (!ipDEGeoDataset) return E_INVALIDARG;
-	
-	// load the mercator projection
-	IProjectedCoordinateSystemPtr ipNAContextPC;
-	ISpatialReferenceFactoryPtr pSpatRefFact = ISpatialReferenceFactoryPtr(CLSID_SpatialReferenceEnvironment);
-	if (FAILED(hr = pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC))) return hr;
-	ISpatialReferencePtr ipNAContextSR = ipNAContextPC;
-	
-	// if (FAILED(hr = ipDEGeoDataset->get_SpatialReference(&ipNAContextSR))) return hr;
+	ISpatialReferencePtr ipNAContextSR;
+	if (FAILED(hr = ipDEGeoDataset->get_SpatialReference(&ipNAContextSR))) return hr;
 
 	IUnknownPtr           ipUnknown;
 	INamedSetPtr          ipNAClassDefinitions;

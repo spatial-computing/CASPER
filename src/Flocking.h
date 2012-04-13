@@ -18,6 +18,9 @@
 
 #define DoubleRangedRand(range_min, range_max)	((double)(rand()) * ((range_max) - (range_min)) / (RAND_MAX + 1.0) + (range_min))
 
+// utilk functions
+double PointToLineDistance(OpenSteer::Vec3 point, OpenSteer::Vec3 line[2], bool shouldRotateLine);
+
 class FlockProfile
 {
 public:
@@ -34,30 +37,32 @@ public:
 
 	FlockProfile(FLOCK_PROFILE profile)
 	{
-		IntersectionRadius = 30.0;
-		ZoneRadius = 50.0;
+		IntersectionRadius = 20.0;
 		MaxForce = 150000.0;
 		switch (profile)
 		{
 		case FLOCK_PROFILE_CAR:
 			Mass = 1.0;
+			ZoneRadius = 75.0;
 			Radius = 1.0;
-			CloseNeighborDistance = 5.0;
-			NeighborDistance = 20.0;
+			CloseNeighborDistance = 15.0;
+			NeighborDistance = 30.0;
 			UsualSpeed = 10.0;
 			break;
 		case FLOCK_PROFILE_PERSON:
 			Mass = 0.1;
+			ZoneRadius = 50.0;
 			Radius = 0.2;
-			CloseNeighborDistance = 1.0;
-			NeighborDistance = 2.0;
+			CloseNeighborDistance = 2.0;
+			NeighborDistance = 4.0;
 			UsualSpeed = 1.0;
 			break;
 		case FLOCK_PROFILE_BIKE:
 			Mass = 0.2;
+			ZoneRadius = 50.0;
 			Radius = 0.5;
-			CloseNeighborDistance = 2.0;
-			NeighborDistance = 5.0;
+			CloseNeighborDistance = 5.0;
+			NeighborDistance = 10.0;
 			UsualSpeed = 5.0;
 			break;
 		}
@@ -111,7 +116,8 @@ private:
 	// properties
 
 	INetworkJunctionPtr			nextVertex;
-	IPointPtr					nextVertexPoint;
+	OpenSteer::Vec3				nextVertexLine[2];
+	OpenSteer::Vec3				finishLine[2];
 	OpenSteer::SimpleVehicle	* myVehicle;
 	OpenSteer::PolylinePathway	myVehiclePath;
 	OpenSteer::AVGroup			myNeighborVehicles;
@@ -120,7 +126,6 @@ private:
 	EvcPath::iterator			pathSegIt;
 	EvcPathPtr					myPath;
 	double						speedLimit;
-	ISpatialReferencePtr		metricProjection;
 	bool						initPathIterator;
 	FlockProfile				* myProfile;
 	bool						twoWayRoadsShareCap;
@@ -135,13 +140,12 @@ private:
 public:
 	// properties
 
-	IPointPtr		FinalPoint;
 	long			BindVertex;
 
 	// methods
 	
 	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
-		ISpatialReferencePtr MetricProjection, FlockProfile * profile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors);
+		FlockProfile * profile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
 	static bool DetectCollision(std::vector<FlockingObject *> * objects);
 
