@@ -163,7 +163,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 		}
 
 		// load new edge points into the steer library
-		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius, false);
+		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius * 1.2, false);
 		newEdgeRequestFlag = false;
 	}
 	return hr;
