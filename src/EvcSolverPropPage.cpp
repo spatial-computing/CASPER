@@ -67,8 +67,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("FLAT")));
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("STEP")));
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("LINEAR")));
-		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("EXP")));
-		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("SQRT")));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("CASPER")));
 		::SendMessage(m_hComboTrafficModel, CB_SETCURSEL, (WPARAM)model, 0);
 
 		// set the loaded network discriptive attribs

@@ -311,7 +311,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;		
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->h = posAlong * myVertex->GetBehindEdge()->originalCost; // / (toPosition - fromPosition);
+							myVertex->h = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
 
 							safeZoneList->insert(NAVertexTablePair(myVertex));
 						}
@@ -330,7 +330,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;						
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->h = (toPosition - posAlong) * myVertex->GetBehindEdge()->originalCost; // / (toPosition - fromPosition);
+							myVertex->h = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
 							safeZoneList->insert(NAVertexTablePair(myVertex));
 						}
 					}
@@ -440,7 +440,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->g = (toPosition - posAlong) * myVertex->GetBehindEdge()->originalCost; // / (toPosition - fromPosition);
+							myVertex->g = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);
 						}
 					}
@@ -458,7 +458,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->g = posAlong * myVertex->GetBehindEdge()->originalCost; // / (toPosition - fromPosition);
+							myVertex->g = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);							
 						}
 					}
@@ -614,10 +614,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
 			{
 				neighbor = vcache->Get(currentJunctionEID);
-				if (neighbor->h > myVertex->h + currentEdge->originalCost)
+				if (neighbor->h > myVertex->h + currentEdge->OriginalCost)
 				{
 					neighbor->SetBehindEdge(currentEdge);
-					neighbor->h = myVertex->h + currentEdge->originalCost;
+					neighbor->h = myVertex->h + currentEdge->OriginalCost;
 					neighbor->Previous = myVertex;
 					if (FAILED(hr = heap->DecreaseKey(currentEdge))) return hr;	
 					vcache->UpdateHeuristic(neighbor);			
@@ -627,7 +627,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			{
 				neighbor = vcache->New(ipCurrentJunction);
 				neighbor->SetBehindEdge(currentEdge);
-				neighbor->h = myVertex->h + currentEdge->originalCost;
+				neighbor->h = myVertex->h + currentEdge->OriginalCost;
 				neighbor->Previous = myVertex;
 				heap->Insert(currentEdge);
 				vcache->UpdateHeuristic(neighbor);
@@ -799,7 +799,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					}			
 					// Final cost calculations
 					path->EvacuationCost += pathSegment->Edge->GetCurrentCost() * pathSegment->EdgePortion;
-					path->OrginalCost    += pathSegment->Edge->originalCost * pathSegment->EdgePortion;
+					path->OrginalCost    += pathSegment->Edge->OriginalCost * pathSegment->EdgePortion;
 				}
 
 				// Add the last point of the last path segment to the polyline
@@ -940,7 +940,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCost(0.0, solvermethod))))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->originalCost)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->OriginalCost)))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
@@ -999,7 +999,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCost(0.0, solvermethod))))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->originalCost)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->OriginalCost)))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;

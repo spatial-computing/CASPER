@@ -419,7 +419,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	SaturationPerCap = 60.0;
 	CriticalDensPerCap = 20.0;
 	solvermethod = EVC_SOLVER_METHOD_CASPER;
-	trafficModel = EVC_TRAFFIC_MODEL_SQRT;
+	trafficModel = EVC_TRAFFIC_MODEL_CASPER;
 	flockingProfile = FLOCK_PROFILE_CAR;
 	
 	m_CreateTraversalResult = VARIANT_TRUE;

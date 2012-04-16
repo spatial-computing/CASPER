@@ -152,7 +152,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 
 		// speed limit update
 		if (FAILED(hr = (*pathSegIt)->pline->get_Length(&speedLimit))) return hr;
-		speedLimit = speedLimit / (*pathSegIt)->Edge->originalCost;
+		speedLimit = speedLimit / (*pathSegIt)->Edge->OriginalCost;
 
 		if (nextVertexLine[0] == nextVertexLine[1] && nextVertexLine[1] == OpenSteer::Vec3::zero)
 		{
@@ -163,7 +163,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 		}
 
 		// load new edge points into the steer library
-		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius * 1.5, false);
+		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius, false);
 		newEdgeRequestFlag = false;
 	}
 	return hr;

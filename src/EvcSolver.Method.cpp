@@ -258,7 +258,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				if (BetterSafeZone->GetBehindEdge())
 				{
 					if (FAILED(hr = BetterSafeZone->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
-					edgePortion = BetterSafeZone->h / BetterSafeZone->GetBehindEdge()->originalCost;
+					edgePortion = BetterSafeZone->h / BetterSafeZone->GetBehindEdge()->OriginalCost;
 					if (fromPosition < toPosition) toPosition = fromPosition + edgePortion;
 					else toPosition = fromPosition - edgePortion;
 
@@ -284,7 +284,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				if (finalVertex->GetBehindEdge())
 				{
 					if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;				
-					edgePortion = finalVertex->g / finalVertex->GetBehindEdge()->originalCost;
+					edgePortion = finalVertex->g / finalVertex->GetBehindEdge()->OriginalCost;
 					if (fromPosition < toPosition) fromPosition = toPosition - edgePortion;
 					else fromPosition = toPosition + edgePortion;
 

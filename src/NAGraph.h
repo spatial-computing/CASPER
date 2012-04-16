@@ -15,10 +15,7 @@ class NAEdge;
 #define EVC_TRAFFIC_MODEL_FLAT		0x0
 #define EVC_TRAFFIC_MODEL_STEP		0x1
 #define EVC_TRAFFIC_MODEL_LINEAR	0x2
-#define EVC_TRAFFIC_MODEL_EXP		0x3
-#define EVC_TRAFFIC_MODEL_SQRT		0x4
-
-#define ln2 0.3010299956639811
+#define EVC_TRAFFIC_MODEL_CASPER	0x3
 
 // The NAVertex class is what sits on top of the INetworkJunction interface and holds extra
 // information about each junction/vertex which are helpful for CASPER algorithm.
@@ -166,9 +163,10 @@ private:
 	double initDelayCostPerPop;
 	EVC_TRAFFIC_MODEL trafficModel;
 	double GetTrafficSpeedRatio(double newPop) const;
+	double CASPERRatio;
 
 public:
-	double originalCost;
+	double OriginalCost;
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
 	INetworkEdgePtr NetEdge;
