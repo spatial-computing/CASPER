@@ -308,7 +308,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;		
+							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipEdge));
 							myVertex->h = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
@@ -693,7 +693,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INetworkSourcePtr ipNetworkSource;
 	BSTR sourceName;
 	
-	// load the mercator projection
+	// load the mercator projection and analysis projection
+	ISpatialReferencePtr ipNAContextSR;
+	if (FAILED(hr = pNAContext->get_SpatialReference(&ipNAContextSR))) return hr;
+
 	IProjectedCoordinateSystemPtr ipNAContextPC;
 	ISpatialReferenceFactoryPtr pSpatRefFact = ISpatialReferenceFactoryPtr(CLSID_SpatialReferenceEnvironment);
 	if (FAILED(hr = pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC))) return hr;
@@ -780,22 +783,20 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					// get all the points from this polyline and store it in the point stack
 					_ASSERT(*type == esriGeometryPolyline);
 
-					// project to mercator
-					if (FAILED(hr = ipGeometry->Project(ipSpatialRef))) return hr;
-
 					if (*type == esriGeometryPolyline)
 					{
 						pathSegment->pline = (IPolylinePtr)ipGeometry;
 						pcollect = pathSegment->pline;
-						pcollect->get_PointCount(&pointCount);
+						if (FAILED(hr = pcollect->get_PointCount(&pointCount))) return hr;
 
 						// if this is not the last path segment then the last point is redundent.
 						pointCount--;						
 						for (i = 0; i < pointCount; i++)
 						{
-							pcollect->get_Point(i, &p);
-							pline->AddPoint(p);
+							if (FAILED(hr = pcollect->get_Point(i, &p))) return hr;
+							if (FAILED(hr = pline->AddPoint(p))) return hr;
 						}
+						// if (FAILED(hr = pathSegment->pline->Project(ipSpatialRef))) return hr;
 					}			
 					// Final cost calculations
 					path->EvacuationCost += pathSegment->Edge->GetCurrentCost() * pathSegment->EdgePortion;
@@ -929,9 +930,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				ipGeometry = ipSubCurve;
 			}
 
-			// project to mercator
-			if (FAILED(hr = ipGeometry->Project(ipSpatialRef))) return hr;
-
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, CComVariant(edge->EID)))) return hr;
@@ -987,9 +985,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				if (FAILED(hr = ipCurve->GetSubcurve(fromPosition, toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
 				ipGeometry = ipSubCurve;
 			}
-
-			// project to mercator
-			if (FAILED(hr = ipGeometry->Project(ipSpatialRef))) return hr;
 
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
@@ -1048,6 +1043,18 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		costPerDay = GetUnitPerDay(unit, flockProfile.UsualSpeed);
 		costPerSec = costPerDay / (3600.0 * 24.0);
 
+		// project to mercator for the simulator
+		for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+		{
+			path = *pit;
+			pointCount = -1;
+			for (psit = path->begin(); psit != path->end(); psit++)
+			{
+				pathSegment = *psit;
+				if (FAILED(hr = pathSegment->pline->Project(ipNAContextPC))) return hr;
+			}
+		}
+
 		// init
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
@@ -1058,6 +1065,18 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
 		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, predictedCost))) return hr;
 		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
+
+		// project back to analysis coordinate system
+		for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+		{
+			path = *pit;
+			pointCount = -1;
+			for (psit = path->begin(); psit != path->end(); psit++)
+			{
+				pathSegment = *psit;
+				if (FAILED(hr = pathSegment->pline->Project(ipNAContextSR))) return hr;
+			}
+		}
 
 		// start writing into the featureclass
 		if (ipStepProgressor)
@@ -1099,6 +1118,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			wcsftime(thisTimeBuf, 25, L"%Y/%m/%d %H:%M:%S", &local);
 
 			// Store the feature values on the feature buffer
+			if (FAILED(hr = (*it)->MyLocation->Project(ipNAContextSR))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant((*it)->ID)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, CComVariant((*it)->GroupName)))) return hr;
