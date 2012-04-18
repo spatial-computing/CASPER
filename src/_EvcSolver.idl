@@ -92,7 +92,6 @@ library CustomSolver
 	importlib("stdole2.tlb");
 	importlib("olepro32.dll");
 
-	importlib("\Program Files (x86)\ArcGIS\Desktop10.0\com\esrinetworkanalyst.olb");
 	[
 		version(1.0),
 		uuid(7b081f99-b691-46b1-b756-aa72868c8683),
@@ -105,16 +104,6 @@ library CustomSolver
 
 	[
 		version(1.0),
-		uuid(cd267b89-0144-4e7c-929e-bcd5d82f4c4d),
-		helpstring("EvcSolverPropPage Class")
-	] 
-#line 29 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolverproppage.h"
-	coclass EvcSolverPropPage {
-		[default]	interface IUnknown;
-	};
-
-	[
-		version(1.0),
 		uuid(6e127557-b452-444d-ac96-3a96a40c4071),
 		helpstring("EvcSolverSymbolizer Class")
 	] 
@@ -123,5 +112,16 @@ library CustomSolver
 		[default]	interface INASymbolizer2;
 	};
 
+	[
+		version(1.0),
+		uuid(cd267b89-0144-4e7c-929e-bcd5d82f4c4d),
+		helpstring("EvcSolverPropPage Class")
+	] 
+#line 29 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolverproppage.h"
+	coclass EvcSolverPropPage {
+		[default]	interface IUnknown;
+	};
+
+	importlib("\Program Files (x86)\ArcGIS\Desktop10.0\com\esrinetworkanalyst.olb");
 }
 
