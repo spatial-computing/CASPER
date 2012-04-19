@@ -90,7 +90,7 @@ namespace OpenSteer {
         Vec3 steerForWander (double dt);
 
         // Seek behavior
-        Vec3 steerForSeek (const Vec3& target);
+        Vec3 steerForSeek (const Vec3& target, const double predictionTime);
 
         // Flee behavior
         Vec3 steerForFlee (const Vec3& target);
@@ -338,9 +338,9 @@ steerForWander (double dt)
 template<class Super>
 OpenSteer::Vec3
 OpenSteer::SteerLibraryMixin<Super>::
-steerForSeek (const Vec3& target)
+steerForSeek (const Vec3& target, const double predictionTime)
 {
-    const Vec3 desiredVelocity = target - position();
+	const Vec3 desiredVelocity = (target - position()) / predictionTime;
     return desiredVelocity - velocity();
 }
 
@@ -418,7 +418,7 @@ steerToStayOnPath (const double predictionTime, Pathway& path)
         // steer towards it.  Use onPath projection of futurePosition
         // as seek target
         annotatePathFollowing (futurePosition, onPath, onPath, outside);
-        return steerForSeek (onPath);
+        return steerForSeek (onPath, predictionTime);
     }
 }
 
@@ -470,7 +470,7 @@ steerToFollowPath (const int direction,
 		Vec3 target = position() + (speed() * newDir);
 
         // return steering to seek target on path
-        return 0.5 * steerForSeek (target);
+        return 0.5 * steerForSeek (target, predictionTime);
     }
     else
     {
@@ -483,7 +483,7 @@ steerToFollowPath (const int direction,
         annotatePathFollowing (futurePosition, onPath, target, outside);
 
         // return steering to seek target on path
-        return steerForSeek (target);
+        return steerForSeek (target, predictionTime);
     }
 }
 
@@ -1063,7 +1063,7 @@ steerForPursuit (const AbstractVehicle& quarry,
                     target,
                     gaudyPursuitAnnotation ? color : gGray40);
 
-    return steerForSeek (target);
+	return steerForSeek (target, maxPredictionTime);
 }
 
 // ----------------------------------------------------------------------------
