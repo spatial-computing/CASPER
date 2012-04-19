@@ -185,9 +185,8 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 	}
 	else
 	{
-		//if (FAILED(hr = ((IProximityOperatorPtr)(nextVertexPoint))->ReturnDistance(MyLocation, &dist))) return hr;
-		dist = PointToLineDistance(myVehicle->position(), nextVertexLine, true);
-		if (dist <= myProfile->IntersectionRadius)
+		dist = PointToLineDistance(myVehicle->position(), nextVertexLine, true, true);
+		if (dist >= -myProfile->IntersectionRadius && dist <= myVehicle->radius())
 		{
 			if (BindVertex == -1l)
 			{
@@ -239,23 +238,23 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 	OpenSteer::Vec3 steer = OpenSteer::Vec3::zero, pos = OpenSteer::Vec3::zero;
 	double dist = 0.0;
 	myVehicle->setMaxForce(myProfile->MaxForce);
+	dist = OpenSteer::Vec3::distance(myVehicle->position(), finishLine[1]);
 
 	if (MyStatus == FLOCK_OBJ_STAT_END)
 	{
 		// check distance to safe zone
-		dist = OpenSteer::Vec3::distance(myVehicle->position(), finishLine[1]);
 		if (FAILED(hr = buildNeighborList(objects))) return hr;
 
 		// generate a steer based on current situation
 		myVehicle->setMaxSpeed(speedLimit / 2.0);
 		steer += myVehicle->steerToAvoidCloseNeighbors (myProfile->CloseNeighborDistance, myNeighborVehicles);
 		if (dist < myProfile->ZoneRadius) steer += myVehicle->steerForWander(dt);
-		else steer += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1]);
+		else steer += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1], dt);
 		myVehicle->applySteeringForce(steer / dt, dt);	
 	}
 	else
 	{
-		dist = PointToLineDistance(myVehicle->position(), finishLine, true);
+		// dist = PointToLineDistance(myVehicle->position(), finishLine, true, false);
 		if (dist < myProfile->ZoneRadius) MyStatus = FLOCK_OBJ_STAT_END;		
 		MyTime += dt;
 		dt = min(dt, MyTime);
@@ -383,15 +382,18 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	collisions->clear();
 
 	for(evcItr = evcList->begin(); evcItr != evcList->end(); evcItr++)
-	{		
-		for (pathItr = (*evcItr)->paths->begin(); pathItr != (*evcItr)->paths->end(); pathItr++)
+	{
+		if (!((*evcItr)->paths->empty()))
 		{
-			maxPathLen = max(maxPathLen, PathLength(*pathItr));
-			size = (int)(ceil((*pathItr)->RoutedPop));
-			for (i = 0; i < size; i++)
+			for (pathItr = (*evcItr)->paths->begin(); pathItr != (*evcItr)->paths->end(); pathItr++)
 			{
-				objects->push_back(new FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name,
-								   ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects));
+				maxPathLen = max(maxPathLen, PathLength(*pathItr));
+				size = (int)(ceil((*pathItr)->RoutedPop));
+				for (i = 0; i < size; i++)
+				{
+					objects->push_back(new FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name,
+									   ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects));
+				}
 			}
 		}
 	}
@@ -488,13 +490,21 @@ double FlockingEnviroment::PathLength(EvcPathPtr path)
 	return len;
 }
 
-double PointToLineDistance(OpenSteer::Vec3 point, OpenSteer::Vec3 line[2], bool shouldRotateLine)
+double PointToLineDistance(OpenSteer::Vec3 point, OpenSteer::Vec3 line[2], bool shouldRotateLine, bool DirAsSign)
 {
 	double dist = 0.0;
-	OpenSteer::Vec3 lineVector = line[1] - line[0];
+	OpenSteer::Vec3 distV, lineVector = line[1] - line[0];
 	if (shouldRotateLine) lineVector.cross(lineVector, OpenSteer::Vec3(0.0, 0.0, 1.0));
 	lineVector = lineVector.normalize();
 	dist = lineVector.dot(line[1] - point);
-	dist = OpenSteer::Vec3::distance(point, line[1] - dist * lineVector);
-	return abs(dist);
+	distV = (line[1] - dist * lineVector) - point;
+	dist = distV.length();	
+
+	if (DirAsSign && dist > 0.0)
+	{
+		distV.cross(distV, lineVector);
+		if (distV.z <= 0.0) dist = -dist;
+	}
+
+	return dist;
 }

@@ -19,7 +19,7 @@
 #define DoubleRangedRand(range_min, range_max)	((double)(rand()) * ((range_max) - (range_min)) / (RAND_MAX + 1.0) + (range_min))
 
 // utilk functions
-double PointToLineDistance(OpenSteer::Vec3 point, OpenSteer::Vec3 line[2], bool shouldRotateLine);
+double PointToLineDistance(OpenSteer::Vec3 point, OpenSteer::Vec3 line[2], bool shouldRotateLine, bool DirAsSign);
 
 class FlockProfile
 {
@@ -37,11 +37,11 @@ public:
 
 	FlockProfile(FLOCK_PROFILE profile)
 	{
-		IntersectionRadius = 20.0;
 		MaxForce = 150000.0;
 		switch (profile)
 		{
 		case FLOCK_PROFILE_CAR:
+			IntersectionRadius = 20.0;
 			Mass = 1.0;
 			ZoneRadius = 75.0;
 			Radius = 1.0;
@@ -50,6 +50,7 @@ public:
 			UsualSpeed = 10.0;
 			break;
 		case FLOCK_PROFILE_PERSON:
+			IntersectionRadius = 10.0;
 			Mass = 0.1;
 			ZoneRadius = 50.0;
 			Radius = 0.2;
@@ -58,6 +59,7 @@ public:
 			UsualSpeed = 1.0;
 			break;
 		case FLOCK_PROFILE_BIKE:
+			IntersectionRadius = 20.0;
 			Mass = 0.2;
 			ZoneRadius = 50.0;
 			Radius = 0.5;

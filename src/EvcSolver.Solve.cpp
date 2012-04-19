@@ -1044,14 +1044,21 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		costPerSec = costPerDay / (3600.0 * 24.0);
 
 		// project to mercator for the simulator
-		for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
 		{
-			path = *pit;
-			pointCount = -1;
-			for (psit = path->begin(); psit != path->end(); psit++)
+			// get all points from the stack and make one polyline from them. this will be the path.
+			currentEvacuee = *eit;
+			if (!currentEvacuee->paths->empty())
 			{
-				pathSegment = *psit;
-				if (FAILED(hr = pathSegment->pline->Project(ipNAContextPC))) return hr;
+				for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+				{
+					path = *pit;
+					for (psit = path->begin(); psit != path->end(); psit++)
+					{
+						pathSegment = *psit;
+						if (FAILED(hr = pathSegment->pline->Project(ipNAContextPC))) return hr;
+					}
+				}
 			}
 		}
 
@@ -1067,14 +1074,21 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
 
 		// project back to analysis coordinate system
-		for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
 		{
-			path = *pit;
-			pointCount = -1;
-			for (psit = path->begin(); psit != path->end(); psit++)
+			// get all points from the stack and make one polyline from them. this will be the path.
+			currentEvacuee = *eit;
+			if (!currentEvacuee->paths->empty())
 			{
-				pathSegment = *psit;
-				if (FAILED(hr = pathSegment->pline->Project(ipNAContextSR))) return hr;
+				for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+				{
+					path = *pit;
+					for (psit = path->begin(); psit != path->end(); psit++)
+					{
+						pathSegment = *psit;
+					if (FAILED(hr = pathSegment->pline->Project(ipNAContextSR))) return hr;
+					}
+				}
 			}
 		}
 
