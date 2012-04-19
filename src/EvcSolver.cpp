@@ -1395,6 +1395,124 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefinitions->Add(CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipClassDef);
 
 	//////////////////////////////////////////////////////////
+	// Flocks class definition 
+
+	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
+	ipClassDefEdit = ipClassDef;
+	ipIUID.CreateInstance(CLSID_UID);
+	if (FAILED(hr = ipIUID->put_Value(CComVariant(L"esriGeoDatabase.Feature")))) return hr;
+	ipClassDefEdit->putref_ClassCLSID(ipIUID);
+
+	ipFields.CreateInstance(CLSID_Fields);
+	ipFieldsEdit = ipFields;
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_OID));
+	ipFieldEdit->put_Type(esriFieldTypeOID);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	{
+		IGeometryDefEditPtr  ipGeoDef(CLSID_GeometryDef);
+
+		ipGeoDef->put_GeometryType(esriGeometryPoint);
+		ipGeoDef->put_HasM(VARIANT_FALSE);
+		ipGeoDef->put_HasZ(VARIANT_FALSE);
+		ipGeoDef->putref_SpatialReference(pSpatialRef);
+		ipFieldEdit->put_Name(CComBSTR(CS_FIELD_SHAPE));
+		ipFieldEdit->put_IsNullable(VARIANT_TRUE);
+		ipFieldEdit->put_Type(esriFieldTypeGeometry);
+		ipFieldEdit->putref_GeometryDef(ipGeoDef);
+	}
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_NAME));
+	ipFieldEdit->put_Type(esriFieldTypeString);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_ID));
+	ipFieldEdit->put_Type(esriFieldTypeInteger);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_COST));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_VelocityX));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_VelocityY));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_SPEED));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_TRAVELED));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_TIME));
+	ipFieldEdit->put_Type(esriFieldTypeString);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_PTIME));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_STATUS));
+	ipFieldEdit->put_Type(esriFieldTypeString);
+	ipFieldEdit->put_Length(1);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipClassDefEdit->putref_Fields(ipFields);
+
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OID), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_ID), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_NAME), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_COST), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_VelocityX), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_VelocityY), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SPEED), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TRAVELED), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TIME), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_PTIME), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_STATUS), esriNAFieldTypeOutput);
+
+	ipClassDefEdit->put_IsInput(VARIANT_FALSE);
+	ipClassDefEdit->put_IsOutput(VARIANT_TRUE);
+
+	ipClassDefEdit->put_Name(CComBSTR(CS_FLOCKS_NAME));
+#if defined(_FLOCK)
+	ipClassDefinitions->Add(CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipClassDef);
+#endif
+
+	//////////////////////////////////////////////////////////
 	// Routes class definition 
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -1560,124 +1678,6 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipClassDefEdit->put_Name(CComBSTR(CS_EDGES_NAME));
 	ipClassDefinitions->Add(CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipClassDef);
-
-	//////////////////////////////////////////////////////////
-	// Flocks class definition 
-
-	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
-	ipClassDefEdit = ipClassDef;
-	ipIUID.CreateInstance(CLSID_UID);
-	if (FAILED(hr = ipIUID->put_Value(CComVariant(L"esriGeoDatabase.Feature")))) return hr;
-	ipClassDefEdit->putref_ClassCLSID(ipIUID);
-
-	ipFields.CreateInstance(CLSID_Fields);
-	ipFieldsEdit = ipFields;
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_OID));
-	ipFieldEdit->put_Type(esriFieldTypeOID);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	{
-		IGeometryDefEditPtr  ipGeoDef(CLSID_GeometryDef);
-
-		ipGeoDef->put_GeometryType(esriGeometryPoint);
-		ipGeoDef->put_HasM(VARIANT_FALSE);
-		ipGeoDef->put_HasZ(VARIANT_FALSE);
-		ipGeoDef->putref_SpatialReference(pSpatialRef);
-		ipFieldEdit->put_Name(CComBSTR(CS_FIELD_SHAPE));
-		ipFieldEdit->put_IsNullable(VARIANT_TRUE);
-		ipFieldEdit->put_Type(esriFieldTypeGeometry);
-		ipFieldEdit->putref_GeometryDef(ipGeoDef);
-	}
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_NAME));
-	ipFieldEdit->put_Type(esriFieldTypeString);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_ID));
-	ipFieldEdit->put_Type(esriFieldTypeInteger);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_COST));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_VelocityX));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_VelocityY));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_SPEED));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_TRAVELED));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_TIME));
-	ipFieldEdit->put_Type(esriFieldTypeString);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_PTIME));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_STATUS));
-	ipFieldEdit->put_Type(esriFieldTypeString);
-	ipFieldEdit->put_Length(1);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipClassDefEdit->putref_Fields(ipFields);
-
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OID), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_ID), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_NAME), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_COST), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_VelocityX), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_VelocityY), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SPEED), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TRAVELED), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TIME), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_PTIME), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_STATUS), esriNAFieldTypeOutput);
-
-	ipClassDefEdit->put_IsInput(VARIANT_FALSE);
-	ipClassDefEdit->put_IsOutput(VARIANT_TRUE);
-
-	ipClassDefEdit->put_Name(CComBSTR(CS_FLOCKS_NAME));
-#if defined(_FLOCK)
-	ipClassDefinitions->Add(CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipClassDef);
-#endif
 
 	// Return the class definitions once we have finished
 	ipClassDefinitions->AddRef();
