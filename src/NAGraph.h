@@ -291,6 +291,7 @@ public:
 		if (saturationPerCap > criticalDensPerCap) saturationPerCap -= criticalDensPerCap;
 		sideCache = new std::vector<NAEdgePtr>();
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
+		trafficModel = TrafficModel;
 
 		resTableAlong = new NAResTable();
 		if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;

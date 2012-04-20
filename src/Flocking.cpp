@@ -193,6 +193,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT || (*it)->MyStatus == FLOCK_OBJ_STAT_END) continue;
 
 			// check if they share an edge or if they are both crossing an intersection
+			/*
 			if (twoWayRoadsShareCap)
 			{
 				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID) && (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
@@ -202,7 +203,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
 					&& (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
 			}
-
+			*/
 			myNeighborVehicles.push_back((*it)->myVehicle);
 		}
 	}
