@@ -97,7 +97,7 @@ public:
 
 	FlockingLocation(const FlockingLocation &copy)
 	{
-		GroupName = copy.GroupName;
+		GroupName = VARIANT(copy.GroupName);
 		MyTime = copy.MyTime;
 		GTime = copy.GTime;
 		Traveled = copy.Traveled;

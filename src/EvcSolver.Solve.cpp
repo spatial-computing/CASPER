@@ -1135,7 +1135,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = (*it)->MyLocation->Project(ipNAContextSR))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant((*it)->ID)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, CComVariant((*it)->GroupName)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, (*it)->GroupName))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, CComVariant((*it)->MyTime)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant((*it)->Traveled)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->Velocity.x)))) return hr;

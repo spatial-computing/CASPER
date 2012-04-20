@@ -401,7 +401,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	// just to make sure we do our best to finish the simulation with no moving object event after the predicted cost
 	predictedCost *= 5.0;
 
-	for (double time = 0.0; movingObjectLeft && time <= predictedCost; time += simulationInterval)
+	for (double thetime = simulationInterval; movingObjectLeft && thetime <= predictedCost; thetime += simulationInterval)
 	{
 		movingObjectLeft = false;
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
@@ -412,7 +412,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
 			}
 
-			(*it)->GTime = time;
+			(*it)->GTime = thetime;
 			oldStat = (*it)->MyStatus;
 			if (FAILED(hr = (*it)->Move(objects, simulationInterval))) return hr;
 			newStat = (*it)->MyStatus;
@@ -423,7 +423,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			{
 				snapshotTempList->push_back(*it);
 			}
-			else if (newStat != FLOCK_OBJ_STAT_INIT && nextSnapshot <= time)
+			else if (newStat != FLOCK_OBJ_STAT_INIT && nextSnapshot <= thetime)
 			{
 				snapshotTempList->push_back(*it);
 				snapshotTaken = true;
@@ -433,7 +433,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 		}
 
 		// see if any collisions happended and update status if nessecery
-		if (FlockingObject::DetectCollision(objects)) collisions->push_back(time);
+		if (FlockingObject::DetectCollision(objects)) collisions->push_back(thetime);
 
 		// flush the snapshot objects into history
 		for (FlockingObjectItr it = snapshotTempList->begin(); it != snapshotTempList->end(); it++)
@@ -444,7 +444,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 
 		if (snapshotTaken)
 		{
-			nextSnapshot = time + snapshotInterval;
+			nextSnapshot = thetime + snapshotInterval;
 			snapshotTaken = false;
 		}
 		if (ipStepProgressor) { if (FAILED(hr = ipStepProgressor->Step())) return hr; }
