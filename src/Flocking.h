@@ -118,8 +118,7 @@ private:
 	// properties
 
 	INetworkJunctionPtr			nextVertex;
-	OpenSteer::Vec3				nextVertexLine[2];
-	OpenSteer::Vec3				finishLine[2];
+	OpenSteer::Vec3				finishPoint;
 	OpenSteer::SimpleVehicle	* myVehicle;
 	OpenSteer::PolylinePathway	myVehiclePath;
 	OpenSteer::AVGroup			myNeighborVehicles;

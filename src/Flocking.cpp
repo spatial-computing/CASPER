@@ -65,10 +65,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	pcollect->get_PointCount(&pointCount);
 	pcollect->get_Point(pointCount - 1, &point);
 	point->QueryCoords(&x, &y);
-	finishLine[1].set(x, y, 0.0);
-	pcollect->get_Point(pointCount - 2, &point);
-	point->QueryCoords(&x, &y);
-	finishLine[0].set(x, y, 0.0);
+	finishPoint.set(x, y, 0.0);
 }
 
 void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors, double x1, double y1, double & dx, double & dy)
@@ -148,19 +145,14 @@ HRESULT FlockingObject::loadNewEdge(void)
 		// push self location first. this will help the steer library since we're swapping the edge during process.
 		// we'll use the current location shadow on road segment as the start point.
 		OpenSteer::Vec3 o12 = (libpoints[2] - libpoints[1]).normalize();
-		libpoints[0] = libpoints[1] - (abs(o12.dot(libpoints[1] - myVehicle->position())) * o12);
+		libpoints[0] = libpoints[1] - (max(1.0, o12.dot(libpoints[1] - myVehicle->position())) * o12);
+		_ASSERT(libpoints[0] != libpoints[1]);
 
 		// speed limit update
 		if (FAILED(hr = (*pathSegIt)->pline->get_Length(&speedLimit))) return hr;
 		speedLimit = speedLimit / (*pathSegIt)->Edge->OriginalCost;
 
-		if (nextVertexLine[0] == nextVertexLine[1] && nextVertexLine[1] == OpenSteer::Vec3::zero)
-		{
-			// update next vertex based on the new edge and direction
-			if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;
-			nextVertexLine[0] = libpoints[pointCount - 2];
-			nextVertexLine[1] = libpoints[pointCount - 1];
-		}
+		if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;
 
 		// load new edge points into the steer library
 		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius * 1.2, false);
@@ -185,25 +177,11 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 	}
 	else
 	{
-		dist = PointToLineDistance(myVehicle->position(), nextVertexLine, true, true);
-		if (dist >= -myProfile->IntersectionRadius && dist <= myVehicle->radius())
+		dist = OpenSteer::Vec3::distance(myVehicle->position(), myVehiclePath.points[myVehiclePath.pointCount - 1]);
+		if (dist < myProfile->IntersectionRadius)
 		{
-			if (BindVertex == -1l)
-			{
-				newEdgeRequestFlag = true;
-				if (FAILED(hr = nextVertex->get_EID(&BindVertex))) return hr;
-			}
-		}
-		else
-		{
-			if (BindVertex != -1l)
-			{
-				// update next vertex based on the new edge and direction
-				if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;
-				nextVertexLine[0] = myVehiclePath.points[myVehiclePath.pointCount - 2];
-				nextVertexLine[1] = myVehiclePath.points[myVehiclePath.pointCount - 1];				
-				BindVertex = -1l;
-			}
+			newEdgeRequestFlag = true;
+			if (FAILED(hr = nextVertex->get_EID(&BindVertex))) return hr;
 		}
 
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
@@ -238,7 +216,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 	OpenSteer::Vec3 steer = OpenSteer::Vec3::zero, pos = OpenSteer::Vec3::zero;
 	double dist = 0.0;
 	myVehicle->setMaxForce(myProfile->MaxForce);
-	dist = OpenSteer::Vec3::distance(myVehicle->position(), finishLine[1]);
+	dist = OpenSteer::Vec3::distance(myVehicle->position(), finishPoint);
 
 	if (MyStatus == FLOCK_OBJ_STAT_END)
 	{
@@ -248,13 +226,16 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 		// generate a steer based on current situation
 		myVehicle->setMaxSpeed(speedLimit / 2.0);
 		steer += myVehicle->steerToAvoidCloseNeighbors (myProfile->CloseNeighborDistance, myNeighborVehicles);
-		if (dist < myProfile->ZoneRadius) steer += myVehicle->steerForWander(dt);
+		if (dist < myProfile->ZoneRadius) steer += myVehicle->steerForWander(dt, 20);
 		else steer += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1], dt);
-		myVehicle->applySteeringForce(steer / dt, dt);	
+			
+		// backup the position in case we needed to back off from a collision
+		pos = myVehicle->position();
+		myVehicle->applySteeringForce(steer / dt, dt);
+		if (DetectMyCollision()) myVehicle->setPosition(pos);
 	}
 	else
 	{
-		// dist = PointToLineDistance(myVehicle->position(), finishLine, true, false);
 		if (dist < myProfile->ZoneRadius) MyStatus = FLOCK_OBJ_STAT_END;		
 		MyTime += dt;
 		dt = min(dt, MyTime);
@@ -266,10 +247,10 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			if (MyStatus == FLOCK_OBJ_STAT_END) return S_OK;
 			if (FAILED(hr = buildNeighborList(objects))) return hr;
 
-			// generate a steer based on current situation
 			myVehicle->setMaxSpeed(speedLimit);
 			myVehicle->setSpeed(speedLimit);
 
+			// generate a steer based on current situation
 			steer  = myVehicle->steerToAvoidCloseNeighbors(myProfile->CloseNeighborDistance, myNeighborVehicles);
 			steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);
 			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
