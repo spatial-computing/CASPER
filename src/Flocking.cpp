@@ -38,7 +38,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	libpoints = new OpenSteer::Vec3[0];
 	myVehicle = new OpenSteer::SimpleVehicle();
 	myVehicle->reset();
-	myVehicle->setRadius(myProfile->Radius * 3.0);
+	myVehicle->setRadius(myProfile->Radius * 4.0);
 	
 	myVehicle->setForward(Velocity.normalize());
 	myVehicle->setSpeed(Velocity.length());
