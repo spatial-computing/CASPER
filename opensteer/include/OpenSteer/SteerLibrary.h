@@ -87,7 +87,7 @@ namespace OpenSteer {
         // Wander behavior
         double WanderSide;
         double WanderUp;
-        Vec3 steerForWander (double dt);
+        Vec3 steerForWander (double dt, double accel);
 
         // Seek behavior
         Vec3 steerForSeek (const Vec3& target, const double predictionTime);
@@ -319,10 +319,10 @@ namespace OpenSteer {
 template<class Super>
 OpenSteer::Vec3
 OpenSteer::SteerLibraryMixin<Super>::
-steerForWander (double dt)
+steerForWander (double dt, double accel)
 {
     // random walk WanderSide and WanderUp between -1 and +1
-    const double speed = 12 * dt; // maybe this (12) should be an argument?
+    const double speed = accel * dt; // maybe this (12) should be an argument?
     WanderSide = scalarRandomWalk (WanderSide, speed, -1, +1);
     WanderUp   = scalarRandomWalk (WanderUp,   speed, -1, +1);
 
@@ -466,8 +466,8 @@ steerToFollowPath (const int direction,
 		// return Vec3::zero;
 		// added by Kaveh: to make movement parallel to the path
 
-		Vec3 newDir = tangent / tangent.length();
-		Vec3 target = position() + (speed() * newDir);
+		Vec3 newDir = tangent.normalize();
+		Vec3 target = position() + (speed() * predictionTime * newDir);
 
         // return steering to seek target on path
         return 0.5 * steerForSeek (target, predictionTime);
