@@ -16,9 +16,8 @@
 #define FLOCK_PROFILE_PERSON	0x1
 #define FLOCK_PROFILE_BIKE		0x2
 
+// utility functions
 #define DoubleRangedRand(range_min, range_max)	((double)(rand()) * ((range_max) - (range_min)) / (RAND_MAX + 1.0) + (range_min))
-
-// utilk functions
 double PointToLineDistance(OpenSteer::Vec3 point, OpenSteer::Vec3 line[2], bool shouldRotateLine, bool DirAsSign);
 
 class FlockProfile

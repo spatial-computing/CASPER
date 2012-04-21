@@ -73,7 +73,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	myNeighborVehicles.clear();
 	bool possibleCollision = true;
 	IPointPtr p = 0;
-	double x2, y2, step = myVehicle->radius() * 2.0;
+	double x2, y2, step = myVehicle->radius() * 4.0;
 	((IPointCollectionPtr)(myPath->front()->pline))->get_Point(1, &p);
 	p->QueryCoords(&x2, &y2);
 
@@ -93,7 +93,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	for (double radius = 0.0; possibleCollision; radius += step)
 	{	
 		dx = radius + DoubleRangedRand(0.0, step);
-		if (rand() < RAND_MAX / 2) dx *= -1.0;
+		// if (rand() < RAND_MAX / 2) dx *= -1.0;
 		dy = DoubleRangedRand(0.0, max(step, radius));
 		myVehicle->setPosition(loc + dx * dir - dy * move);
 		possibleCollision = DetectMyCollision();
@@ -193,7 +193,6 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT || (*it)->MyStatus == FLOCK_OBJ_STAT_END) continue;
 
 			// check if they share an edge or if they are both crossing an intersection
-			/*
 			if (twoWayRoadsShareCap)
 			{
 				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID) && (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
@@ -203,7 +202,6 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
 					&& (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
 			}
-			*/
 			myNeighborVehicles.push_back((*it)->myVehicle);
 		}
 	}
@@ -237,7 +235,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 	}
 	else
 	{
-		if (dist < myProfile->ZoneRadius) MyStatus = FLOCK_OBJ_STAT_END;		
+		if (dist < myProfile->ZoneRadius) MyStatus = FLOCK_OBJ_STAT_END;
 		MyTime += dt;
 		dt = min(dt, MyTime);
 
@@ -252,9 +250,11 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			myVehicle->setSpeed(speedLimit);
 
 			// generate a steer based on current situation
-			steer  = myVehicle->steerToAvoidCloseNeighbors(myProfile->CloseNeighborDistance, myNeighborVehicles);
+			// steer  = myVehicle->steerToAvoidCloseNeighbors(myProfile->CloseNeighborDistance, myNeighborVehicles);
 			steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);
-			steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
+			if (MyStatus != FLOCK_OBJ_STAT_STOP)
+				steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
+			steer += myVehicle->steerToAvoidNeighbors(dt, myNeighborVehicles);
 			
 			// backup the position in case we needed to back off from a collision
 			pos = myVehicle->position();
@@ -262,6 +262,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			if (DetectMyCollision())
 			{
 				myVehicle->setPosition(pos);
+				myVehicle->setSpeed(0.0);
 				MyStatus = FLOCK_OBJ_STAT_STOP;
 			}
 			else
@@ -290,7 +291,7 @@ bool FlockingObject::DetectMyCollision()
 	{
 		n = *git;
 		offset = myVehicle->position() - n->position();
-		if (offset.length() < myVehicle->radius() + n->radius())
+		if (offset.length() <= myVehicle->radius() + n->radius())
 		{
 			collided = true;
 			break;
