@@ -582,7 +582,7 @@ steerToAvoidObstacles (const double minTimeToCollision,
 // ----------------------------------------------------------------------------
 // Unaligned collision avoidance behavior: avoid colliding with other nearby
 // vehicles moving in unconstrained directions.  Determine which (if any)
-// other other vehicle we would collide with first, then steers to avoid the
+// other vehicle we would collide with first, then steers to avoid the
 // site of that potential collision.  Returns a steering force vector, which
 // is zero length if there is no impending collision.
 
@@ -862,7 +862,7 @@ steerForSeparation (const double maxDistance,
             // to normalize, divided another time to get 1/d falloff)
             const Vec3 offset = (**other).position() - position();
 			// _ASSERT(offset.length() > 0);
-			if (offset.length() > 0)
+			if (offset.length() > 0.0)
 			{
 				const double distanceSquared = offset.dot(offset);
 				steering += (offset / -distanceSquared);
