@@ -831,25 +831,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// fluch the insert buffer
 	ipFeatureCursor->Flush();
 
-	// init and execute driving direction agent from the cost attribute
-	/* TODO driving direction
-	INAResult2Ptr result(CLSID_NATraversalResult);
-	INAContextHelperPtr ipContextHelper(pNAContext);
-	INAContextEditPtr ipNAContextEdit(pNAContext);
-	if (FAILED(hr = result->Create(L"Evacuation Routes", ipContextHelper, VARIANT_FALSE))) return hr;
-	if (FAILED(hr = ipNAContextEdit->putref_Result(result))) return hr;
-
-	INetworkAttributePtr costAttrib;
-	BSTR AttribName;
-
-	if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
-	if (FAILED(hr = costAttrib->get_Name(&AttribName))) return hr;
-	pStreetAgent->put_DisplayTime(VARIANT_TRUE);
-	pStreetAgent->put_LengthUnits(esriNAUMiles);
-	pStreetAgent->put_TimeAttributeName(AttribName);
-	if (FAILED(hr = pStreetAgent->Execute(0, pTrackCancel))) return hr;
-	*/
-
 	////////////////////////////////////////////////////////////////////////////////
 	///// Exporting EdgeStat data to output featureClass
 
@@ -937,7 +918,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, CComVariant(sourceOID)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCost(0.0, solvermethod))))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCurrentCost())))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->OriginalCost)))) return hr;
 
 			// Insert the feature buffer in the insert cursor
@@ -993,7 +974,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, CComVariant(sourceOID)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCost(0.0, solvermethod))))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCurrentCost())))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->OriginalCost)))) return hr;
 
 			// Insert the feature buffer in the insert cursor

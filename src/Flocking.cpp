@@ -193,6 +193,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT || (*it)->MyStatus == FLOCK_OBJ_STAT_END) continue;
 
 			// check if they share an edge or if they are both crossing an intersection
+			/*
 			if (twoWayRoadsShareCap)
 			{
 				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID) && (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
@@ -202,6 +203,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
 					&& (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
 			}
+			*/
 			myNeighborVehicles.push_back((*it)->myVehicle);
 		}
 	}
@@ -250,11 +252,15 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			myVehicle->setSpeed(speedLimit);
 
 			// generate a steer based on current situation
+			// this would be replaced by steerToAvoidNeighbors
 			// steer  = myVehicle->steerToAvoidCloseNeighbors(myProfile->CloseNeighborDistance, myNeighborVehicles);
+
+			// sperates you form boids in front
 			steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);
-			if (MyStatus != FLOCK_OBJ_STAT_STOP)
-				steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 			steer += myVehicle->steerToAvoidNeighbors(dt, myNeighborVehicles);
+
+			// to stay inside the path. if last round we had to stop to avoid collision, this round we only focus on avoid neighbors.
+			if (MyStatus != FLOCK_OBJ_STAT_STOP) steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 			
 			// backup the position in case we needed to back off from a collision
 			pos = myVehicle->position();
