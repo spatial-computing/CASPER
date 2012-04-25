@@ -127,7 +127,7 @@ class EdgeReservations
 public:	
 	std::vector<EdgeReservation> * List;
 	double ReservedPop;
-	double SaturationDens;
+	double SaturationDensPerCap;
 	double CriticalDens;
 	double Capacity;
 	EdgeReservations(double capacity, double CriticalDensPerCap, double SaturationDensPerCap);
@@ -162,7 +162,7 @@ private:
 	EdgeReservations * reservations;
 	double initDelayCostPerPop;
 	EVC_TRAFFIC_MODEL trafficModel;
-	double GetTrafficSpeedRatio(double newPop) const;
+	double GetTrafficSpeedRatio(double allPop) const;
 	double CASPERRatio;
 
 public:
@@ -288,7 +288,7 @@ public:
 		cacheAgainst = new stdext::hash_map<long, NAEdgePtr>();
 		saturationPerCap = SaturationPerCap;
 		criticalDensPerCap = CriticalDensPerCap;
-		if (saturationPerCap > criticalDensPerCap) saturationPerCap -= criticalDensPerCap;
+		if (saturationPerCap <= criticalDensPerCap) saturationPerCap += criticalDensPerCap;
 		sideCache = new std::vector<NAEdgePtr>();
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 		trafficModel = TrafficModel;

@@ -12,7 +12,7 @@ EdgeReservations::EdgeReservations(double capacity, double CriticalDensPerCap, d
 	ReservedPop = 0.0;
 	Capacity = capacity;	
 	CriticalDens = CriticalDensPerCap * capacity;
-	SaturationDens = SaturationDensPerCap * capacity;
+	SaturationDensPerCap = SaturationDensPerCap;
 }
 
 EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
@@ -21,7 +21,7 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 	ReservedPop = cpy.ReservedPop;
 	Capacity = cpy.Capacity;	
 	CriticalDens = cpy.CriticalDens;
-	SaturationDens = cpy.SaturationDens;
+	SaturationDensPerCap = cpy.SaturationDensPerCap;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -78,8 +78,8 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 			reservations = it->second;
 		}
 		
-		// z = 1 - 0.19 * (x ^ 0.2132) * exp(-0.01901 * y)
-		CASPERRatio = 0.19 * exp(-0.01901 * reservations->Capacity);
+		// z = 1 - 0.19 * (pop ^ 0.2132) * exp(-0.01901 * cap)
+		CASPERRatio = (0.5 / (pow(reservations->SaturationDensPerCap, 0.2132) * exp(-0.01901))) * exp(-0.01901 * reservations->Capacity);
 	}
 }
 
@@ -103,22 +103,22 @@ double NAEdge::OriginalCapacity() const
 double NAEdge::LeftCapacity() const
 {
 	double newPop = reservations->CriticalDens - reservations->ReservedPop;
-	if ((initDelayCostPerPop > 0.0) && (newPop > OriginalCost / initDelayCostPerPop)) newPop = 2147483647.0; // max int	
+	if ((initDelayCostPerPop > 0.0) && (newPop > OriginalCost / initDelayCostPerPop)) newPop = 2147483647.0; // max_int	
 	newPop = max(newPop, 0.0);
 	return newPop;
 }
 
-double NAEdge::GetTrafficSpeedRatio(double newPop) const
+double NAEdge::GetTrafficSpeedRatio(double allPop) const
 {
 	double speedPercent = 1.0;
 	switch (trafficModel)
 	{
 	case EVC_TRAFFIC_MODEL_CASPER:
-		// z = 1 - 0.19 * (x ^ 0.2132) * exp(-0.01901 * y)
-		speedPercent = 1.0 - CASPERRatio * pow(newPop, 0.2132);
+		// z = 1 - 0.19 * (pop ^ 0.2132) * exp(-0.01901 * cap)
+		speedPercent = 1.0 - CASPERRatio * pow(allPop, 0.2132);
 		break;
 	case EVC_TRAFFIC_MODEL_LINEAR:
-		speedPercent = 1.0 - newPop / (2.0 * reservations->SaturationDens);
+		speedPercent = 1.0 - (allPop - reservations->CriticalDens) / (2.0 * (reservations->SaturationDensPerCap * reservations->Capacity - reservations->CriticalDens));
 		break;
 	case EVC_TRAFFIC_MODEL_STEP:
 		speedPercent = 0.0;
@@ -130,10 +130,11 @@ double NAEdge::GetTrafficSpeedRatio(double newPop) const
 double NAEdge::GetCurrentCost() const
 {
 	double speedPercent = 1.0;
-	double newPop = reservations->ReservedPop - reservations->CriticalDens;
-
-	if (newPop > 0.0) speedPercent = GetTrafficSpeedRatio(newPop);
-	speedPercent = min(1.0, max(0.001, speedPercent));
+	if (reservations->ReservedPop > reservations->CriticalDens)
+	{
+		speedPercent = GetTrafficSpeedRatio(reservations->ReservedPop);
+		speedPercent = min(1.0, max(0.001, speedPercent));
+	}
 	return OriginalCost / speedPercent;
 }
 
@@ -144,9 +145,9 @@ double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 {
 	double speedPercent = 1.0;	
 	if (initDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / initDelayCostPerPop);
-	newPop = newPop + reservations->ReservedPop - reservations->CriticalDens;
+	newPop += reservations->ReservedPop;
 
-	if (newPop > 0.0)
+	if (newPop > reservations->CriticalDens)
 	{			
 		switch (method)
 		{
@@ -157,8 +158,8 @@ double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 			speedPercent = 0.0;
 			break;
 		}
+		speedPercent = min(1.0, max(0.001, speedPercent));
 	}
-	speedPercent = min(1.0, max(0.001, speedPercent));
 	return OriginalCost / speedPercent;
 }
 
