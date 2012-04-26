@@ -6,13 +6,13 @@
 ///////////////////////////////////////////////////////////////////////
 // EdgeReservations Methods
 
-EdgeReservations::EdgeReservations(double capacity, double CriticalDensPerCap, double SaturationDensPerCap)
+EdgeReservations::EdgeReservations(double capacity, double criticalDensPerCap, double saturationDensPerCap)
 {
 	List = new std::vector<EdgeReservation>();
 	ReservedPop = 0.0;
 	Capacity = capacity;	
-	CriticalDens = CriticalDensPerCap * capacity;
-	SaturationDensPerCap = SaturationDensPerCap;
+	CriticalDens = criticalDensPerCap * capacity;
+	SaturationDensPerCap = saturationDensPerCap;
 }
 
 EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
@@ -79,8 +79,9 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 		}
 		
 		// z = 1 - 0.19 * (pop ^ 0.2132) * exp(-0.01901 * cap)
-		// CASPERRatio = (0.5 / (pow(reservations->SaturationDensPerCap, 0.2132) * exp(-0.01901))) * exp(-0.01901 * reservations->Capacity);
-		CASPERRatio = 0.19 * exp(-0.01901 * reservations->Capacity);
+		// CASPERRatio = 0.19 * exp(-0.01901 * reservations->Capacity);
+		CASPERRatio  = 0.5 / (pow(reservations->SaturationDensPerCap, 0.2132) * exp(-0.01901));
+		CASPERRatio *= exp(-0.01901 * reservations->Capacity);
 	}
 }
 
@@ -99,7 +100,7 @@ double NAEdge::OriginalCapacity() const
 	return reservations->Capacity;
 }
 
-// Special function for CCRP: to check how much capacity id left on this edge.
+// Special function for CCRP: to check how much capacity is left on this edge.
 // Will be used to get max capacity available on a path
 double NAEdge::LeftCapacity() const
 {

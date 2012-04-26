@@ -132,7 +132,6 @@ BEGIN
     EDITTEXT        IDC_EDIT_INITDELAY,127,88,63,14,ES_AUTOHSCROLL
     LTEXT           "Flocking Profile:",IDC_STATIC_FlockProfile,230,129,61,8
     COMBOBOX        IDC_COMBO_PROFILE,322,126,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "",IDC_STATIC_LINE,19,123,171,9
 END
 
 
@@ -178,8 +177,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
