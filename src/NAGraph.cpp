@@ -78,10 +78,10 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 			reservations = it->second;
 		}
 		
-		// z = 1 - 0.19 * (pop ^ 0.2132) * exp(-0.01901 * cap)
+		// z = z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
 		// CASPERRatio = 0.19 * exp(-0.01901 * reservations->Capacity);
-		CASPERRatio  = 0.5 / (pow(reservations->SaturationDensPerCap, 0.2132) * exp(-0.01901));
-		CASPERRatio *= exp(-0.01901 * reservations->Capacity);
+		CASPERRatio  = 0.5 / (sqrt(reservations->SaturationDensPerCap) * exp(-0.01127));
+		CASPERRatio *= exp(-0.01127 * reservations->Capacity);
 	}
 }
 
@@ -110,14 +110,17 @@ double NAEdge::LeftCapacity() const
 	return newPop;
 }
 
+// This is where the actual capacity aware part is happening:
+// We take the original values of the edge and recalculate the
+// new travel cost based on number of reserved spots by previous evacuees.
 double NAEdge::GetTrafficSpeedRatio(double allPop) const
 {
 	double speedPercent = 1.0;
 	switch (trafficModel)
 	{
 	case EVC_TRAFFIC_MODEL_CASPER:
-		// z = 1 - 0.19 * (pop ^ 0.2132) * exp(-0.01901 * cap)
-		speedPercent = 1.0 - CASPERRatio * pow(allPop, 0.2132);
+		// z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
+		speedPercent = 1.0 - CASPERRatio * sqrt(allPop);
 		break;
 	case EVC_TRAFFIC_MODEL_LINEAR:
 		speedPercent = 1.0 - (allPop - reservations->CriticalDens) / (2.0 * (reservations->SaturationDensPerCap * reservations->Capacity - reservations->CriticalDens));
@@ -140,9 +143,6 @@ double NAEdge::GetCurrentCost() const
 	return OriginalCost / speedPercent;
 }
 
-// This is where the actual capacity aware part is happening:
-// We take the original values of the edge and recalculate the
-// new travel cost based on number of reserved spots by previous evacuees.
 double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 {
 	double speedPercent = 1.0;	
