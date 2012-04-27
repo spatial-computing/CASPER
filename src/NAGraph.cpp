@@ -79,7 +79,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 		}
 		
 		// z = z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
-		// CASPERRatio = 0.19 * exp(-0.01901 * reservations->Capacity);
+		// CASPERRatio = 0.0202 * exp(-0.01127 * reservations->Capacity);
 		CASPERRatio  = 0.5 / (sqrt(reservations->SaturationDensPerCap) * exp(-0.01127));
 		CASPERRatio *= exp(-0.01127 * reservations->Capacity);
 	}
