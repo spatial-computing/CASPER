@@ -446,9 +446,6 @@ STDMETHODIMP EvcSolver::UpdateContext(INAContext* pNAContext, IDENetworkDataset*
 	// UpdateContext() is a method used to update the context based on any changes that may have been made to the
 	// solver settings. This typically includes changes to the set of accumulation attribute names, etc., which can
 	// be set as fields in the context's NAClass schemas
-
-	// We will not need to update our context, since we do not support any changes necessary to use this method
-
 	return S_OK;
 }
 
