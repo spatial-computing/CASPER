@@ -101,15 +101,11 @@ typedef stdext::hash_map<long, std::vector<EvacueePtr> *>::iterator NAEvacueeVer
 
 class NAEvacueeVertexTable : private stdext::hash_map<long, std::vector<EvacueePtr> *>
 {
-private:
-	int s;
-
 public:
-	NAEvacueeVertexTable() { s = 0; }	
-	int Size() const { return s; }
 	~NAEvacueeVertexTable();
 
 	void Insert(EvacueeList * list);
 	std::vector<EvacueePtr> * Find(long junctionEID);
-	void Erase(long junctionEID) { erase(junctionEID); }
+	void Erase(long junctionEID);
+	bool IsEmpty() const { return this->empty(); }
 };

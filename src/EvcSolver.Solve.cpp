@@ -164,24 +164,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ITablePtr ipZonesTable;
 	if (FAILED(hr = GetNAClassTable(pNAContext, CComBSTR(CS_ZONES_NAME), &ipZonesTable))) return hr;
 
-	// Setup our progressor based on the number of Evacuee points
-	if (ipStepProgressor)
-	{
-		long numberOfEvacueePoints, totalPoints;
-		if (FAILED(hr = ipEvacueePointsTable->RowCount(0, &numberOfEvacueePoints))) return hr;
-		if (FAILED(hr = ipZonesTable->RowCount(0, &totalPoints))) return hr;
-		totalPoints += numberOfEvacueePoints;
-
-		// Step progressor range = 0 through numberOfEvacueePoints
-		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;               // 0 through...			
-		if (FAILED(hr = ipStepProgressor->put_MaxRange(totalPoints))) return hr;     // total number of evacuee points
-		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;              // incremented in step intervals of 1...			
-		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;               // and starting at step 0			
-
-		// Show the progressor
-		if (FAILED(hr = ipStepProgressor->Show())) return hr;
-	}	
-
 	// Create variables for looping through the cursor and traversing the network
 	IRowPtr ipRow;
 	ICursorPtr ipCursor;
@@ -198,12 +180,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipElement);
 	ipCurrentJunction = ipElement;
 
-	long currentJunctionEID, adjacentEdgeCount, sourceOID, sourceID;
+	long sourceOID, sourceID;
 	double posAlong, fromPosition, toPosition;
 	VARIANT_BOOL keepGoing, isLocated, isRestricted;
 	esriNetworkElementType elementType;
 	NAVertexPtr myVertex;
-	NAEdgePtr myEdge;
 
 	// Initialize Caches
 	// This cache will maintain a list of all created vertices/edges. You can retrieve
@@ -212,16 +193,16 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// This will particularly be helpful with the heuristic calculator part of the algorithm.
 	// if (FAILED(hr = heuristicAttribs[heuristicAttribIndex]->get_ID(&capAttributeID))) return hr;  	
 	NAVertexCache * vcache = new NAVertexCache();
-	NAEdgeCache   * ecache = new NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop, trafficModel);
+	NAEdgeCache   * ecache = new NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap,
+		twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop, trafficModel);
 
 	// Vertex table structures
 	NAVertexTable * safeZoneList = new NAVertexTable();
-	NAVertexTableItr iterator;
 	INetworkEdgePtr ipEdge(ipElement);
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
 
-	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Computing evacuation route(s)")); // add more specific information here if appropriate
-	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting safe zone point(s)")); // add more specific information here if appropriate
+	// if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Computing evacuation route(s)")); // add more specific information here if appropriate
+	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting input point(s)")); // add more specific information here if appropriate
 
 	///////////////////////////
 	// here we begin collecting safe zone points for all the evacuees
@@ -230,7 +211,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipZonesTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
-		if (ipStepProgressor) ipStepProgressor->Step();		
+		// if (ipStepProgressor) ipStepProgressor->Step();		
 		ipNALocationObject = ipRow;
 		if (!ipNALocationObject) // we only want valid NALocationObjects
 		{
@@ -340,11 +321,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 
 	// Setup a message on our step progressor indicating that we are traversing the network
-	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting evacuee point(s)"));
+	// if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting evacuee point(s)"));
 
 	// Get a cursor on the Evacuee points table to loop through each row
 	if (FAILED(hr = ipEvacueePointsTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
-	EvacueeList * Evacuees = new EvacueeList(), * sortedEvacuees = new EvacueeList();
+	EvacueeList * Evacuees = new EvacueeList();
 	Evacuee * currentEvacuee;
 	VARIANT evName, pop;
 	long nameFieldIndex = 0l, popFieldIndex = 0l;
@@ -355,7 +336,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
-		if (ipStepProgressor) ipStepProgressor->Step();		
+		// if (ipStepProgressor) ipStepProgressor->Step();
 		ipNALocationObject = ipRow;
 		if (!ipNALocationObject) // we only want valid NALocationObjects
 		{
@@ -469,11 +450,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}
 	}
 
-	// indexing all the population by their sorounding vertices
-	// this will be used to sort them by network distance to safe zone in the next step.
-	NAEvacueeVertexTable * EvacueePairs = new NAEvacueeVertexTable();
-	EvacueePairs->Insert(Evacuees);
-
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
 	tenNanoSec64 = (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
@@ -482,166 +458,22 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	inputSecCpu = tenNanoSec64 / 10000000.0;
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 
-	///////////////////////////////////////
-	// performing pre-process
-	// here we will mark each vertex/junction with a heuristic value indicating
-	// true distance to closest safe zone using backward traversal and Dijkstra
+	// Setup our progressor based on the number of Evacuee points
 	if (ipStepProgressor)
 	{
-		// Step progressor range = 0 through numberOfOutputSteps
-		ipStepProgressor->put_Message(CComBSTR(L"Pre-processing junction heuristics"));
-		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_MaxRange(EvacueePairs->Size()))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
+		// Step progressor range = 0 through numberOfEvacueePoints
+		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;               // 0 through...			
+		if (FAILED(hr = ipStepProgressor->put_MaxRange(100))) return hr;     // total number of evacuee points
+		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;              // incremented in step intervals of 1...			
+		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;               // and starting at step 0			
+
+		// Show the progressor
+		if (FAILED(hr = ipStepProgressor->Show())) return hr;
 	}
 
-	// creating the heap for the dijkstra search
-	FibonacciHeap * heap = new FibonacciHeap();
-	NAEdgeClosed * closedList = new NAEdgeClosed();
-	NAEdge * currentEdge;
-	NAVertexPtr neighbor, evc, tempEvc;
-	std::vector<EvacueePtr>::iterator eit;
-	std::vector<EvacueePtr>::reverse_iterator rseit;
-	std::vector<NAVertexPtr>::iterator vit;
-	NAVertexTableItr cit;
-	INetworkElementPtr ipElementEdge;
-	std::vector<EvacueePtr> * pairs;
-	std::vector<EvacueePtr>::iterator eitr;
-	VARIANT val;
-	val.vt = VT_R8; // double variant value
-
-	// Create a backward Star Adjacencies object (we need this object to hold traversal queries carried out on the Backward Star)
-	INetworkForwardStarAdjacenciesPtr ipNetworkBackwardStarAdjacencies;
-	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkBackwardStarAdjacencies))) return hr;
-
-	for(iterator = safeZoneList->begin(); iterator != safeZoneList->end(); iterator++)
-	{
-		evc = iterator->second;
-		tempEvc = vcache->New(evc->Junction);
-		tempEvc->SetBehindEdge(evc->GetBehindEdge());
-		tempEvc->h = evc->h;
-		tempEvc->Junction = evc->Junction;
-		tempEvc->Previous = 0;
-		myEdge = tempEvc->GetBehindEdge();
-		
-		if (myEdge) heap->Insert(myEdge);
-		else
-		{
-			// if the start point was a single junction, then all the adjacent edges can be start edges
-			if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(tempEvc->Junction, 0, 0, ipNetworkBackwardStarAdjacencies))) return hr; 
-			if (FAILED(hr = ipNetworkBackwardStarAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
-			for (i = 0; i < adjacentEdgeCount; i++)
-			{
-				if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) return hr;
-				ipCurrentEdge = ipElement;
-				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-				myEdge = ecache->New(ipCurrentEdge);
-				tempEvc->SetBehindEdge(myEdge);
-				heap->Insert(myEdge);
-			}
-		}
-	}
-
-	// Continue traversing the network while the heap has remaining junctions in it
-	// this is the actual dijkstra code with backward network traversal. it will only update h value.
-	while (!heap->IsEmpty())
-	{
-		// Remove the next junction EID from the top of the stack
-		myEdge = heap->DeleteMin();
-		myVertex = myEdge->ToVertex;
-		if (FAILED(hr = closedList->Insert(myEdge)))
-		{
-			// closedList violation happened
-			pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
-			return -myEdge->EID;
-		}
-
-		// Adjust the heuristic value on the junction
-		/// TODO the new values are not being written to the junctions
-		// val.dblVal = myVertex->h;
-		// if (FAILED(hr = ipNetworkBackwardStarEx->AdjustJunctionAttributeValue
-		// 	(myVertex->Junction, discriptiveAttribs[heuristicAttribIndex], esriNAATReplace, val))) return hr;
-
-		// The step progressor is based on discovered evacuee vertices
-		pairs = EvacueePairs->Find(myVertex->EID);
-		if (pairs)
-		{
-			EvacueePairs->Erase(myVertex->EID);
-			for (eitr = pairs->begin(); eitr != pairs->end(); eitr++)
-			{
-				sortedEvacuees->insert(sortedEvacuees->end(), *eitr);
-				if (ipStepProgressor) ipStepProgressor->Step();	
-			}
-			// Check to see if the user wishes to continue or cancel the solve
-			if (pTrackCancel)
-			{
-				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
-				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
-			}
-		}
-
-		// terminate if no more evacuee pairs are left
-		if (EvacueePairs->Size() == sortedEvacuees->size()) break;
-
-		// Query adjacencies from the current junction
-		if (FAILED(hr = ipNetworkBackwardStarEx->QueryAdjacencies
-			(myVertex->Junction, myEdge->NetEdge, 0, ipNetworkBackwardStarAdjacencies))) return hr; 
-
-		// Get the adjacent edge count
-		if (FAILED(hr = ipNetworkBackwardStarAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
-
-		// Loop through all adjacent edges and update their cost value
-		for (i = 0; i < adjacentEdgeCount; i++)
-		{
-			if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
-			if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) return hr;
-			ipCurrentEdge = ipElement;
-			ipCurrentJunction = ipOtherElement;
-
-			if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-			if (FAILED(hr = ipCurrentEdge->QueryJunctions(ipCurrentJunction, 0))) return hr; 
-			if (FAILED(hr = ipCurrentJunction->get_EID(&currentJunctionEID))) return hr;
-
-			// check restriction for the recently discovered edge
-			if (FAILED(hr = ipNetworkBackwardStarEx->get_IsRestricted(ipCurrentEdge, &isRestricted))) return hr;
-			if (isRestricted) continue;
-
-			// if node has already been discovered then no need to heap it
-			currentEdge = ecache->New(ipCurrentEdge);
-			if (closedList->IsClosed(currentEdge)) continue;
-
-			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
-			{
-				neighbor = vcache->Get(currentJunctionEID);
-				if (neighbor->h > myVertex->h + currentEdge->OriginalCost)
-				{
-					neighbor->SetBehindEdge(currentEdge);
-					neighbor->h = myVertex->h + currentEdge->OriginalCost;
-					neighbor->Previous = myVertex;
-					if (FAILED(hr = heap->DecreaseKey(currentEdge))) return hr;	
-					vcache->UpdateHeuristic(neighbor);			
-				}
-			}
-			else // unvisited vertex. create new and insert in heap
-			{
-				neighbor = vcache->New(ipCurrentJunction);
-				neighbor->SetBehindEdge(currentEdge);
-				neighbor->h = myVertex->h + currentEdge->OriginalCost;
-				neighbor->Previous = myVertex;
-				heap->Insert(currentEdge);
-				vcache->UpdateHeuristic(neighbor);
-			}
-		}
-	}
-
-	// variable cleanup
-	closedList->Clear();
-	delete heap;
-	delete EvacueePairs;
-
+	///////////////////////////////////////
 	// this will call the core part of the algorithm.
-	if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, sortedEvacuees, vcache, ecache,
+	if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache,
 		safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx))) return hr;	
 
 	// timing
@@ -659,7 +491,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// to the "LineData" NAClass
 
 	// Setup a message on our step progressor indicating that we are outputting feature information
-	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing route features")); 
+	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing output features")); 
 
 	// If we reach this point, we have some features to output to the Routes NAClass
 	// Reset the progressor based on the number of features that we must output
@@ -667,7 +499,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		// Step progressor range = 0 through numberOfOutputSteps
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_MaxRange(Evacuees->size()))) return hr;
+		if (exportEdgeStat)
+		{
+			if (FAILED(hr = ipStepProgressor->put_MaxRange(ecache->Size() + Evacuees->size()))) return hr;
+		}
+		else
+		{
+			if (FAILED(hr = ipStepProgressor->put_MaxRange(Evacuees->size()))) return hr;
+		}
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
@@ -692,6 +531,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	IFeatureClassPtr ipNetworkSourceFC;
 	INetworkSourcePtr ipNetworkSource;
 	BSTR sourceName;
+	std::vector<EvacueePtr>::iterator eit;
 	
 	// load the mercator projection and analysis projection
 	ISpatialReferencePtr ipNAContextSR;
@@ -836,20 +676,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	if (exportEdgeStat)
 	{
-		// Setup a message on our step progressor indicating that we are outputting feature information
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing EdgeStat features")); 
-
-		// If we reach this point, we have some features to output to the Routes NAClass
-		// Reset the progressor based on the number of features that we must output
-		if (ipStepProgressor)
-		{
-			// Step progressor range = 0 through numberOfOutputSteps
-			if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-			if (FAILED(hr = ipStepProgressor->put_MaxRange(ecache->Size()))) return hr;
-			if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
-			if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
-		}
-
 		// Get the "Routes" NAClass feature class
 		IFeatureClassPtr ipEdgesFC(ipEdgesNAClass);
 		NAEdgePtr edge;
@@ -1187,7 +1013,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	flockSecCpu = tenNanoSec64 / 10000000.0;
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+	/// Close it and clean it
 	CString formatString;
 	CString msgString;
 #ifdef _FLOCK
@@ -1218,10 +1044,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// releasing all internal objects
 	delete vcache;
 	delete ecache;
-	delete closedList;
 	for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
 	delete safeZoneList;
-	delete sortedEvacuees;
 	return S_OK;
 }
 

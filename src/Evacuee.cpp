@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Evacuee.h"
 #include "NAGraph.h"
+#include <algorithm>
 
 void NAEvacueeVertexTable::Insert(EvacueeList * list)
 {
@@ -18,8 +19,7 @@ void NAEvacueeVertexTable::Insert(EvacueeList * list)
 				p = new std::vector<EvacueePtr>();
 				insert(_NAEvacueeVertexTablePair((*v)->EID, p));
 			}
-			p->insert(p->end(), *i);
-			s++;
+			p->push_back(*i);
 		}
 	}
 }	
@@ -35,4 +35,23 @@ std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
 NAEvacueeVertexTable::~NAEvacueeVertexTable()
 {
 	for (NAEvacueeVertexTableItr i = begin(); i != end(); i++) delete i->second;
+	this->clear();
+}
+
+void NAEvacueeVertexTable::Erase(long junctionEID)
+{
+	std::vector<NAVertexPtr>::iterator vi;
+	NAEvacueeVertexTableItr evcItr1, evcItr2 = this->find(junctionEID);
+
+	for(std::vector<EvacueePtr>::iterator i = evcItr2->second->begin(); i != evcItr2->second->end(); i++)
+	{
+		for (vi = (*i)->vertices->begin(); vi != (*i)->vertices->end(); vi++)
+		{
+			if ((*vi)->EID == junctionEID) continue;
+			evcItr1 = find((*vi)->EID);
+			evcItr1->second->erase(std::find(evcItr1->second->begin(), evcItr1->second->end(), *i));
+		}
+	}
+	delete evcItr2->second;
+	erase(junctionEID); 
 }
