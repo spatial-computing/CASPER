@@ -1051,7 +1051,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed)
 {	
-	double costPerDay;
+	double costPerDay = 1.0;
 
 	switch (unit)
 	{

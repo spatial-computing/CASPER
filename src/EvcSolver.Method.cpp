@@ -2,10 +2,11 @@
 #include "NameConstants.h"
 #include "float.h"  // for FLT_MAX, etc.
 #include <cmath>   // for HUGE_VAL
+#include <algorithm>
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 
-#define EvacueeBucketSize 5
+#define EvacueeBucketSize 3
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
 							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
@@ -15,7 +16,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	FibonacciHeap * heap = new FibonacciHeap();
 	NAEdgeClosed * closedList = new NAEdgeClosed();
 	NAEdgePtr currentEdge;
-	std::vector<EvacueePtr>::reverse_iterator rseit;
+	std::vector<EvacueePtr>::iterator seit;
 	NAVertexPtr neighbor, evc, tempEvc, BetterSafeZone = 0, finalVertex = 0, myVertex, temp;
 	NAEdgePtr myEdge, edge;
 	HRESULT hr;
@@ -70,9 +71,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (FAILED(hr = RunHeuristic(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache,
 			safeZoneList, ipNetworkBackwardStarEx, EvacueeBucketSize))) return hr;
 
-		for(rseit = sortedEvacuees->rbegin(); rseit != sortedEvacuees->rend(); rseit++)
+		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 		{
-			currentEvacuee = *rseit;
+			currentEvacuee = *seit;
 
 			// Step the progressor before continuing to the next Evacuee point
 			if (ipStepProgressor) ipStepProgressor->Step();		
@@ -336,7 +337,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 }
 
 HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
-								NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkBackwardStarEx, int CountReturnEvacuees)
+								NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkBackwardStarEx, unsigned int CountReturnEvacuees)
 {
 	HRESULT hr;
 
@@ -351,7 +352,6 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	NAEdge * currentEdge;
 	NAVertexPtr neighbor, evc, tempEvc;
 	std::vector<EvacueePtr>::iterator eit;
-	std::vector<EvacueePtr>::reverse_iterator rseit;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr cit;
 	INetworkElementPtr ipElementEdge;
@@ -410,7 +410,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 
 	// Continue traversing the network while the heap has remaining junctions in it
 	// this is the actual dijkstra code with backward network traversal. it will only update h value.
-	while (!(heap->IsEmpty() || EvacueePairs->IsEmpty()))
+	while (!(heap->IsEmpty() || EvacueePairs->empty()))
 	{
 		// Remove the next junction EID from the top of the stack
 		myEdge = heap->DeleteMin();
@@ -426,7 +426,11 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		pairs = EvacueePairs->Find(myVertex->EID);
 		if (pairs)
 		{
-			for (eitr = pairs->begin(); eitr != pairs->end(); eitr++) redundentSortedEvacuees->push_back(*eitr);
+			for (eitr = pairs->begin(); eitr != pairs->end(); eitr++)
+			{
+				(*eitr)->PredictedCost = myVertex->h;
+				redundentSortedEvacuees->push_back(*eitr);
+			}
 			EvacueePairs->Erase(myVertex->EID);
 			// Check to see if the user wishes to continue or cancel the solve
 			if (pTrackCancel)
@@ -494,9 +498,18 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	// load last 'k'th evacuees into sorted list from the redundent list
 	//CountReturnEvacuees
 	SortedEvacuees->clear();
-
+	for (NAEvacueeVertexTableItr evcItr = EvacueePairs->begin(); evcItr != EvacueePairs->end(); evcItr++)
+	{
+		for(eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++) redundentSortedEvacuees->push_back(*eit);
+	}
+	if (!redundentSortedEvacuees->empty())
+	{
+		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);
+		SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
+														redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), CountReturnEvacuees));
+		redundentSortedEvacuees->clear();
+	}
 	// variable cleanup
-	redundentSortedEvacuees->clear();
 	delete redundentSortedEvacuees;
 	delete closedList;
 	delete heap;

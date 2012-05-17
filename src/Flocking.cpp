@@ -355,10 +355,8 @@ FlockingEnviroment::~FlockingEnviroment(void)
 
 void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
 {
-	EvacueePtr evc = 0;
 	EvacueeListItr evcItr;
 	int i = 0, size = 0, id = 0;
-	EvcPathPtr path = 0;
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
 	srand((unsigned int)time(NULL));

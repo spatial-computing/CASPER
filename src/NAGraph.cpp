@@ -345,7 +345,6 @@ void NAVertexCollector::Clear()
 
 bool NAEdgeClosed::IsClosed(NAEdgePtr edge)
 {
-	NAEdgePtr n = 0;
 	NAEdgeTable * cache = 0;
 
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
@@ -356,7 +355,6 @@ bool NAEdgeClosed::IsClosed(NAEdgePtr edge)
 
 HRESULT NAEdgeClosed::Insert(NAEdgePtr edge)
 {
-	NAEdgePtr n = 0;
 	NAEdgeTable * cache = 0;
 
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;

@@ -185,7 +185,7 @@ STDMETHODIMP EvcSolverPropPage::Apply(void)
 	// Set the page to not dirty
 	SetDirty(FALSE);
 
-	return S_OK;
+	return hr;
 }
 
 /////////////////////////////////////////////////////////////////////////////

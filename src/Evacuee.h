@@ -18,6 +18,7 @@
 class NAVertex;
 class NAEdge;
 typedef NAVertex * NAVertexPtr;
+#define MAX_COST 1000000000.0
 
 class PathSegment
 {
@@ -74,6 +75,7 @@ public:
 	std::list<EvcPathPtr> * paths;
 	VARIANT Name;
 	double Population;
+	double PredictedCost;
 
 	Evacuee(VARIANT name, double pop)
 	{
@@ -81,6 +83,7 @@ public:
 		vertices = new std::vector<NAVertexPtr>();
 		paths = new std::list<EvcPathPtr>();
 		Population = pop;
+		PredictedCost = MAX_COST;
 	}
 
 	~Evacuee(void)
@@ -91,6 +94,11 @@ public:
 		delete vertices;
 		delete paths;
 	}
+
+	static bool LessThan(Evacuee * e1, Evacuee * e2)
+	{
+		return e1->PredictedCost < e2->PredictedCost;
+	}
 };
 
 typedef Evacuee * EvacueePtr;
@@ -99,7 +107,7 @@ typedef std::vector<EvacueePtr>::iterator EvacueeListItr;
 typedef std::pair<long, std::vector<EvacueePtr> *> _NAEvacueeVertexTablePair;
 typedef stdext::hash_map<long, std::vector<EvacueePtr> *>::iterator NAEvacueeVertexTableItr;
 
-class NAEvacueeVertexTable : private stdext::hash_map<long, std::vector<EvacueePtr> *>
+class NAEvacueeVertexTable : public stdext::hash_map<long, std::vector<EvacueePtr> *>
 {
 public:
 	~NAEvacueeVertexTable();
@@ -107,5 +115,4 @@ public:
 	void Insert(EvacueeList * list);
 	std::vector<EvacueePtr> * Find(long junctionEID);
 	void Erase(long junctionEID);
-	bool IsEmpty() const { return this->empty(); }
 };
