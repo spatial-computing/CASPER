@@ -505,8 +505,15 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	if (!redundentSortedEvacuees->empty())
 	{
 		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);
-		SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
-														redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->countReturnEvacuees));
+		if (this->solvermethod == EVC_SOLVER_METHOD_CASPER)
+		{
+			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
+															redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->countReturnEvacuees));
+		}
+		else
+		{
+			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
+		}
 		redundentSortedEvacuees->clear();
 	}
 	// variable cleanup
