@@ -162,8 +162,9 @@ private:
 	EdgeReservations * reservations;
 	double initDelayCostPerPop;
 	EVC_TRAFFIC_MODEL trafficModel;
-	double GetTrafficSpeedRatio(double allPop) const;
+	double GetTrafficSpeedRatio(double allPop);
 	double CASPERRatio;
+	double cachedCost[2];
 
 public:
 	double OriginalCost;
@@ -172,8 +173,8 @@ public:
 	INetworkEdgePtr NetEdge;
 	INetworkEdgePtr LastExteriorEdge;	
 	long EID;
-	double GetCost(double newPop, EVC_SOLVER_METHOD method) const;
-	double GetCurrentCost() const;
+	double GetCost(double newPop, EVC_SOLVER_METHOD method);
+	double GetCurrentCost();
 	double LeftCapacity() const;
 	double OriginalCapacity() const;
 

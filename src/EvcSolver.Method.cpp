@@ -186,7 +186,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (FAILED(hr = myEdge->NetEdge->get_TurnParticipationType(&turnType))) return hr;
 					if (turnType == 1) lastExteriorEdge = myEdge->LastExteriorEdge;
 					else lastExteriorEdge = 0;
-					if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge, lastExteriorEdge, ipNetworkForwardStarAdjacencies))) return hr;
+					if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge, 0 /*lastExteriorEdge*/, ipNetworkForwardStarAdjacencies))) return hr;
 					if (turnType == 2) lastExteriorEdge = myEdge->NetEdge;
 
 					// Get the adjacent edge count
@@ -508,7 +508,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		if (this->solvermethod == EVC_SOLVER_METHOD_CASPER)
 		{
 			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
-															redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->countReturnEvacuees));
+				redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->countReturnEvacuees));
 		}
 		else
 		{

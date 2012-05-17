@@ -50,6 +50,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 	VARIANT vcost, vcap;
 	double capacity = 1.0;
 	initDelayCostPerPop = InitDelayCostPerPop;
+	cachedCost[0] = MAX_COST; cachedCost[1] = 0.0;
 
 	if (FAILED(edge->get_AttributeValue(capacityAttribID, &vcap)) ||	
 		FAILED(edge->get_AttributeValue(costAttribID, &vcost)) ||	
@@ -77,7 +78,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 		{
 			reservations = it->second;
 		}
-		
+
 		// z = z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
 		// CASPERRatio = 0.0202 * exp(-0.01127 * reservations->Capacity);
 		CASPERRatio  = 0.5 / (sqrt(reservations->SaturationDensPerCap) * exp(-0.01127));
@@ -113,8 +114,10 @@ double NAEdge::LeftCapacity() const
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
-double NAEdge::GetTrafficSpeedRatio(double allPop) const
+#pragma float_control(precise, off, push)
+double NAEdge::GetTrafficSpeedRatio(double allPop)
 {
+	if (cachedCost[0] == allPop) return cachedCost[1];
 	double speedPercent = 1.0;
 	switch (trafficModel)
 	{
@@ -129,10 +132,12 @@ double NAEdge::GetTrafficSpeedRatio(double allPop) const
 		speedPercent = 0.0;
 		break;
 	}
+	cachedCost[0] = allPop; cachedCost[1] = speedPercent;
 	return speedPercent;
 }
+#pragma float_control(pop)
 
-double NAEdge::GetCurrentCost() const
+double NAEdge::GetCurrentCost()
 {
 	double speedPercent = 1.0;
 	if (reservations->ReservedPop > reservations->CriticalDens)
@@ -143,7 +148,7 @@ double NAEdge::GetCurrentCost() const
 	return OriginalCost / speedPercent;
 }
 
-double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
+double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method)
 {
 	double speedPercent = 1.0;	
 	if (initDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / initDelayCostPerPop);
