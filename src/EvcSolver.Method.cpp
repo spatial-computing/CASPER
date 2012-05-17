@@ -68,8 +68,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	{
 		// indexing all the population by their srrounding vertices this will be used to sort them by network distance to safe zone.
 		// only the last 'k'th evacuees will be bucketed to run each round.
-		if (FAILED(hr = RunHeuristic(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache,
-			safeZoneList, ipNetworkBackwardStarEx, EvacueeBucketSize))) return hr;
+		if (FAILED(hr = RunHeuristic(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkBackwardStarEx))) return hr;
 
 		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 		{
@@ -337,7 +336,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 }
 
 HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
-								NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkBackwardStarEx, unsigned int CountReturnEvacuees)
+								NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkBackwardStarEx)
 {
 	HRESULT hr;
 
@@ -495,8 +494,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		}
 	}
 
-	// load last 'k'th evacuees into sorted list from the redundent list
-	//CountReturnEvacuees
+	// load last 'k'th evacuees into sorted list from the redundent list CountReturnEvacuees
 	SortedEvacuees->clear();
 	for (NAEvacueeVertexTableItr evcItr = EvacueePairs->begin(); evcItr != EvacueePairs->end(); evcItr++)
 	{
@@ -506,7 +504,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	{
 		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);
 		SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
-														redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), CountReturnEvacuees));
+														redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->countReturnEvacuees));
 		redundentSortedEvacuees->clear();
 	}
 	// variable cleanup

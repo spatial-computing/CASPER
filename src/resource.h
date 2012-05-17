@@ -15,7 +15,7 @@
 #define IDC_EDIT_SAT                    219
 #define IDC_LableCritical               220
 #define IDC_EDIT_Critical               221
-#define IDC_COMBO_TRAFFICMODEL            222
+#define IDC_COMBO_TRAFFICMODEL          222
 #define IDC_COMBO_CAPACITY              223
 #define IDC_LableZoneDensity            224
 #define IDC_STATIC_Capacity             225
@@ -24,7 +24,10 @@
 #define IDC_CHECK_EDGESTAT              227
 #define IDC_EDIT_ZoneDensity            228
 #define IDC_ZoneOptions                 229
+#define IDC_LableBucketSize             229
 #define IDC_CASPEROptions               230
+#define IDC_EDIT_ZoneDensity2           230
+#define IDC_EDIT_BucketSize             230
 #define IDC_CapacityOptions             231
 #define IDC_FlockOptions                232
 #define IDC_CHECK_Flock                 233

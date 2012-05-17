@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Thu Apr 26 21:17:41 2012
+/* at Wed May 16 19:29:30 2012
  */
 /* Compiler settings for _EvcSolver.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -204,6 +204,12 @@ EXTERN_C const IID IID_IEvcSolver;
         virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_FlockingProfile( 
             /* [retval][out] */ unsigned char *value) = 0;
         
+        virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_EvacueeBucketSize( 
+            /* [in] */ BSTR value) = 0;
+        
+        virtual /* [helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_EvacueeBucketSize( 
+            /* [retval][out] */ BSTR *value) = 0;
+        
         virtual /* [helpstring][propput] */ HRESULT STDMETHODCALLTYPE put_CostAttribute( 
             /* [in] */ int index) = 0;
         
@@ -356,6 +362,14 @@ EXTERN_C const IID IID_IEvcSolver;
             IEvcSolver * This,
             /* [retval][out] */ unsigned char *value);
         
+        /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_EvacueeBucketSize )( 
+            IEvcSolver * This,
+            /* [in] */ BSTR value);
+        
+        /* [helpstring][propget] */ HRESULT ( STDMETHODCALLTYPE *get_EvacueeBucketSize )( 
+            IEvcSolver * This,
+            /* [retval][out] */ BSTR *value);
+        
         /* [helpstring][propput] */ HRESULT ( STDMETHODCALLTYPE *put_CostAttribute )( 
             IEvcSolver * This,
             /* [in] */ int index);
@@ -484,6 +498,12 @@ EXTERN_C const IID IID_IEvcSolver;
 
 #define IEvcSolver_get_FlockingProfile(This,value)	\
     ( (This)->lpVtbl -> get_FlockingProfile(This,value) ) 
+
+#define IEvcSolver_put_EvacueeBucketSize(This,value)	\
+    ( (This)->lpVtbl -> put_EvacueeBucketSize(This,value) ) 
+
+#define IEvcSolver_get_EvacueeBucketSize(This,value)	\
+    ( (This)->lpVtbl -> get_EvacueeBucketSize(This,value) ) 
 
 #define IEvcSolver_put_CostAttribute(This,index)	\
     ( (This)->lpVtbl -> put_CostAttribute(This,index) ) 

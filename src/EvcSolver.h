@@ -89,6 +89,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT FlockingProfile([in] FLOCK_PROFILE value);
 	[propget, helpstring("Gets the selected flocking profile")]
 		HRESULT FlockingProfile([out, retval] FLOCK_PROFILE * value);
+	[propput, helpstring("Sets the size of the evacuee bucket")]
+		HRESULT EvacueeBucketSize([in] BSTR value);
+	[propget, helpstring("Gets the size of the evacuee bucket")]
+		HRESULT EvacueeBucketSize([out, retval] BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
@@ -185,6 +189,8 @@ public:
 	STDMETHOD(put_InitDelayCostPerPop)(BSTR   value);
 	STDMETHOD(put_FlockingProfile)(FLOCK_PROFILE   value);
 	STDMETHOD(get_FlockingProfile)(FLOCK_PROFILE * value);
+	STDMETHOD(put_EvacueeBucketSize)(BSTR   value);
+	STDMETHOD(get_EvacueeBucketSize)(BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	STDMETHOD(put_CostAttribute)(int index);
@@ -267,7 +273,7 @@ private:
 		IStepProgressorPtr ipStepProgressor, EvacueeList * sortedEvacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
 		NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx);
 	HRESULT RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
-			 NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkBackwardStarEx, unsigned int CountReturnEvacuees);
+			 NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkBackwardStarEx);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -292,6 +298,7 @@ private:
 	float					flockingSimulationInterval;
 	float					initDelayCostPerPop;
 	FLOCK_PROFILE			flockingProfile;
+	unsigned int			countReturnEvacuees;
 
 	VARIANT_BOOL twoWayShareCapacity;	
 	VARIANT_BOOL separable;

@@ -435,6 +435,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 1.0f / 60.0f;
+	countReturnEvacuees = 10;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -530,6 +531,23 @@ STDMETHODIMP EvcSolver::put_FlockingProfile(FLOCK_PROFILE value)
 	return S_OK;
 }
 
+STDMETHODIMP EvcSolver::get_EvacueeBucketSize(BSTR * value)
+{
+	if (value)
+	{
+		*value = new WCHAR[100];
+		swprintf_s(*value, 100, L"%u", countReturnEvacuees);
+	}
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_EvacueeBucketSize(BSTR value)
+{
+	swscanf_s(value, L"%u", &countReturnEvacuees);
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
 STDMETHODIMP EvcSolver::get_SolverMethod(EVC_SOLVER_METHOD * value)
 {
 	*value = solvermethod;
@@ -544,7 +562,7 @@ STDMETHODIMP EvcSolver::put_SolverMethod(EVC_SOLVER_METHOD value)
 }
 
 STDMETHODIMP EvcSolver::get_SaturationPerCap(BSTR * value)
-{	
+{
 	if (value)
 	{
 		*value = new WCHAR[100];
@@ -1045,7 +1063,8 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&flockingSimulationInterval, sizeof(flockingSimulationInterval), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;	
+	if (FAILED(hr = pStm->Read(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&countReturnEvacuees, sizeof(countReturnEvacuees), &numBytes))) return hr;
 
 	m_bPersistDirty = false;
 
@@ -1085,6 +1104,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&countReturnEvacuees, sizeof(countReturnEvacuees), &numBytes))) return hr;
 	
 	return S_OK;
 }

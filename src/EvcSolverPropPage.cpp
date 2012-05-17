@@ -124,6 +124,12 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hEditInitCost, WM_SETTEXT, NULL, (LPARAM)delay);
 		delete [] delay;
 
+		// set evacuee bucket size
+		BSTR bucket;
+		m_ipEvcSolver->get_EvacueeBucketSize(&bucket);
+		::SendMessage(m_heditBucketSize, WM_SETTEXT, NULL, (LPARAM)bucket);
+		delete [] bucket;
+
 		SetFlockingEnabled();
 		SetDirty(FALSE);
 	}
@@ -321,6 +327,14 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditInitCost, WM_GETTEXT, size + 1, (LPARAM)delay);
 		ipSolver->put_InitDelayCostPerPop(delay);
 		delete [] delay;
+		
+		// init delay cost per population
+		BSTR bucket;
+		size = ::SendMessage(m_heditBucketSize, WM_GETTEXTLENGTH, 0, 0);
+		bucket = new WCHAR[size + 1];
+		::SendMessage(m_heditBucketSize, WM_GETTEXT, size + 1, (LPARAM)bucket);
+		ipSolver->put_EvacueeBucketSize(bucket);
+		delete [] bucket;
 
 		// saturation density per capacity
 		BSTR sat;
@@ -401,6 +415,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCheckShareCap = GetDlgItem(IDC_CHECK_SHARECAP);
 	m_hEditInitCost = GetDlgItem(IDC_EDIT_INITDELAY);
 	m_hcmbFlockProfile = GetDlgItem(IDC_COMBO_PROFILE);
+	m_heditBucketSize = GetDlgItem(IDC_EDIT_BucketSize);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
@@ -542,6 +557,14 @@ LRESULT EvcSolverPropPage::OnEnChangeEditInitDelay(WORD /*wNotifyCode*/, WORD /*
 }
 
 LRESULT EvcSolverPropPage::OnCbnSelchangeComboProfile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnEnChangeEditBucketsize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet
