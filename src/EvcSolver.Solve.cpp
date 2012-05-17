@@ -201,7 +201,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INetworkEdgePtr ipEdge(ipElement);
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
 
-	// if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Computing evacuation route(s)")); // add more specific information here if appropriate
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting input point(s)")); // add more specific information here if appropriate
 
 	///////////////////////////
@@ -211,7 +210,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipZonesTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
-		// if (ipStepProgressor) ipStepProgressor->Step();		
 		ipNALocationObject = ipRow;
 		if (!ipNALocationObject) // we only want valid NALocationObjects
 		{
@@ -320,9 +318,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}
 	}
 
-	// Setup a message on our step progressor indicating that we are traversing the network
-	// if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting evacuee point(s)"));
-
 	// Get a cursor on the Evacuee points table to loop through each row
 	if (FAILED(hr = ipEvacueePointsTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	EvacueeList * Evacuees = new EvacueeList();
@@ -336,7 +331,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
-		// if (ipStepProgressor) ipStepProgressor->Step();
 		ipNALocationObject = ipRow;
 		if (!ipNALocationObject) // we only want valid NALocationObjects
 		{
@@ -458,18 +452,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	inputSecCpu = tenNanoSec64 / 10000000.0;
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 
-	// Setup our progressor based on the number of Evacuee points
-	if (ipStepProgressor)
-	{
-		// Step progressor range = 0 through numberOfEvacueePoints
-		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;               // 0 through...			
-		if (FAILED(hr = ipStepProgressor->put_MaxRange(100))) return hr;     // total number of evacuee points
-		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;              // incremented in step intervals of 1...			
-		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;               // and starting at step 0			
-
-		// Show the progressor
-		if (FAILED(hr = ipStepProgressor->Show())) return hr;
-	}
+	if (ipStepProgressor) if (FAILED(hr = ipStepProgressor->Show())) return hr;
 
 	///////////////////////////////////////
 	// this will call the core part of the algorithm.

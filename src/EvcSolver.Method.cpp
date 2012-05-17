@@ -39,9 +39,15 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	sortedEvacuees->reserve(EvacueeBucketSize);
 
 	///////////////////////////////////////
+	// Setup a message on our step progressor indicating that we are traversing the network
 	if (ipStepProgressor)
 	{
-		// Step progressor range = 0 through numberOfOutputSteps
+		// Setup our progressor based on the number of Evacuee points
+		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_MaxRange(Evacuees->size()))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
+
 		if (solvermethod == EVC_SOLVER_METHOD_CASPER)
 		{
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CASPER search")))) return hr;
@@ -54,10 +60,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		{
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CCRP search")))) return hr;
 		}		
-		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_MaxRange(Evacuees->size()))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
 
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
