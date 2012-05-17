@@ -76,8 +76,7 @@ using namespace ATL;
 #import "libid:45AC68FF-DEFF-4884-B3A9-7D882EDCAEF1" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR")
 #endif
 
-// This is included below so we can refer to CLSID_, IID_, etc. defined within
-// this project.
+// This is included below so we can refer to CLSID_, IID_, etc. defined within this project.
 
 #include "_CustomSolver_i.c"
 
