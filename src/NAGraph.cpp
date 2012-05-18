@@ -39,11 +39,13 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	initDelayCostPerPop = cpy.initDelayCostPerPop;
 	trafficModel = cpy.trafficModel;
 	CASPERRatio = cpy.CASPERRatio;
+	H = cpy.H;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
 			   double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
+	H = 0.0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
 	LastExteriorEdge = 0;
@@ -115,7 +117,7 @@ double NAEdge::LeftCapacity() const
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
 #pragma float_control(precise, off, push)
-double NAEdge::GetTrafficSpeedRatio(double allPop)
+double NAEdge::GetTrafficSpeedRatio(double allPop) const
 {
 	if (cachedCost[0] == allPop) return cachedCost[1];
 	double speedPercent = 1.0;
@@ -137,7 +139,7 @@ double NAEdge::GetTrafficSpeedRatio(double allPop)
 }
 #pragma float_control(pop)
 
-double NAEdge::GetCurrentCost()
+double NAEdge::GetCurrentCost() const
 {
 	double speedPercent = 1.0;
 	if (reservations->ReservedPop > reservations->CriticalDens)
@@ -148,7 +150,7 @@ double NAEdge::GetCurrentCost()
 	return OriginalCost / speedPercent;
 }
 
-double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method)
+double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 {
 	double speedPercent = 1.0;	
 	if (initDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / initDelayCostPerPop);

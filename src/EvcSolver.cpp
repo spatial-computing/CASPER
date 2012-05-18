@@ -418,7 +418,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	capAttributeID = -1;
 	SaturationPerCap = 500.0;
 	CriticalDensPerCap = 20.0;
-	solvermethod = EVC_SOLVER_METHOD_CASPER;
+	solverMethod = EVC_SOLVER_METHOD_CASPER;
 	trafficModel = EVC_TRAFFIC_MODEL_CASPER;
 	flockingProfile = FLOCK_PROFILE_CAR;
 	
@@ -550,13 +550,13 @@ STDMETHODIMP EvcSolver::put_EvacueeBucketSize(BSTR value)
 
 STDMETHODIMP EvcSolver::get_SolverMethod(EVC_SOLVER_METHOD * value)
 {
-	*value = solvermethod;
+	*value = solverMethod;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_SolverMethod(EVC_SOLVER_METHOD value)
 {
-	solvermethod = value;
+	solverMethod = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -1046,7 +1046,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&costAttributeID, sizeof(costAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&capAttributeID, sizeof(capAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&trafficModel, sizeof(trafficModel), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&solvermethod, sizeof(solvermethod), &numBytes))) return hr;	
+	if (FAILED(hr = pStm->Read(&solverMethod, sizeof(solverMethod), &numBytes))) return hr;	
 	if (FAILED(hr = pStm->Read(&SaturationPerCap, sizeof(SaturationPerCap), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_CreateTraversalResult, sizeof(m_CreateTraversalResult), &numBytes))) return hr;
@@ -1086,7 +1086,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&costAttributeID, sizeof(costAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&capAttributeID, sizeof(capAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&trafficModel, sizeof(trafficModel), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&solvermethod, sizeof(solvermethod), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&solverMethod, sizeof(solverMethod), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&SaturationPerCap, sizeof(SaturationPerCap), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;	
 	if (FAILED(hr = pStm->Write(&m_CreateTraversalResult, sizeof(m_CreateTraversalResult), &numBytes))) return hr;

@@ -48,11 +48,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 
-		if (solvermethod == EVC_SOLVER_METHOD_CASPER)
+		if (this->solverMethod == EVC_SOLVER_METHOD_CASPER)
 		{
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CASPER search")))) return hr;
 		}
-		else if (solvermethod == EVC_SOLVER_METHOD_SP)
+		else if (this->solverMethod == EVC_SOLVER_METHOD_SP)
 		{
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing SP search")))) return hr;
 		}
@@ -216,7 +216,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (turnType == 1) currentEdge->LastExteriorEdge = lastExteriorEdge;
 						else currentEdge->LastExteriorEdge = 0;
 
-						newCost = myVertex->g + currentEdge->GetCost(population2Route, solvermethod);
+						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod);
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrese key.
 						{
 							neighbor = vcache->New(ipCurrentJunction);
@@ -348,6 +348,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 
 	// creating the heap for the dijkstra search
 	long adjacentEdgeCount, i, currentJunctionEID;
+	int saved = 0;
 	FibonacciHeap * heap = new FibonacciHeap();
 	NAEdgeClosed * closedList = new NAEdgeClosed();
 	NAEdge * currentEdge;
@@ -391,7 +392,11 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		tempEvc->Previous = 0;
 		myEdge = tempEvc->GetBehindEdge();
 
-		if (myEdge) heap->Insert(myEdge);
+		if (myEdge)
+		{
+			myEdge->H = 0.0;
+			heap->Insert(myEdge);
+		}
 		else
 		{
 			// if the start point was a single junction, then all the adjacent edges can be start edges
@@ -404,6 +409,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
 				myEdge = ecache->New(ipCurrentEdge);
 				tempEvc->SetBehindEdge(myEdge);
+				myEdge->H = 0.0;
 				heap->Insert(myEdge);
 			}
 		}
@@ -421,6 +427,13 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			// closedList violation happened
 			pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
 			return -myEdge->EID;
+		}
+		_ASSERT(myEdge->H <= myVertex->h);
+		if (myEdge->H < myVertex->h) myEdge->H = myVertex->h;
+		else
+		{
+			saved++;
+			continue;
 		}
 
 		// The step progressor is based on discovered evacuee vertices
@@ -467,7 +480,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			// if node has already been discovered then no need to heap it
 			currentEdge = ecache->New(ipCurrentEdge);
 			if (closedList->IsClosed(currentEdge)) continue;
-			newh = myVertex->h + currentEdge->GetCurrentCost();
+			newh = myVertex->h + currentEdge->GetCost(0.0, this->solverMethod);
 
 			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
 			{
@@ -484,14 +497,11 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			else // unvisited vertex. create new and insert in heap
 			{
 				neighbor = vcache->New(ipCurrentJunction);
-				if (neighbor->h >= MAX_COST || neighbor->h < newh)
-				{
-					neighbor->SetBehindEdge(currentEdge);
-					neighbor->h = newh;
-					neighbor->Previous = myVertex;
-					heap->Insert(currentEdge);
-					vcache->UpdateHeuristic(neighbor);
-				}
+				neighbor->SetBehindEdge(currentEdge);
+				neighbor->h = newh;
+				neighbor->Previous = myVertex;
+				heap->Insert(currentEdge);
+				vcache->UpdateHeuristic(neighbor);
 			}
 		}
 	}
@@ -505,14 +515,14 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	if (!redundentSortedEvacuees->empty())
 	{
 		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);
-		if (this->solvermethod == EVC_SOLVER_METHOD_CASPER)
+		//if (this->solverMethod == EVC_SOLVER_METHOD_CASPER)
 		{
 			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
 				redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->countReturnEvacuees));
 		}
-		else
+		//else
 		{
-			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
+			//SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
 		}
 		redundentSortedEvacuees->clear();
 	}

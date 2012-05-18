@@ -290,7 +290,7 @@ private:
 	INAStreetDirectionsAgentPtr pStreetAgent;	
 	float					SaturationPerCap;
 	float					CriticalDensPerCap;
-	EVC_SOLVER_METHOD		solvermethod;
+	EVC_SOLVER_METHOD		solverMethod;
 	EVC_TRAFFIC_MODEL		trafficModel;
 	float					costPerDensity;
 	VARIANT_BOOL			flockingEnabled;
