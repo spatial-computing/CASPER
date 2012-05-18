@@ -392,11 +392,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		tempEvc->Previous = 0;
 		myEdge = tempEvc->GetBehindEdge();
 
-		if (myEdge)
-		{
-			myEdge->H = 0.0;
-			heap->Insert(myEdge);
-		}
+		if (myEdge) heap->Insert(myEdge);
 		else
 		{
 			// if the start point was a single junction, then all the adjacent edges can be start edges
@@ -409,7 +405,6 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
 				myEdge = ecache->New(ipCurrentEdge);
 				tempEvc->SetBehindEdge(myEdge);
-				myEdge->H = 0.0;
 				heap->Insert(myEdge);
 			}
 		}
@@ -422,18 +417,12 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		// Remove the next junction EID from the top of the stack
 		myEdge = heap->DeleteMin();
 		myVertex = myEdge->ToVertex;
+		vcache->UpdateHeuristic(myVertex);
 		if (FAILED(hr = closedList->Insert(myEdge)))
 		{
 			// closedList violation happened
 			pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
 			return -myEdge->EID;
-		}
-		_ASSERT(myEdge->H <= myVertex->h);
-		if (myEdge->H < myVertex->h) myEdge->H = myVertex->h;
-		else
-		{
-			saved++;
-			continue;
 		}
 
 		// The step progressor is based on discovered evacuee vertices
@@ -490,8 +479,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 					neighbor->SetBehindEdge(currentEdge);
 					neighbor->h = newh;
 					neighbor->Previous = myVertex;
-					if (FAILED(hr = heap->DecreaseKey(currentEdge))) return hr;	
-					vcache->UpdateHeuristic(neighbor);			
+					if (FAILED(hr = heap->DecreaseKey(currentEdge))) return hr;
 				}
 			}
 			else // unvisited vertex. create new and insert in heap
@@ -501,7 +489,6 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 				neighbor->h = newh;
 				neighbor->Previous = myVertex;
 				heap->Insert(currentEdge);
-				vcache->UpdateHeuristic(neighbor);
 			}
 		}
 	}

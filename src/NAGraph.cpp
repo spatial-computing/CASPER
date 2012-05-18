@@ -39,13 +39,12 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	initDelayCostPerPop = cpy.initDelayCostPerPop;
 	trafficModel = cpy.trafficModel;
 	CASPERRatio = cpy.CASPERRatio;
-	H = cpy.H;
+	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
 			   double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
-	H = 0.0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
 	LastExteriorEdge = 0;

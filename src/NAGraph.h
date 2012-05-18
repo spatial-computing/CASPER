@@ -168,7 +168,6 @@ private:
 
 public:
 	double OriginalCost;
-	double H;
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
 	INetworkEdgePtr NetEdge;
