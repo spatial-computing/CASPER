@@ -219,7 +219,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod);
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrese key.
 						{
-							neighbor = vcache->New(ipCurrentJunction);
+							neighbor = currentEdge->ToVertex; //vcache->New(ipCurrentJunction);
 							if (neighbor->g > newCost)
 							{
 								neighbor->SetBehindEdge(currentEdge);
@@ -465,8 +465,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			ipCurrentJunction = ipOtherElement;
 
 			if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-			if (FAILED(hr = ipCurrentEdge->QueryJunctions(ipCurrentJunction, 0))) return hr; 
-			//if (FAILED(hr = ipCurrentJunction->get_EID(&currentJunctionEID))) return hr;
+			if (FAILED(hr = ipCurrentEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
 
 			// check restriction for the recently discovered edge
 			if (FAILED(hr = ipNetworkBackwardStarEx->get_IsRestricted(ipCurrentEdge, &isRestricted))) return hr;
@@ -479,7 +478,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 
 			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
 			{
-				neighbor = vcache->New(ipCurrentJunction);
+				neighbor = currentEdge->ToVertex; //vcache->New(ipCurrentJunction);
 				if (neighbor->g > newCost)
 				{
 					neighbor->SetBehindEdge(currentEdge);
@@ -508,14 +507,14 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	if (!redundentSortedEvacuees->empty())
 	{
 		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);
-		//if (this->solverMethod == EVC_SOLVER_METHOD_CASPER)
+		if (this->solverMethod == EVC_SOLVER_METHOD_CASPER)
 		{
 			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
 				redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->countReturnEvacuees));
 		}
-		//else
+		else
 		{
-			//SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
+			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
 		}
 		redundentSortedEvacuees->clear();
 	}
