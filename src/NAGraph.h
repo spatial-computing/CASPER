@@ -80,7 +80,7 @@ public:
 	}
 	
 	NAVertexPtr New(INetworkJunctionPtr junction);
-	void NAVertexCache::UpdateHeuristic(NAVertexPtr vertex);
+	bool UpdateHeuristic(NAVertex * n);
 	NAVertexPtr Get(long eid);
 	void Clear();
 };
@@ -184,13 +184,10 @@ public:
 		double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel);
 	NAEdge(const NAEdge& cpy);
 
-	double GetReservedPop() const { return reservations->ReservedPop; }
-	bool LessThan(NAEdge * other) { return ToVertex->g + ToVertex->h < other->ToVertex->g + other->ToVertex->h; }
+	static bool LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->h < n2->ToVertex->g + n2->ToVertex->h; }
+	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g < n2->ToVertex->g; }
 
-	//~NAEdge(void)
-	//{
-	//	delete reservations;
-	//}
+	double GetReservedPop() const { return reservations->ReservedPop; }
 };
 
 typedef NAEdge * NAEdgePtr;

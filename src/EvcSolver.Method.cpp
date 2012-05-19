@@ -13,7 +13,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx)
 {	
 	// creating the heap for the dijkstra search
-	FibonacciHeap * heap = new FibonacciHeap();
+	FibonacciHeap * heap = new FibonacciHeap(&NAEdge::LessThanHur);
 	NAEdgeClosed * closedList = new NAEdgeClosed();
 	NAEdgePtr currentEdge;
 	std::vector<EvacueePtr>::iterator seit;
@@ -347,9 +347,9 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	// true distance to closest safe zone using backward traversal and Dijkstra
 
 	// creating the heap for the dijkstra search
-	long adjacentEdgeCount, i, currentJunctionEID;
+	long adjacentEdgeCount, i;
 	int saved = 0;
-	FibonacciHeap * heap = new FibonacciHeap();
+	FibonacciHeap * heap = new FibonacciHeap(&NAEdge::LessThanNonHur);
 	NAEdgeClosed * closedList = new NAEdgeClosed();
 	NAEdge * currentEdge;
 	NAVertexPtr neighbor, evc, tempEvc;
@@ -365,7 +365,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, newh;
+	double fromPosition, toPosition, newCost;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -387,7 +387,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		evc = iterator->second;
 		tempEvc = vcache->New(evc->Junction);
 		tempEvc->SetBehindEdge(evc->GetBehindEdge());
-		tempEvc->h = evc->h;
+		tempEvc->g = evc->h;
 		tempEvc->Junction = evc->Junction;
 		tempEvc->Previous = 0;
 		myEdge = tempEvc->GetBehindEdge();
@@ -417,7 +417,6 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		// Remove the next junction EID from the top of the stack
 		myEdge = heap->DeleteMin();
 		myVertex = myEdge->ToVertex;
-		vcache->UpdateHeuristic(myVertex);
 		if (FAILED(hr = closedList->Insert(myEdge)))
 		{
 			// closedList violation happened
@@ -425,13 +424,20 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			return -myEdge->EID;
 		}
 
-		// The step progressor is based on discovered evacuee vertices
+		// part to check if this branch of DJ tree needs expanding to update hueristics
+		if (vcache->UpdateHeuristic(myVertex))
+		{
+			saved++;
+			// continue;
+		}		
+
+		// termination condition and evacuee discovery
 		pairs = EvacueePairs->Find(myVertex->EID);
 		if (pairs)
 		{
 			for (eitr = pairs->begin(); eitr != pairs->end(); eitr++)
 			{
-				(*eitr)->PredictedCost = myVertex->h;
+				(*eitr)->PredictedCost = myVertex->g;
 				redundentSortedEvacuees->push_back(*eitr);
 			}
 			EvacueePairs->Erase(myVertex->EID);
@@ -460,7 +466,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 
 			if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
 			if (FAILED(hr = ipCurrentEdge->QueryJunctions(ipCurrentJunction, 0))) return hr; 
-			if (FAILED(hr = ipCurrentJunction->get_EID(&currentJunctionEID))) return hr;
+			//if (FAILED(hr = ipCurrentJunction->get_EID(&currentJunctionEID))) return hr;
 
 			// check restriction for the recently discovered edge
 			if (FAILED(hr = ipNetworkBackwardStarEx->get_IsRestricted(ipCurrentEdge, &isRestricted))) return hr;
@@ -469,15 +475,15 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			// if node has already been discovered then no need to heap it
 			currentEdge = ecache->New(ipCurrentEdge);
 			if (closedList->IsClosed(currentEdge)) continue;
-			newh = myVertex->h + currentEdge->GetCost(0.0, this->solverMethod);
+			newCost = myVertex->g + currentEdge->GetCost(0.0, this->solverMethod);
 
 			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
 			{
-				neighbor = vcache->Get(currentJunctionEID);
-				if (neighbor->h > newh)
+				neighbor = vcache->New(ipCurrentJunction);
+				if (neighbor->g > newCost)
 				{
 					neighbor->SetBehindEdge(currentEdge);
-					neighbor->h = newh;
+					neighbor->g = newCost;
 					neighbor->Previous = myVertex;
 					if (FAILED(hr = heap->DecreaseKey(currentEdge))) return hr;
 				}
@@ -486,7 +492,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			{
 				neighbor = vcache->New(ipCurrentJunction);
 				neighbor->SetBehindEdge(currentEdge);
-				neighbor->h = newh;
+				neighbor->g = newCost;
 				neighbor->Previous = myVertex;
 				heap->Insert(currentEdge);
 			}

@@ -93,13 +93,11 @@ private:
 	HeapNode ** rootListByRank;
 	HeapNode * minRoot;
 	HeapNodeTable * nodeTable;
-	// HeapNodeTable * visitTable;
-
+	bool (*LessThan)(NAEdge *, NAEdge *);
 	bool link(HeapNode * root);
 
 public:
-	FibonacciHeap();
-	FibonacciHeap(HeapDataType * root);	
+	FibonacciHeap(bool (*LessThanMethod)(NAEdge *, NAEdge *));
 	bool IsVisited(HeapDataType * vertex);
 
 	~FibonacciHeap();

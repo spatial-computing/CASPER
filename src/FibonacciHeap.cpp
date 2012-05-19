@@ -33,11 +33,6 @@ HeapNode::HeapNode()
 	rank = 0;
 }
 
-//bool HeapNode::LessThan(const HeapNode * other) const
-//{
-//	return this->data->GetKey() < other->data->GetKey();
-//}
-
 bool HeapNode::addChild(HeapNode * node)
 {
 	if(children != NULL)
@@ -109,18 +104,19 @@ HeapNode * HeapNode::rightMostSibling()
 //	Implementation of class Fibonacci Heap
 // =========================================================================
 
-FibonacciHeap::FibonacciHeap()
+FibonacciHeap::FibonacciHeap(bool (*LessThanMethod)(NAEdge *, NAEdge *))
 {
+	this->LessThan = LessThanMethod;
 	minRoot = NULL;
 	nodeTable = new HeapNodeTable();
-	// visitTable = new HeapNodeTable();
 	rootListByRank = new HeapNodePtr[100];
 }
 
-FibonacciHeap::FibonacciHeap(HeapDataType * root)
+/*
+FibonacciHeap::FibonacciHeap(HeapDataType * root, (*LessThan)(NAEdge *, NAEdge *) LessThanMethod)
 {
+	this->LessThan = LessThanMethod;
 	nodeTable = new HeapNodeTable();
-	// visitTable = new HeapNodeTable();
 	this->minRoot = new HeapNode(root);
 	rootListByRank = new HeapNodePtr[100];
 	minRoot->parent = NULL;
@@ -129,14 +125,13 @@ FibonacciHeap::FibonacciHeap(HeapDataType * root)
 	minRoot->rightSibling = NULL;
 	minRoot->rank = 0;
 	nodeTable->Insert(minRoot);
-	// visitTable->insert(HeapNodeTablePair(minRoot));
 }
+*/
 
 FibonacciHeap::~FibonacciHeap()
 {
 	Clear();
 	delete nodeTable;
-	// delete visitTable;
 	delete [] rootListByRank;
 }
 
@@ -151,7 +146,7 @@ bool FibonacciHeap::Insert(HeapDataType * node)
 	HeapNode * out = nodeTable->Find(node);
 	if (out)
 	{
-		if (node->LessThan(out->data)) return (DecreaseKey(node) == S_OK);
+		if ((*LessThan)(node, out->data)) return (DecreaseKey(node) == S_OK);
 		else return false;
 	}
 	else
@@ -162,7 +157,7 @@ bool FibonacciHeap::Insert(HeapDataType * node)
 		else
 		{
 			minRoot->addSibling(n);
-			if(n->data->LessThan(minRoot->data)) minRoot = n;
+			if((*LessThan)(n->data, minRoot->data)) minRoot = n;
 		}
 		
 		nodeTable->Insert(n);
@@ -219,7 +214,7 @@ HeapDataType * FibonacciHeap::DeleteMin()
 	while(temp)
 	{
 		// Check if key of current vertex is smaller than the key of minRoot
-		if(temp->data->LessThan(minRoot->data)) minRoot = temp;		
+		if((*LessThan)(temp->data,minRoot->data)) minRoot = temp;		
 
 		nextTemp = temp->rightSibling;		
 		link(temp);
@@ -255,7 +250,7 @@ HRESULT FibonacciHeap::DecreaseKey(HeapDataType * vertex)
 			minRoot->addSibling(node);		
 		}
 		// Check if key is smaller than the key of minRoot
-		if(node->data->LessThan(minRoot->data)) minRoot = node;
+		if((*LessThan)(node->data, minRoot->data)) minRoot = node;
 		return S_OK;
 	}
 }
@@ -281,7 +276,7 @@ bool FibonacciHeap::link(HeapNode * root)
 		HeapNode * linkVertex = rootListByRank[root->rank];
 		rootListByRank[root->rank] = NULL;
 		
-		if(root->data->LessThan(linkVertex->data) || root == minRoot)
+		if((*LessThan)(root->data, linkVertex->data) || root == minRoot)
 		{
 			linkVertex->remove();
 			root->addChild(linkVertex);
@@ -298,25 +293,6 @@ bool FibonacciHeap::link(HeapNode * root)
 		return true;
 	}
 }
-/*
-void HeapNodeTable::Erase(NAVertex * vertex)
-{
-	cache->erase(vertex->EID);
-}
-
-void HeapNodeTable::Insert(HeapNodePtr node)
-{
-	cache->insert(std::pair<long, HeapNodePtr>(node->data->EID, node));
-}
-
-HeapNodePtr HeapNodeTable::Find(NAVertex * vertex)
-{
-	stdext::hash_map<long, HeapNodePtr>::iterator it = cache->find(vertex->EID);
-	HeapNodePtr o = 0;
-	if (it != cache->end()) o = it->second;
-	return o;
-}
-*/
 
 void HeapNodeTable::Erase(NAEdge * edge)
 {

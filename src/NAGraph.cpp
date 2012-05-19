@@ -291,10 +291,12 @@ void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 	BehindEdge->ToVertex = this;
 }
 
-void NAVertexCache::UpdateHeuristic(NAVertexPtr vertex)
+bool NAVertexCache::UpdateHeuristic(NAVertex * n)
 {
-	NAVertexPtr a = Get(vertex->EID);
-	a->h = min(a->h, vertex->h);
+	NAVertexPtr a = Get(n->EID);
+	bool ret = (a->GetBehindEdge()->EID == n->GetBehindEdge()->EID) && (a->h == n->g);
+	a->h = min (a->h, n->g);
+	return ret;
 }
 
 NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
