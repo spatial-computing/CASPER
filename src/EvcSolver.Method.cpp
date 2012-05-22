@@ -22,7 +22,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route;
+	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID;
@@ -253,7 +253,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					{
 						while (temp->Previous)
 						{
-							population2Route = min(population2Route, temp->GetBehindEdge()->LeftCapacity());
+							leftCap = temp->GetBehindEdge()->LeftCapacity();
+							if (this->solverMethod != EVC_SOLVER_METHOD_CCRP || leftCap > 0.0)
+								population2Route = min(population2Route, leftCap);
 							temp = temp->Previous;
 						}
 						if (population2Route <= 0.0) population2Route = populationLeft;	
@@ -391,6 +393,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		tempEvc->Junction = evc->Junction;
 		tempEvc->Previous = 0;
 		myEdge = tempEvc->GetBehindEdge();
+		myEdge->hFlag = 0.0;
 
 		if (myEdge) heap->Insert(myEdge);
 		else
@@ -404,6 +407,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 				ipCurrentEdge = ipElement;
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
 				myEdge = ecache->New(ipCurrentEdge);
+				myEdge->hFlag = 0.0;
 				tempEvc->SetBehindEdge(myEdge);
 				heap->Insert(myEdge);
 			}
@@ -425,12 +429,18 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		}
 
 		// part to check if this branch of DJ tree needs expanding to update hueristics
+		// This update should know if this is the first time this vertex is coming out
+		// in this 'RunHeurustic' round. Only then we can be sure whether to update to min
+		// or update absolutely to this new value.
 		vcache->UpdateHeuristic(myVertex);
 		_ASSERT(myEdge->hFlag <= myVertex->g);
 		if (myEdge->hFlag == myVertex->g)
 		{
 			saved++;
-			continue;
+			// here if you 'continue' you are technically breaking the graph into a smaller pice
+			// and the paths are not going to be correct and your huerisitcs are
+			// gonna be an over exstimate which is bad
+			// continue;
 		}
 		myEdge->hFlag = myVertex->g;
 
