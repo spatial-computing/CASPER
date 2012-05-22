@@ -40,11 +40,13 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	trafficModel = cpy.trafficModel;
 	CASPERRatio = cpy.CASPERRatio;
 	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
+	hFlag = cpy.hFlag;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
 			   double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
+	hFlag = 0.0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
 	LastExteriorEdge = 0;
@@ -291,12 +293,10 @@ void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 	BehindEdge->ToVertex = this;
 }
 
-bool NAVertexCache::UpdateHeuristic(NAVertex * n)
+void NAVertexCache::UpdateHeuristic(NAVertex * n)
 {
 	NAVertexPtr a = Get(n->EID);
-	bool ret = (a->GetBehindEdge()->EID == n->GetBehindEdge()->EID) && (a->h == n->g);
-	a->h = min (a->h, n->g);
-	return ret;
+	a->h = min(a->h, n->g);
 }
 
 NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)

@@ -80,7 +80,7 @@ public:
 	}
 	
 	NAVertexPtr New(INetworkJunctionPtr junction);
-	bool UpdateHeuristic(NAVertex * n);
+	void UpdateHeuristic(NAVertex * n);
 	NAVertexPtr Get(long eid);
 	void Clear();
 };
@@ -168,6 +168,7 @@ private:
 
 public:
 	double OriginalCost;
+	double hFlag;
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
 	INetworkEdgePtr NetEdge;

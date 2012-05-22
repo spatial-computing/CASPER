@@ -144,7 +144,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					iterator = safeZoneList->find(myVertex->EID);
 					if (iterator != safeZoneList->end())
 					{
-						// I should handle the last turn restriction here					
+						// Handle the last turn restriction here					
 						edge = iterator->second->GetBehindEdge();
 						restricted = false;
 
@@ -219,7 +219,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod);
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrese key.
 						{
-							neighbor = currentEdge->ToVertex; //vcache->New(ipCurrentJunction);
+							neighbor = currentEdge->ToVertex;
 							if (neighbor->g > newCost)
 							{
 								neighbor->SetBehindEdge(currentEdge);
@@ -425,11 +425,14 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		}
 
 		// part to check if this branch of DJ tree needs expanding to update hueristics
-		if (vcache->UpdateHeuristic(myVertex))
+		vcache->UpdateHeuristic(myVertex);
+		_ASSERT(myEdge->hFlag <= myVertex->g);
+		if (myEdge->hFlag == myVertex->g)
 		{
 			saved++;
-			// continue;
-		}		
+			continue;
+		}
+		myEdge->hFlag = myVertex->g;
 
 		// termination condition and evacuee discovery
 		pairs = EvacueePairs->Find(myVertex->EID);
@@ -474,11 +477,11 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			// if node has already been discovered then no need to heap it
 			currentEdge = ecache->New(ipCurrentEdge);
 			if (closedList->IsClosed(currentEdge)) continue;
-			newCost = myVertex->g + currentEdge->GetCost(0.0, this->solverMethod);
+			newCost = myVertex->g + currentEdge->GetCost(1.0, this->solverMethod);
 
 			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
 			{
-				neighbor = currentEdge->ToVertex; //vcache->New(ipCurrentJunction);
+				neighbor = currentEdge->ToVertex;
 				if (neighbor->g > newCost)
 				{
 					neighbor->SetBehindEdge(currentEdge);
