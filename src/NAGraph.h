@@ -24,26 +24,60 @@ class NAEdge;
 // Edge: the previous edge leading to this vertex
 // Previous: the previous vertex leading to this vertex
 
+struct HValue
+{
+public:
+	double Value;
+	long EdgeID;
+	
+	HValue(long edgeID, double value)
+	{
+		EdgeID = edgeID;
+		Value = value;
+	}
+
+	static bool LessThan(HValue a, HValue b)
+	{
+		return a.Value < b.Value;
+	}
+};
+
 class NAVertex
 {
 private:
 	NAEdge * BehindEdge;
+	std::vector<HValue> * h;
 
 public:
 	double g;
-	double h;
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
+	double posAlong;
+
+	double minh() const
+	{
+		std::vector<HValue>::reference reff = h->front();
+		return reff.Value;
+	}
+
+	void ResetHValues(void)
+	{
+		h->clear(); 
+		h->reserve(3);
+		h->push_back(HValue(0l, MAX_COST));
+	}
 
 	void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
+	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	
 	NAVertex(void);
+	~NAVertex(void) { delete h; }
 	NAVertex(const NAVertex& cpy);
 	NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge);
-	double GetKey() { return g + h; }
-	bool LessThan(NAVertex * other) { return g + h < other->g + other->h; }
+	// double GetKey() { return g + h; }
+	// bool LessThan(NAVertex * other) { return g + h < other->g + other->h; }
 };
 
 typedef NAVertex * NAVertexPtr;
@@ -80,7 +114,7 @@ public:
 	}
 	
 	NAVertexPtr New(INetworkJunctionPtr junction);
-	void UpdateHeuristic(NAVertex * n);
+	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);
 	void Clear();
 };
@@ -168,7 +202,6 @@ private:
 
 public:
 	double OriginalCost;
-	double hFlag;
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
 	INetworkEdgePtr NetEdge;
@@ -185,8 +218,11 @@ public:
 		double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel);
 	NAEdge(const NAEdge& cpy);
 
-	static bool LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->h < n2->ToVertex->g + n2->ToVertex->h; }
 	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g < n2->ToVertex->g; }
+	static bool LessThanHur   (NAEdge * n1, NAEdge * n2)
+	{
+		return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh();
+	}
 
 	double GetReservedPop() const { return reservations->ReservedPop; }
 };

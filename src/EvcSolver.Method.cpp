@@ -96,7 +96,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					evc = *vit;
 					tempEvc = vcache->New(evc->Junction);
 					tempEvc->SetBehindEdge(evc->GetBehindEdge());
-					tempEvc->g = evc->g;
+					tempEvc->g = evc->posAlong;
 					tempEvc->Junction = evc->Junction;
 					tempEvc->Previous = 0;
 					myEdge = tempEvc->GetBehindEdge();
@@ -168,10 +168,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 						if (!restricted)
 						{
-							if (TimeToBeat >  iterator->second->h + myVertex->g)
+							if (TimeToBeat >  iterator->second->posAlong + myVertex->g)
 							{
 								BetterSafeZone = iterator->second;
-								TimeToBeat = iterator->second->h + myVertex->g;
+								TimeToBeat = iterator->second->posAlong + myVertex->g;
 								finalVertex = myVertex;
 							}
 						}
@@ -271,7 +271,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (BetterSafeZone->GetBehindEdge())
 					{
 						if (FAILED(hr = BetterSafeZone->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
-						edgePortion = BetterSafeZone->h / BetterSafeZone->GetBehindEdge()->OriginalCost;
+						edgePortion = BetterSafeZone->posAlong / BetterSafeZone->GetBehindEdge()->OriginalCost;
 						if (fromPosition < toPosition) toPosition = fromPosition + edgePortion;
 						else toPosition = fromPosition - edgePortion;
 
@@ -389,11 +389,11 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		evc = iterator->second;
 		tempEvc = vcache->New(evc->Junction);
 		tempEvc->SetBehindEdge(evc->GetBehindEdge());
-		tempEvc->g = evc->h;
+		tempEvc->g = evc->posAlong;
 		tempEvc->Junction = evc->Junction;
 		tempEvc->Previous = 0;
 		myEdge = tempEvc->GetBehindEdge();
-		myEdge->hFlag = 0.0;
+		tempEvc->ResetHValues();
 
 		if (myEdge) heap->Insert(myEdge);
 		else
@@ -407,7 +407,6 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 				ipCurrentEdge = ipElement;
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
 				myEdge = ecache->New(ipCurrentEdge);
-				myEdge->hFlag = 0.0;
 				tempEvc->SetBehindEdge(myEdge);
 				heap->Insert(myEdge);
 			}
@@ -432,17 +431,11 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		// This update should know if this is the first time this vertex is coming out
 		// in this 'RunHeurustic' round. Only then we can be sure whether to update to min
 		// or update absolutely to this new value.
-		vcache->UpdateHeuristic(myVertex);
-		_ASSERT(myEdge->hFlag <= myVertex->g);
-		if (myEdge->hFlag == myVertex->g)
+		if (vcache->UpdateHeuristic(myEdge->EID, myVertex))
 		{
 			saved++;
-			// here if you 'continue' you are technically breaking the graph into a smaller pice
-			// and the paths are not going to be correct and your huerisitcs are
-			// gonna be an over exstimate which is bad
-			// continue;
+			continue;
 		}
-		myEdge->hFlag = myVertex->g;
 
 		// termination condition and evacuee discovery
 		pairs = EvacueePairs->Find(myVertex->EID);

@@ -263,7 +263,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (!isRestricted)
 					{
 						myVertex = new NAVertex(ipElement, 0);
-						myVertex->h = 0.0;
 						safeZoneList->insert(NAVertexTablePair(myVertex));
 					}
 				}
@@ -290,7 +289,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->h = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
+							myVertex->posAlong = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
 
 							safeZoneList->insert(NAVertexTablePair(myVertex));
 						}
@@ -309,7 +308,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;						
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->h = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
+							myVertex->posAlong = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
 							safeZoneList->insert(NAVertexTablePair(myVertex));
 						}
 					}
@@ -415,7 +414,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->g = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
+							myVertex->posAlong = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);
 						}
 					}
@@ -433,7 +432,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
 							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->g = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
+							myVertex->posAlong = posAlong * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);							
 						}
 					}

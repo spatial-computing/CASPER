@@ -2,6 +2,7 @@
 #include "NAGraph.h"
 #include "Evacuee.h"
 #include <cmath>
+#include <algorithm>
 
 ///////////////////////////////////////////////////////////////////////
 // EdgeReservations Methods
@@ -40,13 +41,11 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	trafficModel = cpy.trafficModel;
 	CASPERRatio = cpy.CASPERRatio;
 	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
-	hFlag = cpy.hFlag;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
 			   double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
-	hFlag = 0.0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
 	LastExteriorEdge = 0;
@@ -252,11 +251,12 @@ void NAEdgeCache::Clear()
 NAVertex::NAVertex(const NAVertex& cpy)
 {
 	g = cpy.g;
-	h = cpy.h;
+	h = new std::vector<HValue>(*(cpy.h));
 	Junction = cpy.Junction;
 	BehindEdge = cpy.BehindEdge;
 	Previous = cpy.Previous;
 	EID = cpy.EID;
+	posAlong = cpy.posAlong;
 }
 
 NAVertex::NAVertex(void)
@@ -266,14 +266,18 @@ NAVertex::NAVertex(void)
 	BehindEdge = 0;
 	Previous = 0;
 	g = 0;
-	h = -1;
+	h = new std::vector<HValue>();
+	ResetHValues();
+	posAlong = 0.0;
 }
 
 NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 {
 	Previous = 0;
+	posAlong = 0.0;
 	g = 0;
-	h = MAX_COST;
+	h = new std::vector<HValue>();
+	ResetHValues();
 	BehindEdge = behindEdge;
 
 	if (!FAILED(junction->get_EID(&EID)))
@@ -293,10 +297,30 @@ void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 	BehindEdge->ToVertex = this;
 }
 
-void NAVertexCache::UpdateHeuristic(NAVertex * n)
+bool NAVertex::UpdateHeuristic(long edgeid, NAVertex * n)
+{
+	bool ret = false;
+	for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++)
+	{
+		if (i->EdgeID == edgeid)
+		{
+			_ASSERT(i->Value <= n->g);
+			ret = i->Value == n->g;
+			i->Value = n->g;
+			if (!ret) std::sort(h->begin(), h->end(), HValue::LessThan);
+			return ret;
+		}
+	}
+	h->push_back(HValue(edgeid, n->g));
+	std::sort(h->begin(), h->end(), HValue::LessThan);
+	return ret;	
+}
+
+// return true if update was unnesecery
+bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n)
 {
 	NAVertexPtr a = Get(n->EID);
-	a->h = min(a->h, n->g);
+	return a->UpdateHeuristic(edgeid, n);
 }
 
 NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
