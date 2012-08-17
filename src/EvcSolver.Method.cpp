@@ -393,7 +393,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		tempEvc->Junction = evc->Junction;
 		tempEvc->Previous = 0;
 		myEdge = tempEvc->GetBehindEdge();
-		tempEvc->ResetHValues();
+		tempEvc->ResetHValues(); // why am i doing this?
 
 		if (myEdge) heap->Insert(myEdge);
 		else
