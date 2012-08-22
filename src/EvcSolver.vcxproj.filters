@@ -92,4 +92,9 @@
     </None>
     <None Include="TODO List.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Midl Include="_EvcSolver.idl">
+      <Filter>Source Files</Filter>
+    </Midl>
+  </ItemGroup>
 </Project>

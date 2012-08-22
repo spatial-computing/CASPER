@@ -7,7 +7,7 @@
 // without modification, provided you include the original copyright
 // notice and use restrictions.
 // 
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
 
 #include "stdafx.h"
 #include "NameConstants.h"
@@ -1739,7 +1739,7 @@ HRESULT EvcSolver::LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, IN
 	if (FAILED(hr = pTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 
 	// Create variables for looping through the cursor and setting up barriers
-	IRowPtr ipRow;
+	IRowESRI * ipRow;
 	INALocationObjectPtr ipNALocationObject;
 	INALocationPtr ipNALocation(CLSID_NALocation);
 	IEnumNetworkElementPtr ipEnumNetworkElement;

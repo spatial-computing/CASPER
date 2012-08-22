@@ -7,14 +7,14 @@
 // without modification, provided you include the original copyright
 // notice and use restrictions.
 // 
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
 
 // CustomSolver.cpp : Implementation of DLL Exports.
 
 #include "stdafx.h"
 #include "resource.h"
 
-[importlib("\Program Files (x86)\ArcGIS\Desktop10.0\com\esrinetworkanalyst.olb")];
+[importlib("\Program Files (x86)\ArcGIS\Desktop10.1\com\esrinetworkanalyst.olb")];
 
 // The module attribute causes DllMain, DllRegisterServer and DllUnregisterServer to be automatically implemented for you
 [ module(dll, uuid = "{F25947D1-9C81-48A6-9BFF-CF9EB158FFD7}", 

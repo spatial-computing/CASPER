@@ -1,10 +1,13 @@
-import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\prsht.idl";
-import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\mshtml.idl";
-import "c:\program files\microsoft sdks\windows\v6.0a\include\dimm.idl";
-import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\mshtmhst.idl";
-import "c:\program files\microsoft sdks\windows\v6.0a\include\docobj.idl";
-import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\exdisp.idl";
-import "C:\Program Files\Microsoft SDKs\Windows\v6.0A\include\objsafe.idl";
+import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\prsht.idl";
+import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\mshtml.idl";
+import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\dimm.idl";
+import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\dispex.idl";
+import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\mshtmhst.idl";
+import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\docobj.idl";
+import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\exdisp.idl";
+import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\objsafe.idl";
+import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\oledb.idl";
+import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\transact.idl";
 
 [
 	object,
@@ -96,7 +99,7 @@ library CustomSolver
 	importlib("stdole2.tlb");
 	importlib("olepro32.dll");
 
-	importlib("\Program Files (x86)\ArcGIS\Desktop10.0\com\esrinetworkanalyst.olb");
+	importlib("\Program Files (x86)\ArcGIS\Desktop10.1\com\esrinetworkanalyst.olb");
 	[
 		version(1.0),
 		uuid(7b081f99-b691-46b1-b756-aa72868c8683),

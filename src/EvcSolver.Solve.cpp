@@ -7,7 +7,7 @@
 // without modification, provided you include the original copyright
 // notice and use restrictions.
 // 
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
 
 #include "stdafx.h"
 #include "NameConstants.h"
@@ -165,7 +165,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = GetNAClassTable(pNAContext, CComBSTR(CS_ZONES_NAME), &ipZonesTable))) return hr;
 
 	// Create variables for looping through the cursor and traversing the network
-	IRowPtr ipRow;
+	IRowESRI * ipRow;
 	ICursorPtr ipCursor;
 	INALocationObjectPtr ipNALocationObject;
 	INALocationPtr ipNALocation(CLSID_NALocation);
