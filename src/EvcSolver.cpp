@@ -1758,9 +1758,7 @@ HRESULT EvcSolver::LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, IN
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
 		ipNALocationObject = ipRow;
-		if (!ipNALocationObject) // we only want valid NALocationObjects
-			continue;
-
+		if (!ipNALocationObject) continue;// we only want valid NALocationObjects			
 		if (FAILED(hr = ipNALocationObject->QueryNALocation(ipNALocation))) return hr;
 
 		// Once we have the NALocation, we need to check if it is actually located within the network dataset
