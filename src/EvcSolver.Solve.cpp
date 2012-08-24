@@ -575,6 +575,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					// take a path segment from the stack
 					pathSegment = *psit;
 					pointCount = -1;
+					_ASSERT(pathSegment->EdgePortion > 0.0);
 
 					// retrive street shape for this segment
 					if (FAILED(hr = ipNetworkDataset->get_SourceByID(pathSegment->SourceID, &ipNetworkSource))) return hr;
@@ -662,7 +663,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		IFeatureClassPtr ipEdgesFC(ipEdgesNAClass);
 		NAEdgePtr edge;
 		double resPop;
-		long sourceIDFieldIndex, sourceOIDFieldIndex, resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, dirFieldIndex, eidFieldIndex;
+		long sourceIDFieldIndex, sourceOIDFieldIndex, resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, dirFieldIndex, eidFieldIndex, congestionFieldIndex;
 
 		// Create an insert cursor and feature buffer from the "EdgeStat" feature class to be used to write edges
 		if (FAILED(hr = ipEdgesFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
@@ -673,6 +674,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_SOURCE_OID), &sourceOIDFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_DIR), &dirFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_ReservPop), &resPopFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_Congestion), &congestionFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_TravCost), &travCostFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_OrgCost), &orgCostFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_EID), &eidFieldIndex))) return hr;
@@ -728,6 +730,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCurrentCost())))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->OriginalCost)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, CComVariant(edge->GetCurrentCost() / edge->OriginalCost)))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
@@ -784,6 +787,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCurrentCost())))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->OriginalCost)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, CComVariant(edge->GetCurrentCost() / edge->OriginalCost)))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;

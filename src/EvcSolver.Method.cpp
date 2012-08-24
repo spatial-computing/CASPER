@@ -254,8 +254,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						while (temp->Previous)
 						{
 							leftCap = temp->GetBehindEdge()->LeftCapacity();
-							if (this->solverMethod != EVC_SOLVER_METHOD_CCRP || leftCap > 0.0)
-								population2Route = min(population2Route, leftCap);
+							if (this->solverMethod != EVC_SOLVER_METHOD_CCRP || leftCap > 0.0) population2Route = min(population2Route, leftCap);
 							temp = temp->Previous;
 						}
 						if (population2Route <= 0.0) population2Route = populationLeft;	
@@ -275,8 +274,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (fromPosition < toPosition) toPosition = fromPosition + edgePortion;
 						else toPosition = fromPosition - edgePortion;
 
-						path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
-						BetterSafeZone->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
+						if (edgePortion > 0.0)
+						{
+							path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
+							BetterSafeZone->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
+						}
 					}
 
 					edgePortion = 1.0;
@@ -306,9 +308,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						{
 							lastAdded->fromPosition = fromPosition;
 							lastAdded->EdgePortion = abs(lastAdded->toPosition - lastAdded->fromPosition); // 2.0 - (lastAdded->EdgePortion + edgePortion);
+							_ASSERT(lastAdded->EdgePortion > 0.0);
 						}
-						else
-						{
+						else if (edgePortion > 0.0)
+						{							
 							path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
 							finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
 						}

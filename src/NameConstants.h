@@ -58,6 +58,7 @@
 #define CS_FIELD_COST                               L"Cost"
 
 #define CS_FIELD_ReservPop                          L"ReservPop"
+#define CS_FIELD_Congestion                         L"Congestion"
 #define CS_FIELD_TravCost                           L"TravCost"
 #define CS_FIELD_OrgCost                            L"OrgCost"
 #define CS_FIELD_DIR                                L"Direction"

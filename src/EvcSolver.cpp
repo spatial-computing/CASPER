@@ -1678,6 +1678,12 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_Congestion));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
 	ipClassDefEdit->putref_Fields(ipFields);
 
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OID), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable);
@@ -1687,6 +1693,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_ReservPop), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TravCost), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OrgCost), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_Congestion), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_DIR), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_EID), esriNAFieldTypeOutput);
 

@@ -10,6 +10,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 							   FlockProfile * flockProfile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors)
 {
 	// construct FlockingLocation	
+	HRESULT hr = S_OK;
 	MyTime = startTime;
 	GTime = 0.0;
 	Traveled = 0.0;
@@ -27,10 +28,16 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	speedLimit = 0.0;
 
 	// build the path itterator and upcoming vertices
-	myPath->front()->pline->get_FromPoint(&MyLocation);
+	if (FAILED(hr = myPath->front()->pline->get_FromPoint(&MyLocation)))
+	{
+		OutputDebugString(L"FlockingObject - get_FromPoint: failed to get start point.");
+	}
 
 	// network element to keep intersection vertex
-	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element);
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element)))
+	{
+		OutputDebugString(L"FlockingObject - CreateNetworkElement: failed to create a junction element.");		
+	}
 	nextVertex = element;
 	initPathIterator = true;
 
@@ -62,15 +69,34 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	IPointCollectionPtr pcollect = myPath->back()->pline;
 	long pointCount = 0;
 
-	pcollect->get_PointCount(&pointCount);
-	pcollect->get_Point(pointCount - 1, &point);
-	point->QueryCoords(&x, &y);
-	finishPoint.set(x, y, 0.0);
+	if (FAILED(hr = pcollect->get_PointCount(&pointCount)))
+	{		
+		OutputDebugString(L"FlockingObject - get_PointCount: failed to get number of path points.");
+		_ASSERT(0);
+	}
+	if (pointCount > 0)
+	{
+		if (FAILED(hr = pcollect->get_Point(pointCount - 1, &point)))
+		{
+			OutputDebugString(L"FlockingObject - get_Point: failed to get end path point.");
+			_ASSERT(0);
+		}
+		if (point)
+		{
+			if (FAILED(hr = point->QueryCoords(&x, &y)))
+			{
+				OutputDebugString(L"FlockingObject - QueryCoords: failed to get end path point coordinates.");
+				_ASSERT(0);
+			}
+			finishPoint.set(x, y, 0.0);
+		}
+	}
 }
 
 void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors, double x1, double y1, double & dx, double & dy)
 {
 	myNeighborVehicles.clear();
+	HRESULT hr = S_OK;
 	bool possibleCollision = true;
 	IPointPtr p = 0;
 	double x2, y2, step = myVehicle->radius() * 4.0;
@@ -79,6 +105,8 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 
 	OpenSteer::Vec3 loc(x1, y1, 0.0);
 	OpenSteer::Vec3 move(x2 - x1, y2 - y1, 0.0);
+	// if (move.length() == 0.0) move = OpenSteer::Vec3::up;
+	_ASSERT(move.length() > 0.0);
 	move = move.normalize();
 	OpenSteer::Vec3 dir;
 	dir.cross(move, OpenSteer::Vec3(0.0, 0.0, 1.0));
@@ -378,8 +406,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 				size = (int)(ceil((*pathItr)->RoutedPop));
 				for (i = 0; i < size; i++)
 				{
-					objects->push_back(new FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name,
-									   ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects));
+					objects->push_back(new FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name, ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects));
 				}
 			}
 		}
