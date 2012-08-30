@@ -859,30 +859,35 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
 		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, initDelayCostPerPop);
-		flock->Init(Evacuees, ipNetworkQuery, costPerSec, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
 
-		// run simulation
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
-		if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, predictedCost))) return hr;
-		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
+		try
+		{
+			flock->Init(Evacuees, ipNetworkQuery, costPerSec, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
+
+			// run simulation
+			if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
+			if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, predictedCost))) return hr;
+			flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
+		}
+		catch(std::exception e)
+		{
+			_ASSERT(1);
+			pMessages->AddError(0, CComBSTR(_T("Unhandled error during flocking simulation.")));
+		}
 
 		// project back to analysis coordinate system
 		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
 		{
-			// get all points from the stack and make one polyline from them. this will be the path.
 			currentEvacuee = *eit;
-			if (!currentEvacuee->paths->empty())
+			for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
 			{
-				for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+				path = *pit;
+				for (psit = path->begin(); psit != path->end(); psit++)
 				{
-					path = *pit;
-					for (psit = path->begin(); psit != path->end(); psit++)
-					{
-						pathSegment = *psit;
+					pathSegment = *psit;
 					if (FAILED(hr = pathSegment->pline->Project(ipNAContextSR))) return hr;
-					}
 				}
-			}
+			}			
 		}
 
 		// start writing into the featureclass
@@ -966,7 +971,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 			if (ipStepProgressor) ipStepProgressor->Step();
-		}
+		}		
 
 		// collision messaging
 		colMsgString.Empty();
