@@ -51,7 +51,7 @@ public:
 		case FLOCK_PROFILE_PERSON:
 			IntersectionRadius = 10.0;
 			Mass = 0.1;
-			ZoneRadius = 50.0;
+			ZoneRadius = 25.0;
 			Radius = 0.2;
 			CloseNeighborDistance = 2.0;
 			NeighborDistance = 4.0;

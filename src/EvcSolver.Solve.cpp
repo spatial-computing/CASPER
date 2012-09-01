@@ -859,21 +859,23 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
 		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, initDelayCostPerPop);
-
+		flock->Init(Evacuees, ipNetworkQuery, costPerSec, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
+		
+		// run simulation
 		try
 		{
-			flock->Init(Evacuees, ipNetworkQuery, costPerSec, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
-
-			// run simulation
 			if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
 			if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, predictedCost))) return hr;
-			flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
 		}
-		catch(std::exception e)
+		catch(std::exception& e)
 		{
-			_ASSERT(1);
-			pMessages->AddError(0, CComBSTR(_T("Unhandled error during flocking simulation.")));
+			CComBSTR ccombstrErr("Critical error during flocking simulation: ");
+			ccombstrErr.Append(e.what());
+			pMessages->AddError(-1, ccombstrErr);
 		}
+
+		// retrive results even if it's empty or errored
+		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
 
 		// project back to analysis coordinate system
 		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
