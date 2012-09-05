@@ -55,7 +55,7 @@ public:
 			Radius = 0.2;
 			CloseNeighborDistance = 2.0;
 			NeighborDistance = 4.0;
-			UsualSpeed = 4.0;
+			UsualSpeed = 2.0;
 			break;
 		case FLOCK_PROFILE_BIKE:
 			IntersectionRadius = 20.0;
@@ -64,7 +64,7 @@ public:
 			Radius = 0.5;
 			CloseNeighborDistance = 5.0;
 			NeighborDistance = 10.0;
-			UsualSpeed = 8.0;
+			UsualSpeed = 7.0;
 			break;
 		}
 	}
