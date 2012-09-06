@@ -6,7 +6,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">
     <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Experiment.mxd"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerAttach>true</LocalDebuggerAttach>
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -15,7 +15,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Experiment.mxd"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerAttach>true</LocalDebuggerAttach>
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
@@ -25,6 +25,7 @@
     <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Experiment.mxd"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>C:\Program Files (x86)\ArcGIS\Desktop10.1\bin\ArcMap.exe</LocalDebuggerCommand>
@@ -33,5 +34,6 @@
     <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Experiment.mxd"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerAttach>false</LocalDebuggerAttach>
   </PropertyGroup>
 </Project>

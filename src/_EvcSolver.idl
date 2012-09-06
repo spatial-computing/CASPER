@@ -67,7 +67,7 @@ interface IEvcSolver : IUnknown {
 #line 79 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propget,helpstring("Gets the flocking mode")] HRESULT  FlockingEnabled([out,retval] VARIANT_BOOL *value);
 #line 81 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the two way road capacity sharing")] HRESULT  TwoWayShareCapacity([in] VARIANT_BOOL value);
+	[propput,helpstring("Sets the two-way road capacity sharing")] HRESULT  TwoWayShareCapacity([in] VARIANT_BOOL value);
 #line 83 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propget,helpstring("Gets the two way road capacity sharing")] HRESULT  TwoWayShareCapacity([out,retval] VARIANT_BOOL *value);
 #line 85 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
