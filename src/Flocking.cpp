@@ -492,6 +492,8 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			nextSnapshot = thetime + snapshotInterval;
 			snapshotTaken = false;
 		}
+
+		// progress bar is based on a combination of first evacuee saved and last evacuee saved.
 		if (ipStepProgressor)
 		{
 			progressValue = (long)(50.0 * ((1.0 - (minDistLeft / minPathLen)) + (1.0 - (maxDistLeft / maxPathLen))));

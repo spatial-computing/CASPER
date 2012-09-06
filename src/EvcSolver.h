@@ -77,7 +77,7 @@ __interface IEvcSolver : IUnknown
 		HRESULT FlockingEnabled([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the flocking mode")]
 		HRESULT FlockingEnabled([out, retval] VARIANT_BOOL * value);
-	[propput, helpstring("Sets the two way road capacity sharing")]
+	[propput, helpstring("Sets the two-way road capacity sharing")]
 		HRESULT TwoWayShareCapacity([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the two way road capacity sharing")]
 		HRESULT TwoWayShareCapacity([out, retval] VARIANT_BOOL * value);
