@@ -141,11 +141,12 @@ public:
 	// properties
 
 	long			BindVertex;
+	double          PathLen;
 
 	// methods
 	
 	FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
-		FlockProfile * profile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors);
+		FlockProfile * profile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
 	static bool DetectCollision(std::vector<FlockingObject *> * objects);
 
@@ -170,6 +171,7 @@ private:
 	double						 	 snapshotInterval;
 	double						 	 simulationInterval;
 	double						 	 maxPathLen;
+	double						 	 minPathLen;
 	double						 	 initDelayCostPerPop;
 	bool							 movingObjectLeft;
 
