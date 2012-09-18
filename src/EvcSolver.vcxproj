@@ -343,9 +343,6 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
     <None Include="EvcSolver.rgs" />
     <None Include="TODO List.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Midl Include="_EvcSolver.idl" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

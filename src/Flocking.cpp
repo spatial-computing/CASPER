@@ -425,7 +425,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	FlockingObjectPtr fo = NULL;
 	FLOCK_OBJ_STAT newStat, oldStat;
 	double nextSnapshot = 0.0, minDistLeft = maxPathLen + 1.0, maxDistLeft = 0.0, distLeft = 0.0;
-	long progressValue = 0l;
+	long progressValue = 0l, lastReportedProgress = 0l;
 	bool snapshotTaken = false;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
@@ -497,7 +497,11 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 		if (ipStepProgressor)
 		{
 			progressValue = (long)(50.0 * ((1.0 - (minDistLeft / minPathLen)) + (1.0 - (maxDistLeft / maxPathLen))));
-			if (FAILED(hr = ipStepProgressor->put_StepValue(progressValue))) return hr;			
+			if (progressValue >= lastReportedProgress + 1l)
+			{
+				if (FAILED(hr = ipStepProgressor->Step())) return hr;
+				lastReportedProgress++;
+			}
 		}
 	}
 	delete snapshotTempList;
