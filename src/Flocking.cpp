@@ -424,8 +424,8 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	movingObjectLeft = true;
 	FlockingObjectPtr fo = NULL;
 	FLOCK_OBJ_STAT newStat, oldStat;
-	double nextSnapshot = 0.0, minDistLeft = maxPathLen + 1.0, maxDistLeft = 0.0, distLeft = 0.0;
-	long progressValue = 0l, lastReportedProgress = 0l;
+	double nextSnapshot = 0.0, minDistLeft = maxPathLen + 1.0, maxDistLeft = 0.0, distLeft = 0.0, progressValue = 0.0;
+	long lastReportedProgress = 0l;
 	bool snapshotTaken = false;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
@@ -496,7 +496,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 		// progress bar is based on a combination of first evacuee saved and last evacuee saved.
 		if (ipStepProgressor)
 		{
-			progressValue = (long)(50.0 * ((1.0 - (minDistLeft / minPathLen)) + (1.0 - (maxDistLeft / maxPathLen))));
+			progressValue = 50.0 * ((1.0 - (minDistLeft / minPathLen)) + (1.0 - (maxDistLeft / maxPathLen)));
 			if (progressValue >= lastReportedProgress + 1l)
 			{
 				if (FAILED(hr = ipStepProgressor->Step())) return hr;
