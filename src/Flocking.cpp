@@ -502,6 +502,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				if (FAILED(hr = ipStepProgressor->Step())) return hr;
 				lastReportedProgress++;
 			}
+			maxDistLeft = 0.0;
 		}
 	}
 	delete snapshotTempList;
