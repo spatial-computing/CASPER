@@ -243,7 +243,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 {	
 	// check destination arriaval
 	HRESULT hr = S_OK;
-	OpenSteer::Vec3 steer = OpenSteer::Vec3::zero, pos = OpenSteer::Vec3::zero;
+	OpenSteer::Vec3 steer = OpenSteer::Vec3::zero, pos = OpenSteer::Vec3::zero, dir = OpenSteer::Vec3::zero;
 	double dist = 0.0;
 	myVehicle->setMaxForce(myProfile->MaxForce);
 	dist = OpenSteer::Vec3::distance(myVehicle->position(), finishPoint);
@@ -293,10 +293,12 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			
 			// backup the position in case we needed to back off from a collision
 			pos = myVehicle->position();
+			dir = myVehicle->forward();
 			myVehicle->applySteeringForce(steer / dt, dt);
 			if (DetectMyCollision())
 			{
 				myVehicle->setPosition(pos);
+				myVehicle->setForward(dir);
 				myVehicle->setSpeed(0.0);
 				MyStatus = FLOCK_OBJ_STAT_STOP;
 			}
@@ -427,6 +429,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	double nextSnapshot = 0.0, minDistLeft = maxPathLen + 1.0, maxDistLeft = 0.0, distLeft = 0.0, progressValue = 0.0;
 	long lastReportedProgress = 0l;
 	bool snapshotTaken = false;
+	unsigned int objPos = 0, objStart = 0, objEnd = 0, objStep = 1;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
 	std::vector<FlockingObjectPtr> * snapshotTempList = new std::vector<FlockingObjectPtr>();
@@ -445,14 +448,27 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	for (double thetime = simulationInterval; movingObjectLeft && thetime <= predictedCost; thetime += simulationInterval)
 	{
 		movingObjectLeft = false;
-		for (FlockingObjectItr itp = objects->begin(); itp != objects->end(); itp++)
+		if (objStep == 1)
+		{
+			objStep = -1;
+			objStart = objects->size() - 1;
+			objEnd = -1;
+		}
+		else
+		{
+			objStep = 1;
+			objStart = 0;
+			objEnd = objects->size();
+		}
+
+		for (objPos = objStart; objPos != objEnd; objPos += objStep)
 		{
 			if (pTrackCancel)
 			{
 				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
 				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
 			}
-			fo = *itp;
+			fo = objects->at(objPos);
 
 			fo->GTime = thetime;
 			oldStat = fo->MyStatus;
