@@ -278,7 +278,8 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			if (FAILED(hr = buildNeighborList(objects))) return hr;
 
 			myVehicle->setMaxSpeed(speedLimit);
-			myVehicle->setSpeed(speedLimit);
+			if (MyStatus != FLOCK_OBJ_STAT_STOP) myVehicle->setSpeed(speedLimit);
+			else myVehicle->setSpeed(speedLimit / 2.0);
 
 			// generate a steer based on current situation
 			// this would be replaced by steerToAvoidNeighbors
