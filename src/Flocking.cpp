@@ -97,7 +97,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors, double x1, double y1, double & dx, double & dy)
 {
 	myNeighborVehicles.clear();
-	HRESULT hr = S_OK;
+	// HRESULT hr = S_OK;
 	bool possibleCollision = true;
 	IPointPtr p = 0;
 	double x2, y2, step = myVehicle->radius() * 4.0;
@@ -430,7 +430,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	double nextSnapshot = 0.0, minDistLeft = maxPathLen + 1.0, maxDistLeft = 0.0, distLeft = 0.0, progressValue = 0.0;
 	long lastReportedProgress = 0l;
 	bool snapshotTaken = false;
-	unsigned int objPos = 0, objStart = 0, objEnd = 0, objStep = 1;
+	int objPos = 0, objStart = 0, objEnd = 0, objStep = 1;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
 	std::vector<FlockingObjectPtr> * snapshotTempList = new std::vector<FlockingObjectPtr>();

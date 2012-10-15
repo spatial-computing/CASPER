@@ -77,14 +77,16 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">$(Configuration)\</IntDir>
     <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">true</PreBuildEventUseInBuild>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">true</LinkIncremental>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;C:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;C:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;C:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;C:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;C:\dev\3rdParty\opensteer\win32\Release;C:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;C:\dev\3rdParty\opensteer\win32\Release;C:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;C:\dev\3rdParty\opensteer\win32\Debug;C:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;C:\dev\3rdParty\opensteer\win32\Debug;C:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Release;c:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Release;c:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Debug;c:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Debug;c:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">true</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -304,13 +306,6 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\3rdParty\opensteer\win32\opensteer.vcxproj">
-      <Project>{2fcb5399-059f-405f-a19b-3acbe92057a9}</Project>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CustomSolver.cpp" />
     <ClCompile Include="Evacuee.cpp" />

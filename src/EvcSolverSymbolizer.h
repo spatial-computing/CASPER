@@ -29,8 +29,7 @@
   uuid("6e127557-b452-444d-ac96-3a96a40c4071"),
   helpstring("EvcSolverSymbolizer Class")
 ]
-class ATL_NO_VTABLE EvcSolverSymbolizer :
-  public INASymbolizer2
+class ATL_NO_VTABLE EvcSolverSymbolizer : public INASymbolizer2
 {
 public:
   EvcSolverSymbolizer() :

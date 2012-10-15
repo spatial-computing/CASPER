@@ -68,15 +68,15 @@ using namespace ATL;
 
 #else
 
-#import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE")
-#import "libid:4ECCA6E2-B16B-4ACA-BD17-E74CAE4C150A" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
-#import "libid:866AE5D3-530C-11D2-A2BD-0000F8774FB5" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
-#import "libid:C4B094C2-FF32-4FA1-ABCB-7820F8D6FB68" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
-#import "libid:0475BDB1-E5B2-4CA2-9127-B4B1683E70C2" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI")
-#import "libid:9B4F73F7-90C0-11D5-A6C3-0008C7DF88AB" named_guids no_namespace raw_interfaces_only no_implementation
-#import "libid:59FCCD31-434C-4017-BDEF-DB4B7EDC9CE0" raw_interfaces_only, raw_native_types, no_namespace, named_guids
-#import "libid:8F0541A3-D5BE-4B3F-A8D9-062D5579E19B" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids
-#import "libid:45AC68FF-DEFF-4884-B3A9-7D882EDCAEF1" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI")
+#import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE") // System
+#import "libid:4ECCA6E2-B16B-4ACA-BD17-E74CAE4C150A" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI") // SystemUI
+#import "libid:866AE5D3-530C-11D2-A2BD-0000F8774FB5" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR") // Framework
+#import "libid:C4B094C2-FF32-4FA1-ABCB-7820F8D6FB68" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI") // Geometry
+#import "libid:0475BDB1-E5B2-4CA2-9127-B4B1683E70C2" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI") // GeoDatabase
+#import "libid:9B4F73F7-90C0-11D5-A6C3-0008C7DF88AB" named_guids no_namespace raw_interfaces_only no_implementation // NetworkAnalyst
+#import "libid:59FCCD31-434C-4017-BDEF-DB4B7EDC9CE0" raw_interfaces_only, raw_native_types, no_namespace, named_guids // Display
+#import "libid:8F0541A3-D5BE-4B3F-A8D9-062D5579E19B" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids // DataSourcesRaster
+#import "libid:45AC68FF-DEFF-4884-B3A9-7D882EDCAEF1" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI") // Carto
 
 #endif
 
