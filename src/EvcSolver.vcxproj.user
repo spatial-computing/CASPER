@@ -35,5 +35,6 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
+    <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
 </Project>

@@ -118,7 +118,7 @@ __interface IEvcSolver : IUnknown
 ]
 class ATL_NO_VTABLE EvcSolver :
 	public IEvcSolver,
-	/// public INARouteSolver2,
+	// public INARouteSolver2,
 	public INASolver,
 	public INASolverSettings2,
 	public IPersistStream,

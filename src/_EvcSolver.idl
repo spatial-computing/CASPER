@@ -1,12 +1,12 @@
-import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\prsht.idl";
-import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\mshtml.idl";
+import "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\prsht.idl";
+import "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\mshtml.idl";
 import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\dimm.idl";
 import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\dispex.idl";
-import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\mshtmhst.idl";
+import "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\mshtmhst.idl";
 import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\docobj.idl";
-import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\exdisp.idl";
-import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\objsafe.idl";
-import "c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\oledb.idl";
+import "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\exdisp.idl";
+import "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\objsafe.idl";
+import "C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\oledb.idl";
 import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\transact.idl";
 
 [
