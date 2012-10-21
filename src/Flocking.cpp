@@ -279,7 +279,13 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 
 			myVehicle->setMaxSpeed(speedLimit);
 			if (MyStatus != FLOCK_OBJ_STAT_STOP) myVehicle->setSpeed(speedLimit);
-			else myVehicle->setSpeed(speedLimit / 2.0);
+			else 
+			{
+				OpenSteer::Vec3 forward = OpenSteer::RandomVectorInUnitRadiusSphere();
+				forward.z = 0.0;
+				myVehicle->setForward(forward.normalize());
+				myVehicle->setSpeed(speedLimit / 2.0);
+			}
 
 			// generate a steer based on current situation
 			// this would be replaced by steerToAvoidNeighbors
@@ -444,7 +450,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	}
 
 	// just to make sure we do our best to finish the simulation with no moving object event after the predicted cost
-	predictedCost *= 5.0;
+	predictedCost *= 4.0;
 
 	for (double thetime = simulationInterval; movingObjectLeft && thetime <= predictedCost; thetime += simulationInterval)
 	{
