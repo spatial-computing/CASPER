@@ -36,7 +36,6 @@ public:
 
 	FlockProfile(FLOCK_PROFILE profile)
 	{
-		MaxForce = 150000.0;
 		switch (profile)
 		{
 		case FLOCK_PROFILE_CAR:
@@ -47,6 +46,7 @@ public:
 			CloseNeighborDistance = 15.0;
 			NeighborDistance = 30.0;
 			UsualSpeed = 15.0;
+			MaxForce = 150000.0;
 			break;
 		case FLOCK_PROFILE_PERSON:
 			IntersectionRadius = 10.0;
@@ -56,6 +56,7 @@ public:
 			CloseNeighborDistance = 2.0;
 			NeighborDistance = 4.0;
 			UsualSpeed = 2.0;
+			MaxForce = 300000.0;
 			break;
 		case FLOCK_PROFILE_BIKE:
 			IntersectionRadius = 20.0;
@@ -65,6 +66,7 @@ public:
 			CloseNeighborDistance = 5.0;
 			NeighborDistance = 10.0;
 			UsualSpeed = 7.0;
+			MaxForce = 200000.0;
 			break;
 		}
 	}

@@ -980,7 +980,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		ending.Empty();
 
 		// message about simulation time
-		if (movingObjectLeft) ending = _T("Max simulation time reached therefore not all objects get to a safe area. Probebly the predicted evacuation time was too low.");
+		if (movingObjectLeft) ending = _T("Max simulation time reached therefore not all objects get to a safe area. Probably the predicted evacuation time was too low.");
 
 		// message about collisions
 		if (collisionTimes && collisionTimes->size() > 0)
