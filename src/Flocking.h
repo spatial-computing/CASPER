@@ -65,7 +65,7 @@ public:
 			Radius = 0.5;
 			CloseNeighborDistance = 5.0;
 			NeighborDistance = 10.0;
-			UsualSpeed = 7.0;
+			UsualSpeed = 5.0;
 			MaxForce = 200000.0;
 			break;
 		}

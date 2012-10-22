@@ -633,7 +633,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					pline->AddPoint(p);
 				}
 
-				// att the initial delay cost
+				// add the initial delay cost
 				path->EvacuationCost += path->RoutedPop * initDelayCostPerPop;
 
 				// Store the feature values on the feature buffer
