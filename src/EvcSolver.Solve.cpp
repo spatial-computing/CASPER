@@ -807,7 +807,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Perform flocking simulation if requested
 
-	// At this stage we create many evacuee points with in an flocking simulation enviroment to validate the calculated results
+	// At this stage we create many evacuee points within a flocking simulation enviroment to validate the calculated results
 	CString colMsgString, ending;
 	std::vector<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
@@ -975,14 +975,41 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (ipStepProgressor) ipStepProgressor->Step();
 		}		
 
-		// collision messaging
-		colMsgString.Empty();
+		// incomplete ending message
 		ending.Empty();
 
 		// message about simulation time
-		if (movingObjectLeft) ending = _T("Max simulation time reached therefore not all objects get to a safe area. Probably the predicted evacuation time was too low.");
+		if (movingObjectLeft)
+		{
+			ending = _T("Max simulation time reached therefore not all objects get to a safe area. Probably the predicted evacuation time was too low.");			
 
+			// generate a new row indicating an incomplete simulation
+			thisTime = baseTime + time_t(0);
+			localtime_s(&local, &thisTime);
+			wcsftime(thisTimeBuf, 25, L"%Y/%m/%d %H:%M:%S", &local);
+			FlockingLocationItr it = history->begin();
+
+			// Store the feature values on the feature buffer			
+			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, CComVariant("0")))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, CComVariant(-9999)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(thisTimeBuf)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, CComVariant(-9999)))) return hr;
+
+			// print out the status
+			if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("E"))))) return hr;			
+
+			// Insert the feature buffer in the insert cursor
+			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
+		}	
+		
 		// message about collisions
+		colMsgString.Empty();
 		if (collisionTimes && collisionTimes->size() > 0)
 		{
 			for (std::list<double>::iterator ct = collisionTimes->begin(); ct != collisionTimes->end(); ct++)

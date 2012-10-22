@@ -450,7 +450,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	}
 
 	// just to make sure we do our best to finish the simulation with no moving object event after the predicted cost
-	predictedCost *= 4.0;
+	predictedCost *= 2.0;
 
 	for (double thetime = simulationInterval; movingObjectLeft && thetime <= predictedCost; thetime += simulationInterval)
 	{
