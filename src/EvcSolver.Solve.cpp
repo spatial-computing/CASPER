@@ -993,13 +993,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant(0)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, CComVariant("0")))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, CComVariant(-9999)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, CComVariant(99999)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant(0)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant(0)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant(0)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant(0)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(thisTimeBuf)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, CComVariant(-9999)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, CComVariant(99999)))) return hr;
 
 			// print out the status
 			if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("E"))))) return hr;			
