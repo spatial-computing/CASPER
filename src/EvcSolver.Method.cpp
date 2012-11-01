@@ -151,8 +151,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (edge)
 						{
 							restricted = true;		
-							if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge
-								, 0, ipNetworkForwardStarAdjacencies))) return hr;
+							if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge , 0, ipNetworkForwardStarAdjacencies))) return hr;
 							if (FAILED(hr = ipNetworkForwardStarAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
 							for (i = 0; i < adjacentEdgeCount; i++)
 							{
@@ -246,7 +245,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				// generate evacuation route if a destination has been found
 				if (BetterSafeZone)
 				{
-					// First find out about remaining limit of this path
+					// First find out about remaining capacity of this path
 					temp             = finalVertex;
 					population2Route = populationLeft;
 					if (separable)				
