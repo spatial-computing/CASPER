@@ -1,9 +1,11 @@
 - EdgePortion migth be fulty in case of really short paths
-- don't ignore the last turn restriction
++ don't ignore the last turn restriction
 * include a variable for safe area capacity and then inforce it in your DJ code
-- update the vertex huiristics after each evacuee loop... this needs some thinking
++ update the vertex huiristics after each evacuee loop... this needs some thinking
 + the flocking model is gonna take some time to implement
 
 + fix remaining cost of each edge for pop seperation
 - fix multi-part turn to be accurate
 + drop menu to select traffic model instead of cost calc model.
+
+- inteligently repeat the graph/vertex huiristic update after some paths are reserved. maybe size of closed list can help.

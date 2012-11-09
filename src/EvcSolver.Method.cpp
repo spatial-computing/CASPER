@@ -1,12 +1,11 @@
 #include "stdafx.h"
+#include <sstream>
 #include "NameConstants.h"
 #include "float.h"  // for FLT_MAX, etc.
 #include <cmath>   // for HUGE_VAL
 #include <algorithm>
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
-
-#define EvacueeBucketSize 3
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
 							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
@@ -22,7 +21,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap;
+	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap, maxClosedList_PathSize_Ratio = 1.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID;
@@ -36,7 +35,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	bool restricted = false;
 	esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new EvacueeList();
-	sortedEvacuees->reserve(EvacueeBucketSize);
+	sortedEvacuees->reserve(Evacuees->size());
+	unsigned int countEvacueesInOneBucket = 0;
 
 	///////////////////////////////////////
 	// Setup a message on our step progressor indicating that we are traversing the network
@@ -61,7 +61,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CCRP search")))) return hr;
 		}		
 	}
-
+	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkForwardStarAdjacencies))) return hr; 
@@ -72,7 +72,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		// only the last 'k'th evacuees will be bucketed to run each round.
 		if (FAILED(hr = RunHeuristic(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkBackwardStarEx))) return hr;
 
-		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
+		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 1, maxClosedList_PathSize_Ratio = 1.0; seit != sortedEvacuees->end(); seit++, countEvacueesInOneBucket++)
 		{
 			currentEvacuee = *seit;
 
@@ -316,6 +316,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 					}
 					currentEvacuee->paths->push_front(path);
+
+					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'RunHeuristic'
+					maxClosedList_PathSize_Ratio = max(maxClosedList_PathSize_Ratio, closedList->Size() / path->size());
+					std::wostringstream os_;
+					os_ << countEvacueesInOneBucket << "," << closedList->Size() << "," << heap->Size() << "," << path->size() << std::endl;
+					OutputDebugStringW( os_.str().c_str() );
 				}
 				else
 				{
@@ -332,7 +338,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			// cleanup vertices of this evacuee since all its population is routed.
 			for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);	
 			currentEvacuee->vertices->clear();
-		} // end of for loop over sortedEvacuees (reverse)
+
+			// determine if the previous round of DJs where fast enough and if not break out of the loop and have RunHeuristic do something about it
+			/// if (maxClosedList_PathSize_Ratio > this->GoldenClosedList_PathSize_Ratio && countEvacueesInOneBucket >= this->minEvacueeBucketSize) break;
+
+		} // end of for loop over sortedEvacuees
 	}
 	while (!sortedEvacuees->empty());
 
@@ -515,10 +525,11 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	if (!redundentSortedEvacuees->empty())
 	{
 		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);
+		
 		if (this->solverMethod == EVC_SOLVER_METHOD_CASPER)
 		{
 			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
-				redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->countReturnEvacuees));
+				redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->minEvacueeBucketSize));
 		}
 		else
 		{

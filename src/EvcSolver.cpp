@@ -435,7 +435,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 0.0f;
-	countReturnEvacuees = 25;
+	minEvacueeBucketSize = 25;
+	GoldenClosedList_PathSize_Ratio = 1.5;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -536,14 +537,14 @@ STDMETHODIMP EvcSolver::get_EvacueeBucketSize(BSTR * value)
 	if (value)
 	{
 		*value = new WCHAR[100];
-		swprintf_s(*value, 100, L"%u", countReturnEvacuees);
+		swprintf_s(*value, 100, L"%u", minEvacueeBucketSize);
 	}
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_EvacueeBucketSize(BSTR value)
 {
-	swscanf_s(value, L"%u", &countReturnEvacuees);
+	swscanf_s(value, L"%u", &minEvacueeBucketSize);
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -1064,7 +1065,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&countReturnEvacuees, sizeof(countReturnEvacuees), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&minEvacueeBucketSize, sizeof(minEvacueeBucketSize), &numBytes))) return hr;
 
 	m_bPersistDirty = false;
 
@@ -1104,7 +1105,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&countReturnEvacuees, sizeof(countReturnEvacuees), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&minEvacueeBucketSize, sizeof(minEvacueeBucketSize), &numBytes))) return hr;
 	
 	return S_OK;
 }

@@ -298,7 +298,8 @@ private:
 	float					flockingSimulationInterval;
 	float					initDelayCostPerPop;
 	FLOCK_PROFILE			flockingProfile;
-	unsigned int			countReturnEvacuees;
+	unsigned int			minEvacueeBucketSize;
+	double                  GoldenClosedList_PathSize_Ratio;
 
 	VARIANT_BOOL twoWayShareCapacity;	
 	VARIANT_BOOL separable;

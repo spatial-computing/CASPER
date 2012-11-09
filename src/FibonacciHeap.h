@@ -106,6 +106,7 @@ public:
 	void Clear();
 	bool Insert(HeapDataType * node);	
 	HRESULT DecreaseKey(HeapDataType * node);
+	int Size() const { return nodeTable->Size(); }
 
 	HeapDataType * FindMin();
 	HeapDataType * DeleteMin();

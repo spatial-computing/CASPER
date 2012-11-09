@@ -288,7 +288,7 @@ bool FibonacciHeap::link(HeapNode * root)
 			root->remove();
 			linkVertex->addChild(root);
 			if(rootListByRank[linkVertex->rank] != NULL) link(linkVertex);
-			else rootListByRank[linkVertex->rank] = linkVertex;
+			else rootListByRank[linkVertex->rank] = linkVertex;			
 		}
 		return true;
 	}
@@ -317,3 +317,5 @@ HeapNodePtr HeapNodeTable::Find(NAEdge * edge)
 	if (it != cache->end()) o = it->second;
 	return o;
 }
+
+
