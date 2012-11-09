@@ -319,9 +319,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'RunHeuristic'
 					maxClosedList_PathSize_Ratio = max(maxClosedList_PathSize_Ratio, closedList->Size() / path->size());
+#ifdef DEBUG
 					std::wostringstream os_;
 					os_ << countEvacueesInOneBucket << "," << closedList->Size() << "," << heap->Size() << "," << path->size() << std::endl;
 					OutputDebugStringW( os_.str().c_str() );
+#endif
 				}
 				else
 				{
