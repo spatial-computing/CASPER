@@ -297,6 +297,7 @@ void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 	BehindEdge->ToVertex = this;
 }
 
+// return true if update was unnesecery
 bool NAVertex::UpdateHeuristic(long edgeid, NAVertex * n)
 {
 	bool ret = false;

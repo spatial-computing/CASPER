@@ -36,7 +36,7 @@ public:
 		Value = value;
 	}
 
-	static bool LessThan(HValue a, HValue b)
+	static bool LessThan(HValue & a, HValue & b)
 	{
 		return a.Value < b.Value;
 	}
@@ -55,7 +55,7 @@ public:
 	long EID;
 	double posAlong;
 
-	double minh() const
+	__forceinline double minh() const
 	{
 		std::vector<HValue>::reference reff = h->front();
 		return reff.Value;

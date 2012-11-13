@@ -364,7 +364,6 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 
 	// creating the heap for the dijkstra search
 	long adjacentEdgeCount, i;
-	int saved = 0;
 	FibonacciHeap * heap = new FibonacciHeap(&NAEdge::LessThanNonHur);
 	NAEdgeClosed * closedList = new NAEdgeClosed();
 	NAEdge * currentEdge;
@@ -445,11 +444,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		// This update should know if this is the first time this vertex is coming out
 		// in this 'RunHeurustic' round. Only then we can be sure whether to update to min
 		// or update absolutely to this new value.
-		if (vcache->UpdateHeuristic(myEdge->EID, myVertex))
-		{
-			saved++;
-			continue;
-		}
+		if (vcache->UpdateHeuristic(myEdge->EID, myVertex)) continue;		
 
 		// termination condition and evacuee discovery
 		pairs = EvacueePairs->Find(myVertex->EID);
@@ -470,8 +465,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 		}
 
 		// Query adjacencies from the current junction
-		if (FAILED(hr = ipNetworkBackwardStarEx->QueryAdjacencies
-			(myVertex->Junction, myEdge->NetEdge, 0, ipNetworkBackwardStarAdjacencies))) return hr; 
+		if (FAILED(hr = ipNetworkBackwardStarEx->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge, 0, ipNetworkBackwardStarAdjacencies))) return hr; 
 
 		// Get the adjacent edge count
 		if (FAILED(hr = ipNetworkBackwardStarAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
