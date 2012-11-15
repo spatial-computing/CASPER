@@ -21,7 +21,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap, maxClosedList_PathSize_Ratio = 1.0;
+	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 1.5;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID;
@@ -36,7 +36,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
-	unsigned int countEvacueesInOneBucket = 0;
+	unsigned int countEvacueesInOneBucket = 0, dirtyVerticesInClosedList = 0, dirtyVerticesInPath = 0;
 
 	///////////////////////////////////////
 	// Setup a message on our step progressor indicating that we are traversing the network
@@ -72,7 +72,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		// only the last 'k'th evacuees will be bucketed to run each round.
 		if (FAILED(hr = RunHeuristic(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkBackwardStarEx))) return hr;
 
-		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 1, maxClosedList_PathSize_Ratio = 1.0; seit != sortedEvacuees->end(); seit++, countEvacueesInOneBucket++)
+		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, maxPerformance_Ratio = 1.0; seit != sortedEvacuees->end(); seit++)
 		{
 			currentEvacuee = *seit;
 
@@ -86,6 +86,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
 			}
 			if (currentEvacuee->vertices->size() == 0) continue;
+			countEvacueesInOneBucket++;
 			populationLeft = currentEvacuee->Population;
 
 			while (populationLeft > 0.0)
@@ -122,7 +123,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				TimeToBeat = MAX_COST;
 				BetterSafeZone = 0;
 				finalVertex = 0;
-				population2Route = populationLeft;
+				if (this->solverMethod == EVC_SOLVER_METHOD_CCRP) population2Route = 1.0;
+				else population2Route = populationLeft;
+
+				// reset counters for dirty stuff
+				dirtyVerticesInPath = 0;
+				dirtyVerticesInClosedList = 0;
 
 				// Continue traversing the network while the heap has remaining junctions in it
 				// this is the actual dijkstra code with the Fibonacci Heap
@@ -137,6 +143,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
 						return -myEdge->EID;
 					}
+
+					if (myEdge->IsDirty()) dirtyVerticesInClosedList++;
 
 					// Check for destinations. If a new destination has been found then we sould
 					// first flag this so later we can use to generate route. Also we should
@@ -276,7 +284,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (edgePortion > 0.0)
 						{
 							path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
-							BetterSafeZone->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
+							if (BetterSafeZone->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route)) dirtyVerticesInPath++;
 						}
 					}
 
@@ -288,7 +296,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						{
 							if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;	
 							path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-							finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
+							if (finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route)) dirtyVerticesInPath++;
 						}
 						finalVertex = finalVertex->Previous;
 					}
@@ -312,16 +320,17 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						else if (edgePortion > 0.0)
 						{							
 							path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-							finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route);
+							if (finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route)) dirtyVerticesInPath++;
 						}
 					}
 					currentEvacuee->paths->push_front(path);
 
 					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'RunHeuristic'
-					maxClosedList_PathSize_Ratio = max(maxClosedList_PathSize_Ratio, closedList->Size() / path->size());
+					maxPerformance_Ratio = max(maxPerformance_Ratio, dirtyVerticesInClosedList / path->size());
 #ifdef DEBUG
 					std::wostringstream os_;
-					os_ << countEvacueesInOneBucket << "," << closedList->Size() << "," << heap->Size() << "," << path->size() << std::endl;
+					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << closedList->Size() / dirtyVerticesInClosedList  << "," 
+						<< dirtyVerticesInPath << "," << path->size() << path->size() / dirtyVerticesInPath << std::endl;
 					OutputDebugStringW( os_.str().c_str() );
 #endif
 				}
@@ -342,7 +351,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			currentEvacuee->vertices->clear();
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have RunHeuristic do something about it
-			/// if (maxClosedList_PathSize_Ratio > this->GoldenClosedList_PathSize_Ratio && countEvacueesInOneBucket >= this->minEvacueeBucketSize) break;
+			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && maxPerformance_Ratio > this->GoldenPerformance_Ratio && countEvacueesInOneBucket >= this->minEvacueeBucketSize) break;
 
 		} // end of for loop over sortedEvacuees
 	}
@@ -380,7 +389,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, newCost;
+	double fromPosition, toPosition, newCost, minPop2Route = 1.0;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -396,6 +405,18 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	// Create a backward Star Adjacencies object (we need this object to hold traversal queries carried out on the Backward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkBackwardStarAdjacencies;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkBackwardStarAdjacencies))) return hr;
+
+	//search for min population on graph evacuees left to be routed
+	if (this->solverMethod != EVC_SOLVER_METHOD_CCRP)
+	{
+		minPop2Route = DBL_MAX;
+		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
+		{
+			if ((*eit)->vertices->empty()) continue;
+			minPop2Route = min(minPop2Route, (*eit)->Population);
+		}
+		minPop2Route = max(minPop2Route, 1.0);
+	}
 
 	for(iterator = safeZoneList->begin(); iterator != safeZoneList->end(); iterator++)
 	{
@@ -488,7 +509,7 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 			// if node has already been discovered then no need to heap it
 			currentEdge = ecache->New(ipCurrentEdge);
 			if (closedList->IsClosed(currentEdge)) continue;
-			newCost = myVertex->g + currentEdge->GetCost(1.0, this->solverMethod);
+			newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
 
 			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
 			{
@@ -520,19 +541,13 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	}
 	if (!redundentSortedEvacuees->empty())
 	{
-		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);
-		
-		if (this->solverMethod == EVC_SOLVER_METHOD_CASPER)
-		{
-			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(),
-				redundentSortedEvacuees->rbegin() + min(redundentSortedEvacuees->size(), this->minEvacueeBucketSize));
-		}
-		else
-		{
-			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
-		}
+		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);		
+		SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());		
 		redundentSortedEvacuees->clear();
 	}
+	// set graph as having all clean edges
+	ecache->CleanAllEdges();
+
 	// variable cleanup
 	delete redundentSortedEvacuees;
 	delete closedList;

@@ -299,7 +299,7 @@ private:
 	float					initDelayCostPerPop;
 	FLOCK_PROFILE			flockingProfile;
 	unsigned int			minEvacueeBucketSize;
-	double                  GoldenClosedList_PathSize_Ratio;
+	double                  GoldenPerformance_Ratio;
 
 	VARIANT_BOOL twoWayShareCapacity;	
 	VARIANT_BOOL separable;

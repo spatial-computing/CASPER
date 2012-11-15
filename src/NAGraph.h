@@ -76,8 +76,6 @@ public:
 	~NAVertex(void) { delete h; }
 	NAVertex(const NAVertex& cpy);
 	NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge);
-	// double GetKey() { return g + h; }
-	// bool LessThan(NAVertex * other) { return g + h < other->g + other->h; }
 };
 
 typedef NAVertex * NAVertexPtr;
@@ -164,6 +162,7 @@ public:
 	double SaturationDensPerCap;
 	double CriticalDens;
 	double Capacity;
+	bool   DirtyFlag;
 	EdgeReservations(double capacity, double CriticalDensPerCap, double SaturationDensPerCap);
 	EdgeReservations(const EdgeReservations& cpy);
 	
@@ -213,7 +212,7 @@ public:
 	double OriginalCapacity() const;
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
-	void AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
+	bool AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
 	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
 		double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel);
 	NAEdge(const NAEdge& cpy);
@@ -225,6 +224,9 @@ public:
 	}
 
 	double GetReservedPop() const { return reservations->ReservedPop; }
+
+	inline void SetClean() { reservations->DirtyFlag = false; }
+	inline bool IsDirty() const { return reservations->DirtyFlag; }
 };
 
 typedef NAEdge * NAEdgePtr;
@@ -350,6 +352,13 @@ public:
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }
 	NAEdgeTableItr AgainstEnd() const { return cacheAgainst->end(); }
 	int Size() { return cacheAlong->size() + cacheAgainst->size(); }
+
+	void CleanAllEdges(void)
+	{		
+		/// TODO can use resTableAlong and resTableAgains for faster cleanup
+		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) (*cit).second->SetClean();
+		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) (*cit).second->SetClean();
+	}
 
 	void Clear();	
 };
