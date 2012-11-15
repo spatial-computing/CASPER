@@ -1066,6 +1066,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	delete ecache;
 	for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
 	delete safeZoneList;
+
 	return S_OK;
 }
 

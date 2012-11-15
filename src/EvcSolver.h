@@ -11,6 +11,11 @@
 
 #pragma once
 
+// memory leak detection in DEBUG mode
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 #include "Evacuee.h"
 #include "NAGraph.h"
@@ -131,6 +136,8 @@ public:
 		  c_version(1),
 		  c_featureRetrievalInterval(500)
 	  {
+		  // set program start for memory leak detection (DEBUG Mode)
+		  _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 	  }
 
 	  DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -148,6 +155,7 @@ public:
 
 	  void FinalRelease() 
 	  {
+		  _CrtDumpMemoryLeaks();
 	  }
 
 public:
