@@ -329,7 +329,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 #ifdef DEBUG
 					std::wostringstream os_;
 					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << dirtyVerticesInClosedList / closedList->Size() << "," 
-						<< dirtyVerticesInPath << "," << path->size() << dirtyVerticesInPath / path->size() << std::endl;
+						<< dirtyVerticesInPath << "," << path->size() << "," << dirtyVerticesInPath / path->size() << std::endl;
 					OutputDebugStringW( os_.str().c_str() );
 #endif
 				}
