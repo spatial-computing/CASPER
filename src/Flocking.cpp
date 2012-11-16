@@ -43,8 +43,8 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	initPathIterator = true;
 
 	// steering lib init
-	libpoints = new OpenSteer::Vec3[0];
-	myVehicle = new OpenSteer::SimpleVehicle();
+	libpoints = new DEBUG_NEW_PLACEMENT OpenSteer::Vec3[0];
+	myVehicle = new DEBUG_NEW_PLACEMENT OpenSteer::SimpleVehicle();
 	myVehicle->reset();
 	myVehicle->setRadius(myProfile->Radius * 4.0);
 	
@@ -162,7 +162,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 		if (FAILED(hr = pcollect->get_PointCount(&pointCount))) return hr;
 		delete [] libpoints;
 		pointCount++;
-		libpoints = new OpenSteer::Vec3[pointCount];
+		libpoints = new DEBUG_NEW_PLACEMENT OpenSteer::Vec3[pointCount];
 		
 		for(i = 1; i < pointCount; i++)
 		{
@@ -183,7 +183,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 
 		if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;
 
-		// load new edge points into the steer library
+		// load new DEBUG_NEW_PLACEMENT edge points into the steer library
 		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius * 1.2, false);
 		newEdgeRequestFlag = false;
 	}
@@ -372,9 +372,9 @@ FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double Simulatio
 {
 	snapshotInterval = abs(SnapshotInterval);
 	simulationInterval = abs(SimulationInterval);
-	objects = new std::vector<FlockingObjectPtr>();
-	history = new std::vector<FlockingLocationPtr>();
-	collisions = new std::list<double>();
+	objects = new DEBUG_NEW_PLACEMENT std::vector<FlockingObjectPtr>();
+	history = new DEBUG_NEW_PLACEMENT std::vector<FlockingLocationPtr>();
+	collisions = new DEBUG_NEW_PLACEMENT std::list<double>();
 	maxPathLen = 0.0;
 	minPathLen = 0.0;
 	initDelayCostPerPop = InitDelayCostPerPop;
@@ -439,7 +439,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 	int objPos = 0, objStart = 0, objEnd = 0, objStep = 1;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
-	std::vector<FlockingObjectPtr> * snapshotTempList = new std::vector<FlockingObjectPtr>();
+	std::vector<FlockingObjectPtr> * snapshotTempList = new DEBUG_NEW_PLACEMENT std::vector<FlockingObjectPtr>();
 
 	if (ipStepProgressor)
 	{

@@ -9,7 +9,7 @@
 
 EdgeReservations::EdgeReservations(double capacity, double criticalDensPerCap, double saturationDensPerCap)
 {
-	List = new std::vector<EdgeReservation>();
+	List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>();
 	ReservedPop = 0.0;
 	Capacity = capacity;	
 	CriticalDens = criticalDensPerCap * capacity;
@@ -19,7 +19,7 @@ EdgeReservations::EdgeReservations(double capacity, double criticalDensPerCap, d
 
 EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 {
-	List = new std::vector<EdgeReservation>(*(cpy.List));
+	List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>(*(cpy.List));
 	ReservedPop = cpy.ReservedPop;
 	Capacity = cpy.Capacity;	
 	CriticalDens = cpy.CriticalDens;
@@ -75,7 +75,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 		NAResTableItr it = resTable->find(EID);
 		if (it == resTable->end())
 		{
-			reservations = new EdgeReservations(capacity, CriticalDensPerCap, SaturationDensPerCap);
+			reservations = new DEBUG_NEW_PLACEMENT EdgeReservations(capacity, CriticalDensPerCap, SaturationDensPerCap);
 			resTable->insert(NAResTablePair(EID, reservations));
 		}
 		else
@@ -215,7 +215,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 
 	if (it == cache->end())
 	{
-		n = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop, trafficModel);
+		n = new DEBUG_NEW_PLACEMENT NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop, trafficModel);
 		cache->insert(NAEdgeTablePair(n));
 	}
 	else
@@ -223,7 +223,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 		if (replace)
 		{
 			delete it->second;
-			it->second = new NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop, trafficModel);
+			it->second = new DEBUG_NEW_PLACEMENT NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop, trafficModel);
 		}
 		else it->second->NetEdge = edge;
 		n = it->second;
@@ -256,7 +256,7 @@ void NAEdgeCache::Clear()
 NAVertex::NAVertex(const NAVertex& cpy)
 {
 	g = cpy.g;
-	h = new std::vector<HValue>(*(cpy.h));
+	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>(*(cpy.h));
 	Junction = cpy.Junction;
 	BehindEdge = cpy.BehindEdge;
 	Previous = cpy.Previous;
@@ -271,7 +271,7 @@ NAVertex::NAVertex(void)
 	BehindEdge = 0;
 	Previous = 0;
 	g = 0;
-	h = new std::vector<HValue>();
+	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
 	ResetHValues();
 	posAlong = 0.0;
 }
@@ -281,7 +281,7 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 	Previous = 0;
 	posAlong = 0.0;
 	g = 0;
-	h = new std::vector<HValue>();
+	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
 	ResetHValues();
 	BehindEdge = behindEdge;
 
@@ -338,12 +338,12 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
 
 	if (it == cache->end())
 	{
-		n = new NAVertex(junction, 0);
+		n = new DEBUG_NEW_PLACEMENT NAVertex(junction, 0);
 		cache->insert(NAVertexTablePair(n));
 	}
 	else
 	{
-		n = new NAVertex(*(it->second));
+		n = new DEBUG_NEW_PLACEMENT NAVertex(*(it->second));
 		sideCache->insert(sideCache->end(), n);
 	}
 	return n;
@@ -367,7 +367,7 @@ void NAVertexCache::Clear()
 
 NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)
 {
-	NAVertexPtr n = new NAVertex(junction, 0);
+	NAVertexPtr n = new DEBUG_NEW_PLACEMENT NAVertex(junction, 0);
 	cache->insert(cache->end(), n);
 	return n;
 }

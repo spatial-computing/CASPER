@@ -16,7 +16,7 @@ void NAEvacueeVertexTable::Insert(EvacueeList * list)
 			p = Find((*v)->EID);
 			if (!p)
 			{
-				p = new std::vector<EvacueePtr>();
+				p = new DEBUG_NEW_PLACEMENT std::vector<EvacueePtr>();
 				insert(_NAEvacueeVertexTablePair((*v)->EID, p));
 			}
 			p->push_back(*i);

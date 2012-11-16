@@ -68,8 +68,8 @@ private:
 public:
 	HeapNodeTable(void)
 	{
-		cacheAlong = new stdext::hash_map<long, HeapNodePtr>();
-		cacheAgainst = new stdext::hash_map<long, HeapNodePtr>();
+		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, HeapNodePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, HeapNodePtr>();
 	}
 
 	~HeapNodeTable(void)

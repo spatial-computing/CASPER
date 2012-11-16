@@ -12,8 +12,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx)
 {	
 	// creating the heap for the dijkstra search
-	FibonacciHeap * heap = new FibonacciHeap(&NAEdge::LessThanHur);
-	NAEdgeClosed * closedList = new NAEdgeClosed();
+	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanHur);
+	NAEdgeClosed * closedList = new DEBUG_NEW_PLACEMENT NAEdgeClosed();
 	NAEdgePtr currentEdge;
 	std::vector<EvacueePtr>::iterator seit;
 	NAVertexPtr neighbor, evc, tempEvc, BetterSafeZone = 0, finalVertex = 0, myVertex, temp;
@@ -21,22 +21,21 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 1.5;
+	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 1.5, dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
-	long adjacentEdgeCount, i, sourceOID, sourceID;
+	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
 	INetworkEdgePtr ipCurrentEdge, lastExteriorEdge;
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipElement, ipOtherElement;
 	PathSegment * lastAdded = 0;
 	EvcPathPtr path;
-	long eid;
 	esriNetworkEdgeDirection dir;
 	bool restricted = false;
 	esriNetworkTurnParticipationType turnType;
-	EvacueeList * sortedEvacuees = new EvacueeList();
+	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
-	unsigned int countEvacueesInOneBucket = 0, dirtyVerticesInClosedList = 0, dirtyVerticesInPath = 0;
+	unsigned int countEvacueesInOneBucket = 0;
 
 	///////////////////////////////////////
 	// Setup a message on our step progressor indicating that we are traversing the network
@@ -127,8 +126,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				else population2Route = populationLeft;
 
 				// reset counters for dirty stuff
-				dirtyVerticesInPath = 0;
-				dirtyVerticesInClosedList = 0;
+				dirtyVerticesInPath = 0.0;
+				dirtyVerticesInClosedList = 0.0;
 
 				// Continue traversing the network while the heap has remaining junctions in it
 				// this is the actual dijkstra code with the Fibonacci Heap
@@ -270,7 +269,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					populationLeft  -= population2Route;
 
 					// create a new path for this portion of the population
-					path = new EvcPath(population2Route);
+					path = new DEBUG_NEW_PLACEMENT EvcPath(population2Route);
 
 					// special case for the last edge.
 					// We have to subcurve it based on the safezone point location along the edge
@@ -329,8 +328,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					maxPerformance_Ratio = max(maxPerformance_Ratio, dirtyVerticesInClosedList / path->size());
 #ifdef DEBUG
 					std::wostringstream os_;
-					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << closedList->Size() / dirtyVerticesInClosedList  << "," 
-						<< dirtyVerticesInPath << "," << path->size() << path->size() / dirtyVerticesInPath << std::endl;
+					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << dirtyVerticesInClosedList / closedList->Size() << "," 
+						<< dirtyVerticesInPath << "," << path->size() << dirtyVerticesInPath / path->size() << std::endl;
 					OutputDebugStringW( os_.str().c_str() );
 #endif
 				}
@@ -358,6 +357,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	while (!sortedEvacuees->empty());
 
 	delete closedList;
+	delete heap;
 	delete sortedEvacuees;
 	return S_OK;
 }
@@ -373,8 +373,8 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 
 	// creating the heap for the dijkstra search
 	long adjacentEdgeCount, i;
-	FibonacciHeap * heap = new FibonacciHeap(&NAEdge::LessThanNonHur);
-	NAEdgeClosed * closedList = new NAEdgeClosed();
+	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanNonHur);
+	NAEdgeClosed * closedList = new DEBUG_NEW_PLACEMENT NAEdgeClosed();
 	NAEdge * currentEdge;
 	NAVertexPtr neighbor, evc, tempEvc;
 	std::vector<EvacueePtr>::iterator eit;
@@ -393,10 +393,10 @@ HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pM
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
-	EvacueeList * redundentSortedEvacuees = new EvacueeList();
+	EvacueeList * redundentSortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	redundentSortedEvacuees->reserve(Evacuees->size());
 
-	NAEvacueeVertexTable * EvacueePairs = new NAEvacueeVertexTable();
+	NAEvacueeVertexTable * EvacueePairs = new DEBUG_NEW_PLACEMENT NAEvacueeVertexTable();
 	EvacueePairs->Insert(Evacuees);
 
 	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement);

@@ -80,6 +80,7 @@ public:
 
 typedef NAVertex * NAVertexPtr;
 typedef stdext::hash_map<long, NAVertexPtr> NAVertexTable;
+typedef stdext::hash_map<long, NAVertexPtr>::_Pairib NAVertexTableInsertReturn;
 typedef stdext::hash_map<long, NAVertexPtr>::iterator NAVertexTableItr;
 typedef std::pair<long, NAVertexPtr> _NAVertexTablePair;
 #define NAVertexTablePair(a) _NAVertexTablePair(a->EID, a)
@@ -100,8 +101,8 @@ private:
 public:
 	NAVertexCache(void)
 	{
-		cache = new stdext::hash_map<long, NAVertexPtr>();
-		sideCache = new std::vector<NAVertex *>();
+		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAVertexPtr>();
+		sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
 	}
 
 	~NAVertexCache(void) 
@@ -125,7 +126,7 @@ private:
 public:
 	NAVertexCollector(void)
 	{
-		cache = new std::vector<NAVertexPtr>();
+		cache = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 	}
 
 	~NAVertexCollector(void) 
@@ -244,8 +245,8 @@ private:
 public:
 	NAEdgeClosed(void)
 	{ 
-		cacheAlong = new stdext::hash_map<long, NAEdgePtr>();
-		cacheAgainst = new stdext::hash_map<long, NAEdgePtr>();
+		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
 	}
 
 	~NAEdgeClosed(void) 
@@ -273,8 +274,8 @@ private:
 public:
 	NAEdgeContainer(void)
 	{ 
-		cacheAlong = new stdext::hash_map<long, char>();
-		cacheAgainst = new stdext::hash_map<long, char>();
+		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, char>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, char>();
 	}
 
 	~NAEdgeContainer(void) 
@@ -321,18 +322,18 @@ public:
 		initDelayCostPerPop = InitDelayCostPerPop;
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
-		cacheAlong = new stdext::hash_map<long, NAEdgePtr>();
-		cacheAgainst = new stdext::hash_map<long, NAEdgePtr>();
+		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
 		saturationPerCap = SaturationPerCap;
 		criticalDensPerCap = CriticalDensPerCap;
 		if (saturationPerCap <= criticalDensPerCap) saturationPerCap += criticalDensPerCap;
-		sideCache = new std::vector<NAEdgePtr>();
+		sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 		trafficModel = TrafficModel;
 
-		resTableAlong = new NAResTable();
+		resTableAlong = new DEBUG_NEW_PLACEMENT NAResTable();
 		if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
-		else resTableAgainst = new NAResTable();
+		else resTableAgainst = new DEBUG_NEW_PLACEMENT NAResTable();
 	}
 
 	~NAEdgeCache(void) 

@@ -192,12 +192,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// can maintain one-to-one relationship between network junctions and vertices.
 	// This will particularly be helpful with the heuristic calculator part of the algorithm.
 	// if (FAILED(hr = heuristicAttribs[heuristicAttribIndex]->get_ID(&capAttributeID))) return hr;  	
-	NAVertexCache * vcache = new NAVertexCache();
-	NAEdgeCache   * ecache = new NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap,
+	NAVertexCache * vcache = new DEBUG_NEW_PLACEMENT NAVertexCache();
+	NAEdgeCache   * ecache = new DEBUG_NEW_PLACEMENT NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap,
 		twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop, trafficModel);
 
 	// Vertex table structures
-	NAVertexTable * safeZoneList = new NAVertexTable();
+	NAVertexTable * safeZoneList = new DEBUG_NEW_PLACEMENT NAVertexTable();
+	NAVertexTableInsertReturn insertRet;
 	INetworkEdgePtr ipEdge(ipElement);
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
 
@@ -262,8 +263,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipElement, &isRestricted))) return hr;
 					if (!isRestricted)
 					{
-						myVertex = new NAVertex(ipElement, 0);
-						safeZoneList->insert(NAVertexTablePair(myVertex));
+						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
+						insertRet = safeZoneList->insert(NAVertexTablePair(myVertex));
+						if (!insertRet.second) delete myVertex;
 					}
 				}
 
@@ -288,10 +290,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
 
-							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipEdge));
+							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
 							myVertex->posAlong = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
 
-							safeZoneList->insert(NAVertexTablePair(myVertex));
+							insertRet = safeZoneList->insert(NAVertexTablePair(myVertex));
+							if (!insertRet.second) delete myVertex;
 						}
 					}
 
@@ -307,9 +310,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;						
 
-							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->posAlong = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
-							safeZoneList->insert(NAVertexTablePair(myVertex));
+							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
+							myVertex->posAlong = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);							
+							insertRet = safeZoneList->insert(NAVertexTablePair(myVertex));
+							if (!insertRet.second) delete myVertex;
 						}
 					}
 				}
@@ -319,7 +323,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Get a cursor on the Evacuee points table to loop through each row
 	if (FAILED(hr = ipEvacueePointsTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
-	EvacueeList * Evacuees = new EvacueeList();
+	EvacueeList * Evacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	Evacuee * currentEvacuee;
 	VARIANT evName, pop;
 	long nameFieldIndex = 0l, popFieldIndex = 0l;
@@ -373,7 +377,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Get the OID of the evacuee NALocation
 			if (FAILED(hr = ipRow->get_Value(nameFieldIndex, &evName))) return hr;
 			if (FAILED(hr = ipRow->get_Value(popFieldIndex, &pop))) return hr;
-			currentEvacuee = new Evacuee(evName, pop.dblVal);
+			currentEvacuee = new DEBUG_NEW_PLACEMENT Evacuee(evName, pop.dblVal);
 
 			while (ipEnumNetworkElement->Next(&ipElement) == S_OK)
 			{
@@ -387,7 +391,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipElement, &isRestricted))) return hr;
 					if (!isRestricted)
 					{
-						myVertex = new NAVertex(ipElement, 0);
+						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
 						currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);
 					}
 				}
@@ -413,7 +417,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
-							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipEdge));
+							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
 							myVertex->posAlong = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);
 						}
@@ -431,7 +435,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
-							myVertex = new NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
+							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
 							myVertex->posAlong = posAlong * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);							
 						}
@@ -499,7 +503,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	IGeometryPtr ipGeometry;
 	ICurvePtr  ipSubCurve;
 	IPointCollectionPtr pcollect = NULL;	
-	esriGeometryType * type = new esriGeometryType();
+	esriGeometryType * type = new DEBUG_NEW_PLACEMENT esriGeometryType();
 	long pointCount = 0;
 	IPointPtr p = NULL;
 	CComVariant featureID(0);
@@ -650,6 +654,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 		}
 	}
+
+	delete type;
 	
 	// fluch the insert buffer
 	ipFeatureCursor->Flush();
@@ -827,7 +833,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		time_t baseTime = time(NULL), thisTime = 0;
 		FlockProfile flockProfile(flockingProfile);
 		bool movingObjectLeft;
-		wchar_t * thisTimeBuf = new wchar_t[25];
+		wchar_t * thisTimeBuf = new DEBUG_NEW_PLACEMENT wchar_t[25];
 		tm local;
 
 		// read cost attribute unit
@@ -858,7 +864,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// init
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
-		FlockingEnviroment * flock = new FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, initDelayCostPerPop);
+		FlockingEnviroment * flock = new DEBUG_NEW_PLACEMENT FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, initDelayCostPerPop);
 		flock->Init(Evacuees, ipNetworkQuery, costPerSec, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
 		
 		// run simulation
@@ -1064,7 +1070,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// releasing all internal objects
 	delete vcache;
 	delete ecache;
-	for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
+	for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++)
+		delete it->second;
 	delete safeZoneList;
 
 	return S_OK;

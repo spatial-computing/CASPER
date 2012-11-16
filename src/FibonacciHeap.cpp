@@ -108,17 +108,17 @@ FibonacciHeap::FibonacciHeap(bool (*LessThanMethod)(NAEdge *, NAEdge *))
 {
 	this->LessThan = LessThanMethod;
 	minRoot = NULL;
-	nodeTable = new HeapNodeTable();
-	rootListByRank = new HeapNodePtr[100];
+	nodeTable = new DEBUG_NEW_PLACEMENT HeapNodeTable();
+	rootListByRank = new DEBUG_NEW_PLACEMENT HeapNodePtr[100];
 }
 
 /*
 FibonacciHeap::FibonacciHeap(HeapDataType * root, (*LessThan)(NAEdge *, NAEdge *) LessThanMethod)
 {
 	this->LessThan = LessThanMethod;
-	nodeTable = new HeapNodeTable();
-	this->minRoot = new HeapNode(root);
-	rootListByRank = new HeapNodePtr[100];
+	nodeTable = new DEBUG_NEW_PLACEMENT HeapNodeTable();
+	this->minRoot = new DEBUG_NEW_PLACEMENT HeapNode(root);
+	rootListByRank = new DEBUG_NEW_PLACEMENT HeapNodePtr[100];
 	minRoot->parent = NULL;
 	minRoot->children = NULL;
 	minRoot->leftSibling = NULL;
@@ -151,7 +151,7 @@ bool FibonacciHeap::Insert(HeapDataType * node)
 	}
 	else
 	{
-		HeapNode * n = new HeapNode(node);
+		HeapNode * n = new DEBUG_NEW_PLACEMENT HeapNode(node);
 
 		if(minRoot == NULL) minRoot = n;
 		else

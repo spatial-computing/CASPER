@@ -315,7 +315,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		// critical density per capacity
 		BSTR critical;
 		size = ::SendMessage(m_hEditCritical, WM_GETTEXTLENGTH, 0, 0);
-		critical = new WCHAR[size + 1];
+		critical = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
 		::SendMessage(m_hEditCritical, WM_GETTEXT, size + 1, (LPARAM)critical);
 		ipSolver->put_CriticalDensPerCap(critical);
 		delete [] critical;
@@ -323,7 +323,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		// init delay cost per population
 		BSTR delay;
 		size = ::SendMessage(m_hEditInitCost, WM_GETTEXTLENGTH, 0, 0);
-		delay = new WCHAR[size + 1];
+		delay = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
 		::SendMessage(m_hEditInitCost, WM_GETTEXT, size + 1, (LPARAM)delay);
 		ipSolver->put_InitDelayCostPerPop(delay);
 		delete [] delay;
@@ -331,7 +331,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		// init delay cost per population
 		BSTR bucket;
 		size = ::SendMessage(m_heditBucketSize, WM_GETTEXTLENGTH, 0, 0);
-		bucket = new WCHAR[size + 1];
+		bucket = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
 		::SendMessage(m_heditBucketSize, WM_GETTEXT, size + 1, (LPARAM)bucket);
 		ipSolver->put_EvacueeBucketSize(bucket);
 		delete [] bucket;
@@ -339,7 +339,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		// saturation density per capacity
 		BSTR sat;
 		size = ::SendMessage(m_hEditSat, WM_GETTEXTLENGTH, 0, 0);
-		sat = new WCHAR[size + 1];
+		sat = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
 		::SendMessage(m_hEditSat, WM_GETTEXT, size + 1, (LPARAM)sat);
 		ipSolver->put_SaturationPerCap(sat);
 		delete [] sat;
@@ -347,7 +347,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		// cost per zone density
 		BSTR density;
 		size = ::SendMessage(m_hEditDensity, WM_GETTEXTLENGTH, 0, 0);
-		density = new WCHAR[size + 1];
+		density = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
 		::SendMessage(m_hEditDensity, WM_GETTEXT, size + 1, (LPARAM)density);
 		ipSolver->put_CostPerZoneDensity(density);
 		delete [] density;
@@ -355,7 +355,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		// flock snap interval
 		BSTR flock;
 		size = ::SendMessage(m_hEditSnapFlock, WM_GETTEXTLENGTH, 0, 0);
-		flock = new WCHAR[size + 1];
+		flock = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
 		::SendMessage(m_hEditSnapFlock, WM_GETTEXT, size + 1, (LPARAM)flock);
 		ipSolver->put_FlockingSnapInterval(flock);
 		delete [] flock;
@@ -363,7 +363,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		// flock simulation interval
 		BSTR simul;
 		size = ::SendMessage(m_hEditSimulationFlock, WM_GETTEXTLENGTH, 0, 0);
-		simul = new WCHAR[size + 1];
+		simul = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
 		::SendMessage(m_hEditSimulationFlock, WM_GETTEXT, size + 1, (LPARAM)simul);
 		ipSolver->put_FlockingSimulationInterval(simul);
 		delete [] simul;

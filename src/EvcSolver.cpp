@@ -10,9 +10,9 @@
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
 
 #include "stdafx.h"
-#include "NameConstants.h"
-#include "float.h"  // for FLT_MAX, etc.
+#include <float.h>  // for FLT_MAX, etc.
 #include <cmath>   // for HUGE_VAL
+#include "NameConstants.h"
 #include "EvcSolver.h"
 
 // EvcSolver
@@ -162,7 +162,7 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 
 	// load network attributes for later configuration and usage
 	// this will be used to load restriction and also to load proper impedance (cost) value
-
+	
 	INetworkAttribute2Ptr networkAttrib = 0;
 	long count, i;
 	HRESULT hr;
@@ -536,7 +536,7 @@ STDMETHODIMP EvcSolver::get_EvacueeBucketSize(BSTR * value)
 {
 	if (value)
 	{
-		*value = new WCHAR[100];
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
 		swprintf_s(*value, 100, L"%u", minEvacueeBucketSize);
 	}
 	return S_OK;
@@ -566,7 +566,7 @@ STDMETHODIMP EvcSolver::get_SaturationPerCap(BSTR * value)
 {
 	if (value)
 	{
-		*value = new WCHAR[100];
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
 		swprintf_s(*value, 100, L"%.2f", SaturationPerCap);
 	}
 	return S_OK;
@@ -576,7 +576,7 @@ STDMETHODIMP EvcSolver::get_FlockingSnapInterval(BSTR * value)
 {	
 	if (value)
 	{
-		*value = new WCHAR[100];
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
 		swprintf_s(*value, 100, L"%.4f", flockingSnapInterval);
 	}
 	return S_OK;
@@ -586,7 +586,7 @@ STDMETHODIMP EvcSolver::get_FlockingSimulationInterval(BSTR * value)
 {	
 	if (value)
 	{
-		*value = new WCHAR[100];
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
 		swprintf_s(*value, 100, L"%.4f", flockingSimulationInterval);
 	}
 	return S_OK;
@@ -596,7 +596,7 @@ STDMETHODIMP EvcSolver::get_CriticalDensPerCap(BSTR * value)
 {	
 	if (value)
 	{
-		*value = new WCHAR[100];
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
 		swprintf_s(*value, 100, L"%.2f", CriticalDensPerCap);
 	}
 	return S_OK;
@@ -606,7 +606,7 @@ STDMETHODIMP EvcSolver::get_CostPerZoneDensity(BSTR * value)
 {	
 	if (value)
 	{
-		*value = new WCHAR[100];
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
 		swprintf_s(*value, 100, L"%.2f", costPerDensity);
 	}
 	return S_OK;
@@ -616,7 +616,7 @@ STDMETHODIMP EvcSolver::get_InitDelayCostPerPop(BSTR * value)
 {	
 	if (value)
 	{
-		*value = new WCHAR[100];
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
 		swprintf_s(*value, 100, L"%.4f", initDelayCostPerPop);
 	}
 	return S_OK;
@@ -671,7 +671,7 @@ STDMETHODIMP EvcSolver::get_CostAttributes(BSTR ** Names)
 {
 	int count = costAttribs.size(), i;
 	HRESULT hr;
-	BSTR * names = new BSTR[count];
+	BSTR * names = new DEBUG_NEW_PLACEMENT BSTR[count];
 
 	for (i = 0; i < count; i++) if (FAILED(hr = costAttribs[i]->get_Name(&(names[i])))) return hr;	
 
@@ -686,7 +686,7 @@ STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(BSTR ** Names)
 {
 	int count = discriptiveAttribs.size(), i;
 	HRESULT hr;
-	BSTR * names = new BSTR[count];
+	BSTR * names = new DEBUG_NEW_PLACEMENT BSTR[count];
 
 	for (i = 0; i < count; i++) if (FAILED(hr = discriptiveAttribs[i]->get_Name(&(names[i])))) return hr;	
 

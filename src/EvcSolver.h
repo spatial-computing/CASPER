@@ -11,15 +11,22 @@
 
 #pragma once
 
-// memory leak detection in DEBUG mode
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
+static int isDebugLeakLoaded = false;
 
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 #include "Evacuee.h"
 #include "NAGraph.h"
 #include "Flocking.h"
+
+// memory leak detection in DEBUG mode
+// ref: http://msdn.microsoft.com/en-us/library/e5ewb1h3%28v=vs.80%29.aspx
+// #define _CRTDBG_MAP_ALLOC // defined in project file
+#include <stdlib.h>
+#include <crtdbg.h>
+
+// new memory leak detection library
+// ref: http://vld.codeplex.com/wikipage?title=Using%20Visual%20Leak%20Detector&referringTitle=Documentation
+/// #include <vld.h>
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -137,7 +144,11 @@ public:
 		  c_featureRetrievalInterval(500)
 	  {
 		  // set program start for memory leak detection (DEBUG Mode)
-		  _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+		  if (!isDebugLeakLoaded)
+		  {
+			 _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+			 isDebugLeakLoaded = true;
+		  }
 	  }
 
 	  DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -155,7 +166,6 @@ public:
 
 	  void FinalRelease() 
 	  {
-		  _CrtDumpMemoryLeaks();
 	  }
 
 public:

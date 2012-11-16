@@ -80,8 +80,8 @@ public:
 	Evacuee(VARIANT name, double pop)
 	{
 		Name = name;
-		vertices = new std::vector<NAVertexPtr>();
-		paths = new std::list<EvcPathPtr>();
+		vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
+		paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
 		Population = pop;
 		PredictedCost = MAX_COST;
 	}
