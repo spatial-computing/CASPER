@@ -328,7 +328,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					maxPerformance_Ratio = max(maxPerformance_Ratio, dirtyVerticesInClosedList / path->size());
 #ifdef DEBUG
 					std::wostringstream os_;
-					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << dirtyVerticesInClosedList / closedList->Size() << "," 
+					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
 						<< dirtyVerticesInPath << "," << path->size() << "," << dirtyVerticesInPath / path->size() << std::endl;
 					OutputDebugStringW( os_.str().c_str() );
 #endif
