@@ -21,7 +21,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 1.5, dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0;
+	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 0.0, dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
@@ -71,7 +71,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		// only the last 'k'th evacuees will be bucketed to run each round.
 		if (FAILED(hr = RunHeuristic(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkBackwardStarEx))) return hr;
 
-		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, maxPerformance_Ratio = 1.0; seit != sortedEvacuees->end(); seit++)
+		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, maxPerformance_Ratio = 0.0; seit != sortedEvacuees->end(); seit++)
 		{
 			currentEvacuee = *seit;
 
@@ -325,7 +325,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					currentEvacuee->paths->push_front(path);
 
 					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'RunHeuristic'
-					maxPerformance_Ratio = max(maxPerformance_Ratio, dirtyVerticesInClosedList / path->size());
+					maxPerformance_Ratio = max(maxPerformance_Ratio, dirtyVerticesInClosedList / closedList->Size());
 #ifdef DEBUG
 					std::wostringstream os_;
 					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
