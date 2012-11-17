@@ -4,7 +4,7 @@
     <LocalDebuggerCommand>C:\Program Files (x86)\ArcGIS\Desktop10.1\bin\ArcMap.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">
-    <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Experiment.mxd"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Exp.mxd"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
@@ -13,7 +13,8 @@
     <LocalDebuggerCommand>C:\Program Files (x86)\ArcGIS\Desktop10.1\bin\ArcMap.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Experiment.mxd"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>
+    </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
@@ -22,7 +23,7 @@
     <LocalDebuggerCommand>C:\Program Files (x86)\ArcGIS\Desktop10.1\bin\ArcMap.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
-    <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Experiment.mxd"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Exp.mxd"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
@@ -31,7 +32,7 @@
     <LocalDebuggerCommand>C:\Program Files (x86)\ArcGIS\Desktop10.1\bin\ArcMap.exe</LocalDebuggerCommand>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Experiment.mxd"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"C:\Users\kshahabi\Documents\My Data\ArcCASPER\USC Exp.mxd"</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>

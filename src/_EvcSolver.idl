@@ -16,79 +16,79 @@ import "c:\program files (x86)\microsoft sdks\windows\v7.0a\include\transact.idl
 	helpstring("IEvcSolver Interface"),
 	pointer_default(unique)
 ] 
-#line 30 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+#line 42 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 interface IEvcSolver : IUnknown {
-#line 33 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the saturation constant per capacity")] HRESULT  SaturationPerCap([in] BSTR value);
-#line 35 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected saturation constant per capacity")] HRESULT  SaturationPerCap([out,retval] BSTR *value);
-#line 37 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the critical density per capacity")] HRESULT  CriticalDensPerCap([in] BSTR value);
-#line 39 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected critical density per capacity")] HRESULT  CriticalDensPerCap([out,retval] BSTR *value);
-#line 41 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Lists discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributes([out,retval] BSTR **names);
-#line 43 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Counts discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributesCount([out,retval] int *count);
 #line 45 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the selected capacity attribute index")] HRESULT  CapacityAttribute([in] int index);
+	[propput,helpstring("Sets the saturation constant per capacity")] HRESULT  SaturationPerCap([in] BSTR value);
 #line 47 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected caspacity attribute index")] HRESULT  CapacityAttribute([out,retval] int *index);
+	[propget,helpstring("Gets the selected saturation constant per capacity")] HRESULT  SaturationPerCap([out,retval] BSTR *value);
 #line 49 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the separable evacuee flag")] HRESULT  SeparableEvacuee([in] VARIANT_BOOL value);
+	[propput,helpstring("Sets the critical density per capacity")] HRESULT  CriticalDensPerCap([in] BSTR value);
 #line 51 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the separable evacuee flag")] HRESULT  SeparableEvacuee([out,retval] VARIANT_BOOL *value);
+	[propget,helpstring("Gets the selected critical density per capacity")] HRESULT  CriticalDensPerCap([out,retval] BSTR *value);
 #line 53 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the export edge stat flag")] HRESULT  ExportEdgeStat([in] VARIANT_BOOL value);
+	[propget,helpstring("Lists discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributes([out,retval] BSTR **names);
 #line 55 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the export edge stat flag")] HRESULT  ExportEdgeStat([out,retval] VARIANT_BOOL *value);
+	[propget,helpstring("Counts discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributesCount([out,retval] int *count);
 #line 57 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the solver method")] HRESULT  SolverMethod([in] char value);
+	[propput,helpstring("Sets the selected capacity attribute index")] HRESULT  CapacityAttribute([in] int index);
 #line 59 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected solver method")] HRESULT  SolverMethod([out,retval] char *value);
+	[propget,helpstring("Gets the selected caspacity attribute index")] HRESULT  CapacityAttribute([out,retval] int *index);
 #line 61 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the cost method")] HRESULT  TrafficModel([in] char value);
+	[propput,helpstring("Sets the separable evacuee flag")] HRESULT  SeparableEvacuee([in] VARIANT_BOOL value);
 #line 63 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected cost method")] HRESULT  TrafficModel([out,retval] char *value);
+	[propget,helpstring("Gets the separable evacuee flag")] HRESULT  SeparableEvacuee([out,retval] VARIANT_BOOL *value);
 #line 65 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the cost per safe zone density")] HRESULT  CostPerZoneDensity([in] BSTR value);
+	[propput,helpstring("Sets the export edge stat flag")] HRESULT  ExportEdgeStat([in] VARIANT_BOOL value);
 #line 67 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the cost per safe zone density")] HRESULT  CostPerZoneDensity([out,retval] BSTR *value);
+	[propget,helpstring("Gets the export edge stat flag")] HRESULT  ExportEdgeStat([out,retval] VARIANT_BOOL *value);
 #line 69 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the flocking simulation interval in minutes")] HRESULT  FlockingSimulationInterval([in] BSTR value);
+	[propput,helpstring("Sets the solver method")] HRESULT  SolverMethod([in] char value);
 #line 71 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the flocking simulation interval in minutes")] HRESULT  FlockingSimulationInterval([out,retval] BSTR *value);
+	[propget,helpstring("Gets the selected solver method")] HRESULT  SolverMethod([out,retval] char *value);
 #line 73 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the flocking snapshot interval in minutes")] HRESULT  FlockingSnapInterval([in] BSTR value);
+	[propput,helpstring("Sets the cost method")] HRESULT  TrafficModel([in] char value);
 #line 75 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the flocking snapshot interval in minutes")] HRESULT  FlockingSnapInterval([out,retval] BSTR *value);
+	[propget,helpstring("Gets the selected cost method")] HRESULT  TrafficModel([out,retval] char *value);
 #line 77 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the flocking mode to on/off")] HRESULT  FlockingEnabled([in] VARIANT_BOOL value);
+	[propput,helpstring("Sets the cost per safe zone density")] HRESULT  CostPerZoneDensity([in] BSTR value);
 #line 79 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the flocking mode")] HRESULT  FlockingEnabled([out,retval] VARIANT_BOOL *value);
+	[propget,helpstring("Gets the cost per safe zone density")] HRESULT  CostPerZoneDensity([out,retval] BSTR *value);
 #line 81 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the two-way road capacity sharing")] HRESULT  TwoWayShareCapacity([in] VARIANT_BOOL value);
+	[propput,helpstring("Sets the flocking simulation interval in minutes")] HRESULT  FlockingSimulationInterval([in] BSTR value);
 #line 83 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the two way road capacity sharing")] HRESULT  TwoWayShareCapacity([out,retval] VARIANT_BOOL *value);
+	[propget,helpstring("Gets the flocking simulation interval in minutes")] HRESULT  FlockingSimulationInterval([out,retval] BSTR *value);
 #line 85 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the initial delay cost per population")] HRESULT  InitDelayCostPerPop([in] BSTR value);
+	[propput,helpstring("Sets the flocking snapshot interval in minutes")] HRESULT  FlockingSnapInterval([in] BSTR value);
 #line 87 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the initial delay cost per population")] HRESULT  InitDelayCostPerPop([out,retval] BSTR *value);
+	[propget,helpstring("Gets the flocking snapshot interval in minutes")] HRESULT  FlockingSnapInterval([out,retval] BSTR *value);
 #line 89 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the flocking profile")] HRESULT  FlockingProfile([in] char value);
+	[propput,helpstring("Sets the flocking mode to on/off")] HRESULT  FlockingEnabled([in] VARIANT_BOOL value);
 #line 91 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected flocking profile")] HRESULT  FlockingProfile([out,retval] char *value);
+	[propget,helpstring("Gets the flocking mode")] HRESULT  FlockingEnabled([out,retval] VARIANT_BOOL *value);
 #line 93 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the size of the evacuee bucket")] HRESULT  EvacueeBucketSize([in] BSTR value);
+	[propput,helpstring("Sets the two-way road capacity sharing")] HRESULT  TwoWayShareCapacity([in] VARIANT_BOOL value);
 #line 95 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the size of the evacuee bucket")] HRESULT  EvacueeBucketSize([out,retval] BSTR *value);
+	[propget,helpstring("Gets the two way road capacity sharing")] HRESULT  TwoWayShareCapacity([out,retval] VARIANT_BOOL *value);
+#line 97 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the initial delay cost per population")] HRESULT  InitDelayCostPerPop([in] BSTR value);
 #line 99 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the selected cost attribute index")] HRESULT  CostAttribute([in] int index);
+	[propget,helpstring("Gets the initial delay cost per population")] HRESULT  InitDelayCostPerPop([out,retval] BSTR *value);
 #line 101 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected cost attribute index")] HRESULT  CostAttribute([out,retval] int *index);
+	[propput,helpstring("Sets the flocking profile")] HRESULT  FlockingProfile([in] char value);
 #line 103 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Lists impedence attributes from the network dataset")] HRESULT  CostAttributes([out,retval] BSTR **names);
+	[propget,helpstring("Gets the selected flocking profile")] HRESULT  FlockingProfile([out,retval] char *value);
 #line 105 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the size of the evacuee bucket")] HRESULT  EvacueeBucketSize([in] BSTR value);
+#line 107 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the size of the evacuee bucket")] HRESULT  EvacueeBucketSize([out,retval] BSTR *value);
+#line 111 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propput,helpstring("Sets the selected cost attribute index")] HRESULT  CostAttribute([in] int index);
+#line 113 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Gets the selected cost attribute index")] HRESULT  CostAttribute([out,retval] int *index);
+#line 115 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+	[propget,helpstring("Lists impedence attributes from the network dataset")] HRESULT  CostAttributes([out,retval] BSTR **names);
+#line 117 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propget,helpstring("Counts impedence attributes from the network dataset")] HRESULT  CostAttributesCount([out,retval] int *count);
 };
 
@@ -99,25 +99,14 @@ library CustomSolver
 	importlib("stdole2.tlb");
 	importlib("olepro32.dll");
 
-	importlib("\Program Files (x86)\ArcGIS\Desktop10.1\com\esrinetworkanalyst.olb");
 	[
 		version(1.0),
 		uuid(7b081f99-b691-46b1-b756-aa72868c8683),
 		helpstring("EvcSolver Class")
 	] 
-#line 119 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
+#line 131 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	coclass EvcSolver {
 		[default]	interface IEvcSolver;
-	};
-
-	[
-		version(1.0),
-		uuid(cd267b89-0144-4e7c-929e-bcd5d82f4c4d),
-		helpstring("EvcSolverPropPage Class")
-	] 
-#line 29 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolverproppage.h"
-	coclass EvcSolverPropPage {
-		[default]	interface IUnknown;
 	};
 
 	[
@@ -130,5 +119,16 @@ library CustomSolver
 		[default]	interface INASymbolizer2;
 	};
 
+	[
+		version(1.0),
+		uuid(cd267b89-0144-4e7c-929e-bcd5d82f4c4d),
+		helpstring("EvcSolverPropPage Class")
+	] 
+#line 29 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolverproppage.h"
+	coclass EvcSolverPropPage {
+		[default]	interface IUnknown;
+	};
+
+	importlib("\Program Files (x86)\ArcGIS\Desktop10.1\com\esrinetworkanalyst.olb");
 }
 
