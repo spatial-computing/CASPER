@@ -73,10 +73,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, maxPerformance_Ratio = 0.0; seit != sortedEvacuees->end(); seit++)
 		{
-			currentEvacuee = *seit;
-
-			// Step the progressor before continuing to the next Evacuee point
-			if (ipStepProgressor) ipStepProgressor->Step();		
+			currentEvacuee = *seit;	
 
 			// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
 			if (pTrackCancel)
@@ -85,6 +82,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
 			}
 			if (currentEvacuee->vertices->size() == 0) continue;
+
+			// Step the progressor before continuing to the next Evacuee point
+			if (ipStepProgressor) ipStepProgressor->Step();	
 			countEvacueesInOneBucket++;
 			populationLeft = currentEvacuee->Population;
 
