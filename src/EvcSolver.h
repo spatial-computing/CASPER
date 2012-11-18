@@ -290,7 +290,7 @@ private:
 	HRESULT SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages * pMessages, ITrackCancel * pTrackCancel,
 		IStepProgressorPtr ipStepProgressor, EvacueeList * sortedEvacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
 		NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx);
-	HRESULT RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
+	HRESULT FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
 			 NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkBackwardStarEx);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);

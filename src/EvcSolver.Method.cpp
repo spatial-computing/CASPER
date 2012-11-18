@@ -69,7 +69,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	{
 		// indexing all the population by their srrounding vertices this will be used to sort them by network distance to safe zone.
 		// only the last 'k'th evacuees will be bucketed to run each round.
-		if (FAILED(hr = RunHeuristic(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkBackwardStarEx))) goto END_OF_FUNC;
+		if (FAILED(hr = FlagMyGraph(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkBackwardStarEx))) goto END_OF_FUNC;
 
 		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, maxPerformance_Ratio = 0.0; seit != sortedEvacuees->end(); seit++)
 		{
@@ -324,7 +324,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 					currentEvacuee->paths->push_front(path);
 
-					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'RunHeuristic'
+					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'FlagMyGraph'
 					maxPerformance_Ratio = max(maxPerformance_Ratio, dirtyVerticesInClosedList / closedList->Size());
 #ifdef DEBUG
 					std::wostringstream os_;
@@ -349,7 +349,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);	
 			currentEvacuee->vertices->clear();
 
-			// determine if the previous round of DJs where fast enough and if not break out of the loop and have RunHeuristic do something about it
+			// determine if the previous round of DJs where fast enough and if not break out of the loop and have FlagMyGraph do something about it
 			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && maxPerformance_Ratio > this->GoldenPerformance_Ratio && countEvacueesInOneBucket >= this->minEvacueeBucketSize) break;
 
 		} // end of for loop over sortedEvacuees
@@ -364,7 +364,7 @@ END_OF_FUNC:
 	return hr;
 }
 
-HRESULT EvcSolver::RunHeuristic(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
+HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
 								NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkBackwardStarEx)
 {
 	HRESULT hr = S_OK;
