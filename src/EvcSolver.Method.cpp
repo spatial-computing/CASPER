@@ -36,6 +36,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0;
+	
+	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
+	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
+	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC; 
 
 	///////////////////////////////////////
 	// Setup a message on our step progressor indicating that we are traversing the network
@@ -60,10 +64,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CCRP search")))) goto END_OF_FUNC;
 		}		
 	}
-	
-	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
-	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
-	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC; 
 
 	do
 	{

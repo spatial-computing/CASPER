@@ -460,7 +460,21 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	///////////////////////////////////////
 	// this will call the core part of the algorithm.
 	if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache,
-		safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx))) return hr;	
+		safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx)))
+	{
+		// it either failed or canceled. clean up and then return.
+		for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
+		Evacuees->clear();
+		delete Evacuees;
+
+		// releasing all internal objects
+		delete vcache;
+		delete ecache;
+		for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
+		delete safeZoneList;
+
+		return hr;
+	}
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -1061,8 +1075,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		pMessages->AddWarning(CComBSTR(_T("Some collisions have been reported at the following intervals:")));
 		pMessages->AddWarning(CComBSTR(colMsgString));
 	}
-
-END_OF_FUNC:
 
 	// clear and release evacuees and their paths
 	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
