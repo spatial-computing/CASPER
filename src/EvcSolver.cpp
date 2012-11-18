@@ -1068,6 +1068,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&minEvacueeBucketSize, sizeof(minEvacueeBucketSize), &numBytes))) return hr;
 
 	m_bPersistDirty = false;
+	GoldenPerformance_Ratio = 0.2;
 
 	return S_OK;
 }
