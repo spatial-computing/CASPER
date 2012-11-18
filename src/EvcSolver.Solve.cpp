@@ -37,7 +37,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// NOTE: for consistency within custom applications, similar validation checks should also be implemented
 	// before calling the Solve method on any solver  
 
-	HRESULT hr;
+	HRESULT hr = S_OK;
 	long i;
 
 	// Check for null parameter variables (the track cancel variable is typically considered optional)
@@ -1062,6 +1062,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		pMessages->AddWarning(CComBSTR(colMsgString));
 	}
 
+END_OF_FUNC:
+
 	// clear and release evacuees and their paths
 	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
 	Evacuees->clear();
@@ -1073,7 +1075,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
 	delete safeZoneList;
 
-	return S_OK;
+	return hr;
 }
 
 double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed)
