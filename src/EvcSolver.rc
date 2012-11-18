@@ -132,7 +132,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_INITDELAY,127,85,63,14,ES_AUTOHSCROLL
     LTEXT           "Flocking Profile:",IDC_STATIC_FlockProfile,217,116,61,8
     COMBOBOX        IDC_COMBO_PROFILE,322,113,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Evacuee Bucket Size:",IDC_LableBucketSize,20,123,95,8
+    LTEXT           "Min Evacuee Bucket Size:",IDC_LableBucketSize,20,123,95,8
     EDITTEXT        IDC_EDIT_BucketSize,127,120,63,14,ES_AUTOHSCROLL | ES_NUMBER
 END
 
