@@ -11,6 +11,7 @@
 
 #include "stdafx.h"
 #include "EvcSolverPropPage.h"
+#include "NameConstants.h"
 
 // EvcSolverPropPage
 
@@ -31,9 +32,9 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		EVC_SOLVER_METHOD method;
 		m_ipEvcSolver->get_SolverMethod(&method);
 		::SendMessage(m_hComboMethod, CB_RESETCONTENT, NULL, NULL);
-		::SendMessage(m_hComboMethod, CB_ADDSTRING, NULL, (LPARAM)(_T("SP")));
-		::SendMessage(m_hComboMethod, CB_ADDSTRING, NULL, (LPARAM)(_T("CCRP")));
-		::SendMessage(m_hComboMethod, CB_ADDSTRING, NULL, (LPARAM)(_T("CASPER")));
+		::SendMessage(m_hComboMethod, CB_ADDSTRING, NULL, (LPARAM)(OPTIMIZATION_SP));
+		::SendMessage(m_hComboMethod, CB_ADDSTRING, NULL, (LPARAM)(OPTIMIZATION_CCRP));
+		::SendMessage(m_hComboMethod, CB_ADDSTRING, NULL, (LPARAM)(OPTIMIZATION_CASPER));
 		::SendMessage(m_hComboMethod, CB_SETCURSEL, (WPARAM)method, 0);
 
 		// set the flocking profile names
@@ -64,10 +65,10 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		EVC_TRAFFIC_MODEL model;
 		m_ipEvcSolver->get_TrafficModel(&model);
 		::SendMessage(m_hComboTrafficModel, CB_RESETCONTENT, NULL, NULL);
-		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("FLAT")));
-		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("STEP")));
-		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("LINEAR")));
-		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(_T("CASPER")));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_FLAT));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_STEP));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_LINEAR));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_EXP));
 		::SendMessage(m_hComboTrafficModel, CB_SETCURSEL, (WPARAM)model, 0);
 
 		// set the loaded network discriptive attribs
