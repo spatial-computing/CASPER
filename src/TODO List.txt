@@ -8,4 +8,4 @@
 - fix multi-part turn to be accurate
 + drop menu to select traffic model instead of cost calc model.
 
-- inteligently repeat the graph/vertex huiristic update after some paths are reserved. maybe size of closed list can help.
++ inteligently repeat the graph/vertex huiristic update after some paths are reserved. maybe size of closed list can help.
