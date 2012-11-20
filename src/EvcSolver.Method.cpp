@@ -260,7 +260,19 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						while (temp->Previous)
 						{
 							leftCap = temp->GetBehindEdge()->LeftCapacity();
-							if (this->solverMethod != EVC_SOLVER_METHOD_CCRP || leftCap > 0.0) population2Route = min(population2Route, leftCap);
+							// if (this->solverMethod == EVC_SOLVER_METHOD_CCRP || leftCap > 0.0) population2Route = min(population2Route, leftCap);
+							switch (this->solverMethod)
+							{
+							case EVC_SOLVER_METHOD_CCRP:
+								population2Route = min(population2Route, leftCap);
+								break;
+							case EVC_SOLVER_METHOD_CASPER:								
+								if (leftCap > 0.0) population2Route = min(population2Route, leftCap);
+								break;
+							default:
+								population2Route = min(population2Route, leftCap);
+								break;
+							}							
 							temp = temp->Previous;
 						}
 						if (population2Route <= 0.0) population2Route = populationLeft;	
