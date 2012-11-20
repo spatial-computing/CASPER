@@ -147,7 +147,7 @@ double NAEdge::GetCurrentCost() const
 	if (reservations->ReservedPop > reservations->CriticalDens)
 	{
 		speedPercent = GetTrafficSpeedRatio(reservations->ReservedPop);
-		speedPercent = min(1.0, max(0.001, speedPercent));
+		speedPercent = min(1.0, max(0.0001, speedPercent));
 	}
 	return OriginalCost / speedPercent;
 }
@@ -169,7 +169,7 @@ double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 			speedPercent = 0.0;
 			break;
 		}
-		speedPercent = min(1.0, max(0.001, speedPercent));
+		speedPercent = min(1.0, max(0.0001, speedPercent));
 	}
 	return OriginalCost / speedPercent;
 }
