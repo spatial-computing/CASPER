@@ -69,10 +69,13 @@ OpenSteer::PolylinePathway::initialize (const int _pointCount,
     cyclic = _cyclic;
     pointCount = _pointCount;
     totalPathLength = 0;
+	if (isInit) Destruct();
+	isInit = true;
+
     if (cyclic) pointCount++;
-    lengths = new double    [pointCount];
-    points  = new Vec3 [pointCount];
-    normals = new Vec3 [pointCount];
+    lengths = new DEBUG_NEW_PLACEMENT double [pointCount];
+    points  = new DEBUG_NEW_PLACEMENT Vec3 [pointCount];
+    normals = new DEBUG_NEW_PLACEMENT Vec3 [pointCount];
 
     // loop over all points
     for (int i = 0; i < pointCount; i++)
@@ -98,6 +101,17 @@ OpenSteer::PolylinePathway::initialize (const int _pointCount,
     }
 }
 
+// Kaveh096: destructor to get rid of memory created in initialize
+ void OpenSteer::PolylinePathway::Destruct(void)
+{
+	if (isInit)
+	{
+		delete [] lengths;
+		delete [] points;
+		delete [] normals;
+		isInit = false;
+	}
+}
 
 // ----------------------------------------------------------------------------
 // Given an arbitrary point ("A"), returns the nearest point ("P") on

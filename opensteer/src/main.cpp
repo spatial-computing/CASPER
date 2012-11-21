@@ -42,7 +42,6 @@
 // To include EXIT_SUCCESS
 #include <cstdlib>
 
-
 int main (int argc, char **argv) 
 {
     // initialize OpenSteerDemo application

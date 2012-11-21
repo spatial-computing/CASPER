@@ -36,16 +36,25 @@
 //
 // ----------------------------------------------------------------------------
 
-
 #ifndef OPENSTEER_UTILITIES_H
 #define OPENSTEER_UTILITIES_H
-
 
 #include <iostream>  // for ostream, <<, etc.
 #include <cstdlib>   // for rand, etc.
 #include <cfloat>    // for FLT_MAX, etc.
 #include <cmath>     // for sqrt, etc.
 
+// for memory leak detection during debugging
+#include <stdlib.h>
+#include <crtdbg.h>
+
+// memory leak detection new operator replacment
+/// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
+#ifdef _DEBUG
+#define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)
+#else
+#define DEBUG_NEW_PLACEMENT
+#endif
 
 // ----------------------------------------------------------------------------
 // For the sake of Windows, apparently this is a "Linux/Unix thing"

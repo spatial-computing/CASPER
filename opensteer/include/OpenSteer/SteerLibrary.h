@@ -46,7 +46,6 @@
 #ifndef OPENSTEER_STEERLIBRARY_H
 #define OPENSTEER_STEERLIBRARY_H
 
-
 #include "AbstractVehicle.h"
 #include "Pathway.h"
 #include "Obstacle.h"

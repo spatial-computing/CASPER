@@ -95,6 +95,10 @@ namespace OpenSteer {
 
     class PolylinePathway: public virtual Pathway
     {
+	private:
+		bool isInit;
+		void Destruct(void);
+
     public:
 
         int pointCount;
@@ -102,7 +106,8 @@ namespace OpenSteer {
         double radius;
         bool cyclic;
 
-        PolylinePathway (void) {}
+		PolylinePathway (void) { isInit = false; }
+		virtual ~PolylinePathway (void) { Destruct(); }
 
         // construct a PolylinePathway given the number of points (vertices),
         // an array of points, and a path radius.
