@@ -885,7 +885,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		try
 		{
 			if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
-			if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, predictedCost))) return hr;
+			hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, predictedCost);
 		}
 		catch(std::exception& e)
 		{
@@ -896,6 +896,26 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// retrive results even if it's empty or errored
 		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
+
+		if (FAILED(hr))
+		{
+			// the flocking is canceled or failed. clean up and return.
+			delete flock;
+			delete [] thisTimeBuf;
+			
+			// clear and release evacuees and their paths
+			for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
+			Evacuees->clear();
+			delete Evacuees;
+
+			// releasing all internal objects
+			delete vcache;
+			delete ecache;
+			for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
+			delete safeZoneList;
+
+			return hr;
+		}
 
 		// project back to analysis coordinate system
 		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)

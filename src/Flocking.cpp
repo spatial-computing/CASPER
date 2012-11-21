@@ -183,7 +183,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 
 		if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;
 
-		// load new DEBUG_NEW_PLACEMENT edge points into the steer library
+		// load new edge points into the steer library
 		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius * 1.2, false);
 		newEdgeRequestFlag = false;
 	}

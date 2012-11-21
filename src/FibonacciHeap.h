@@ -43,7 +43,7 @@ private:
 	stdext::hash_map<long, HeapNodePtr> * cache;
 
 public:
-	HeapNodeTable(void) { cache = new stdext::hash_map<long, HeapNodePtr>(); }
+	HeapNodeTable(void) { cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, HeapNodePtr>(); }
 	~HeapNodeTable(void)
 	{
 		Clear();

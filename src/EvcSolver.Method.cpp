@@ -122,6 +122,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				TimeToBeat = MAX_COST;
 				BetterSafeZone = 0;
 				finalVertex = 0;
+
+				// the next 'if' is a distinctive feature by CASPER that CCRP does not have
+				// and can actually improve routes even with a STEP traffic model
 				if (this->solverMethod == EVC_SOLVER_METHOD_CCRP) population2Route = 1.0;
 				else population2Route = populationLeft;
 
@@ -260,19 +263,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						while (temp->Previous)
 						{
 							leftCap = temp->GetBehindEdge()->LeftCapacity();
-							// if (this->solverMethod == EVC_SOLVER_METHOD_CCRP || leftCap > 0.0) population2Route = min(population2Route, leftCap);
-							switch (this->solverMethod)
-							{
-							case EVC_SOLVER_METHOD_CCRP:
-								population2Route = min(population2Route, leftCap);
-								break;
-							case EVC_SOLVER_METHOD_CASPER:								
-								if (leftCap > 0.0) population2Route = min(population2Route, leftCap);
-								break;
-							default:
-								population2Route = min(population2Route, leftCap);
-								break;
-							}							
+							if (this->solverMethod == EVC_SOLVER_METHOD_CCRP || leftCap > 0.0) population2Route = min(population2Route, leftCap);
 							temp = temp->Previous;
 						}
 						if (population2Route <= 0.0) population2Route = populationLeft;	
@@ -421,6 +412,8 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC;
 
 	//search for min population on graph evacuees left to be routed
+	// The next if has to be in tune with what population will be routed next.
+	// the h values should always be an understimation
 	if (this->solverMethod != EVC_SOLVER_METHOD_CCRP)
 	{
 		minPop2Route = DBL_MAX;
