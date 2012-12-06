@@ -240,21 +240,26 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 
 void NAEdgeCache::Clear()
 {
+	CollectAndRelease();
 	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) delete (*cit).second;
 	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) delete (*cit).second;
-	for(std::vector<NAEdgePtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) delete (*i);
 	for(NAResTableItr ires = resTableAlong->begin(); ires != resTableAlong->end(); ires++) delete (*ires).second;
 
 	cacheAlong->clear();
 	cacheAgainst->clear();
 	resTableAlong->clear();
-	sideCache->clear();
 
 	if (!twoWayRoadsShareCap)
 	{
 		for(NAResTableItr ires = resTableAgainst->begin(); ires != resTableAgainst->end(); ires++) delete (*ires).second;
 		resTableAgainst->clear();
 	}
+}
+
+void NAEdgeCache::CollectAndRelease()
+{
+	for(std::vector<NAEdgePtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) delete (*i);
+	sideCache->clear();
 }
 
 ///////////////////////////////////////////////
@@ -351,7 +356,7 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
 	else
 	{
 		n = new DEBUG_NEW_PLACEMENT NAVertex(*(it->second));
-		sideCache->insert(sideCache->end(), n);
+		sideCache->push_back(n);
 	}
 	return n;
 }
@@ -368,6 +373,11 @@ void NAVertexCache::Clear()
 {
 	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++) delete cit->second;
 	cache->clear();
+	CollectAndRelease();
+}
+
+void NAVertexCache::CollectAndRelease()
+{	
 	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) delete (*i);
 	sideCache->clear();
 }

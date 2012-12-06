@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <psapi.h>
 #include <sstream>
 #include "NameConstants.h"
 #include "float.h"  // for FLT_MAX, etc.
@@ -36,7 +37,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0;
-	countFlagging = 0;
+	countFlagging = 0;	
+	PROCESS_MEMORY_COUNTERS MemCountr;
+	BOOL memResult;
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
@@ -102,6 +105,14 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (ipStepProgressor) ipStepProgressor->Step();	
 			countEvacueesInOneBucket++;
 			populationLeft = currentEvacuee->Population;
+
+			// I think it's safe to do a collect-n-clean on the graph (ecache & vcache) if the system memory is low
+			memResult = GetProcessMemoryInfo(GetCurrentProcess(), &MemCountr, sizeof(MemCountr));
+			if (memResult != FALSE && MemCountr.PagefileUsage > 3221225472) // 3GB
+			{
+				ecache->CollectAndRelease();
+				vcache->CollectAndRelease();
+			}
 
 			while (populationLeft > 0.0)
 			{

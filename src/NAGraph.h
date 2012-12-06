@@ -115,6 +115,7 @@ public:
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);
 	void Clear();
+	void CollectAndRelease();
 };
 
 class NAVertexCollector
@@ -354,6 +355,8 @@ public:
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }
 	NAEdgeTableItr AgainstEnd() const { return cacheAgainst->end(); }
 	int Size() { return cacheAlong->size() + cacheAgainst->size(); }
+	
+	void CollectAndRelease();
 
 	void CleanAllEdges(void)
 	{		
