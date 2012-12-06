@@ -4,7 +4,6 @@
 
 class Evacuee;
 class NAEdge;
-#define MAX_COST 1000000000.0
 
 #define EVC_SOLVER_METHOD			char
 #define EVC_SOLVER_METHOD_SP		0x0
@@ -65,7 +64,7 @@ public:
 	{
 		h->clear(); 
 		h->reserve(3);
-		h->push_back(HValue(0l, MAX_COST));
+		h->push_back(HValue(0l, DBL_MAX));
 	}
 
 	void SetBehindEdge(NAEdge * behindEdge);

@@ -54,7 +54,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 	VARIANT vcost, vcap;
 	double capacity = 1.0;
 	initDelayCostPerPop = InitDelayCostPerPop;
-	cachedCost[0] = MAX_COST; cachedCost[1] = 0.0;
+	cachedCost[0] = DBL_MAX; cachedCost[1] = 0.0;
 	HRESULT hr = 0;
 
 	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)) ||	

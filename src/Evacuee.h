@@ -18,7 +18,6 @@
 class NAVertex;
 class NAEdge;
 typedef NAVertex * NAVertexPtr;
-#define MAX_COST 1000000000.0
 
 class PathSegment
 {
@@ -76,6 +75,7 @@ public:
 	VARIANT Name;
 	double Population;
 	double PredictedCost;
+	bool Reachable;
 
 	Evacuee(VARIANT name, double pop)
 	{
@@ -83,7 +83,8 @@ public:
 		vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 		paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
 		Population = pop;
-		PredictedCost = MAX_COST;
+		PredictedCost = DBL_MAX;
+		Reachable = true;
 	}
 
 	~Evacuee(void)
@@ -112,7 +113,7 @@ class NAEvacueeVertexTable : public stdext::hash_map<long, std::vector<EvacueePt
 public:
 	~NAEvacueeVertexTable();
 
-	void Insert(EvacueeList * list);
+	void InsertReachable(EvacueeList * list);
 	std::vector<EvacueePtr> * Find(long junctionEID);
 	void Erase(long junctionEID);
 };

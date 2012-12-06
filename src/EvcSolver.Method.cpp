@@ -121,7 +121,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 				}
 
-				TimeToBeat = MAX_COST;
+				TimeToBeat = DBL_MAX;
 				BetterSafeZone = 0;
 				finalVertex = 0;
 
@@ -403,8 +403,12 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueeList * redundentSortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	redundentSortedEvacuees->reserve(Evacuees->size());
 
+	// keeping reachable evacuees in a new hashtable for better access
 	NAEvacueeVertexTable * EvacueePairs = new DEBUG_NEW_PLACEMENT NAEvacueeVertexTable();
-	EvacueePairs->Insert(Evacuees);
+	EvacueePairs->InsertReachable(Evacuees);
+
+	// also keep unreachable ones in the redundent list	
+	for(std::vector<EvacueePtr>::iterator i = Evacuees->begin(); i != Evacuees->end(); i++)	if (!((*i)->Reachable)) redundentSortedEvacuees->push_back(*i);
 
 	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement);
 	ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement);
@@ -546,7 +550,11 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	SortedEvacuees->clear();
 	for (NAEvacueeVertexTableItr evcItr = EvacueePairs->begin(); evcItr != EvacueePairs->end(); evcItr++)
 	{
-		for(eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++) redundentSortedEvacuees->push_back(*eit);
+		for(eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++)
+		{
+			if ((*eit)->PredictedCost == DBL_MAX) (*eit)->Reachable = false;
+			redundentSortedEvacuees->push_back(*eit);
+		}
 	}
 	if (!redundentSortedEvacuees->empty())
 	{

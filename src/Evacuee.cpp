@@ -3,7 +3,7 @@
 #include "NAGraph.h"
 #include <algorithm>
 
-void NAEvacueeVertexTable::Insert(EvacueeList * list)
+void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
 {
 	std::vector<EvacueePtr> * p = 0;
 	std::vector<EvacueePtr>::iterator i;
@@ -11,15 +11,18 @@ void NAEvacueeVertexTable::Insert(EvacueeList * list)
 
 	for(i = list->begin(); i != list->end(); i++)
 	{
-		for (v = (*i)->vertices->begin(); v != (*i)->vertices->end(); v++)
+		if ((*i)->Reachable)
 		{
-			p = Find((*v)->EID);
-			if (!p)
+			for (v = (*i)->vertices->begin(); v != (*i)->vertices->end(); v++)
 			{
-				p = new DEBUG_NEW_PLACEMENT std::vector<EvacueePtr>();
-				insert(_NAEvacueeVertexTablePair((*v)->EID, p));
+				p = Find((*v)->EID);
+				if (!p)
+				{
+					p = new DEBUG_NEW_PLACEMENT std::vector<EvacueePtr>();
+					insert(_NAEvacueeVertexTablePair((*v)->EID, p));
+				}
+				p->push_back(*i);
 			}
-			p->push_back(*i);
 		}
 	}
 }	
