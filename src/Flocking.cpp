@@ -70,6 +70,8 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	IPointCollectionPtr pcollect = myPath->back()->pline;
 	long pointCount = 0;
 
+	/// TODO it's a good idea to throw a logic error after each of these FAILED statements.
+
 	if (FAILED(hr = pcollect->get_PointCount(&pointCount)))
 	{		
 		OutputDebugString(L"FlockingObject - get_PointCount: failed to get number of path points.");
