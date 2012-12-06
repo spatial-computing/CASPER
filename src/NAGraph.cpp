@@ -55,15 +55,22 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 	double capacity = 1.0;
 	initDelayCostPerPop = InitDelayCostPerPop;
 	cachedCost[0] = MAX_COST; cachedCost[1] = 0.0;
+	HRESULT hr = 0;
 
-	if (FAILED(edge->get_AttributeValue(capacityAttribID, &vcap)) ||	
-		FAILED(edge->get_AttributeValue(costAttribID, &vcost)) ||	
-		FAILED(edge->get_EID(&EID)) ||	
-		FAILED(edge->get_Direction(&Direction)))
+	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)) ||	
+		FAILED(hr = edge->get_AttributeValue(costAttribID, &vcost)) ||	
+		FAILED(hr = edge->get_EID(&EID)) ||	
+		FAILED(hr = edge->get_Direction(&Direction)))
 	{
+		_ASSERT(hr == 0);
+		hr = edge->get_AttributeValue(capacityAttribID, &vcap);	
+		hr = edge->get_AttributeValue(costAttribID, &vcost);
+		hr = edge->get_EID(&EID);	
+		hr = edge->get_Direction(&Direction);
 		NetEdge = 0;
 		reservations = 0;
 		EID = -1;
+		throw std::logic_error("Something bad happened while looking up a network edge");
 	}
 	else
 	{

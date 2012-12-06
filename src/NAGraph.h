@@ -157,7 +157,7 @@ public:
 
 class EdgeReservations
 {
-public:	
+private:
 	std::vector<EdgeReservation> * List;
 	double ReservedPop;
 	double SaturationDensPerCap;
@@ -166,6 +166,9 @@ public:
 	bool   DirtyFlag;
 	EdgeReservations(double capacity, double CriticalDensPerCap, double SaturationDensPerCap);
 	EdgeReservations(const EdgeReservations& cpy);
+
+public:	
+	inline void SetClean() { DirtyFlag = false; }
 	
 	void Clear()
 	{
@@ -177,6 +180,7 @@ public:
 		Clear();
 		delete List;
 	}
+	friend class NAEdge;
 };
 
 // EdgeReservations hash map
@@ -225,8 +229,6 @@ public:
 	}
 
 	double GetReservedPop() const { return reservations->ReservedPop; }
-
-	inline void SetClean() { reservations->DirtyFlag = false; }
 	inline bool IsDirty() const { return reservations->DirtyFlag; }
 };
 
@@ -357,8 +359,8 @@ public:
 	void CleanAllEdges(void)
 	{		
 		/// TODO can use resTableAlong and resTableAgains for faster cleanup
-		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) (*cit).second->SetClean();
-		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) (*cit).second->SetClean();
+		for(NAResTableItr cit = resTableAlong->begin(); cit != resTableAlong->end(); cit++) (*cit).second->SetClean();
+		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
 	}
 
 	void Clear();	
