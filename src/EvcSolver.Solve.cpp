@@ -1093,7 +1093,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
-	flaggMsg.Format("The algorithm performed %d number of graph flagging to improve quality and performance.", countFlagging);
+	flaggMsg.Format(_T("The algorithm performed %d number of graph flagging(s) to improve quality and performance."), countFlagging);
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
 	pMessages->AddMessage(CComBSTR(flaggMsg));
