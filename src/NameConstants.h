@@ -76,5 +76,5 @@
 #define OPTIMIZATION_SP                             L"SP"
 #define TRAFFIC_MODEL_LINEAR                        L"LINEAR"
 #define TRAFFIC_MODEL_STEP                          L"STEP"
-#define TRAFFIC_MODEL_EXP                           L"EXP"
+#define TRAFFIC_MODEL_EXP                           L"POWER"
 #define TRAFFIC_MODEL_FLAT                          L"FLAT"

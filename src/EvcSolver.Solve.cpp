@@ -149,11 +149,40 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipNetworkForwardStarEx))) return hr;
 	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipNetworkBackwardStarEx))) return hr;
 
+	INetworkAttributeParameter2Ptr atribParam = 0;
+	IUnknownPtr atribParamU = 0;
+	esriNetworkAttributeParameterUsageType atribParamUsage;
+	VARIANT atribParamValue;
+	long j, atribParamsCount = 0, atribParamVarType = 0;
+	IArrayPtr atribParams = 0;
+	INetworkAttribute2Ptr networkAttrib = 0;
+
 	// loading restriction attributes into the forward star. this will enforce all available restrictions.
 	for (std::vector<INetworkAttribute2Ptr>::iterator Iter = turnAttribs.begin(); Iter != turnAttribs.end(); Iter++)
 	{
-		if (FAILED(hr = ipNetworkForwardStarEx->AddRestrictionAttribute(*Iter))) return hr;
-		if (FAILED(hr = ipNetworkBackwardStarEx->AddRestrictionAttribute(*Iter))) return hr;
+		networkAttrib = *Iter;
+		shouldAppyTurnRes = false;
+		if (FAILED(hr = networkAttrib->get_Parameters(&atribParams))) return hr;
+		if (FAILED(hr = atribParams->get_Count(&atribParamsCount))) return hr;
+		for(j = 0; j < atribParamsCount; j++)
+		{
+			if (FAILED(hr = atribParams->get_Element(j, &atribParamU))) return hr;
+			atribParam = atribParamU;
+			if (FAILED(hr = atribParam->get_ParameterUsageType(&atribParamUsage))) return hr;
+			if (atribParamUsage != esriNAPUTRestriction) continue;
+			if (FAILED(hr = atribParam->get_VarType(&atribParamVarType))) return hr;
+			atribParamValue.vt = (VARTYPE)atribParamVarType;
+			if (FAILED(hr = atribParam->get_Value(&atribParamValue))) return hr;
+
+			// here we have decided whether the user wants this restriction to be applied or not.
+			// We do not care about fuzzy avoidance of ArcGIS 10.1.
+			if (atribParamValue.vt == VT_R8 && atribParamValue.dblVal == -1.0)
+			{
+				if (FAILED(hr = ipNetworkForwardStarEx->AddRestrictionAttribute(networkAttrib))) return hr;
+				if (FAILED(hr = ipNetworkBackwardStarEx->AddRestrictionAttribute(networkAttrib))) return hr;
+				break;
+			}
+		}
 	}
 
 	// Get the "Evacuee Points" NAClass table (we need the NALocation objects from

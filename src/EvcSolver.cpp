@@ -185,9 +185,9 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 			networkAttrib = unk;
 			if (FAILED(hr = networkAttrib->get_UsageType(&utype))) return hr;
 			if (FAILED(hr = networkAttrib->get_DataType(&dtype))) return hr;
-			if (utype == esriNAUTRestriction) turnAttribs.insert(turnAttribs.end(), networkAttrib);
-			if (utype == esriNAUTCost) costAttribs.insert(costAttribs.end(), networkAttrib);
-			if (utype == esriNAUTDescriptor && (dtype == esriNADTDouble || dtype == esriNADTInteger))
+			if (utype == esriNAUTRestriction) turnAttribs.insert(turnAttribs.end(), networkAttrib);			
+			else if (utype == esriNAUTCost) costAttribs.insert(costAttribs.end(), networkAttrib);
+			else if (utype == esriNAUTDescriptor && (dtype == esriNADTDouble || dtype == esriNADTInteger))
 				discriptiveAttribs.insert(discriptiveAttribs.end(), networkAttrib);
 		}
 
