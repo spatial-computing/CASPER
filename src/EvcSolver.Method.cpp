@@ -81,8 +81,21 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (pTrackCancel)
 			{
 				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) goto END_OF_FUNC;
-				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+				if (keepGoing == VARIANT_FALSE)
+				{
+					hr = E_ABORT;
+					goto END_OF_FUNC;
+				}
 			}
+
+			// if the flagger decided this evacuee is not reachable, then we're not even going to try solving it.
+			if (!(currentEvacuee->Reachable))
+			{				
+				// cleanup vertices of this evacuee
+				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);	
+				currentEvacuee->vertices->clear();
+			}
+
 			if (currentEvacuee->vertices->size() == 0) continue;
 
 			// Step the progressor before continuing to the next Evacuee point
@@ -145,7 +158,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					{
 						// closedList violation happened
 						pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
-						return -myEdge->EID;
+						hr = -myEdge->EID;
+						goto END_OF_FUNC;
 					}
 
 					if (myEdge->IsDirty()) dirtyVerticesInClosedList++;
@@ -471,7 +485,8 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		{
 			// closedList violation happened
 			pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
-			return -myEdge->EID;
+			hr = -myEdge->EID;
+			goto END_OF_FUNC;
 		}
 
 		// part to check if this branch of DJ tree needs expanding to update hueristics
@@ -494,7 +509,11 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (pTrackCancel)
 			{
 				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) goto END_OF_FUNC;
-				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+				if (keepGoing == VARIANT_FALSE)
+				{
+					hr = E_ABORT;			
+					goto END_OF_FUNC;
+				}
 			}
 		}
 
@@ -552,7 +571,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	{
 		for(eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++)
 		{
-			if ((*eit)->PredictedCost == DBL_MAX) (*eit)->Reachable = false;
+			if ((*eit)->PredictedCost >= DBL_MAX) (*eit)->Reachable = false;
 			redundentSortedEvacuees->push_back(*eit);
 		}
 	}
