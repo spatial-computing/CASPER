@@ -39,6 +39,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	HRESULT hr = S_OK;
 	long i;
+	int countFlagging = 0;
 
 	// Check for null parameter variables (the track cancel variable is typically considered optional)
 	if (!pNAContext || !pMessages) return E_POINTER;
@@ -468,7 +469,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	///////////////////////////////////////
 	// this will call the core part of the algorithm.
 	if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache,
-		safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx)))
+		safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, countFlagging)))
 	{
 		// it either failed or canceled. clean up and then return.
 		for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
@@ -1082,8 +1083,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString formatString;
-	CString msgString;
+	CString formatString, msgString, flaggMsg;
 #ifdef _FLOCK
 	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f");
 	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
@@ -1093,8 +1093,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
+	flaggMsg.Format("The algorithm performed %d number of graph flagging to improve quality and performance.", countFlagging);
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
+	pMessages->AddMessage(CComBSTR(flaggMsg));
 
 	if (!(ending.IsEmpty())) pMessages->AddWarning(CComBSTR(ending));
 
