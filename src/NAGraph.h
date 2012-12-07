@@ -305,7 +305,7 @@ class NAEdgeCache
 private:
 	NAEdgeTable				* cacheAlong;
 	NAEdgeTable				* cacheAgainst;
-	std::vector<NAEdgePtr>	* sideCache;
+	// std::vector<NAEdgePtr>	* sideCache;
 	long					capacityAttribID;
 	long					costAttribID;
 	double					saturationPerCap;
@@ -329,7 +329,7 @@ public:
 		saturationPerCap = SaturationPerCap;
 		criticalDensPerCap = CriticalDensPerCap;
 		if (saturationPerCap <= criticalDensPerCap) saturationPerCap += criticalDensPerCap;
-		sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
+		// sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 		trafficModel = TrafficModel;
 
@@ -341,7 +341,7 @@ public:
 	~NAEdgeCache(void) 
 	{
 		Clear();
-		delete sideCache;
+		// delete sideCache;
 		delete cacheAlong; 
 		delete cacheAgainst;
 		delete resTableAlong;

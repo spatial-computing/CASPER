@@ -258,8 +258,7 @@ void NAEdgeCache::Clear()
 
 void NAEdgeCache::CollectAndRelease()
 {
-	for(std::vector<NAEdgePtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) delete (*i);
-	sideCache->clear();
+	
 }
 
 ///////////////////////////////////////////////
@@ -380,6 +379,7 @@ void NAVertexCache::CollectAndRelease()
 {	
 	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) delete (*i);
 	sideCache->clear();
+	sideCache->shrink_to_fit();
 }
 
 NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)
