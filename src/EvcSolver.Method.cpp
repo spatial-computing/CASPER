@@ -110,6 +110,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			memResult = GetProcessMemoryInfo(GetCurrentProcess(), &MemCountr, sizeof(MemCountr));
 			if (memResult != FALSE && MemCountr.PagefileUsage > 3221225472) // 3GB
 			{
+				_ASSERT(0);
 				ecache->CollectAndRelease();
 				vcache->CollectAndRelease();
 			}
@@ -421,7 +422,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, newCost, minPop2Route = 1.0;
+	double fromPosition, toPosition, newCost, minPop2Route = 1.0, maxPredictionCost = DBL_MAX;;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -576,7 +577,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		}
 	}
 
-	// load last 'k'th evacuees into sorted list from the redundent list CountReturnEvacuees
+	// load evacuees into sorted list from the redundent list in reverse
 	SortedEvacuees->clear();
 	for (NAEvacueeVertexTableItr evcItr = EvacueePairs->begin(); evcItr != EvacueePairs->end(); evcItr++)
 	{
@@ -592,8 +593,14 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());		
 		redundentSortedEvacuees->clear();
 	}
-	// set graph as having all clean edges
-	ecache->CleanAllEdges();
+	// set graph as having all clean edges	
+	for(std::vector<EvacueePtr>::iterator i = SortedEvacuees->begin(); i != SortedEvacuees->end(); i++)
+		if ((*i)->Reachable) 
+		{
+			maxPredictionCost = (*i)->PredictedCost;
+			break;
+		}
+	ecache->CleanAllEdgesAndRelease(maxPredictionCost * 2.0);
 
 END_OF_FUNC:
 

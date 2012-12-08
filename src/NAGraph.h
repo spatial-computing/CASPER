@@ -63,7 +63,7 @@ public:
 	void ResetHValues(void)
 	{
 		h->clear(); 
-		h->reserve(3);
+		h->reserve(2);
 		h->push_back(HValue(0l, DBL_MAX));
 	}
 
@@ -158,7 +158,7 @@ public:
 class EdgeReservations
 {
 private:
-	std::vector<EdgeReservation> * List;
+	// std::vector<EdgeReservation> * List;
 	double ReservedPop;
 	double SaturationDensPerCap;
 	double CriticalDens;
@@ -172,13 +172,13 @@ public:
 	
 	void Clear()
 	{
-		List->clear();
+		//List->clear();
 	}
 	
 	~EdgeReservations(void)
 	{
 		Clear();
-		delete List;
+		//delete List;
 	}
 	friend class NAEdge;
 };
@@ -218,15 +218,11 @@ public:
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	bool AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
-	NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
-		double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel);
+	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable *, double InitDelayCostPerPop, EVC_TRAFFIC_MODEL);
 	NAEdge(const NAEdge& cpy);
 
 	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g < n2->ToVertex->g; }
-	static bool LessThanHur   (NAEdge * n1, NAEdge * n2)
-	{
-		return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh();
-	}
+	static bool LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh(); }
 
 	double GetReservedPop() const { return reservations->ReservedPop; }
 	inline bool IsDirty() const { return reservations->DirtyFlag; }
@@ -358,9 +354,17 @@ public:
 	
 	void CollectAndRelease();
 
-	void CleanAllEdges(void)
+	void CleanAllEdgesAndRelease(double maxPredictionCost)
 	{		
-		/// TODO can use resTableAlong and resTableAgains for faster cleanup
+		int count = 0;
+		
+		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++)
+			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost) count++;
+		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++)
+			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost) count++;
+
+		_ASSERT(count == 0);
+
 		for(NAResTableItr cit = resTableAlong->begin(); cit != resTableAlong->end(); cit++) (*cit).second->SetClean();
 		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
 	}

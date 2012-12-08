@@ -9,7 +9,7 @@
 
 EdgeReservations::EdgeReservations(double capacity, double criticalDensPerCap, double saturationDensPerCap)
 {
-	List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>();
+	//List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>();
 	ReservedPop = 0.0;
 	Capacity = capacity;	
 	CriticalDens = criticalDensPerCap * capacity;
@@ -19,7 +19,7 @@ EdgeReservations::EdgeReservations(double capacity, double criticalDensPerCap, d
 
 EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 {
-	List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>(*(cpy.List));
+	//List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>(*(cpy.List));
 	ReservedPop = cpy.ReservedPop;
 	Capacity = cpy.Capacity;	
 	CriticalDens = cpy.CriticalDens;
@@ -48,6 +48,7 @@ NAEdge::NAEdge(const NAEdge& cpy)
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
 			   double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
+	ToVertex = 0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
 	LastExteriorEdge = 0;
@@ -63,10 +64,6 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 		FAILED(hr = edge->get_Direction(&Direction)))
 	{
 		_ASSERT(hr == 0);
-		hr = edge->get_AttributeValue(capacityAttribID, &vcap);	
-		hr = edge->get_AttributeValue(costAttribID, &vcost);
-		hr = edge->get_EID(&EID);	
-		hr = edge->get_Direction(&Direction);
 		NetEdge = 0;
 		reservations = 0;
 		EID = -1;
@@ -184,7 +181,7 @@ double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 bool NAEdge::AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population)
 {
 	bool ret = reservations->DirtyFlag;
-	reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
+	// reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
 	double newPop = population;
 	if (initDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / initDelayCostPerPop);
 	reservations->ReservedPop += newPop;
@@ -258,7 +255,8 @@ void NAEdgeCache::Clear()
 
 void NAEdgeCache::CollectAndRelease()
 {
-	
+	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) (*cit).second->ToVertex = 0;
+	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) (*cit).second->ToVertex = 0;
 }
 
 ///////////////////////////////////////////////
