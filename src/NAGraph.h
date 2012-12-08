@@ -347,11 +347,11 @@ public:
 
 	NAEdgePtr New(INetworkEdgePtr edge, bool replace = false);
 
-	NAEdgeTableItr AlongBegin() const { return cacheAlong->begin(); }
-	NAEdgeTableItr AlongEnd() const { return cacheAlong->end(); }
+	NAEdgeTableItr AlongBegin()   const { return cacheAlong->begin();   }
+	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }
-	NAEdgeTableItr AgainstEnd() const { return cacheAgainst->end(); }
-	int Size() { return cacheAlong->size() + cacheAgainst->size(); }
+	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
+	int Size() const { return cacheAlong->size() + cacheAgainst->size();}
 	
 	void CollectAndRelease();
 
@@ -366,8 +366,8 @@ public:
 
 		_ASSERT(count == 0);
 		std::ofstream f;
-		f.open("c:\evcsolver.log");
-		f << count << std::endl;
+		f.open("c:\\evcsolver.log");
+		f << count << ',' << Size() << std::endl;
 
 		for(NAResTableItr cit = resTableAlong->begin(); cit != resTableAlong->end(); cit++) (*cit).second->SetClean();
 		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
