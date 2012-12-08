@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hash_map>
+#include <fstream>
 
 class Evacuee;
 class NAEdge;
@@ -364,6 +365,9 @@ public:
 			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost) count++;
 
 		_ASSERT(count == 0);
+		std::ofstream f;
+		f.open("c:\evcsolver.log");
+		f << count << std::endl;
 
 		for(NAResTableItr cit = resTableAlong->begin(); cit != resTableAlong->end(); cit++) (*cit).second->SetClean();
 		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
