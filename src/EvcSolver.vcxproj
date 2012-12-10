@@ -16,11 +16,7 @@
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="ResDeb|Win32">
-      <Configuration>ResDeb</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
+    </ProjectConfiguration>    
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BA6137DF-0073-4E81-8A61-302C805B7745}</ProjectGuid>
