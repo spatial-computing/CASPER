@@ -109,12 +109,14 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 			// I think it's safe to do a collect-n-clean on the graph (ecache & vcache) if the system memory is low
 			memResult = GetProcessMemoryInfo(GetCurrentProcess(), &MemCountr, sizeof(MemCountr));			
-#ifdef TRACE
+
+			#ifdef TRACE
 			std::ofstream f;
-			f.open("c:\\evcsolver.log");
+			f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 			f << "Memory: " << MemCountr.PagefileUsage << std::endl;
 			f.close();
-#endif
+			#endif
+
 			if (memResult != FALSE && MemCountr.PagefileUsage > 3221225472) // 3GB
 			{
 				_ASSERT(0);
@@ -364,19 +366,19 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'FlagMyGraph'
 					maxPerformance_Ratio = max(maxPerformance_Ratio, dirtyVerticesInClosedList / closedList->Size());
-#ifdef DEBUG
+					#ifdef DEBUG
 					std::wostringstream os_;
 					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
 						<< dirtyVerticesInPath << "," << path->size() << "," << dirtyVerticesInPath / path->size() << std::endl;
 					OutputDebugStringW( os_.str().c_str() );
-#endif
-#ifdef TRACE
+					#endif
+					#ifdef TRACE
 					std::ofstream f;
-					f.open("c:\\evcsolver.log");
+					f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 					f << "The flagging stats: " << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
 								<< dirtyVerticesInPath << "," << path->size() << "," << dirtyVerticesInPath / path->size() << std::endl;
 					f.close();
-#endif
+					#endif
 				}
 				else
 				{
@@ -601,12 +603,12 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if ((*eit)->PredictedCost >= FLT_MAX)
 			{
 				(*eit)->Reachable = false;
-#ifdef TRACE
+				#ifdef TRACE
 				std::ofstream f;
-				f.open("c:\\evcsolver.log");
+				f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 				f << "Evacuee " << (*eit)->Name.bstrVal << " is unreachable." << std::endl;
 				f.close();
-#endif
+				#endif
 			}
 			redundentSortedEvacuees->push_back(*eit);
 		}

@@ -201,9 +201,10 @@ private:
 	EdgeReservations * reservations;
 	double initDelayCostPerPop;
 	EVC_TRAFFIC_MODEL trafficModel;
-	double GetTrafficSpeedRatio(double allPop) const;
 	double CASPERRatio;
 	mutable double cachedCost[2];
+	mutable unsigned short calcSaved;
+	double GetTrafficSpeedRatio(double allPop) const;
 
 public:
 	double OriginalCost;
@@ -227,6 +228,7 @@ public:
 
 	double GetReservedPop() const { return reservations->ReservedPop; }
 	inline bool IsDirty() const { return reservations->DirtyFlag; }
+	inline unsigned short GetCalcSaved() const { return calcSaved; }
 };
 
 typedef NAEdge * NAEdgePtr;
@@ -365,14 +367,24 @@ public:
 			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost) count++;
 
 		_ASSERT(count == 0);
-#ifdef TRACE
+
+		#ifdef TRACE
 		std::ofstream f;
-		f.open("c:\\evcsolver.log");
+		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 		f << "Outside Edges: " << count << " of " << Size() << std::endl;
 		f.close();
-#endif
+		#endif
+
 		for(NAResTableItr cit = resTableAlong->begin(); cit != resTableAlong->end(); cit++) (*cit).second->SetClean();
 		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
+	}
+
+	unsigned int TotalCalcSaved() const
+	{
+		unsigned int total = 0;
+		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) total += (*cit).second->GetCalcSaved();
+		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) total += (*cit).second->GetCalcSaved();
+		return total;
 	}
 
 	void Clear();	

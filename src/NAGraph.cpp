@@ -43,11 +43,13 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	trafficModel = cpy.trafficModel;
 	CASPERRatio = cpy.CASPERRatio;
 	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];	
+	calcSaved = cpy.calcSaved;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable * resTable,
 			   double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
+	calcSaved = 0;
 	ToVertex = 0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
@@ -122,10 +124,9 @@ double NAEdge::LeftCapacity() const
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
-#pragma float_control(precise, off, push)
 double NAEdge::GetTrafficSpeedRatio(double allPop) const
 {
-	if (cachedCost[0] == allPop) return cachedCost[1];
+	if (cachedCost[0] == allPop) { return cachedCost[1]; calcSaved++; }
 	double speedPercent = 1.0;
 	switch (trafficModel)
 	{
@@ -143,7 +144,6 @@ double NAEdge::GetTrafficSpeedRatio(double allPop) const
 	cachedCost[0] = allPop; cachedCost[1] = speedPercent;
 	return speedPercent;
 }
-#pragma float_control(pop)
 
 double NAEdge::GetCurrentCost() const
 {
@@ -379,12 +379,13 @@ void NAVertexCache::CollectAndRelease()
 	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) { delete (*i); count++; }
 	sideCache->clear();
 	sideCache->shrink_to_fit();
-#ifdef TRACE
+
+	#ifdef TRACE
 	std::ofstream f;
-	f.open("c:\\evcsolver.log");
+	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 	f << "Vertex Cleared: " << count << std::endl;
 	f.close();
-#endif
+	#endif
 }
 
 NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)

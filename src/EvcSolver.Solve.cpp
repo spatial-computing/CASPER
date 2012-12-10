@@ -468,8 +468,22 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	///////////////////////////////////////
 	// this will call the core part of the algorithm.
-	if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache,
-		safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, countFlagging)))
+	try
+	{
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, countFlagging);
+	}
+	catch (std::exception & ex)
+	{
+		hr = ERROR_UNHANDLED_EXCEPTION;
+		#ifdef TRACE
+		std::ofstream f;
+		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+		f << "Search throw: " << ex.what() << std::endl;
+		f.close();
+		#endif
+	}
+
+	if (FAILED(hr))
 	{
 		// it either failed or canceled. clean up and then return.
 		for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
@@ -480,7 +494,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		delete vcache;
 		delete ecache;
 		for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
-		delete safeZoneList;
+		delete safeZoneList;		
+
+		#ifdef TRACE
+		std::ofstream f;
+		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+		f << "Search exit: " << hr << std::endl;
+		f.close();
+		#endif
 
 		return hr;
 	}

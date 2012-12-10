@@ -104,7 +104,7 @@ HeapNode * HeapNode::rightMostSibling()
 //	Implementation of class Fibonacci Heap
 // =========================================================================
 
-FibonacciHeap::FibonacciHeap(bool (*LessThanMethod)(NAEdge *, NAEdge *))
+FibonacciHeap::FibonacciHeap(bool (*LessThanMethod)(HeapDataType *, HeapDataType *))
 {
 	this->LessThan = LessThanMethod;
 	minRoot = NULL;
@@ -113,7 +113,7 @@ FibonacciHeap::FibonacciHeap(bool (*LessThanMethod)(NAEdge *, NAEdge *))
 }
 
 /*
-FibonacciHeap::FibonacciHeap(HeapDataType * root, (*LessThan)(NAEdge *, NAEdge *) LessThanMethod)
+FibonacciHeap::FibonacciHeap(HeapDataType * root, (*LessThan)(HeapDataType *, HeapDataType *) LessThanMethod)
 {
 	this->LessThan = LessThanMethod;
 	nodeTable = new DEBUG_NEW_PLACEMENT HeapNodeTable();
@@ -294,7 +294,7 @@ bool FibonacciHeap::link(HeapNode * root)
 	}
 }
 
-void HeapNodeTable::Erase(NAEdge * edge)
+void HeapNodeTable::Erase(HeapDataType * edge)
 {
 	if (edge->Direction == esriNEDAlongDigitized) cacheAlong->erase(edge->EID);
 	else cacheAgainst->erase(edge->EID);
@@ -306,7 +306,7 @@ void HeapNodeTable::Insert(HeapNodePtr node)
 	else cacheAgainst->insert(std::pair<long, HeapNodePtr>(node->data->EID, node));
 }
 
-HeapNodePtr HeapNodeTable::Find(NAEdge * edge)
+HeapNodePtr HeapNodeTable::Find(HeapDataType * edge)
 {
 	stdext::hash_map<long, HeapNodePtr> * cache = 0;
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;

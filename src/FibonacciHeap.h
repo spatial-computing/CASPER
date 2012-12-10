@@ -82,9 +82,9 @@ public:
 	int Size() { return cacheAlong->size() + cacheAgainst->size(); }
 	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
 
-	void Erase(NAEdge * edge);
-	void Insert(HeapNodePtr node);
-	HeapNodePtr Find(NAEdge * edge);
+	void Erase(HeapDataType * edge);
+	void Insert(HeapNode * node);
+	HeapNodePtr Find(HeapDataType * edge);
 };
 
 class FibonacciHeap
@@ -93,11 +93,11 @@ private:
 	HeapNode ** rootListByRank;
 	HeapNode * minRoot;
 	HeapNodeTable * nodeTable;
-	bool (*LessThan)(NAEdge *, NAEdge *);
+	bool (*LessThan)(HeapDataType *, HeapDataType *);
 	bool link(HeapNode * root);
 
 public:
-	FibonacciHeap(bool (*LessThanMethod)(NAEdge *, NAEdge *));
+	FibonacciHeap(bool (*LessThanMethod)(HeapDataType *, HeapDataType *));
 	bool IsVisited(HeapDataType * vertex);
 
 	~FibonacciHeap();
