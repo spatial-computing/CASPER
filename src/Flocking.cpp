@@ -401,7 +401,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	double pathLen = 0.0;
 	std::list<EvcPathPtr>::iterator pathItr;
 	maxPathLen = 0.0;
-	minPathLen = DBL_MAX;
+	minPathLen = FLT_MAX;
 	srand((unsigned int)time(NULL));
 
 	// pre-init clean up just in case the enviroment is being re-used

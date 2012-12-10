@@ -83,7 +83,7 @@ public:
 		vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 		paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
 		Population = pop;
-		PredictedCost = DBL_MAX;
+		PredictedCost = FLT_MAX;
 		Reachable = true;
 	}
 

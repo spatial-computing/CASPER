@@ -22,7 +22,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, TimeToBeat = 0.0, edgePortion = 1.0, newCost, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 0.0, dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0;
+	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 0.0, dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0;
+	float TimeToBeat = 0.0f, newCost;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
@@ -107,7 +108,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			populationLeft = currentEvacuee->Population;
 
 			// I think it's safe to do a collect-n-clean on the graph (ecache & vcache) if the system memory is low
-			memResult = GetProcessMemoryInfo(GetCurrentProcess(), &MemCountr, sizeof(MemCountr));
+			memResult = GetProcessMemoryInfo(GetCurrentProcess(), &MemCountr, sizeof(MemCountr));			
+#ifdef TRACE
+			std::ofstream f;
+			f.open("c:\\evcsolver.log");
+			f << "Memory: " << MemCountr.PagefileUsage << std::endl;
+			f.close();
+#endif
 			if (memResult != FALSE && MemCountr.PagefileUsage > 3221225472) // 3GB
 			{
 				_ASSERT(0);
@@ -123,7 +130,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					evc = *vit;
 					tempEvc = vcache->New(evc->Junction);
 					tempEvc->SetBehindEdge(evc->GetBehindEdge());
-					tempEvc->g = evc->posAlong;
+					tempEvc->g = evc->g;
 					tempEvc->Junction = evc->Junction;
 					tempEvc->Previous = 0;
 					myEdge = tempEvc->GetBehindEdge();
@@ -146,7 +153,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 				}
 
-				TimeToBeat = DBL_MAX;
+				TimeToBeat = FLT_MAX;
 				BetterSafeZone = 0;
 				finalVertex = 0;
 
@@ -205,10 +212,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 						if (!restricted)
 						{
-							if (TimeToBeat >  iterator->second->posAlong + myVertex->g)
+							if (TimeToBeat >  iterator->second->g + myVertex->g)
 							{
 								BetterSafeZone = iterator->second;
-								TimeToBeat = iterator->second->posAlong + myVertex->g;
+								TimeToBeat = iterator->second->g + myVertex->g;
 								finalVertex = myVertex;
 							}
 						}
@@ -253,7 +260,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (turnType == 1) currentEdge->LastExteriorEdge = lastExteriorEdge;
 						else currentEdge->LastExteriorEdge = 0;
 
-						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod);
+						newCost = myVertex->g + (float)(currentEdge->GetCost(population2Route, this->solverMethod));
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrese key.
 						{
 							neighbor = currentEdge->ToVertex;
@@ -307,7 +314,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (BetterSafeZone->GetBehindEdge())
 					{
 						if (FAILED(hr = BetterSafeZone->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;
-						edgePortion = BetterSafeZone->posAlong / BetterSafeZone->GetBehindEdge()->OriginalCost;
+						edgePortion = BetterSafeZone->g / BetterSafeZone->GetBehindEdge()->OriginalCost;
 						if (fromPosition < toPosition) toPosition = fromPosition + edgePortion;
 						else toPosition = fromPosition - edgePortion;
 
@@ -362,6 +369,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
 						<< dirtyVerticesInPath << "," << path->size() << "," << dirtyVerticesInPath / path->size() << std::endl;
 					OutputDebugStringW( os_.str().c_str() );
+#endif
+#ifdef TRACE
+					std::ofstream f;
+					f.open("c:\\evcsolver.log");
+					f << "The flagging stats: " << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
+								<< dirtyVerticesInPath << "," << path->size() << "," << dirtyVerticesInPath / path->size() << std::endl;
+					f.close();
 #endif
 				}
 				else
@@ -422,7 +436,8 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, newCost, minPop2Route = 1.0, maxPredictionCost = DBL_MAX;;
+	double fromPosition, toPosition, minPop2Route = 1.0, maxPredictionCost = FLT_MAX;
+	float newCost;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -448,7 +463,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	// the h values should always be an understimation
 	if (this->solverMethod != EVC_SOLVER_METHOD_CCRP)
 	{
-		minPop2Route = DBL_MAX;
+		minPop2Route = FLT_MAX;
 		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
 		{
 			if ((*eit)->vertices->empty()) continue;
@@ -462,7 +477,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		evc = iterator->second;
 		tempEvc = vcache->New(evc->Junction);
 		tempEvc->SetBehindEdge(evc->GetBehindEdge());
-		tempEvc->g = evc->posAlong;
+		tempEvc->g = evc->g;
 		tempEvc->Junction = evc->Junction;
 		tempEvc->Previous = 0;
 		myEdge = tempEvc->GetBehindEdge();
@@ -553,7 +568,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			// if node has already been discovered then no need to heap it
 			currentEdge = ecache->New(ipCurrentEdge);
 			if (closedList->IsClosed(currentEdge)) continue;
-			newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
+			newCost = myVertex->g + (float)(currentEdge->GetCost(minPop2Route, this->solverMethod));
 
 			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
 			{
@@ -583,7 +598,16 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	{
 		for(eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++)
 		{
-			if ((*eit)->PredictedCost >= DBL_MAX) (*eit)->Reachable = false;
+			if ((*eit)->PredictedCost >= FLT_MAX)
+			{
+				(*eit)->Reachable = false;
+#ifdef TRACE
+				std::ofstream f;
+				f.open("c:\\evcsolver.log");
+				f << "Evacuee " << (*eit)->Name.bstrVal << " is unreachable." << std::endl;
+				f.close();
+#endif
+			}
 			redundentSortedEvacuees->push_back(*eit);
 		}
 	}

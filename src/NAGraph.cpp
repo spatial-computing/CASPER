@@ -55,7 +55,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, d
 	VARIANT vcost, vcap;
 	double capacity = 1.0;
 	initDelayCostPerPop = InitDelayCostPerPop;
-	cachedCost[0] = DBL_MAX; cachedCost[1] = 0.0;
+	cachedCost[0] = FLT_MAX; cachedCost[1] = 0.0;
 	HRESULT hr = 0;
 
 	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)) ||	
@@ -270,7 +270,7 @@ NAVertex::NAVertex(const NAVertex& cpy)
 	BehindEdge = cpy.BehindEdge;
 	Previous = cpy.Previous;
 	EID = cpy.EID;
-	posAlong = cpy.posAlong;
+	// posAlong = cpy.posAlong;
 }
 
 NAVertex::NAVertex(void)
@@ -279,17 +279,17 @@ NAVertex::NAVertex(void)
 	Junction = 0;
 	BehindEdge = 0;
 	Previous = 0;
-	g = 0;
+	g = 0.0f;
 	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
 	ResetHValues();
-	posAlong = 0.0;
+	// posAlong = 0.0f;
 }
 
 NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 {
 	Previous = 0;
-	posAlong = 0.0;
-	g = 0;
+	// posAlong = 0.0f;
+	g = 0.0f;
 	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
 	ResetHValues();
 	BehindEdge = behindEdge;
@@ -375,9 +375,16 @@ void NAVertexCache::Clear()
 
 void NAVertexCache::CollectAndRelease()
 {	
-	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) delete (*i);
+	int count = 0;
+	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) { delete (*i); count++; }
 	sideCache->clear();
 	sideCache->shrink_to_fit();
+#ifdef TRACE
+	std::ofstream f;
+	f.open("c:\\evcsolver.log");
+	f << "Vertex Cleared: " << count << std::endl;
+	f.close();
+#endif
 }
 
 NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)

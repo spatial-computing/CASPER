@@ -27,10 +27,10 @@ class NAEdge;
 struct HValue
 {
 public:
-	double Value;
+	float Value;
 	long EdgeID;
 	
-	HValue(long edgeID, double value)
+	HValue(long edgeID, float value)
 	{
 		EdgeID = edgeID;
 		Value = value;
@@ -49,13 +49,13 @@ private:
 	std::vector<HValue> * h;
 
 public:
-	double g;
+	float g;
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
-	double posAlong;
+	// float posAlong;
 
-	__forceinline double minh() const
+	__forceinline float minh() const
 	{
 		std::vector<HValue>::reference reff = h->front();
 		return reff.Value;
@@ -65,7 +65,7 @@ public:
 	{
 		h->clear(); 
 		h->reserve(2);
-		h->push_back(HValue(0l, DBL_MAX));
+		h->push_back(HValue(0l, FLT_MAX));
 	}
 
 	void SetBehindEdge(NAEdge * behindEdge);
@@ -365,10 +365,12 @@ public:
 			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost) count++;
 
 		_ASSERT(count == 0);
+#ifdef TRACE
 		std::ofstream f;
 		f.open("c:\\evcsolver.log");
-		f << count << ',' << Size() << std::endl;
-
+		f << "Outside Edges: " << count << " of " << Size() << std::endl;
+		f.close();
+#endif
 		for(NAResTableItr cit = resTableAlong->begin(); cit != resTableAlong->end(); cit++) (*cit).second->SetClean();
 		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
 	}
