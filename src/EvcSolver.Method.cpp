@@ -10,7 +10,7 @@
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
 							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
-							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, int & countFlagging)
+							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, int & countFlagging, VARIANT_BOOL* pIsPartialSolution)
 {	
 	// creating the heap for the dijkstra search
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanHur);
@@ -98,6 +98,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				// cleanup vertices of this evacuee
 				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);	
 				currentEvacuee->vertices->clear();
+				*pIsPartialSolution = VARIANT_TRUE;
 			}
 
 			if (currentEvacuee->vertices->size() == 0) continue;
@@ -113,13 +114,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			#ifdef TRACE
 			std::ofstream f;
 			f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-			f << "Memory: " << MemCountr.PagefileUsage << std::endl;
+			f << "Memory (MB): " << MemCountr.PagefileUsage / 1048576 << ',' << MemCountr.WorkingSetSize / 1048576 << std::endl;
 			f.close();
 			#endif
 
-			if (memResult != FALSE && MemCountr.PagefileUsage > 3221225472) // 3GB
+			// if (memResult != FALSE && MemCountr.PagefileUsage > 3221225472) // 3GB
 			{
-				_ASSERT(0);
 				ecache->CollectAndRelease();
 				vcache->CollectAndRelease();
 			}
@@ -375,7 +375,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					#ifdef TRACE
 					std::ofstream f;
 					f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-					f << "The flagging stats: " << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
+					f << "Flagging stats: " << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
 								<< dirtyVerticesInPath << "," << path->size() << "," << dirtyVerticesInPath / path->size() << std::endl;
 					f.close();
 					#endif

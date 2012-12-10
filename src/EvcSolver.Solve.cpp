@@ -36,6 +36,16 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// this method should be available to call
 	// NOTE: for consistency within custom applications, similar validation checks should also be implemented
 	// before calling the Solve method on any solver  
+		
+	#ifdef TRACE
+	std::ofstream f;
+	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+	time_t curr = time(0);
+	char timeBuff[50];
+	ctime_s(timeBuff, 50, &curr);
+	f << "Trace start: " << timeBuff << std::endl;
+	f.close();
+	#endif
 
 	HRESULT hr = S_OK;
 	long i;
@@ -470,11 +480,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// this will call the core part of the algorithm.
 	try
 	{
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, countFlagging);
+		hr = S_OK;
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, countFlagging, pIsPartialSolution);
 	}
 	catch (std::exception & ex)
 	{
-		hr = ERROR_UNHANDLED_EXCEPTION;
+		hr = -1L * abs(ERROR_UNHANDLED_EXCEPTION);
 		#ifdef TRACE
 		std::ofstream f;
 		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);

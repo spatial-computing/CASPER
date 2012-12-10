@@ -358,18 +358,18 @@ public:
 	void CollectAndRelease();
 
 	void CleanAllEdgesAndRelease(double maxPredictionCost)
-	{		
-		int count = 0;
-		
-		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++)
-			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost) count++;
-		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++)
-			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost) count++;
-
-		_ASSERT(count == 0);
-
+	{				
 		#ifdef TRACE
 		std::ofstream f;
+		int count = 0;		
+		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++)
+		{
+			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost && (*cit).second->GetReservedPop() <= 0.0) count++;
+		}
+		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++)
+		{
+			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost && (*cit).second->GetReservedPop() <= 0.0) count++;
+		}
 		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 		f << "Outside Edges: " << count << " of " << Size() << std::endl;
 		f.close();
