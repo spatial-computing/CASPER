@@ -270,7 +270,7 @@ OpenSteer::Clock::realTimeSinceFirstClockUpdate (void)
 #ifdef _WIN32
 {
     // get time from Windows
-    LONGLONG counter, frequency;
+    LONGLONG counter = 0L, frequency = 1L;
     bool clockOK = (QueryPerformanceCounter ((LARGE_INTEGER *)&counter)  &&
                     QueryPerformanceFrequency ((LARGE_INTEGER *)&frequency));
     if (!clockOK) return clockErrorExit ();
