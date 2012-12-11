@@ -160,16 +160,18 @@ class EdgeReservations
 {
 private:
 	// std::vector<EdgeReservation> * List;
-	double ReservedPop;
-	double SaturationDensPerCap;
-	double CriticalDens;
-	double Capacity;
-	bool   DirtyFlag;
-	EdgeReservations(double capacity, double CriticalDensPerCap, double SaturationDensPerCap);
-	EdgeReservations(const EdgeReservations& cpy);
+	float ReservedPop;
+	float SaturationDensPerCap;
+	float CriticalDens;
+	float Capacity;
+	bool  DirtyFlag;
+	float initDelayCostPerPop;
 
 public:	
 	inline void SetClean() { DirtyFlag = false; }
+
+	EdgeReservations(float capacity, float CriticalDensPerCap, float SaturationDensPerCap, float InitDelayCostPerPop);
+	EdgeReservations(const EdgeReservations& cpy);
 	
 	void Clear()
 	{
@@ -199,7 +201,6 @@ class NAEdge
 {
 private:	
 	EdgeReservations * reservations;
-	double initDelayCostPerPop;
 	EVC_TRAFFIC_MODEL trafficModel;
 	double CASPERRatio;
 	mutable double cachedCost[2];
@@ -220,13 +221,13 @@ public:
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	bool AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population);
-	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable *, double InitDelayCostPerPop, EVC_TRAFFIC_MODEL);
+	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable *, float InitDelayCostPerPop, EVC_TRAFFIC_MODEL);
 	NAEdge(const NAEdge& cpy);
 
 	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g < n2->ToVertex->g; }
 	static bool LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh(); }
 
-	double GetReservedPop() const { return reservations->ReservedPop; }
+	float GetReservedPop() const { return reservations->ReservedPop; }
 	inline bool IsDirty() const { return reservations->DirtyFlag; }
 	inline unsigned short GetCalcSaved() const { return calcSaved; }
 };
@@ -302,24 +303,24 @@ public:
 class NAEdgeCache
 {
 private:
+	// std::vector<NAEdgePtr>	* sideCache;
 	NAEdgeTable				* cacheAlong;
 	NAEdgeTable				* cacheAgainst;
-	// std::vector<NAEdgePtr>	* sideCache;
 	long					capacityAttribID;
 	long					costAttribID;
-	double					saturationPerCap;
-	double					criticalDensPerCap;
+	float					saturationPerCap;
+	float					criticalDensPerCap;
 	bool					twoWayRoadsShareCap;
 	NAResTable				* resTableAlong;
 	NAResTable				* resTableAgainst;
-	double					initDelayCostPerPop;
+	float					initDelayCostPerPop;
 	EVC_TRAFFIC_MODEL		trafficModel;
 
 public:
 
-	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap,
-		double InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
+	NAEdgeCache(long CapacityAttribID, long CostAttribID, float SaturationPerCap, float CriticalDensPerCap, bool TwoWayRoadsShareCap, float InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 	{
+		// sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 		initDelayCostPerPop = InitDelayCostPerPop;
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
@@ -328,7 +329,6 @@ public:
 		saturationPerCap = SaturationPerCap;
 		criticalDensPerCap = CriticalDensPerCap;
 		if (saturationPerCap <= criticalDensPerCap) saturationPerCap += criticalDensPerCap;
-		// sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 		trafficModel = TrafficModel;
 

@@ -212,8 +212,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// This will particularly be helpful with the heuristic calculator part of the algorithm.
 	// if (FAILED(hr = heuristicAttribs[heuristicAttribIndex]->get_ID(&capAttributeID))) return hr;  	
 	NAVertexCache * vcache = new DEBUG_NEW_PLACEMENT NAVertexCache();
-	NAEdgeCache   * ecache = new DEBUG_NEW_PLACEMENT NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap,
-		twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop, trafficModel);
+	NAEdgeCache   * ecache = new DEBUG_NEW_PLACEMENT NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop, trafficModel);
 
 	// Vertex table structures
 	NAVertexTable * safeZoneList = new DEBUG_NEW_PLACEMENT NAVertexTable();
