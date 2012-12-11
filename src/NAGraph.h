@@ -219,7 +219,7 @@ public:
 	double OriginalCapacity() const;
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
-	bool AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population);
+	bool AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population);
 	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, double CriticalDensPerCap, double SaturationDensPerCap, NAResTable *, double InitDelayCostPerPop, EVC_TRAFFIC_MODEL);
 	NAEdge(const NAEdge& cpy);
 

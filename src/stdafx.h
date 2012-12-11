@@ -50,6 +50,7 @@
 #pragma warning(disable : 4192) /* Ignore warnings for types that are duplicated in win32 header files */
 #pragma warning(disable : 4146) /* Ignore warnings for use of minus on unsigned types */
 #pragma warning(disable : 4278) /* Ignore warnings for use of duplicate macros */
+#pragma warning(disable : 4336) /* Ignore warnings for order of imports */
 
 #include <atlbase.h>
 #include <atlcom.h>

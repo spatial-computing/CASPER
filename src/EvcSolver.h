@@ -294,7 +294,7 @@ private:
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
 	HRESULT CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
 	HRESULT AddLocationFields(IFieldsEdit* pFieldsEdit, IDENetworkDataset* pDENDS);
-	HRESULT AddLocationFieldTypes(IFields* pFields, INAClassDefinitionEdit* pClassDef);
+	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
 	

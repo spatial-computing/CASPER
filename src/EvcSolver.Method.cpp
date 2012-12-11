@@ -315,7 +315,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (edgePortion > 0.0)
 						{
 							path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
-							if (BetterSafeZone->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route)) dirtyVerticesInPath++;
+							if (BetterSafeZone->GetBehindEdge()->AddReservation(population2Route)) dirtyVerticesInPath++;
 						}
 					}
 
@@ -327,7 +327,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						{
 							if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;	
 							path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-							if (finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route)) dirtyVerticesInPath++;
+							if (finalVertex->GetBehindEdge()->AddReservation(population2Route)) dirtyVerticesInPath++;
 						}
 						finalVertex = finalVertex->Previous;
 					}
@@ -351,7 +351,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						else if (edgePortion > 0.0)
 						{							
 							path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-							if (finalVertex->GetBehindEdge()->AddReservation(currentEvacuee, 0.0, 0.0, population2Route)) dirtyVerticesInPath++;
+							if (finalVertex->GetBehindEdge()->AddReservation(population2Route)) dirtyVerticesInPath++;
 						}
 					}
 					currentEvacuee->paths->push_front(path);

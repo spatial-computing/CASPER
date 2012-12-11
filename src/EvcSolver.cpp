@@ -15,6 +15,9 @@
 #include "NameConstants.h"
 #include "EvcSolver.h"
 
+#pragma warning(push)
+#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
+
 // EvcSolver
 
 /////////////////////////////////////////////////////////////////////
@@ -664,7 +667,6 @@ STDMETHODIMP EvcSolver::put_CostPerZoneDensity(BSTR value)
 	return S_OK;
 }
 
-
 // returns the name of the heuristic attributes loaded from the network dataset.
 // this will be called from the property page so the user can select.
 STDMETHODIMP EvcSolver::get_CostAttributes(BSTR ** Names)
@@ -1020,6 +1022,8 @@ STDMETHODIMP EvcSolver::get_NumTransitionToHierarchy(long toLevel, long * pValue
 	return E_NOTIMPL; // This solver does not support hierarchy attributes
 }
 
+#pragma warning(pop)
+
 /////////////////////////////////////////////////////////////////////
 // IPersistStream
 
@@ -1249,7 +1253,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->putref_Fields(ipFields);
 
 	// Setup the field types (i.e., input/output fields, editable/non-editable fields, visible/non-visible fields, or a combination of these)
-	AddLocationFieldTypes(ipFields, ipClassDefEdit);
+	AddLocationFieldTypes(ipClassDefEdit);
 
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OID), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeInput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
@@ -1333,7 +1337,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->putref_Fields(ipFields);
 
 	// Setup the field types (i.e., input/output fields, editable/non-editable fields, visible/non-visible fields, or a combination of these)
-	AddLocationFieldTypes(ipFields, ipClassDefEdit);
+	AddLocationFieldTypes(ipClassDefEdit);
 
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OID), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeInput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
@@ -1401,7 +1405,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipClassDefEdit->putref_Fields(ipFields);  
 
-	AddLocationFieldTypes(ipFields, ipClassDefEdit);
+	AddLocationFieldTypes(ipClassDefEdit);
 
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OID), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeInput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
@@ -2053,7 +2057,7 @@ HRESULT EvcSolver::CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDo
 	return S_OK;
 }
 
-HRESULT EvcSolver::AddLocationFieldTypes(IFields* pFields, INAClassDefinitionEdit* pClassDef)
+HRESULT EvcSolver::AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef)
 {
 	if (!pClassDef) return E_INVALIDARG;
 

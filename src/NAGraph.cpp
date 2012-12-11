@@ -126,7 +126,7 @@ double NAEdge::LeftCapacity() const
 // new travel cost based on number of reserved spots by previous evacuees.
 double NAEdge::GetTrafficSpeedRatio(double allPop) const
 {
-	if (cachedCost[0] == allPop) { return cachedCost[1]; calcSaved++; }
+	if (cachedCost[0] == allPop) { calcSaved++; return cachedCost[1]; }
 	double speedPercent = 1.0;
 	switch (trafficModel)
 	{
@@ -178,7 +178,7 @@ double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 	return OriginalCost / speedPercent;
 }
 
-bool NAEdge::AddReservation(Evacuee * evacuee, double fromCost, double toCost, double population)
+bool NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population)
 {
 	bool ret = reservations->DirtyFlag;
 	// reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));

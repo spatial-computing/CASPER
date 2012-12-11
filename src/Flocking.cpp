@@ -394,7 +394,7 @@ FlockingEnviroment::~FlockingEnviroment(void)
 	delete collisions;
 }
 
-void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, double costPerSec, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
+void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
 {
 	EvacueeListItr evcItr;
 	int i = 0, size = 0, id = 0;

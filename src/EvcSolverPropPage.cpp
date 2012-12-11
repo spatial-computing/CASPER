@@ -267,10 +267,10 @@ STDMETHODIMP EvcSolverPropPage::Applies(VARIANT unkArray, VARIANT_BOOL* pApplies
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolverPropPage::CreateCompatibleObject(VARIANT kind, VARIANT* pNewObject)
+STDMETHODIMP EvcSolverPropPage::Cancel()
 {
-	if (pNewObject == NULL) return E_POINTER;
-	return E_NOTIMPL;
+	// In this case do nothing
+	return S_OK;
 }
 
 STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
@@ -372,6 +372,15 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 	return S_OK;
 }
 
+#pragma warning(push)
+#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
+
+STDMETHODIMP EvcSolverPropPage::CreateCompatibleObject(VARIANT kind, VARIANT* pNewObject)
+{
+	if (pNewObject == NULL) return E_POINTER;
+	return E_NOTIMPL;
+}
+
 STDMETHODIMP EvcSolverPropPage::GetHelpFile(LONG controlID, BSTR* pHelpFile)
 {
 	if (pHelpFile == NULL) return E_POINTER;
@@ -382,12 +391,6 @@ STDMETHODIMP EvcSolverPropPage::GetHelpId(LONG controlID, LONG* pHelpID)
 {
 	if (pHelpID == NULL) return E_POINTER;
 	return E_NOTIMPL;
-}
-
-STDMETHODIMP EvcSolverPropPage::Cancel()
-{
-	// In this case do nothing
-	return S_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -434,6 +437,8 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 	return 0;
 }
+
+#pragma warning(pop)
 
 void EvcSolverPropPage::SetFlockingEnabled()
 {	
