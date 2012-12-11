@@ -310,7 +310,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->g = (float)(posAlong * myVertex->GetBehindEdge()->OriginalCost); // / (toPosition - fromPosition);
+							myVertex->g = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
 
 							insertRet = safeZoneList->insert(NAVertexTablePair(myVertex));
 							if (!insertRet.second) delete myVertex;
@@ -330,7 +330,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;						
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->g = (float)((toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost); // / (toPosition - fromPosition);							
+							myVertex->g = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);							
 							insertRet = safeZoneList->insert(NAVertexTablePair(myVertex));
 							if (!insertRet.second) delete myVertex;
 						}
@@ -437,7 +437,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->g = (float)((toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost);
+							myVertex->g = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);
 						}
 					}
@@ -455,7 +455,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->g = (float)(posAlong * myVertex->GetBehindEdge()->OriginalCost);
+							myVertex->g = posAlong * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);							
 						}
 					}

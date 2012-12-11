@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include <psapi.h>
 #include <sstream>
 #include "NameConstants.h"
 #include "float.h"  // for FLT_MAX, etc.
@@ -22,8 +21,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 0.0, dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0;
-	float TimeToBeat = 0.0f, newCost;
+	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 0.0, dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0, TimeToBeat = 0.0f, newCost;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
@@ -38,9 +36,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0;
-	countFlagging = 0;	
-	PROCESS_MEMORY_COUNTERS MemCountr;
-	BOOL memResult;
+	countFlagging = 0;
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
@@ -109,20 +105,16 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			populationLeft = currentEvacuee->Population;
 
 			// I think it's safe to do a collect-n-clean on the graph (ecache & vcache) if the system memory is low
-			memResult = GetProcessMemoryInfo(GetCurrentProcess(), &MemCountr, sizeof(MemCountr));			
-
+			// clean out used up vertices from GC
+			vcache->CollectAndRelease();
+/*
 			#ifdef TRACE
 			std::ofstream f;
 			f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 			f << "Memory (MB): " << MemCountr.PagefileUsage / 1048576 << ',' << MemCountr.WorkingSetSize / 1048576 << std::endl;
 			f.close();
 			#endif
-
-			// if (memResult != FALSE && MemCountr.PagefileUsage > 3221225472) // 3GB
-			{
-				ecache->CollectAndRelease();
-				vcache->CollectAndRelease();
-			}
+*/			
 
 			while (populationLeft > 0.0)
 			{
@@ -262,7 +254,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (turnType == 1) currentEdge->LastExteriorEdge = lastExteriorEdge;
 						else currentEdge->LastExteriorEdge = 0;
 
-						newCost = myVertex->g + (float)(currentEdge->GetCost(population2Route, this->solverMethod));
+						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod);
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrese key.
 						{
 							neighbor = currentEdge->ToVertex;
@@ -438,8 +430,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, minPop2Route = 1.0, maxPredictionCost = FLT_MAX;
-	float newCost;
+	double fromPosition, toPosition, minPop2Route = 1.0, maxPredictionCost = FLT_MAX, newCost;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -570,7 +561,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			// if node has already been discovered then no need to heap it
 			currentEdge = ecache->New(ipCurrentEdge);
 			if (closedList->IsClosed(currentEdge)) continue;
-			newCost = myVertex->g + (float)(currentEdge->GetCost(minPop2Route, this->solverMethod));
+			newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
 
 			if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
 			{

@@ -237,7 +237,6 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 
 void NAEdgeCache::Clear()
 {
-	CollectAndRelease();
 	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) delete (*cit).second;
 	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) delete (*cit).second;
 	for(NAResTableItr ires = resTableAlong->begin(); ires != resTableAlong->end(); ires++) delete (*ires).second;
@@ -251,12 +250,6 @@ void NAEdgeCache::Clear()
 		for(NAResTableItr ires = resTableAgainst->begin(); ires != resTableAgainst->end(); ires++) delete (*ires).second;
 		resTableAgainst->clear();
 	}
-}
-
-void NAEdgeCache::CollectAndRelease()
-{
-	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) (*cit).second->ToVertex = 0;
-	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) (*cit).second->ToVertex = 0;
 }
 
 ///////////////////////////////////////////////
@@ -305,10 +298,10 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 	}
 }
 
-void NAVertex::SetBehindEdge(NAEdge * behindEdge)
+inline void NAVertex::SetBehindEdge(NAEdge * behindEdge) 
 {
 	BehindEdge = behindEdge;
-	BehindEdge->ToVertex = this;
+	if (BehindEdge != NULL) BehindEdge->ToVertex = this;
 }
 
 // return true if update was unnesecery
@@ -376,9 +369,14 @@ void NAVertexCache::Clear()
 void NAVertexCache::CollectAndRelease()
 {	
 	int count = 0;
-	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++) { delete (*i); count++; }
+	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++)
+	{
+		(*i)->SetBehindEdge(0);
+		delete (*i);
+		count++; 
+	}
 	sideCache->clear();
-	sideCache->shrink_to_fit();
+	// sideCache->shrink_to_fit();
 
 	#ifdef TRACE
 	std::ofstream f;

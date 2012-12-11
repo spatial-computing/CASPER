@@ -27,10 +27,10 @@ class NAEdge;
 struct HValue
 {
 public:
-	float Value;
+	double Value;
 	long EdgeID;
 	
-	HValue(long edgeID, float value)
+	HValue(long edgeID, double value)
 	{
 		EdgeID = edgeID;
 		Value = value;
@@ -49,13 +49,13 @@ private:
 	std::vector<HValue> * h;
 
 public:
-	float g;
+	double g;
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
-	// float posAlong;
+	// double posAlong;
 
-	__forceinline float minh() const
+	__forceinline double minh() const
 	{
 		std::vector<HValue>::reference reff = h->front();
 		return reff.Value;
@@ -68,7 +68,7 @@ public:
 		h->push_back(HValue(0l, FLT_MAX));
 	}
 
-	void SetBehindEdge(NAEdge * behindEdge);
+	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	
@@ -355,8 +355,6 @@ public:
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
 	int Size() const { return cacheAlong->size() + cacheAgainst->size();}
 	
-	void CollectAndRelease();
-
 	void CleanAllEdgesAndRelease(double maxPredictionCost)
 	{				
 		#ifdef TRACE
