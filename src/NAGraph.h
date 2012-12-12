@@ -355,6 +355,8 @@ public:
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
 	int Size() const { return cacheAlong->size() + cacheAgainst->size();}
 	
+	#pragma warning(push)
+	#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
 	void CleanAllEdgesAndRelease(double maxPredictionCost)
 	{				
 		#ifdef TRACE
@@ -376,6 +378,7 @@ public:
 		for(NAResTableItr cit = resTableAlong->begin(); cit != resTableAlong->end(); cit++) (*cit).second->SetClean();
 		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
 	}
+	#pragma warning(pop)
 
 	unsigned int TotalCalcSaved() const
 	{

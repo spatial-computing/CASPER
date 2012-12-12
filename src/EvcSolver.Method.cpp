@@ -107,15 +107,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			// I think it's safe to do a collect-n-clean on the graph (ecache & vcache) if the system memory is low
 			// clean out used up vertices from GC
 			vcache->CollectAndRelease();
-/*
-			#ifdef TRACE
-			std::ofstream f;
-			f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-			f << "Memory (MB): " << MemCountr.PagefileUsage / 1048576 << ',' << MemCountr.WorkingSetSize / 1048576 << std::endl;
-			f.close();
-			#endif
-*/			
-
+			
 			while (populationLeft > 0.0)
 			{
 				// populate the heap with vextices asociated with the current evacuee
