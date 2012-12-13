@@ -103,13 +103,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (ipStepProgressor) ipStepProgressor->Step();	
 			countEvacueesInOneBucket++;
 			populationLeft = currentEvacuee->Population;
-
-			// I think it's safe to do a collect-n-clean on the graph (ecache & vcache) if the system memory is low
-			// clean out used up vertices from GC
-			vcache->CollectAndRelease();
 			
 			while (populationLeft > 0.0)
 			{
+				// It's now safe to collect-n-clean on the graph (ecache & vcache).
+				// clean up used up vertices from GC
+				vcache->CollectAndRelease();
+
 				// populate the heap with vextices asociated with the current evacuee
 				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++)
 				{
