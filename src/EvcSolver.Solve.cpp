@@ -1114,7 +1114,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString formatString, msgString, flaggMsg;
+	CString formatString, msgString, flaggMsg, calcSavedMsg;
 #ifdef _FLOCK
 	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f");
 	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
@@ -1124,10 +1124,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
-	flaggMsg.Format(_T("The algorithm performed %d number of graph flagging(s) to improve quality and performance."), countFlagging);
+	flaggMsg.Format(_T("The algorithm performed %d graph flagging(s) to improve quality and performance."), countFlagging);
+	calcSavedMsg.Format(_T("A total of %d calculations have been avoided in edge speed ratio processing."), ecache->TotalCalcSaved());
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
 	pMessages->AddMessage(CComBSTR(flaggMsg));
+	pMessages->AddMessage(CComBSTR(calcSavedMsg));
 
 	if (!(ending.IsEmpty())) pMessages->AddWarning(CComBSTR(ending));
 
