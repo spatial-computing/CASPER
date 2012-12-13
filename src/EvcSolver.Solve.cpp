@@ -1125,7 +1125,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
 	flaggMsg.Format(_T("The algorithm performed %d graph flagging(s) to improve quality and performance."), countFlagging);
-	calcSavedMsg.Format(_T("A total of %d calculations have been avoided in edge speed ratio processing."), ecache->TotalCalcSaved());
+	unsigned int t = ecache->TotalCalcSaved();
+	if (t > 1) calcSavedMsg.Format(_T("A total of %d calculations have been avoided in edge speed-ratio processing."), t);
+
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
 	pMessages->AddMessage(CComBSTR(flaggMsg));
