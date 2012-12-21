@@ -338,9 +338,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 		}
 	}
-
-	// for(NAVertexTableItr iterator = safeZoneList->begin(); iterator != safeZoneList->end(); iterator++) iterator->second->g = 0.0;
-
+	
 	// Get a cursor on the Evacuee points table to loop through each row
 	if (FAILED(hr = ipEvacueePointsTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	EvacueeList * Evacuees = new DEBUG_NEW_PLACEMENT EvacueeList();

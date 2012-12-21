@@ -21,7 +21,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 0.0, dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0, TimeToBeat = 0.0f, newCost;
+	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 0.0,
+		dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
@@ -110,6 +111,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				// clean up used up vertices from GC
 				vcache->CollectAndRelease();
 
+				// the next 'if' is a distinctive feature by CASPER that CCRP does not have
+				// and can actually improve routes even with a STEP traffic model
+				if (this->solverMethod == EVC_SOLVER_METHOD_CCRP) population2Route = 1.0;
+				else population2Route = populationLeft;
+
 				// populate the heap with vextices asociated with the current evacuee
 				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++)
 				{
@@ -121,7 +127,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					tempEvc->Previous = 0;
 					myEdge = tempEvc->GetBehindEdge();
 
-					if (myEdge) heap->Insert(myEdge);
+					if (myEdge)
+					{
+						tempEvc->g *= myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
+						heap->Insert(myEdge);
+					}
 					else
 					{
 						// if the start point was a single junction, then all the adjacent edges can be start edges
@@ -134,6 +144,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 							myEdge = ecache->New(ipCurrentEdge);
 							tempEvc->SetBehindEdge(myEdge);
+							tempEvc->g *= myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
 							heap->Insert(myEdge);
 						}
 					}
@@ -142,11 +153,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				TimeToBeat = FLT_MAX;
 				BetterSafeZone = 0;
 				finalVertex = 0;
-
-				// the next 'if' is a distinctive feature by CASPER that CCRP does not have
-				// and can actually improve routes even with a STEP traffic model
-				if (this->solverMethod == EVC_SOLVER_METHOD_CCRP) population2Route = 1.0;
-				else population2Route = populationLeft;
 
 				// reset counters for dirty stuff
 				dirtyVerticesInPath = 0.0;
@@ -175,13 +181,16 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					iterator = safeZoneList->find(myVertex->EID);
 					if (iterator != safeZoneList->end())
 					{
-						// Handle the last turn restriction here					
+						// Handle the last turn restriction here ... and the remaining capacity-aware cost.
 						edge = iterator->second->GetBehindEdge();
+						costLeft = iterator->second->g;
 						restricted = false;
 
 						if (edge)
 						{
-							restricted = true;		
+							costLeft *= edge->GetCost(population2Route, this->solverMethod) / edge->OriginalCost;
+
+							restricted = true;
 							if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge , 0, ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC;
 							if (FAILED(hr = ipNetworkForwardStarAdjacencies->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
 							for (i = 0; i < adjacentEdgeCount; i++)
@@ -198,10 +207,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 						if (!restricted)
 						{
-							if (TimeToBeat >  iterator->second->g + myVertex->g)
+							if (TimeToBeat >  costLeft + myVertex->g)
 							{
 								BetterSafeZone = iterator->second;
-								TimeToBeat = iterator->second->g + myVertex->g;
+								TimeToBeat = costLeft + myVertex->g;
 								finalVertex = myVertex;
 							}
 						}
@@ -470,6 +479,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 		if (myEdge) 
 		{
+			tempEvc->g *= myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
 			heap->Insert(myEdge);
 		}
 		else
@@ -484,6 +494,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				myEdge = ecache->New(ipCurrentEdge);
 				tempEvc->SetBehindEdge(myEdge);
+				tempEvc->g *= myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
 				heap->Insert(myEdge);
 			}
 		}
