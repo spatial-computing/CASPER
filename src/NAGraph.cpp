@@ -44,12 +44,12 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	trafficModel = cpy.trafficModel;
 	CASPERRatio = cpy.CASPERRatio;
 	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];	
-	calcSaved = cpy.calcSaved;
+	// calcSaved = cpy.calcSaved;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable * resTable, float InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
-	calcSaved = 0;
+	// calcSaved = 0;
 	ToVertex = 0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
@@ -126,7 +126,7 @@ double NAEdge::LeftCapacity() const
 #pragma float_control(precise, off, push)
 double NAEdge::GetTrafficSpeedRatio(double allPop) const
 {
-	if (cachedCost[0] == allPop) { calcSaved++; return cachedCost[1]; }
+	if (cachedCost[0] == allPop) { /*calcSaved++;*/ return cachedCost[1]; }
 	double speedPercent = 1.0;
 	switch (trafficModel)
 	{

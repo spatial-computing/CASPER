@@ -36,7 +36,7 @@ public:
 		Value = value;
 	}
 
-	static bool LessThan(HValue & a, HValue & b)
+	static inline bool LessThan(HValue & a, HValue & b)
 	{
 		return a.Value < b.Value;
 	}
@@ -57,15 +57,15 @@ public:
 
 	__forceinline double minh() const
 	{
-		std::vector<HValue>::reference reff = h->front();
-		return reff.Value;
+		if (h->empty()) return 0.0;
+		else return ((*h)[0]).Value;
 	}
 
 	void ResetHValues(void)
 	{
 		h->clear(); 
 		h->reserve(2);
-		h->push_back(HValue(0l, FLT_MAX));
+		// h->push_back(HValue(0l, 0.0));
 	}
 
 	inline void SetBehindEdge(NAEdge * behindEdge);
@@ -204,7 +204,7 @@ private:
 	EVC_TRAFFIC_MODEL trafficModel;
 	double CASPERRatio;
 	mutable double cachedCost[2];
-	mutable unsigned short calcSaved;
+	// mutable unsigned short calcSaved;
 	double GetTrafficSpeedRatio(double allPop) const;
 
 public:
@@ -229,7 +229,7 @@ public:
 
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	inline bool IsDirty() const { return reservations->DirtyFlag; }
-	inline unsigned short GetCalcSaved() const { return calcSaved; }
+	// inline unsigned short GetCalcSaved() const { return calcSaved; }
 };
 
 typedef NAEdge * NAEdgePtr;
@@ -379,7 +379,7 @@ public:
 		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
 	}
 	#pragma warning(pop)
-
+	/*
 	unsigned int TotalCalcSaved() const
 	{
 		unsigned int total = 0;
@@ -387,6 +387,6 @@ public:
 		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) total += (*cit).second->GetCalcSaved();
 		return total;
 	}
-
+	*/
 	void Clear();	
 };

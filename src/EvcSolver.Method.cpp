@@ -466,9 +466,12 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		tempEvc->Junction = evc->Junction;
 		tempEvc->Previous = 0;
 		myEdge = tempEvc->GetBehindEdge();
-		tempEvc->ResetHValues(); // why am i doing this?
+		vcache->Get(tempEvc->EID)->ResetHValues();
 
-		if (myEdge) heap->Insert(myEdge);
+		if (myEdge) 
+		{
+			heap->Insert(myEdge);
+		}
 		else
 		{
 			// if the start point was a single junction, then all the adjacent edges can be start edges
@@ -503,9 +506,9 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 		// part to check if this branch of DJ tree needs expanding to update hueristics
 		// This update should know if this is the first time this vertex is coming out
-		// in this 'RunHeurustic' round. Only then we can be sure whether to update to min
+		// in this 'FlagMyGraph' round. Only then we can be sure whether to update to min
 		// or update absolutely to this new value.
-		if (vcache->UpdateHeuristic(myEdge->EID, myVertex)) continue;		
+		vcache->UpdateHeuristic(myEdge->EID, myVertex);
 
 		// termination condition and evacuee discovery
 		pairs = EvacueePairs->Find(myVertex->EID);

@@ -339,6 +339,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}
 	}
 
+	// for(NAVertexTableItr iterator = safeZoneList->begin(); iterator != safeZoneList->end(); iterator++) iterator->second->g = 0.0;
+
 	// Get a cursor on the Evacuee points table to loop through each row
 	if (FAILED(hr = ipEvacueePointsTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	EvacueeList * Evacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
@@ -1125,13 +1127,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
 	flaggMsg.Format(_T("The algorithm performed %d graph flagging(s) to improve quality and performance."), countFlagging);
-	unsigned int t = ecache->TotalCalcSaved();
-	if (t > 1) calcSavedMsg.Format(_T("A total of %d calculations have been avoided in edge speed-ratio processing."), t);
+	// unsigned int t = ecache->TotalCalcSaved();
+	// if (t > 1) calcSavedMsg.Format(_T("A total of %d calculations have been avoided in edge speed-ratio processing."), t);
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(msgString));
 	pMessages->AddMessage(CComBSTR(flaggMsg));
-	pMessages->AddMessage(CComBSTR(calcSavedMsg));
+	// pMessages->AddMessage(CComBSTR(calcSavedMsg));
 
 	if (!(ending.IsEmpty())) pMessages->AddWarning(CComBSTR(ending));
 
