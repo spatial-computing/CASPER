@@ -308,21 +308,21 @@ inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 // return true if update was unnesecery
 bool NAVertex::UpdateHeuristic(long edgeid, NAVertex * n)
 {
-	bool ret = false;
+	bool unnesecery = false;
 	for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++)
 	{
 		if (i->EdgeID == edgeid)
 		{
 			_ASSERT(i->Value <= n->g);
-			ret = i->Value == n->g;
+			unnesecery = i->Value == n->g;
 			i->Value = n->g;
-			if (!ret) std::sort(h->begin(), h->end(), HValue::LessThan);
-			return ret;
+			if (!unnesecery) std::sort(h->begin(), h->end(), HValue::LessThan);
+			return unnesecery;
 		}
 	}
 	h->push_back(HValue(edgeid, n->g));
 	std::sort(h->begin(), h->end(), HValue::LessThan);
-	return ret;	
+	return unnesecery;	
 }
 
 // return true if update was unnesecery
