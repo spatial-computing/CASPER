@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -52,8 +50,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,0
- PRODUCTVERSION 1,0,0,0
+ FILEVERSION 1,1,0,0
+ PRODUCTVERSION 1,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,13 +66,15 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "USC SSI"
-            VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
-            VALUE "FileVersion", "1.0.0.0"
-            VALUE "InternalName", "EvcSolver.dll"
-            VALUE "OriginalFilename", "EvcSolver.dll"
-            VALUE "ProductName", "EvcSolver"
-            VALUE "ProductVersion", "1.1.0.0"
+            VALUE "CompanyName", "USC SSI\0"
+            VALUE "FileDescription", "Evacuation Routing Network Analyst tool\0"
+            VALUE "FileVersion", "1.1.0.0\0"
+            VALUE "InternalName", "EvcSolver.dll\0"
+            VALUE "LegalCopyright", "Copyright (C) 2013\0"
+            VALUE "OriginalFilename", "EvcSolver.dll\0"
+            VALUE "ProductName", "EvcSolver\0"
+            VALUE "ProductVersion", "1.1.0.0\0"
+            VALUE "Comments", "Build 1/22/2013\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -143,7 +143,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_EvcSolverPROPPAGE, DIALOG
     BEGIN
@@ -161,7 +161,7 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PROJNAME            "EvacuationSolver"
     IDS_TITLEEvcSolverPROPPAGE "Evacuation Settings"
@@ -169,7 +169,7 @@ BEGIN
     IDS_DOCSTRINGEvcSolverPROPPAGE "Evacuation Settings"
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
