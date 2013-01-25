@@ -74,7 +74,6 @@ BEGIN
             VALUE "OriginalFilename", "EvcSolver.dll\0"
             VALUE "ProductName", "EvcSolver\0"
             VALUE "ProductVersion", "1.1.0.0\0"
-            VALUE "Comments", "Build 1/22/2013\0"
         END
     END
     BLOCK "VarFileInfo"
