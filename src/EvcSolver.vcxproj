@@ -334,9 +334,7 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
     <ClInclude Include="NAGraph.h" />
     <ClInclude Include="NameConstants.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="resource1.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="VersionInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="EvcSolver.rc" />
@@ -344,14 +342,13 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemGroup>
     <None Include="EvcSolver.rgs" />
     <None Include="TODO List.txt" />
-    <None Include="VersionInfo.rc2" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties RESOURCE_FILE="EvcSolver.rc" />
+      <UserProperties RESOURCE_FILE="EvcSolver.rc" BuildVersion_IncrementBeforeBuild="False" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>
