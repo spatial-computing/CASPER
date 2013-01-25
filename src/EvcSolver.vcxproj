@@ -348,7 +348,7 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties RESOURCE_FILE="EvcSolver.rc" BuildVersion_IncrementBeforeBuild="False" />
+      <UserProperties RESOURCE_FILE="EvcSolver.rc" BuildVersion_IncrementBeforeBuild="" BuildVersion_UpdateAssemblyVersion="" BuildVersion_UpdateFileVersion="" BuildVersion_BuildVersioningStyle="None.None.Increment.YearDayOfYear" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>
