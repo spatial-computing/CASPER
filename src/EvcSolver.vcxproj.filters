@@ -80,6 +80,12 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource1.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VersionInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="EvcSolver.rc">
@@ -91,5 +97,8 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="TODO List.txt" />
+    <None Include="VersionInfo.rc2">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
