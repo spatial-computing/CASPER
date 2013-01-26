@@ -438,7 +438,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	// release date lable
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
 	wchar_t compileDateBuff[100];
-	swprintf_s(compileDateBuff, 50, L"<a href=\"http://esri.com/arccasper\">Release Date: %s</a>", _T(__DATE__));
+	swprintf_s(compileDateBuff, 100, L"<a href=\"http://esri.com/arccasper\">Release Date: %s</a>", _T(__DATE__));
 	::SendMessage(m_hlblRelease, WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
 
 	return 0;
@@ -581,5 +581,13 @@ LRESULT EvcSolverPropPage::OnEnChangeEditBucketsize(WORD /*wNotifyCode*/, WORD /
 	SetDirty(TRUE);
 	//refresh property sheet
 	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/)
+{
+	NMLINK* pNMLink = (NMLINK*)pNMHDR;
+	LITEM   item    = pNMLink->item;
+	ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
 	return 0;
 }

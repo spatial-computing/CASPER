@@ -79,6 +79,7 @@ public:
 	COMMAND_HANDLER(IDC_COMBO_COST, CBN_SELCHANGE, OnCbnSelchangeCostCapacity)
 	COMMAND_HANDLER(IDC_CHECK_SEPARABLE, BN_CLICKED, OnBnClickedCheckSeparable)
 	COMMAND_HANDLER(IDC_CHECK_EDGESTAT, BN_CLICKED, OnBnClickedCheckEdgestat)
+	NOTIFY_HANDLER(IDC_RELEASE, NM_CLICK, OnNMClickRelease)
   END_MSG_MAP()
 
   // Handler prototypes:
@@ -158,4 +159,5 @@ protected:
 public:
 	LRESULT OnCbnSelchangeComboProfile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditBucketsize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);
 };

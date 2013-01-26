@@ -133,7 +133,7 @@ BEGIN
     COMBOBOX        IDC_COMBO_PROFILE,322,113,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Min Evacuee Bucket Size:",IDC_LableBucketSize,20,123,95,8
     EDITTEXT        IDC_EDIT_BucketSize,127,120,63,14,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "<a href=http://esri.com/arccasper>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",WS_TABSTOP,7,194,114,13
+    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",WS_TABSTOP,7,194,114,13
 END
 
 
