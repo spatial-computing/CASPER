@@ -44,6 +44,7 @@
 #define IDC_STATIC_FlockProfile         243
 #define IDC_COMBO_PROFILE               244
 #define IDC_STATIC_LINE                 245
+#define IDC_STATIC_RELEASE              246
 
 // Next default values for new objects
 // 

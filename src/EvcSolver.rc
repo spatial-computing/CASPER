@@ -66,14 +66,14 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "USC SSI\0"
-            VALUE "FileDescription", "Evacuation Routing Network Analyst tool\0"
-            VALUE "FileVersion", "1.1.0.0\0"
-            VALUE "InternalName", "EvcSolver.dll\0"
-            VALUE "LegalCopyright", "Copyright (C) 2013\0"
-            VALUE "OriginalFilename", "EvcSolver.dll\0"
-            VALUE "ProductName", "EvcSolver\0"
-            VALUE "ProductVersion", "1.1.0.0\0"
+            VALUE "CompanyName", "USC SSI"
+            VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
+            VALUE "FileVersion", "1.1.0.0"
+            VALUE "InternalName", "EvcSolver.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2013"
+            VALUE "OriginalFilename", "EvcSolver.dll"
+            VALUE "ProductName", "EvcSolver"
+            VALUE "ProductVersion", "1.1.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -81,6 +81,7 @@ BEGIN
         VALUE "Translation", 0x409, 1252
     END
 END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -132,6 +133,7 @@ BEGIN
     COMBOBOX        IDC_COMBO_PROFILE,322,113,63,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Min Evacuee Bucket Size:",IDC_LableBucketSize,20,123,95,8
     EDITTEXT        IDC_EDIT_BucketSize,127,120,63,14,ES_AUTOHSCROLL | ES_NUMBER
+    RTEXT           "Release Date: 1-1-2013", IDC_STATIC_RELEASE,259,186,137,8
 END
 
 
