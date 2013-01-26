@@ -436,9 +436,9 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	::ShowWindow(m_hcmbFlockProfile, cmdShow);
 
 	// release date lable
-	HWND m_hlblRelease = GetDlgItem(IDC_STATIC_RELEASE);
-	wchar_t compileDateBuff[50];
-	swprintf_s(compileDateBuff, 50, L"Release Date: %s", __DATE__);
+	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
+	wchar_t compileDateBuff[30];
+	swprintf_s(compileDateBuff, 50, L"Release Date: %s", _T(__DATE__));
 	::SendMessage(m_hlblRelease, WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
 
 	return 0;
