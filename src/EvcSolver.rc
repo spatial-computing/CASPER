@@ -70,8 +70,8 @@ BEGIN
             VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
             VALUE "FileVersion", "1.1.0.0"
             VALUE "InternalName", "EvcSolver.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2013"
             VALUE "OriginalFilename", "EvcSolver.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2013"
             VALUE "ProductName", "EvcSolver"
             VALUE "ProductVersion", "1.1.0.0"
         END

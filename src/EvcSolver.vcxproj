@@ -232,8 +232,10 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>
-      </Command>
+      <Command>cd "$(OutDir)"
+cd ..
+if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s /u)
+</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -271,8 +273,11 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
-      <Command>
-      </Command>
+      <Command>cd "$(OutDir)"
+cd ..
+copy /Y "$(TargetDir)$(TargetName).*" *.*
+%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -336,8 +341,10 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>
-      </Command>
+      <Command>cd "$(OutDir)"
+cd ..
+if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s /u)
+</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -381,8 +388,11 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
-      <Command>
-      </Command>
+      <Command>cd "$(OutDir)"
+cd ..
+copy /Y "$(TargetDir)$(TargetName).*" *.*
+%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
@@ -446,8 +456,10 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>
-      </Command>
+      <Command>cd "$(OutDir)"
+cd ..
+if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s /u)
+</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -491,8 +503,11 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
-      <Command>
-      </Command>
+      <Command>cd "$(OutDir)"
+cd ..
+copy /Y "$(TargetDir)$(TargetName).*" *.*
+%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">
@@ -551,8 +566,10 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>
-      </Command>
+      <Command>cd "$(OutDir)"
+cd ..
+if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s /u)
+</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -590,8 +607,11 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
-      <Command>
-      </Command>
+      <Command>cd "$(OutDir)"
+cd ..
+copy /Y "$(TargetDir)$(TargetName).*" *.*
+%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
