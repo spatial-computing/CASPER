@@ -137,7 +137,7 @@ public:
 	}
 	
 	NAVertexPtr New(INetworkJunctionPtr junction);
-	int Size() { return cache->size(); }
+	size_t Size() { return cache->size(); }
 	void Clear();
 };
 
@@ -259,7 +259,7 @@ public:
 	}
 	
 	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
-	int Size() { return cacheAlong->size() + cacheAgainst->size(); }
+	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }
 	HRESULT Insert(NAEdgePtr edge);
 	bool IsClosed(NAEdgePtr edge);
 };
@@ -288,7 +288,7 @@ public:
 	}
 	
 	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
-	int Size() { return cacheAlong->size() + cacheAgainst->size(); }
+	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }
 	HRESULT Insert(INetworkEdgePtr edge);
 	bool Exist(INetworkEdgePtr edge);
 };
@@ -353,7 +353,7 @@ public:
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
-	int Size() const { return cacheAlong->size() + cacheAgainst->size();}
+	size_t Size() const { return cacheAlong->size() + cacheAgainst->size();}
 	
 	#pragma warning(push)
 	#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */

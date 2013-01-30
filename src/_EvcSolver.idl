@@ -29,11 +29,11 @@ interface IEvcSolver : IUnknown {
 #line 53 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propget,helpstring("Lists discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributes([out,retval] BSTR **names);
 #line 55 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Counts discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributesCount([out,retval] int *count);
+	[propget,helpstring("Counts discriptive attributes from the network dataset")] HRESULT  DiscriptiveAttributesCount([out,retval] size_t *Count);
 #line 57 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the selected capacity attribute index")] HRESULT  CapacityAttribute([in] int index);
+	[propput,helpstring("Sets the selected capacity attribute index")] HRESULT  CapacityAttribute([in] size_t index);
 #line 59 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected caspacity attribute index")] HRESULT  CapacityAttribute([out,retval] int *index);
+	[propget,helpstring("Gets the selected caspacity attribute index")] HRESULT  CapacityAttribute([out,retval] size_t *index);
 #line 61 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propput,helpstring("Sets the separable evacuee flag")] HRESULT  SeparableEvacuee([in] VARIANT_BOOL value);
 #line 63 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
@@ -83,13 +83,13 @@ interface IEvcSolver : IUnknown {
 #line 107 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propget,helpstring("Gets the size of the evacuee bucket")] HRESULT  EvacueeBucketSize([out,retval] BSTR *value);
 #line 111 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propput,helpstring("Sets the selected cost attribute index")] HRESULT  CostAttribute([in] int index);
+	[propput,helpstring("Sets the selected cost attribute index")] HRESULT  CostAttribute([in] size_t index);
 #line 113 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Gets the selected cost attribute index")] HRESULT  CostAttribute([out,retval] int *index);
+	[propget,helpstring("Gets the selected cost attribute index")] HRESULT  CostAttribute([out,retval] size_t *index);
 #line 115 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
 	[propget,helpstring("Lists impedence attributes from the network dataset")] HRESULT  CostAttributes([out,retval] BSTR **names);
 #line 117 "c:\\dev\\cpp\\uscgisresearchlab\\arccasper\\src\\evcsolver.h"
-	[propget,helpstring("Counts impedence attributes from the network dataset")] HRESULT  CostAttributesCount([out,retval] int *count);
+	[propget,helpstring("Counts impedence attributes from the network dataset")] HRESULT  CostAttributesCount([out,retval] size_t *count);
 };
 
 

@@ -49,7 +49,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	{
 		// Setup our progressor based on the number of Evacuee points
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) goto END_OF_FUNC;
-		if (FAILED(hr = ipStepProgressor->put_MaxRange(Evacuees->size()))) goto END_OF_FUNC;
+		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(Evacuees->size())))) goto END_OF_FUNC;
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) goto END_OF_FUNC;
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) goto END_OF_FUNC;
 

@@ -541,11 +541,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
 		if (exportEdgeStat)
 		{
-			if (FAILED(hr = ipStepProgressor->put_MaxRange(ecache->Size() + Evacuees->size()))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ecache->Size() + Evacuees->size())))) return hr;
 		}
 		else
 		{
-			if (FAILED(hr = ipStepProgressor->put_MaxRange(Evacuees->size()))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(Evacuees->size())))) return hr;
 		}
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
@@ -977,7 +977,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		{			
 			ipStepProgressor->put_Message(CComBSTR(L"Writing flocking results"));
 			ipStepProgressor->put_MinRange(0);
-			ipStepProgressor->put_MaxRange(history->size());
+			ipStepProgressor->put_MaxRange((long)(history->size()));
 			ipStepProgressor->put_StepValue(1);
 			ipStepProgressor->put_Position(0);
 		}

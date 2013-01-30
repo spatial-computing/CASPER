@@ -671,7 +671,7 @@ STDMETHODIMP EvcSolver::put_CostPerZoneDensity(BSTR value)
 // this will be called from the property page so the user can select.
 STDMETHODIMP EvcSolver::get_CostAttributes(BSTR ** Names)
 {
-	int count = costAttribs.size(), i;
+	size_t count = costAttribs.size(), i;
 	HRESULT hr;
 	BSTR * names = new DEBUG_NEW_PLACEMENT BSTR[count];
 
@@ -686,7 +686,7 @@ STDMETHODIMP EvcSolver::get_CostAttributes(BSTR ** Names)
 // this will be called from the property page so the user can select.
 STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(BSTR ** Names)
 {
-	int count = discriptiveAttribs.size(), i;
+	size_t count = discriptiveAttribs.size(), i;
 	HRESULT hr;
 	BSTR * names = new DEBUG_NEW_PLACEMENT BSTR[count];
 
@@ -698,25 +698,25 @@ STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(BSTR ** Names)
 }
 
 // returns the count of available heuristic attributes from the network dataset to the property page
-STDMETHODIMP EvcSolver::get_CostAttributesCount(int * Count)
+STDMETHODIMP EvcSolver::get_CostAttributesCount(size_t * Count)
 {
-	int count = costAttribs.size();
+	size_t count = costAttribs.size();
 	*Count = count;
 	return S_OK;
 }
 
 // returns the count of available heuristic attributes from the network dataset to the property page
-STDMETHODIMP EvcSolver::get_DiscriptiveAttributesCount(int * Count)
+STDMETHODIMP EvcSolver::get_DiscriptiveAttributesCount(size_t * Count)
 {
-	int count = discriptiveAttribs.size();
+	size_t count = discriptiveAttribs.size();
 	*Count = count;
 	return S_OK;
 }
 
 // Gets the selected cost attribute back to the property page
-STDMETHODIMP EvcSolver::get_CapacityAttribute(int * index)
+STDMETHODIMP EvcSolver::get_CapacityAttribute(size_t * index)
 {	
-	int count = discriptiveAttribs.size(), i;
+	size_t count = discriptiveAttribs.size(), i;
 	HRESULT hr;
 	long ID;
 
@@ -733,9 +733,9 @@ STDMETHODIMP EvcSolver::get_CapacityAttribute(int * index)
 }
 
 // Gets the selected cost attribute back to the property page
-STDMETHODIMP EvcSolver::get_CostAttribute(int * index)
+STDMETHODIMP EvcSolver::get_CostAttribute(size_t * index)
 {	
-	int count = costAttribs.size(), i;
+	size_t count = costAttribs.size(), i;
 	HRESULT hr;
 	long ID;
 
@@ -752,7 +752,7 @@ STDMETHODIMP EvcSolver::get_CostAttribute(int * index)
 }
 
 // Sets the selected cost attribute based on what user selected in property page
-STDMETHODIMP EvcSolver::put_CapacityAttribute(int index)
+STDMETHODIMP EvcSolver::put_CapacityAttribute(size_t index)
 {		
 	HRESULT hr;
 	if (FAILED(hr = discriptiveAttribs[index]->get_ID(&capAttributeID))) return hr;
@@ -761,7 +761,7 @@ STDMETHODIMP EvcSolver::put_CapacityAttribute(int index)
 }
 
 // Sets the selected cost attribute based on what user selected in property page
-STDMETHODIMP EvcSolver::put_CostAttribute(int index)
+STDMETHODIMP EvcSolver::put_CostAttribute(size_t index)
 {		
 	HRESULT hr;
 	if (FAILED(hr = costAttribs[index]->get_ID(&costAttributeID))) return hr;
@@ -866,7 +866,7 @@ STDMETHODIMP EvcSolver::get_ResetHierarchyRangesOnBind(VARIANT_BOOL * value)
 
 STDMETHODIMP EvcSolver::put_ImpedanceAttributeName(BSTR attributeName)
 {
-	int count = costAttribs.size(), i;
+	size_t count = costAttribs.size(), i;
 	HRESULT hr;
 	BSTR name;
 
@@ -885,7 +885,7 @@ STDMETHODIMP EvcSolver::put_ImpedanceAttributeName(BSTR attributeName)
 
 STDMETHODIMP EvcSolver::get_ImpedanceAttributeName(BSTR * pAttributeName)
 {
-	int count = costAttribs.size(), i;
+	size_t count = costAttribs.size(), i;
 	HRESULT hr;
 	long ID = -1;
 
@@ -907,7 +907,7 @@ STDMETHODIMP EvcSolver::get_ImpedanceAttributeName(BSTR * pAttributeName)
 // this will be called from the property page so the user can select.
 STDMETHODIMP EvcSolver::get_RestrictionAttributeNames(IStringArray ** ppAttributeName)
 {
-	int count = turnAttribs.size(), i;
+	size_t count = turnAttribs.size(), i;
 	HRESULT hr;
 	BSTR name;
 	IStringArrayPtr names(CLSID_StrArray);

@@ -171,6 +171,10 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">true</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">true</PostBuildEventUseInBuild>
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -209,7 +213,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>
@@ -228,10 +232,8 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>cd "$(OutDir)"
-cd ..
-if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s /u)
-</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -242,7 +244,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;_FLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN64;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;_FLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <FloatingPointModel>Precise</FloatingPointModel>
@@ -261,7 +263,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalDependencies>opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>
@@ -269,11 +271,8 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
-      <Command>cd "$(OutDir)"
-cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
-"$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -316,7 +315,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -337,10 +336,8 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>cd "$(OutDir)"
-cd ..
-if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s /u)
-</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -353,7 +350,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;_FLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN64;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;_FLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <FloatingPointModel>Precise</FloatingPointModel>
@@ -374,7 +371,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalDependencies>opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -384,11 +381,8 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
-      <Command>cd "$(OutDir)"
-cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
-"$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
@@ -431,7 +425,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -452,10 +446,8 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>cd "$(OutDir)"
-cd ..
-if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s /u)
-</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -468,7 +460,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;_NOFLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN64;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;_NOFLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <FloatingPointModel>Precise</FloatingPointModel>
@@ -489,7 +481,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalDependencies>opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -499,11 +491,8 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
-      <Command>cd "$(OutDir)"
-cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
-"$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">
@@ -543,7 +532,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>
@@ -562,10 +551,8 @@ copy /Y "$(TargetDir)$(TargetName).*" *.*
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>cd "$(OutDir)"
-cd ..
-if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s /u)
-</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -576,7 +563,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;_NOFLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN64;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;_NOFLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <FloatingPointModel>Precise</FloatingPointModel>
@@ -595,7 +582,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalDependencies>opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>
@@ -603,11 +590,8 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
-      <Command>cd "$(OutDir)"
-cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
-"$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

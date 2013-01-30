@@ -51,12 +51,12 @@ __interface IEvcSolver : IUnknown
 		HRESULT CriticalDensPerCap([out, retval] BSTR * value);
 	[propget, helpstring("Lists discriptive attributes from the network dataset")]
 		HRESULT DiscriptiveAttributes([out, retval] BSTR ** names);
-	[propget, helpstring("Counts discriptive attributes from the network dataset")]
-		HRESULT DiscriptiveAttributesCount([out, retval] int * count);
 	[propput, helpstring("Sets the selected capacity attribute index")]
-		HRESULT CapacityAttribute([in] int index);
+		HRESULT CapacityAttribute([in] unsigned __int3264 index);
 	[propget, helpstring("Gets the selected caspacity attribute index")]
-		HRESULT CapacityAttribute([out, retval] int * index);
+		HRESULT CapacityAttribute([out, retval] unsigned __int3264 * index);
+	[propget, helpstring("Counts discriptive attributes from the network dataset")]
+		HRESULT DiscriptiveAttributesCount([out, retval] unsigned __int3264 * Count);
 	[propput, helpstring("Sets the separable evacuee flag")]
 		HRESULT SeparableEvacuee([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the separable evacuee flag")]
@@ -108,13 +108,13 @@ __interface IEvcSolver : IUnknown
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
-		HRESULT CostAttribute([in] int index);
+		HRESULT CostAttribute([in] unsigned __int3264 index);
 	[propget, helpstring("Gets the selected cost attribute index")]
-		HRESULT CostAttribute([out, retval] int * index);
+		HRESULT CostAttribute([out, retval] unsigned __int3264 * index);
 	[propget, helpstring("Lists impedence attributes from the network dataset")]
 		HRESULT CostAttributes([out, retval] BSTR ** names);
 	[propget, helpstring("Counts impedence attributes from the network dataset")]
-		HRESULT CostAttributesCount([out, retval] int * count);
+		HRESULT CostAttributesCount([out, retval] unsigned __int3264 * count);
 };
 
 // EvcSolver
@@ -190,9 +190,9 @@ public:
 	STDMETHOD(put_CriticalDensPerCap)(BSTR   value);
 	STDMETHOD(get_CriticalDensPerCap)(BSTR * value);
 	STDMETHOD(get_DiscriptiveAttributes)(BSTR ** names);
-	STDMETHOD(get_DiscriptiveAttributesCount)(int * count);
-	STDMETHOD(put_CapacityAttribute)(int   index);
-	STDMETHOD(get_CapacityAttribute)(int * index);
+	STDMETHOD(get_DiscriptiveAttributesCount)(unsigned __int3264 * count);
+	STDMETHOD(put_CapacityAttribute)(unsigned __int3264   index);
+	STDMETHOD(get_CapacityAttribute)(unsigned __int3264 * index);
 	STDMETHOD(get_CostPerZoneDensity)(BSTR * value);
 	STDMETHOD(put_CostPerZoneDensity)(BSTR   value);
 	STDMETHOD(get_FlockingEnabled)(VARIANT_BOOL * value);
@@ -211,10 +211,10 @@ public:
 	STDMETHOD(get_EvacueeBucketSize)(BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
-	STDMETHOD(put_CostAttribute)(int index);
-	STDMETHOD(get_CostAttribute)(int * index);
+	STDMETHOD(put_CostAttribute)(unsigned __int3264 index);
+	STDMETHOD(get_CostAttribute)(unsigned __int3264 * index);
 	STDMETHOD(get_CostAttributes)(BSTR ** names);
-	STDMETHOD(get_CostAttributesCount)(int * count);
+	STDMETHOD(get_CostAttributesCount)(unsigned __int3264 * count);
 
 	// INARouteSolver2
 

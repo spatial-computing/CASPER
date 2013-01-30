@@ -460,14 +460,14 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 		if (objStep == 1)
 		{
 			objStep = -1;
-			objStart = objects->size() - 1;
+			objStart = (int)(objects->size()) - 1;
 			objEnd = -1;
 		}
 		else
 		{
 			objStep = 1;
 			objStart = 0;
-			objEnd = objects->size();
+			objEnd = (int)(objects->size());
 		}
 
 		for (objPos = objStart; objPos != objEnd; objPos += objStep)
@@ -477,7 +477,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
 				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
 			}
-			fo = objects->at(objPos);
+			fo = objects->at(size_t(objPos));
 
 			fo->GTime = thetime;
 			oldStat = fo->MyStatus;

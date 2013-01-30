@@ -26,7 +26,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 	{
 		// set the loaded network restrictions
 		BSTR * names;
-		int i, c, selectedIndex;
+		size_t i, c, selectedIndex;
 
 		// set the solver method names
 		EVC_SOLVER_METHOD method;
@@ -281,14 +281,14 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 	if (vObject.vt != VT_UNKNOWN) return E_UNEXPECTED;
 	// Try and QI to IEvcSolver
 	IEvcSolverPtr ipSolver(vObject.punkVal);
-	int size;
+	LRESULT size;
 	if (ipSolver != 0)
 	{
 		// save data from drop boxes
-		int selectedIndex = ::SendMessage(m_hCapCombo, CB_GETCURSEL, 0, 0);
-		if (selectedIndex > -1) ipSolver->put_CapacityAttribute(selectedIndex);
+		LRESULT selectedIndex = ::SendMessage(m_hCapCombo, CB_GETCURSEL, 0, 0);
+		if (selectedIndex > -1) ipSolver->put_CapacityAttribute((size_t)selectedIndex);
 		selectedIndex = ::SendMessage(m_hCostCombo, CB_GETCURSEL, 0, 0);
-		if (selectedIndex > -1) ipSolver->put_CostAttribute(selectedIndex);
+		if (selectedIndex > -1) ipSolver->put_CostAttribute((size_t)selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboMethod, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_SolverMethod((EVC_SOLVER_METHOD)selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboTrafficModel, CB_GETCURSEL, 0, 0);
@@ -448,7 +448,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 void EvcSolverPropPage::SetFlockingEnabled()
 {	
-	int flag = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
+	LRESULT flag = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
 	if (flag == BST_CHECKED) flag = 1; else flag = 0;
 	
 	::SendMessage(m_hEditSnapFlock, WM_ENABLE, flag, 0);

@@ -79,7 +79,7 @@ public:
 		delete cacheAgainst;
 	}
 	
-	int Size() { return cacheAlong->size() + cacheAgainst->size(); }
+	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }
 	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
 
 	void Erase(HeapDataType * edge);
@@ -106,7 +106,7 @@ public:
 	void Clear();
 	bool Insert(HeapDataType * node);	
 	HRESULT DecreaseKey(HeapDataType * node);
-	int Size() const { return nodeTable->Size(); }
+	size_t Size() const { return nodeTable->Size(); }
 
 	HeapDataType * FindMin();
 	HeapDataType * DeleteMin();
