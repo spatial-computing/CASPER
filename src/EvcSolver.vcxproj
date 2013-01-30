@@ -5,17 +5,33 @@
       <Configuration>DebugNoFlock</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugNoFlock|x64">
+      <Configuration>DebugNoFlock</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleaseNoFlock|Win32">
       <Configuration>ReleaseNoFlock</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseNoFlock|x64">
+      <Configuration>ReleaseNoFlock</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -28,7 +44,18 @@
     <UseOfAtl>false</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfAtl>false</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
@@ -41,7 +68,19 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfAtl>false</UseOfAtl>
     <CharacterSet>Unicode</CharacterSet>
@@ -52,42 +91,86 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Configuration)\</IntDir>
     <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</PreBuildEventUseInBuild>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Configuration)\</IntDir>
     <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</PreBuildEventUseInBuild>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">..\bin\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">..\bin\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">$(Configuration)\</IntDir>
     <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">true</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">true</PreBuildEventUseInBuild>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">..\bin\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">..\bin\$(Configuration)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">$(Configuration)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">$(Configuration)\</IntDir>
     <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">true</PreBuildEventUseInBuild>
+    <PreBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">true</PreBuildEventUseInBuild>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">true</LinkIncremental>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;C:\dev\3rdParty\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;C:\dev\3rdParty\Visual Leak Detector\include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;C:\dev\3rdParty\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;C:\dev\3rdParty\Visual Leak Detector\include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.1\include;c:\dev\3rdParty\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Release;c:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Release;c:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Release;c:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Release;c:\dev\3rdParty\glut;$(LibraryPath)</LibraryPath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Debug;c:\dev\3rdParty\glut;C:\dev\3rdParty\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Debug;c:\dev\3rdParty\glut;C:\dev\3rdParty\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Debug;c:\dev\3rdParty\glut;C:\dev\3rdParty\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.1\com;c:\dev\3rdParty\opensteer\win32\Debug;c:\dev\3rdParty\glut;C:\dev\3rdParty\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">true</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">true</EnableManagedIncrementalBuild>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</EnableManagedIncrementalBuild>
+    <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</EnableManagedIncrementalBuild>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">$(ProjectName)$(PlatformArchitecture)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectName)$(PlatformArchitecture)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">$(ProjectName)$(PlatformArchitecture)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectName)$(PlatformArchitecture)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -124,7 +207,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -132,6 +215,57 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <RandomizedBaseAddress>
       </RandomizedBaseAddress>
       <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Performing Custom Post-Build Step</Message>
+      <Command>cd "$(OutDir)"
+cd ..
+copy /Y "$(TargetDir)$(TargetName).*" *.*
+"$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PreBuildEvent>
+      <Message>Performing Custom Pre-Build Step</Message>
+      <Command>cd "$(OutDir)"
+cd ..
+if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s /u)
+</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;_FLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4100;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <RegisterOutput>false</RegisterOutput>
+      <PerUserRedirection>true</PerUserRedirection>
+      <AdditionalDependencies>opensteer64.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
@@ -180,7 +314,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -190,6 +324,63 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <RandomizedBaseAddress>
       </RandomizedBaseAddress>
       <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Performing Custom Post-Build Step</Message>
+      <Command>cd "$(OutDir)"
+cd ..
+copy /Y "$(TargetDir)$(TargetName).*" *.*
+"$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PreBuildEvent>
+      <Message>Performing Custom Pre-Build Step</Message>
+      <Command>cd "$(OutDir)"
+cd ..
+if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s /u)
+</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;_FLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <OmitFramePointers>true</OmitFramePointers>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <RegisterOutput>false</RegisterOutput>
+      <PerUserRedirection>true</PerUserRedirection>
+      <AdditionalDependencies>opensteer64.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
@@ -238,7 +429,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -248,6 +439,63 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <RandomizedBaseAddress>
       </RandomizedBaseAddress>
       <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Performing Custom Post-Build Step</Message>
+      <Command>cd "$(OutDir)"
+cd ..
+copy /Y "$(TargetDir)$(TargetName).*" *.*
+"$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">
+    <PreBuildEvent>
+      <Message>Performing Custom Pre-Build Step</Message>
+      <Command>cd "$(OutDir)"
+cd ..
+if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s /u)
+</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;_NOFLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <OmitFramePointers>true</OmitFramePointers>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <RegisterOutput>false</RegisterOutput>
+      <PerUserRedirection>true</PerUserRedirection>
+      <AdditionalDependencies>opensteer64.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
@@ -293,7 +541,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -301,6 +549,57 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <RandomizedBaseAddress>
       </RandomizedBaseAddress>
       <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Performing Custom Post-Build Step</Message>
+      <Command>cd "$(OutDir)"
+cd ..
+copy /Y "$(TargetDir)$(TargetName).*" *.*
+"$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">
+    <PreBuildEvent>
+      <Message>Performing Custom Pre-Build Step</Message>
+      <Command>cd "$(OutDir)"
+cd ..
+if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s /u)
+</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;_NOFLOCK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4100;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <RegisterOutput>false</RegisterOutput>
+      <PerUserRedirection>true</PerUserRedirection>
+      <AdditionalDependencies>opensteer64.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <MergedIDLBaseFileName>_EvcSolver.idl</MergedIDLBaseFileName>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>
+      </RandomizedBaseAddress>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
