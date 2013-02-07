@@ -63,8 +63,6 @@ using namespace ATL;
 
 // Be sure to set these paths to the version of the software against which you want to run
 
-#ifdef _DEBUG
-
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriSystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriSystemUI.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
@@ -75,7 +73,7 @@ using namespace ATL;
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriDataSourcesRaster.olb" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI")
 
-#else
+/*
 
 #import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE") // System
 #import "libid:4ECCA6E2-B16B-4ACA-BD17-E74CAE4C150A" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI") // SystemUI
@@ -87,7 +85,7 @@ using namespace ATL;
 #import "libid:8F0541A3-D5BE-4B3F-A8D9-062D5579E19B" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids // DataSourcesRaster
 #import "libid:45AC68FF-DEFF-4884-B3A9-7D882EDCAEF1" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI") // Carto
 
-#endif
+*/
 
 // This is included below so we can refer to CLSID_, IID_, etc. defined within this project.
 
