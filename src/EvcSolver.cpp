@@ -547,7 +547,7 @@ STDMETHODIMP EvcSolver::get_CARMAPerformanceRatio(BSTR * value)
 
 STDMETHODIMP EvcSolver::put_CARMAPerformanceRatio(BSTR value)
 {
-	swscanf_s(value, L"%.3f", &CARMAPerformanceRatio);
+	swscanf_s(value, L"%f", &CARMAPerformanceRatio);
 	m_bPersistDirty = true;
 	return S_OK;
 }

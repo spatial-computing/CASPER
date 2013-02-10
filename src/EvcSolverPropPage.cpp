@@ -10,6 +10,7 @@
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
 
 #include "stdafx.h"
+#include <Windowsx.h>
 #include "EvcSolverPropPage.h"
 #include "NameConstants.h"
 
@@ -452,7 +453,8 @@ void EvcSolverPropPage::SetFlockingEnabled()
 	if (flag == BST_CHECKED) flag = 1; else flag = 0;
 	
 	::SendMessage(m_hEditSnapFlock, WM_ENABLE, flag, 0);
-	::SendMessage(m_hEditSimulationFlock, WM_ENABLE, flag, 0);	
+	::SendMessage(m_hEditSimulationFlock, WM_ENABLE, flag, 0);
+	::SendMessage(m_hcmbFlockProfile, WM_ENABLE, flag, 0);
 }
 
 LRESULT EvcSolverPropPage::OnEnChangeEditSat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
