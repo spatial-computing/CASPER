@@ -50,6 +50,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	HRESULT hr = S_OK;
 	long i;
 	int countFlagging = 0;
+	double globalEvcCost = -1.0;
 
 	// Check for null parameter variables (the track cancel variable is typically considered optional)
 	if (!pNAContext || !pMessages) return E_POINTER;
@@ -693,6 +694,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 				// add the initial delay cost
 				path->EvacuationCost += path->RoutedPop * initDelayCostPerPop;
+				globalEvcCost = max(globalEvcCost, path->EvacuationCost);
 
 				// Store the feature values on the feature buffer
 				if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
@@ -868,7 +870,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Perform flocking simulation if requested
 
 	// At this stage we create many evacuee points within a flocking simulation enviroment to validate the calculated results
-	CString colMsgString, ending;
+	CString collisionMsg, simulationIncompleteEndingMsg;
 	std::vector<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
 
@@ -1056,12 +1058,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}		
 
 		// incomplete ending message
-		ending.Empty();
+		simulationIncompleteEndingMsg.Empty();
 
 		// message about simulation time
 		if (movingObjectLeft)
 		{
-			ending = _T("Max simulation time reached therefore not all objects get to a safe area. Probably the predicted evacuation time was too low.");			
+			simulationIncompleteEndingMsg = _T("Max simulation time reached therefore not all objects get to a safe area. Probably the predicted evacuation time was too low.");			
 
 			// generate a new row indicating an incomplete simulation
 			thisTime = baseTime + time_t(0);
@@ -1089,13 +1091,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}	
 		
 		// message about collisions
-		colMsgString.Empty();
+		collisionMsg.Empty();
 		if (collisionTimes && collisionTimes->size() > 0)
 		{
 			for (std::list<double>::iterator ct = collisionTimes->begin(); ct != collisionTimes->end(); ct++)
 			{
-				if (colMsgString.IsEmpty()) colMsgString.AppendFormat(_T("%.3f"), *ct);
-				else colMsgString.AppendFormat(_T(", %.3f"), *ct);
+				if (collisionMsg.IsEmpty()) collisionMsg.AppendFormat(_T("%.3f"), *ct);
+				else collisionMsg.AppendFormat(_T(", %.3f"), *ct);
 			}
 		}
 
@@ -1114,31 +1116,30 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString formatString, msgString, flaggMsg, calcSavedMsg;
+	CString performanceMsg, CARMALoopMsg, globalEvcCostMsg;
 #ifdef _FLOCK
-	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f");
-	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
+	performanceMsg.Format(_T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
+		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #else
-	formatString = _T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f");
-	msgString.Format(formatString, inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
+	performanceMsg.Format(_T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f"),
+		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
-	flaggMsg.Format(_T("The algorithm performed %d graph flagging(s) to improve quality and performance."), countFlagging);
-	// unsigned int t = ecache->TotalCalcSaved();
-	// if (t > 1) calcSavedMsg.Format(_T("A total of %d calculations have been avoided in edge speed-ratio processing."), t);
+	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) to improve quality and performance."), countFlagging);
+	globalEvcCostMsg.Format(_T("Global evacuation cost is %.3f."), globalEvcCost);
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
-	pMessages->AddMessage(CComBSTR(msgString));
-	pMessages->AddMessage(CComBSTR(flaggMsg));
-	// pMessages->AddMessage(CComBSTR(calcSavedMsg));
+	pMessages->AddMessage(CComBSTR(performanceMsg));
+	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
+	pMessages->AddMessage(CComBSTR(globalEvcCostMsg));
 
-	if (!(ending.IsEmpty())) pMessages->AddWarning(CComBSTR(ending));
+	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(CComBSTR(simulationIncompleteEndingMsg));
 
-	if (!(colMsgString.IsEmpty()))
+	if (!(collisionMsg.IsEmpty()))
 	{
 		pMessages->AddWarning(CComBSTR(_T("Some collisions have been reported at the following intervals:")));
-		pMessages->AddWarning(CComBSTR(colMsgString));
+		pMessages->AddWarning(CComBSTR(collisionMsg));
 	}
 
 	// clear and release evacuees and their paths
