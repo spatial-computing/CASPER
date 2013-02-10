@@ -530,7 +530,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			{
 				// this is the statement to decide whether to
 				// resort evacuees every time or only once at the begining.
-				(*eitr)->PredictedCost = min ((*eitr)->PredictedCost, myVertex->g);
+				(*eitr)->PredictedCost = min((*eitr)->PredictedCost, myVertex->g);
 				redundentSortedEvacuees->push_back(*eitr);
 			}
 			EvacueePairs->Erase(myVertex->EID);
