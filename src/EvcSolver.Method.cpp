@@ -21,8 +21,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, maxPerformance_Ratio = 0.0,
-		dirtyVerticesInClosedList = 0.0, dirtyVerticesInPath = 0.0, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
+	float maxPerformanceRatio = 0.0f, dirtyVerticesInPath = 0.0f, dirtyVerticesInClosedList = 0.0f;
+	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap,
+		TimeToBeat = 0.0f, newCost, costLeft = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
@@ -74,7 +75,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (FAILED(hr = FlagMyGraph(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx))) goto END_OF_FUNC;
 		countFlagging++;
 
-		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, maxPerformance_Ratio = 0.0; seit != sortedEvacuees->end(); seit++)
+		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, maxPerformanceRatio = 0.0f; seit != sortedEvacuees->end(); seit++)
 		{
 			currentEvacuee = *seit;	
 
@@ -155,8 +156,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				finalVertex = 0;
 
 				// reset counters for dirty stuff
-				dirtyVerticesInPath = 0.0;
-				dirtyVerticesInClosedList = 0.0;
+				dirtyVerticesInPath = 0.0f;
+				dirtyVerticesInClosedList = 0.0f;
 
 				// Continue traversing the network while the heap has remaining junctions in it
 				// this is the actual dijkstra code with the Fibonacci Heap
@@ -358,7 +359,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					currentEvacuee->paths->push_front(path);
 
 					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'FlagMyGraph'
-					maxPerformance_Ratio = max(maxPerformance_Ratio, dirtyVerticesInClosedList / closedList->Size());
+					maxPerformanceRatio = max(maxPerformanceRatio, dirtyVerticesInClosedList / closedList->Size());
 					#ifdef DEBUG
 					std::wostringstream os_;
 					os_ << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
@@ -390,7 +391,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			currentEvacuee->vertices->clear();
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have FlagMyGraph do something about it
-			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && maxPerformance_Ratio > this->GoldenPerformance_Ratio && countEvacueesInOneBucket >= this->minEvacueeBucketSize) break;
+			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && maxPerformanceRatio > this->CARMAPerformanceRatio) break;
 
 		} // end of for loop over sortedEvacuees
 	}
@@ -527,7 +528,9 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		{
 			for (eitr = pairs->begin(); eitr != pairs->end(); eitr++)
 			{
-				(*eitr)->PredictedCost = myVertex->g;
+				// this is the statement to decide whether to
+				// resort evacuees every time or only once at the begining.
+				(*eitr)->PredictedCost = min ((*eitr)->PredictedCost, myVertex->g);
 				redundentSortedEvacuees->push_back(*eitr);
 			}
 			EvacueePairs->Erase(myVertex->EID);

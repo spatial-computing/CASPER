@@ -438,8 +438,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 0.0f;
-	minEvacueeBucketSize = 0;
-	GoldenPerformance_Ratio = 0.1;
+	//minEvacueeBucketSize = 0;
+	CARMAPerformanceRatio = 0.15f;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -535,19 +535,19 @@ STDMETHODIMP EvcSolver::put_FlockingProfile(FLOCK_PROFILE value)
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::get_EvacueeBucketSize(BSTR * value)
+STDMETHODIMP EvcSolver::get_CARMAPerformanceRatio(BSTR * value)
 {
 	if (value)
 	{
 		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
-		swprintf_s(*value, 100, L"%u", minEvacueeBucketSize);
+		swprintf_s(*value, 100, L"%.3f", CARMAPerformanceRatio);
 	}
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_EvacueeBucketSize(BSTR value)
+STDMETHODIMP EvcSolver::put_CARMAPerformanceRatio(BSTR value)
 {
-	swscanf_s(value, L"%u", &minEvacueeBucketSize);
+	swscanf_s(value, L"%.3f", &CARMAPerformanceRatio);
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -1069,10 +1069,10 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&minEvacueeBucketSize, sizeof(minEvacueeBucketSize), &numBytes))) return hr;
-
+	if (FAILED(hr = pStm->Read(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
+	
+	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
 	m_bPersistDirty = false;
-	GoldenPerformance_Ratio = 0.1;
 
 	return S_OK;
 }
@@ -1110,7 +1110,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&twoWayShareCapacity, sizeof(twoWayShareCapacity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&minEvacueeBucketSize, sizeof(minEvacueeBucketSize), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
 	
 	return S_OK;
 }

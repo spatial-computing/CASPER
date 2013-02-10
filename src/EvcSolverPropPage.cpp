@@ -125,11 +125,11 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hEditInitCost, WM_SETTEXT, NULL, (LPARAM)delay);
 		delete [] delay;
 
-		// set evacuee bucket size
-		BSTR bucket;
-		m_ipEvcSolver->get_EvacueeBucketSize(&bucket);
-		::SendMessage(m_heditBucketSize, WM_SETTEXT, NULL, (LPARAM)bucket);
-		delete [] bucket;
+		// set CARMA ratio
+		BSTR carma;
+		m_ipEvcSolver->get_CARMAPerformanceRatio(&carma);
+		::SendMessage(m_heditCARMA, WM_SETTEXT, NULL, (LPARAM)carma);
+		delete [] carma;
 
 		SetFlockingEnabled();
 		SetDirty(FALSE);
@@ -329,13 +329,13 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		ipSolver->put_InitDelayCostPerPop(delay);
 		delete [] delay;
 		
-		// init delay cost per population
-		BSTR bucket;
-		size = ::SendMessage(m_heditBucketSize, WM_GETTEXTLENGTH, 0, 0);
-		bucket = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
-		::SendMessage(m_heditBucketSize, WM_GETTEXT, size + 1, (LPARAM)bucket);
-		ipSolver->put_EvacueeBucketSize(bucket);
-		delete [] bucket;
+		// CARMA ratio
+		BSTR carma;
+		size = ::SendMessage(m_heditCARMA, WM_GETTEXTLENGTH, 0, 0);
+		carma = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
+		::SendMessage(m_heditCARMA, WM_GETTEXT, size + 1, (LPARAM)carma);
+		ipSolver->put_CARMAPerformanceRatio(carma);
+		delete [] carma;
 
 		// saturation density per capacity
 		BSTR sat;
@@ -419,7 +419,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCheckShareCap = GetDlgItem(IDC_CHECK_SHARECAP);
 	m_hEditInitCost = GetDlgItem(IDC_EDIT_INITDELAY);
 	m_hcmbFlockProfile = GetDlgItem(IDC_COMBO_PROFILE);
-	m_heditBucketSize = GetDlgItem(IDC_EDIT_BucketSize);
+	m_heditCARMA = GetDlgItem(IDC_EDIT_CARMA);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
@@ -576,7 +576,7 @@ LRESULT EvcSolverPropPage::OnCbnSelchangeComboProfile(WORD /*wNotifyCode*/, WORD
 	return 0;
 }
 
-LRESULT EvcSolverPropPage::OnEnChangeEditBucketsize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+LRESULT EvcSolverPropPage::OnEnChangeEditCARMA(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

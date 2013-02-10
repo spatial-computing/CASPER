@@ -24,10 +24,10 @@
 #define IDC_CHECK_EDGESTAT              227
 #define IDC_EDIT_ZoneDensity            228
 #define IDC_ZoneOptions                 229
-#define IDC_LableBucketSize             229
+#define IDC_LableCARMA                  229
 #define IDC_CASPEROptions               230
 #define IDC_EDIT_ZoneDensity2           230
-#define IDC_EDIT_BucketSize             230
+#define IDC_EDIT_CARMA                  230
 #define IDC_CapacityOptions             231
 #define IDC_FlockOptions                232
 #define IDC_CHECK_Flock                 233

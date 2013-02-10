@@ -68,7 +68,7 @@ public:
 	COMMAND_HANDLER(IDC_EDIT_INITDELAY, EN_CHANGE, OnEnChangeEditInitDelay)
 	COMMAND_HANDLER(IDC_CHECK_SHARECAP, BN_CLICKED, OnBnClickedCheckSharecap)
 	COMMAND_HANDLER(IDC_COMBO_PROFILE, CBN_SELCHANGE, OnCbnSelchangeComboProfile)
-	COMMAND_HANDLER(IDC_EDIT_BucketSize, EN_CHANGE, OnEnChangeEditBucketsize)
+	COMMAND_HANDLER(IDC_EDIT_CARMA, EN_CHANGE, OnEnChangeEditCARMA)
 	CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
 	MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)	
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
@@ -130,7 +130,7 @@ private:
   HWND                    m_hCheckShareCap;
   HWND                    m_hEditInitCost;
   HWND					  m_hcmbFlockProfile;
-  HWND					  m_heditBucketSize;
+  HWND					  m_heditCARMA;
 
   void SetFlockingEnabled();
 
@@ -158,6 +158,6 @@ protected:
 	int pppp;
 public:
 	LRESULT OnCbnSelchangeComboProfile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnEnChangeEditBucketsize(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnEnChangeEditCARMA(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);
 };
