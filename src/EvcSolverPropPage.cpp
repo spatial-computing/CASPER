@@ -439,7 +439,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	// release date lable
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
 	wchar_t compileDateBuff[100];
-	swprintf_s(compileDateBuff, 100, L"<a href=\"http://esri.com/arccasper\">Release Date: %s</a>", _T(__DATE__));
+	swprintf_s(compileDateBuff, 100, L"<a href=\"http://esri.com/arccasper\">Release: %s %s</a>", _T(__DATE__), _T(__TIME__));
 	::SendMessage(m_hlblRelease, WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
 
 	return 0;
