@@ -11,13 +11,9 @@
 
 #include "stdafx.h"
 #include "NameConstants.h"
-#include "float.h"  // for FLT_MAX, etc.
-#include <cmath>   // for HUGE_VAL
-#include <ctime>
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 #include "Flocking.h"
-#include <ATLComTime.h>
 
 STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, ITrackCancel* pTrackCancel, VARIANT_BOOL* pIsPartialSolution)
 {
@@ -565,7 +561,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	IPointCollectionPtr pline = 0;
 	EvcPathPtr path;
 	std::list<PathSegmentPtr>::iterator psit;
-	std::list<EvcPathPtr>::iterator pit;
+	std::list<EvcPathPtr>::iterator tpit;
+	std::vector<EvcPathPtr>::iterator pit;
 	double predictedCost = 0.0;
 	bool sourceNotFoundFlag = false;
 	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);
@@ -582,25 +579,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ISpatialReferenceFactoryPtr pSpatRefFact = ISpatialReferenceFactoryPtr(CLSID_SpatialReferenceEnvironment);
 	if (FAILED(hr = pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC))) return hr;
 	ISpatialReferencePtr ipSpatialRef = ipNAContextPC;
+	std::vector<EvcPathPtr> * tempPathList = new std::vector<EvcPathPtr>(Evacuees->size());
+	tempPathList->clear();
 
-	// Get the "Routes" NAClass feature class
-	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
-
-	// Create an insert cursor and feature buffer from the "Routes" feature class to be used to write routes
-	IFeatureCursorPtr ipFeatureCursor;
-	if (FAILED(hr = ipRoutesFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
-
-	IFeatureBufferPtr ipFeatureBuffer;
-	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBuffer))) return hr;
-
-	// Query for the appropriate field index values in the "routes" feature class
-	long evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_ORG), &orgTimeFieldIndex))) return hr;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr;
-
-	for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
+	for(eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
 	{
 		// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
 		if (pTrackCancel)
@@ -621,94 +603,121 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}
 		else
 		{
-			for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
-			{
-				path = *pit;
-				path->OrginalCost = 0.0;
-				path->EvacuationCost = 0.0;
-				pline = IPointCollectionPtr(CLSID_Polyline);
-				pointCount = -1;
-
-				for (psit = path->begin(); psit != path->end(); psit++)
-				{
-					// take a path segment from the stack
-					pathSegment = *psit;
-					pointCount = -1;
-					_ASSERT(pathSegment->EdgePortion > 0.0);
-
-					// retrive street shape for this segment
-					if (FAILED(hr = ipNetworkDataset->get_SourceByID(pathSegment->SourceID, &ipNetworkSource))) return hr;
-					if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
-					if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
-					if (!ipNetworkSourceFC)
-					{
-						if (!sourceNotFoundFlag)
-						{
-							sourceNotFoundFlag = true;
-							pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));							
-						}
-						continue;
-					}
-					if (FAILED(hr = ipNetworkSourceFC->GetFeature(pathSegment->SourceOID, &ipSourceFeature))) return hr;
-					if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
-
-					// Check to see how much of the line geometry we can copy over
-					if (pathSegment->fromPosition != 0.0 || pathSegment->toPosition != 1.0)
-					{
-						// We must use only a subcurve of the line geometry
-						ICurve3Ptr ipCurve(ipGeometry);
-						if (FAILED(hr = ipCurve->GetSubcurve(pathSegment->fromPosition, pathSegment->toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
-						ipGeometry = ipSubCurve;
-					}
-					ipGeometry->get_GeometryType(type);			
-
-					// get all the points from this polyline and store it in the point stack
-					_ASSERT(*type == esriGeometryPolyline);
-
-					if (*type == esriGeometryPolyline)
-					{
-						pathSegment->pline = (IPolylinePtr)ipGeometry;
-						pcollect = pathSegment->pline;
-						if (FAILED(hr = pcollect->get_PointCount(&pointCount))) return hr;
-
-						// if this is not the last path segment then the last point is redundent.
-						pointCount--;						
-						for (i = 0; i < pointCount; i++)
-						{
-							if (FAILED(hr = pcollect->get_Point(i, &p))) return hr;
-							if (FAILED(hr = pline->AddPoint(p))) return hr;
-						}
-						// if (FAILED(hr = pathSegment->pline->Project(ipSpatialRef))) return hr;
-					}			
-					// Final cost calculations
-					path->EvacuationCost += pathSegment->Edge->GetCurrentCost() * pathSegment->EdgePortion;
-					path->OrginalCost    += pathSegment->Edge->OriginalCost * pathSegment->EdgePortion;
-				}
-
-				// Add the last point of the last path segment to the polyline
-				if (pointCount > -1)
-				{
-					pcollect->get_Point(pointCount, &p);
-					pline->AddPoint(p);
-				}
-
-				// add the initial delay cost
-				path->EvacuationCost += path->RoutedPop * initDelayCostPerPop;
-				globalEvcCost = max(globalEvcCost, path->EvacuationCost);
-
-				// Store the feature values on the feature buffer
-				if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
-				if (FAILED(hr = ipFeatureBuffer->put_Value(evNameFieldIndex, currentEvacuee->Name))) return hr;
-				if (FAILED(hr = ipFeatureBuffer->put_Value(evacTimeFieldIndex, CComVariant(path->EvacuationCost)))) return hr;
-				if (FAILED(hr = ipFeatureBuffer->put_Value(orgTimeFieldIndex, CComVariant(path->OrginalCost)))) return hr;
-				if (FAILED(hr = ipFeatureBuffer->put_Value(popFieldIndex, CComVariant(path->RoutedPop)))) return hr;
-
-				// Insert the feature buffer in the insert cursor
-				if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
-
-				predictedCost = max(predictedCost, path->EvacuationCost);
-			}
+			for (tpit = currentEvacuee->paths->begin(); tpit != currentEvacuee->paths->end(); tpit++) tempPathList->push_back(*tpit);			
 		}
+	}
+	std::sort(tempPathList->begin(), tempPathList->end(), EvcPath::LessThan);
+	
+	// Get the "Routes" NAClass feature class
+	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
+
+	// Create an insert cursor and feature buffer from the "Routes" feature class to be used to write routes
+	IFeatureCursorPtr ipFeatureCursor;
+	if (FAILED(hr = ipRoutesFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
+
+	IFeatureBufferPtr ipFeatureBuffer;
+	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBuffer))) return hr;
+
+	// Query for the appropriate field index values in the "routes" feature class
+	long evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex;
+	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_ORG), &orgTimeFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr;
+
+	for (pit = tempPathList->begin(); pit != tempPathList->end(); pit++)
+	{
+		path = *pit;
+		path->OrginalCost = 0.0;
+		path->EvacuationCost = 0.0;
+		pline = IPointCollectionPtr(CLSID_Polyline);
+		pointCount = -1;
+
+		for (psit = path->begin(); psit != path->end(); psit++)
+		{
+			// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
+			if (pTrackCancel)
+			{
+				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
+				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+			}
+
+			// take a path segment from the stack
+			pathSegment = *psit;
+			pointCount = -1;
+			_ASSERT(pathSegment->EdgePortion > 0.0);
+
+			// retrive street shape for this segment
+			if (FAILED(hr = ipNetworkDataset->get_SourceByID(pathSegment->SourceID, &ipNetworkSource))) return hr;
+			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
+			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
+			if (!ipNetworkSourceFC)
+			{
+				if (!sourceNotFoundFlag)
+				{
+					sourceNotFoundFlag = true;
+					pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));							
+				}
+				continue;
+			}
+			if (FAILED(hr = ipNetworkSourceFC->GetFeature(pathSegment->SourceOID, &ipSourceFeature))) return hr;
+			if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
+
+			// Check to see how much of the line geometry we can copy over
+			if (pathSegment->fromPosition != 0.0 || pathSegment->toPosition != 1.0)
+			{
+				// We must use only a subcurve of the line geometry
+				ICurve3Ptr ipCurve(ipGeometry);
+				if (FAILED(hr = ipCurve->GetSubcurve(pathSegment->fromPosition, pathSegment->toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
+				ipGeometry = ipSubCurve;
+			}
+			ipGeometry->get_GeometryType(type);			
+
+			// get all the points from this polyline and store it in the point stack
+			_ASSERT(*type == esriGeometryPolyline);
+
+			if (*type == esriGeometryPolyline)
+			{
+				pathSegment->pline = (IPolylinePtr)ipGeometry;
+				pcollect = pathSegment->pline;
+				if (FAILED(hr = pcollect->get_PointCount(&pointCount))) return hr;
+
+				// if this is not the last path segment then the last point is redundent.
+				pointCount--;						
+				for (i = 0; i < pointCount; i++)
+				{
+					if (FAILED(hr = pcollect->get_Point(i, &p))) return hr;
+					if (FAILED(hr = pline->AddPoint(p))) return hr;
+				}
+				// if (FAILED(hr = pathSegment->pline->Project(ipSpatialRef))) return hr;
+			}			
+			// Final cost calculations
+			path->EvacuationCost += pathSegment->Edge->GetCurrentCost() * pathSegment->EdgePortion;
+			path->OrginalCost    += pathSegment->Edge->OriginalCost     * pathSegment->EdgePortion;
+		}
+
+		// Add the last point of the last path segment to the polyline
+		if (pointCount > -1)
+		{
+			pcollect->get_Point(pointCount, &p);
+			pline->AddPoint(p);
+		}
+
+		// add the initial delay cost
+		path->EvacuationCost += path->RoutedPop * initDelayCostPerPop;
+		globalEvcCost = max(globalEvcCost, path->EvacuationCost);
+
+		// Store the feature values on the feature buffer
+		if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
+		if (FAILED(hr = ipFeatureBuffer->put_Value(evNameFieldIndex, path->myEvc->Name))) return hr;
+		if (FAILED(hr = ipFeatureBuffer->put_Value(evacTimeFieldIndex, CComVariant(path->EvacuationCost)))) return hr;
+		if (FAILED(hr = ipFeatureBuffer->put_Value(orgTimeFieldIndex, CComVariant(path->OrginalCost)))) return hr;
+		if (FAILED(hr = ipFeatureBuffer->put_Value(popFieldIndex, CComVariant(path->RoutedPop)))) return hr;
+
+		// Insert the feature buffer in the insert cursor
+		if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
+
+		predictedCost = max(predictedCost, path->EvacuationCost);
 	}
 
 	delete type;
@@ -905,9 +914,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			currentEvacuee = *eit;
 			if (!currentEvacuee->paths->empty())
 			{
-				for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+				for (tpit = currentEvacuee->paths->begin(); tpit != currentEvacuee->paths->end(); tpit++)			
 				{
-					path = *pit;
+					path = *tpit;
 					for (psit = path->begin(); psit != path->end(); psit++)
 					{
 						pathSegment = *psit;
@@ -963,9 +972,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
 		{
 			currentEvacuee = *eit;
-			for (pit = currentEvacuee->paths->begin(); pit != currentEvacuee->paths->end(); pit++)			
+			for (tpit = currentEvacuee->paths->begin(); tpit != currentEvacuee->paths->end(); tpit++)			
 			{
-				path = *pit;
+				path = *tpit;
 				for (psit = path->begin(); psit != path->end(); psit++)
 				{
 					pathSegment = *psit;

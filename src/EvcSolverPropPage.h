@@ -129,7 +129,7 @@ private:
   HWND                    m_hCheckFlock;
   HWND                    m_hCheckShareCap;
   HWND                    m_hEditInitCost;
-  HWND					  m_hcmbFlockProfile;
+  HWND					  m_hCmbFlockProfile;
   HWND					  m_heditCARMA;
 
   void SetFlockingEnabled();

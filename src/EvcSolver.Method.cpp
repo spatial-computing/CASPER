@@ -1,9 +1,5 @@
 #include "stdafx.h"
-#include <sstream>
 #include "NameConstants.h"
-#include "float.h"  // for FLT_MAX, etc.
-#include <cmath>   // for HUGE_VAL
-#include <algorithm>
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 
@@ -38,6 +34,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0;
+	int pathGenerationCount = -1;
 	countFlagging = -1;
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
@@ -303,7 +300,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					populationLeft  -= population2Route;
 
 					// create a new path for this portion of the population
-					path = new DEBUG_NEW_PLACEMENT EvcPath(population2Route);
+					path = new DEBUG_NEW_PLACEMENT EvcPath(population2Route, ++pathGenerationCount, currentEvacuee);
 
 					// special case for the last edge.
 					// We have to subcurve it based on the safezone point location along the edge

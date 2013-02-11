@@ -41,11 +41,11 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		// set the flocking profile names
 		FLOCK_PROFILE profile;
 		m_ipEvcSolver->get_FlockingProfile(&profile);
-		::SendMessage(m_hcmbFlockProfile, CB_RESETCONTENT, NULL, NULL);
-		::SendMessage(m_hcmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Car")));
-		::SendMessage(m_hcmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Person")));
-		::SendMessage(m_hcmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Bike")));
-		::SendMessage(m_hcmbFlockProfile, CB_SETCURSEL, (WPARAM)profile, 0);
+		::SendMessage(m_hCmbFlockProfile, CB_RESETCONTENT, NULL, NULL);
+		::SendMessage(m_hCmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Car")));
+		::SendMessage(m_hCmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Person")));
+		::SendMessage(m_hCmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Bike")));
+		::SendMessage(m_hCmbFlockProfile, CB_SETCURSEL, (WPARAM)profile, 0);
 
 		// set flags
 		VARIANT_BOOL val;
@@ -294,7 +294,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex > -1) ipSolver->put_SolverMethod((EVC_SOLVER_METHOD)selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboTrafficModel, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_TrafficModel((EVC_TRAFFIC_MODEL)selectedIndex);
-		selectedIndex = ::SendMessage(m_hcmbFlockProfile, CB_GETCURSEL, 0, 0);
+		selectedIndex = ::SendMessage(m_hCmbFlockProfile, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_FlockingProfile((FLOCK_PROFILE)selectedIndex);
 
 		// flags
@@ -419,7 +419,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCheckFlock = GetDlgItem(IDC_CHECK_Flock);
 	m_hCheckShareCap = GetDlgItem(IDC_CHECK_SHARECAP);
 	m_hEditInitCost = GetDlgItem(IDC_EDIT_INITDELAY);
-	m_hcmbFlockProfile = GetDlgItem(IDC_COMBO_PROFILE);
+	m_hCmbFlockProfile = GetDlgItem(IDC_COMBO_PROFILE);
 	m_heditCARMA = GetDlgItem(IDC_EDIT_CARMA);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
@@ -434,7 +434,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	::ShowWindow(m_hlblSimulationFlock, cmdShow);
 	::ShowWindow(m_hlblSnapFlock, cmdShow);
 	::ShowWindow(m_hlblFlockProfile, cmdShow);
-	::ShowWindow(m_hcmbFlockProfile, cmdShow);
+	::ShowWindow(m_hCmbFlockProfile, cmdShow);
 
 	// release date lable
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
@@ -450,11 +450,17 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 void EvcSolverPropPage::SetFlockingEnabled()
 {	
 	LRESULT flag = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
-	if (flag == BST_CHECKED) flag = 1; else flag = 0;
+	BOOL bFlag;
+	if (flag == BST_CHECKED) bFlag = TRUE; else bFlag = FALSE;
 	
-	::SendMessage(m_hEditSnapFlock, WM_ENABLE, flag, 0);
-	::SendMessage(m_hEditSimulationFlock, WM_ENABLE, flag, 0);
-	::SendMessage(m_hcmbFlockProfile, WM_ENABLE, flag, 0);
+	CWindow cwEditSnapFlock, cwEditSimulationFlock, cwCmbFlockProfile;
+	cwEditSnapFlock.Attach(m_hEditSnapFlock);
+	cwEditSimulationFlock.Attach(m_hEditSimulationFlock);
+	cwCmbFlockProfile.Attach(m_hCmbFlockProfile);
+
+	cwEditSnapFlock.EnableWindow(bFlag);
+	cwEditSimulationFlock.EnableWindow(bFlag);
+	cwCmbFlockProfile.EnableWindow(bFlag);
 }
 
 LRESULT EvcSolverPropPage::OnEnChangeEditSat(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)

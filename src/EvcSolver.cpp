@@ -10,8 +10,6 @@
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
 
 #include "stdafx.h"
-#include <float.h>  // for FLT_MAX, etc.
-#include <cmath>   // for HUGE_VAL
 #include "NameConstants.h"
 #include "EvcSolver.h"
 
@@ -439,7 +437,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 0.0f;
 	//minEvacueeBucketSize = 0;
-	CARMAPerformanceRatio = 0.15f;
+	CARMAPerformanceRatio = 0.2f;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 

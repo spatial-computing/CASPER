@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "Evacuee.h"
 #include "NAGraph.h"
-#include <algorithm>
 
 void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
 {

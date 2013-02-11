@@ -43,6 +43,7 @@ public:
 };
 
 typedef PathSegment * PathSegmentPtr;
+class Evacuee;
 
 class EvcPath : public std::list<PathSegmentPtr>
 {
@@ -50,18 +51,27 @@ public:
 	double RoutedPop;
 	double EvacuationCost;
 	double OrginalCost;
+	int    Order;
+	Evacuee * myEvc;
 
-	EvcPath(double routedPop) : std::list<PathSegmentPtr>()
+	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
 	{
 		RoutedPop = routedPop; 
 		EvacuationCost = -1.0;
 		OrginalCost = -1.0;
+		Order = order;
+		myEvc = evc;
 	}
 
 	~EvcPath(void)
 	{
 		for(iterator it = begin(); it != end(); it++) delete (*it);
 		clear();
+	}
+
+	static bool LessThan(EvcPath * p1, EvcPath * p2)
+	{
+		return p1->Order < p2->Order;
 	}
 };
 

@@ -91,4 +91,11 @@ using namespace ATL;
 
 #include "_CustomSolver_i.c"
 
+// other needed libraries
+#include "float.h"  // for FLT_MAX, etc.
+#include <cmath>   // for HUGE_VAL
+#include <algorithm>
+#include <ctime>
+#include <sstream>
+
 #pragma warning(pop)
