@@ -531,6 +531,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				redundentSortedEvacuees->push_back(*eitr);
 			}
 			EvacueePairs->Erase(myVertex->EID);
+
 			// Check to see if the user wishes to continue or cancel the solve
 			if (pTrackCancel)
 			{
