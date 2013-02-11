@@ -287,8 +287,8 @@ public:
 
 private:
 
-	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr, int &, VARIANT_BOOL*);
-	HRESULT FlagMyGraph(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr);
+	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*);
+	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -315,6 +315,7 @@ private:
 	FLOCK_PROFILE			flockingProfile;
 	//unsigned int			minEvacueeBucketSize;
 	float                   CARMAPerformanceRatio;
+	int						countCARMALoops;
 
 	VARIANT_BOOL twoWayShareCapacity;	
 	VARIANT_BOOL separable;

@@ -45,7 +45,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	HRESULT hr = S_OK;
 	long i;
-	int countFlagging = 0;
 	double globalEvcCost = -1.0;
 
 	// Check for null parameter variables (the track cancel variable is typically considered optional)
@@ -477,7 +476,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	try
 	{
 		hr = S_OK;
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, countFlagging, pIsPartialSolution);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, pIsPartialSolution);
 	}
 	catch (std::exception & ex)
 	{
@@ -1135,7 +1134,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
-	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) to improve quality and performance."), countFlagging);
+	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) to improve quality and performance."), countCARMALoops);
 	globalEvcCostMsg.Format(_T("Global evacuation cost is %.3f."), globalEvcCost);
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));

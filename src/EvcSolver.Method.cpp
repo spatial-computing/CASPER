@@ -5,7 +5,7 @@
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
 							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
-							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, int & countFlagging, VARIANT_BOOL* pIsPartialSolution)
+							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, VARIANT_BOOL* pIsPartialSolution)
 {	
 	// creating the heap for the dijkstra search
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanHur);
@@ -35,7 +35,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0;
 	int pathGenerationCount = -1;
-	countFlagging = -1;
+	countCARMALoops = 0;
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
@@ -69,8 +69,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	{
 		// indexing all the population by their srrounding vertices this will be used to sort them by network distance to safe zone.
 		// only the last 'k'th evacuees will be bucketed to run each round.
-		if (FAILED(hr = FlagMyGraph(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx))) goto END_OF_FUNC;
-		countFlagging++;
+		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx))) goto END_OF_FUNC;		
 
 		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, maxPerformanceRatio = 0.0f; seit != sortedEvacuees->end(); seit++)
 		{
@@ -87,7 +86,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				}
 			}
 
-			// if the flagger decided this evacuee is not reachable, then we're not even going to try solving it.
+			// if the CARMALoop decided this evacuee is not reachable, then we're not even going to try solving it.
 			if (!(currentEvacuee->Reachable))
 			{				
 				// cleanup vertices of this evacuee
@@ -355,7 +354,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 					currentEvacuee->paths->push_front(path);
 
-					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'FlagMyGraph'
+					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another set of 'CARMALoop'
 					maxPerformanceRatio = max(maxPerformanceRatio, dirtyVerticesInClosedList / closedList->Size());
 					#ifdef DEBUG
 					std::wostringstream os_;
@@ -366,7 +365,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					#ifdef TRACE
 					std::ofstream f;
 					f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-					f << "Flagging stats: " << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
+					f << "CARMALoop stats: " << countEvacueesInOneBucket << "," << dirtyVerticesInClosedList << "," << closedList->Size() << "," << dirtyVerticesInClosedList / closedList->Size() << "," 
 								<< dirtyVerticesInPath << "," << path->size() << "," << dirtyVerticesInPath / path->size() << std::endl;
 					f.close();
 					#endif
@@ -387,7 +386,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);	
 			currentEvacuee->vertices->clear();
 
-			// determine if the previous round of DJs where fast enough and if not break out of the loop and have FlagMyGraph do something about it
+			// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
 			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && maxPerformanceRatio > this->CARMAPerformanceRatio) break;
 
 		} // end of for loop over sortedEvacuees
@@ -402,7 +401,7 @@ END_OF_FUNC:
 	return hr;
 }
 
-HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
+HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees,
 								NAVertexCache * vcache, NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx)
 {
 	HRESULT hr = S_OK;
@@ -498,6 +497,9 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		}
 	}
 
+	// if this list is not empty, it means we are going to have another CARMA loop here
+	if (!EvacueePairs->empty()) countCARMALoops++;
+
 	// Continue traversing the network while the heap has remaining junctions in it
 	// this is the actual dijkstra code with backward network traversal. it will only update h value.
 	while (!(heap->IsEmpty() || EvacueePairs->empty()))
@@ -515,7 +517,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 		// part to check if this branch of DJ tree needs expanding to update hueristics
 		// This update should know if this is the first time this vertex is coming out
-		// in this 'FlagMyGraph' round. Only then we can be sure whether to update to min
+		// in this 'CARMALoop' round. Only then we can be sure whether to update to min
 		// or update absolutely to this new value.
 		vcache->UpdateHeuristic(myEdge->EID, myVertex);
 
@@ -525,9 +527,7 @@ HRESULT EvcSolver::FlagMyGraph(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		{
 			for (eitr = pairs->begin(); eitr != pairs->end(); eitr++)
 			{
-				// this is the statement to decide whether to
-				// resort evacuees every time or only once at the begining.
-				(*eitr)->PredictedCost = min((*eitr)->PredictedCost, myVertex->g);
+				if (countCARMALoops == 1) (*eitr)->PredictedCost = myVertex->g;
 				redundentSortedEvacuees->push_back(*eitr);
 			}
 			EvacueePairs->Erase(myVertex->EID);
