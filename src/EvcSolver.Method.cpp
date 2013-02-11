@@ -126,7 +126,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 					if (myEdge)
 					{
-						tempEvc->g *= myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
+						tempEvc->g = evc->g * myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
 						heap->Insert(myEdge);
 					}
 					else
@@ -141,7 +141,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 							myEdge = ecache->New(ipCurrentEdge);
 							tempEvc->SetBehindEdge(myEdge);
-							tempEvc->g *= myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
+							tempEvc->g = evc->g * myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
 							heap->Insert(myEdge);
 						}
 					}
@@ -415,7 +415,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanNonHur);
 	NAEdgeClosed * closedList = new DEBUG_NEW_PLACEMENT NAEdgeClosed();
 	NAEdge * currentEdge;
-	NAVertexPtr neighbor, evc, tempEvc;
+	NAVertexPtr neighbor, zone, tempZone;
 	std::vector<EvacueePtr>::iterator eit;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr cit;
@@ -465,24 +465,24 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	for(iterator = safeZoneList->begin(); iterator != safeZoneList->end(); iterator++)
 	{
-		evc = iterator->second;
-		tempEvc = vcache->New(evc->Junction);
-		tempEvc->SetBehindEdge(evc->GetBehindEdge());
-		tempEvc->g = evc->g;
-		tempEvc->Junction = evc->Junction;
-		tempEvc->Previous = 0;
-		myEdge = tempEvc->GetBehindEdge();
-		vcache->Get(tempEvc->EID)->ResetHValues();
+		zone = iterator->second;
+		tempZone = vcache->New(zone->Junction);
+		tempZone->SetBehindEdge(zone->GetBehindEdge());
+		tempZone->g = zone->g;
+		tempZone->Junction = zone->Junction;
+		tempZone->Previous = 0;
+		myEdge = tempZone->GetBehindEdge();
+		vcache->Get(tempZone->EID)->ResetHValues();
 
 		if (myEdge) 
 		{
-			tempEvc->g *= myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
+			tempZone->g = zone->g * myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
 			heap->Insert(myEdge);
 		}
 		else
 		{
 			// if the start point was a single junction, then all the adjacent edges can be start edges
-			if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(tempEvc->Junction, 0, 0, ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC; 
+			if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(tempZone->Junction, 0, 0, ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC; 
 			if (FAILED(hr = ipNetworkBackwardStarAdjacencies->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
 			for (i = 0; i < adjacentEdgeCount; i++)
 			{
@@ -490,8 +490,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				ipCurrentEdge = ipElement;
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				myEdge = ecache->New(ipCurrentEdge);
-				tempEvc->SetBehindEdge(myEdge);
-				tempEvc->g *= myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
+				tempZone->SetBehindEdge(myEdge);
+				tempZone->g = zone->g * myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
 				heap->Insert(myEdge);
 			}
 		}
