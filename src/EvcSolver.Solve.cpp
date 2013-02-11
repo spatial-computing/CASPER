@@ -529,24 +529,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Setup a message on our step progressor indicating that we are outputting feature information
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing output features")); 
 
-	// If we reach this point, we have some features to output to the Routes NAClass
-	// Reset the progressor based on the number of features that we must output
-	if (ipStepProgressor)
-	{
-		// Step progressor range = 0 through numberOfOutputSteps
-		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
-		if (exportEdgeStat)
-		{
-			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ecache->Size() + Evacuees->size())))) return hr;
-		}
-		else
-		{
-			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(Evacuees->size())))) return hr;
-		}
-		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
-		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
-	}
-
 	// looping through processed evacuees and generate routes in output featureclass
 	PathSegment * pathSegment;
 	IFeaturePtr ipSourceFeature;
@@ -583,18 +565,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	for(eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
 	{
-		// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
-		if (pTrackCancel)
-		{
-			if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
-			if (keepGoing == VARIANT_FALSE) return E_ABORT;			
-		}
-
 		// get all points from the stack and make one polyline from them. this will be the path.
 		currentEvacuee = *eit;
-
-		// Step the progressor before continuing to the next Evacuee point
-		if (ipStepProgressor) ipStepProgressor->Step();	
 
 		if (currentEvacuee->paths->empty())
 		{
@@ -605,6 +577,25 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			for (tpit = currentEvacuee->paths->begin(); tpit != currentEvacuee->paths->end(); tpit++) tempPathList->push_back(*tpit);			
 		}
 	}
+
+	// If we reach this point, we have some features to output to the Routes NAClass
+	// Reset the progressor based on the number of features that we must output
+	if (ipStepProgressor)
+	{
+		// Step progressor range = 0 through numberOfOutputSteps
+		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
+		if (exportEdgeStat)
+		{
+			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ecache->Size() + tempPathList->size())))) return hr;
+		}
+		else
+		{
+			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(tempPathList->size())))) return hr;
+		}
+		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
+		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
+	}
+
 	std::sort(tempPathList->begin(), tempPathList->end(), EvcPath::LessThan);
 	
 	// Get the "Routes" NAClass feature class
@@ -717,6 +708,16 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 
 		predictedCost = max(predictedCost, path->EvacuationCost);
+
+		// Step the progressor before continuing to the next Evacuee point
+		if (ipStepProgressor) ipStepProgressor->Step();
+		
+		// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
+		if (pTrackCancel)
+		{
+			if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
+			if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+		}
 	}
 
 	delete type;

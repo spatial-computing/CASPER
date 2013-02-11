@@ -216,7 +216,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					// termination condition is when we reach the TimeToBeat radius.
 					// this could either be the maximum allowed or it could mean that
 					// the already discovered safe zone is the closest.
-					if (myVertex->g > TimeToBeat) break;
+					if (myVertex->g > TimeToBeat) continue;
 
 					// Query adjacencies from the current junction.
 					if (FAILED(hr = myEdge->NetEdge->get_TurnParticipationType(&turnType))) goto END_OF_FUNC;
@@ -502,7 +502,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	// Continue traversing the network while the heap has remaining junctions in it
 	// this is the actual dijkstra code with backward network traversal. it will only update h value.
-	while (!(heap->IsEmpty() || EvacueePairs->empty()))
+	while (!heap->IsEmpty())
 	{
 		// Remove the next junction EID from the top of the stack
 		myEdge = heap->DeleteMin();
@@ -522,12 +522,14 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		vcache->UpdateHeuristic(myEdge->EID, myVertex);
 
 		// termination condition and evacuee discovery
+		if (EvacueePairs->empty()) continue;
+
 		pairs = EvacueePairs->Find(myVertex->EID);
 		if (pairs)
 		{
 			for (eitr = pairs->begin(); eitr != pairs->end(); eitr++)
 			{
-				if (countCARMALoops == 1) (*eitr)->PredictedCost = myVertex->g;
+				(*eitr)->PredictedCost = min((*eitr)->PredictedCost, myVertex->g);
 				redundentSortedEvacuees->push_back(*eitr);
 			}
 			EvacueePairs->Erase(myVertex->EID);
