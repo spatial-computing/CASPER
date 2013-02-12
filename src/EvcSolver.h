@@ -297,6 +297,7 @@ private:
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
+	void    UpdatePeakMemoryUsage();
 	
 	esriNAOutputLineType	m_outputLineType;
 	bool					m_bPersistDirty;
@@ -316,6 +317,8 @@ private:
 	//unsigned int			minEvacueeBucketSize;
 	float                   CARMAPerformanceRatio;
 	int						countCARMALoops;
+	unsigned long			peakMemoryUsage;	
+	HANDLE					hProcessPeakMemoryUsage;
 
 	VARIANT_BOOL twoWayShareCapacity;	
 	VARIANT_BOOL separable;

@@ -23,6 +23,9 @@
 #define DEBUG_NEW_PLACEMENT
 #endif
 
+// ref: http://msdn.microsoft.com/en-us/library/windows/desktop/ms683219%28v=vs.85%29.aspx
+#define PSAPI_VERSION 1
+
 // Modify the following defines if you have to target a platform prior to the ones specified below.
 // Refer to MSDN for the latest info on corresponding values for different platforms.
 #ifndef WINVER				// Allow use of features specific to Windows XP or later.
@@ -97,5 +100,7 @@ using namespace ATL;
 #include <algorithm>
 #include <ctime>
 #include <sstream>
+#include <windows.h>
+#include <psapi.h>
 
 #pragma warning(pop)

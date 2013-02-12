@@ -378,6 +378,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				}
 
 				// cleanup search heap and closedlist
+				UpdatePeakMemoryUsage();
 				heap->Clear();
 				closedList->Clear();
 			} // end of while loop for multiple routes single evacuee
@@ -392,6 +393,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		} // end of for loop over sortedEvacuees
 	}
 	while (!sortedEvacuees->empty());
+
+	UpdatePeakMemoryUsage();
 
 END_OF_FUNC:
 
@@ -626,6 +629,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			maxPredictionCost = (*i)->PredictedCost;
 			break;
 		}
+
+	UpdatePeakMemoryUsage();
+
 	ecache->CleanAllEdgesAndRelease(maxPredictionCost * 2.0);
 
 END_OF_FUNC:
@@ -637,4 +643,11 @@ END_OF_FUNC:
 	delete EvacueePairs;
 
 	return hr;
+}
+
+void EvcSolver::UpdatePeakMemoryUsage()
+{
+    PROCESS_MEMORY_COUNTERS pmc;
+	if(!hProcessPeakMemoryUsage) hProcessPeakMemoryUsage = GetCurrentProcess();
+	if (GetProcessMemoryInfo(hProcessPeakMemoryUsage, &pmc, sizeof(pmc))) peakMemoryUsage = max(peakMemoryUsage, pmc.PagefileUsage);
 }

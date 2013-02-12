@@ -211,7 +211,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Psapi.lib;opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -263,7 +263,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Psapi.lib;opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -318,7 +318,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Psapi.lib;opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -376,7 +376,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Psapi.lib;opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -433,7 +433,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Psapi.lib;opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -491,7 +491,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Psapi.lib;opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -545,7 +545,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Psapi.lib;opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -597,7 +597,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
     <Link>
       <RegisterOutput>false</RegisterOutput>
       <PerUserRedirection>true</PerUserRedirection>
-      <AdditionalDependencies>opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Psapi.lib;opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
       <GenerateDebugInformation>true</GenerateDebugInformation>

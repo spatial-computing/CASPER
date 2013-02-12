@@ -47,6 +47,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	long i;
 	double globalEvcCost = -1.0;
 
+	// init memory usage function and set the base
+	peakMemoryUsage = 0l;
+	hProcessPeakMemoryUsage = NULL;
+	UpdatePeakMemoryUsage();
+	long baseMemoryUsage = peakMemoryUsage;
+
 	// Check for null parameter variables (the track cancel variable is typically considered optional)
 	if (!pNAContext || !pMessages) return E_POINTER;
 
@@ -476,6 +482,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	try
 	{
 		hr = S_OK;
+		UpdatePeakMemoryUsage();
 		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, pIsPartialSolution);
 	}
 	catch (std::exception & ex)
@@ -1125,7 +1132,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString performanceMsg, CARMALoopMsg, globalEvcCostMsg;
+	CString performanceMsg, CARMALoopMsg, globalEvcCostMsg, peakMemUsageMsg;
 #ifdef _FLOCK
 	performanceMsg.Format(_T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
@@ -1137,11 +1144,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 #endif
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) to improve quality and performance."), countCARMALoops);
 	globalEvcCostMsg.Format(_T("Global evacuation cost is %.3f."), globalEvcCost);
+	peakMemUsageMsg.Format(_T("Peak memory usage is %d MB."), max(0l, peakMemoryUsage - baseMemoryUsage) / 1048576l);
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(performanceMsg));
 	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
 	pMessages->AddMessage(CComBSTR(globalEvcCostMsg));
+	pMessages->AddMessage(CComBSTR(peakMemUsageMsg));
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(CComBSTR(simulationIncompleteEndingMsg));
 
