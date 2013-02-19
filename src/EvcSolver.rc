@@ -8,6 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "winres.h"
+#include "CommCtrl.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -133,7 +134,7 @@ BEGIN
     COMBOBOX        IDC_COMBO_PROFILE,322,113,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,123,95,8
     EDITTEXT        IDC_EDIT_CARMA,127,120,63,14,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",WS_TABSTOP,7,194,114,13
+    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink", WS_TABSTOP,7,194,114,13,WS_EX_TRANSPARENT
 END
 
 

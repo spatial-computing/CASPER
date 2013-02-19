@@ -125,6 +125,7 @@ public:
 	void GenerateZeroHurMsg(CString & msg) const
 	{
 		msg.Empty();
+		msg.AppendFormat(_T("These are vertex IDs in each round that were missing huristic value: "));
 		std::list<long> * l;
 		NAVertexLoopCountListItr i;
 		std::list<long>::iterator j;
