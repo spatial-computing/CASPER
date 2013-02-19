@@ -70,6 +70,7 @@ public:
 
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
+	inline bool IsHEmpty() const { return h->empty(); }
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	
 	NAVertex(void);
@@ -85,6 +86,11 @@ typedef stdext::hash_map<long, NAVertexPtr>::iterator NAVertexTableItr;
 typedef std::pair<long, NAVertexPtr> _NAVertexTablePair;
 #define NAVertexTablePair(a) _NAVertexTablePair(a->EID, a)
 
+typedef stdext::hash_map<int, std::list<long> *> NAVertexLoopCountList;
+typedef NAVertexLoopCountList::_Pairib NAVertexLoopCountListReturn;
+typedef NAVertexLoopCountList::iterator NAVertexLoopCountListItr;
+typedef std::pair<int, std::list<long> *> NAVertexLoopCountListPair;
+
 // This collection object has two jobs:
 // it makes sure that there exist only one copy of a vertex in it that is connected to each INetworkJunction.
 // this will be helpful to avoid duplicate copies pointing to the same junction structure. So data attached
@@ -97,12 +103,14 @@ class NAVertexCache
 private:
 	NAVertexTable * cache;
 	std::vector<NAVertex *> * sideCache;
+	NAVertexLoopCountList * noHVertices;
 
 public:
 	NAVertexCache(void)
 	{
 		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAVertexPtr>();
 		sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
+		noHVertices = new NAVertexLoopCountList();
 	}
 
 	~NAVertexCache(void) 
@@ -110,9 +118,25 @@ public:
 		Clear();
 		delete cache;
 		delete sideCache;
+		for(NAVertexLoopCountListItr i = noHVertices->begin(); i != noHVertices->end(); i++) delete i->second;
+		delete noHVertices;
+	}
+
+	void GenerateZeroHurMsg(CString & msg) const
+	{
+		msg.Empty();
+		std::list<long> * l;
+		NAVertexLoopCountListItr i;
+		std::list<long>::iterator j;
+		for(i = noHVertices->begin(); i != noHVertices->end(); i++)
+		{
+			l = i->second;
+			msg.AppendFormat(_T("R%d="), i->first);
+			for (j = l->begin(); j != l->end(); j++) msg.AppendFormat(_T("%d, "), *j);
+		}
 	}
 	
-	NAVertexPtr New(INetworkJunctionPtr junction);
+	NAVertexPtr New(INetworkJunctionPtr junction, int loopCount);
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);
 	void Clear();
@@ -228,7 +252,7 @@ public:
 	static bool LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh(); }
 
 	float GetReservedPop() const { return reservations->ReservedPop; }
-	inline bool IsDirty() const { return reservations->DirtyFlag; }
+	inline bool IsDirty()  const { return reservations->DirtyFlag;   }
 	// inline unsigned short GetCalcSaved() const { return calcSaved; }
 };
 

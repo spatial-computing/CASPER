@@ -33,7 +33,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
-	unsigned int countEvacueesInOneBucket = 0;
+	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0;
 	int pathGenerationCount = -1;
 	countCARMALoops = 0;
 	
@@ -100,6 +100,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			// Step the progressor before continuing to the next Evacuee point
 			if (ipStepProgressor) ipStepProgressor->Step();	
 			countEvacueesInOneBucket++;
+			countCASPERLoops++;
 			populationLeft = currentEvacuee->Population;
 			
 			while (populationLeft > 0.0)
@@ -117,7 +118,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++)
 				{
 					evc = *vit;
-					tempEvc = vcache->New(evc->Junction);
+					tempEvc = vcache->New(evc->Junction, countCASPERLoops);
 					tempEvc->SetBehindEdge(evc->GetBehindEdge());
 					tempEvc->g = evc->g;
 					tempEvc->Junction = evc->Junction;
@@ -266,7 +267,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 						else // unvisited edge. create new and insert in heap
 						{						
-							neighbor = vcache->New(ipCurrentJunction);
+							neighbor = vcache->New(ipCurrentJunction, countCASPERLoops);
 							neighbor->SetBehindEdge(currentEdge);
 							neighbor->g = newCost;
 							neighbor->Previous = myVertex;
@@ -469,7 +470,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	for(iterator = safeZoneList->begin(); iterator != safeZoneList->end(); iterator++)
 	{
 		zone = iterator->second;
-		tempZone = vcache->New(zone->Junction);
+		tempZone = vcache->New(zone->Junction, 0);
 		tempZone->SetBehindEdge(zone->GetBehindEdge());
 		tempZone->g = zone->g;
 		tempZone->Junction = zone->Junction;
@@ -588,7 +589,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			}
 			else // unvisited vertex. create new and insert in heap
 			{
-				neighbor = vcache->New(ipCurrentJunction);
+				neighbor = vcache->New(ipCurrentJunction, 0);
 				neighbor->SetBehindEdge(currentEdge);
 				neighbor->g = newCost;
 				neighbor->Previous = myVertex;

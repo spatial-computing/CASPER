@@ -1132,7 +1132,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg;
+	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg;
 #ifdef _FLOCK
 	performanceMsg.Format(_T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
@@ -1157,6 +1157,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		pMessages->AddWarning(CComBSTR(_T("Some collisions have been reported at the following intervals:")));
 		pMessages->AddWarning(CComBSTR(collisionMsg));
 	}
+
+	// message about zero heuristics observed	
+	vcache->GenerateZeroHurMsg(ZeroHurMsg);
+	if (!ZeroHurMsg.IsEmpty()) pMessages->AddWarning(CComBSTR(ZeroHurMsg));
 
 	// clear and release evacuees and their paths
 	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
