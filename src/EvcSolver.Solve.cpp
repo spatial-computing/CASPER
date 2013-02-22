@@ -1158,10 +1158,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		pMessages->AddWarning(CComBSTR(collisionMsg));
 	}
 
+	/*
 	// message about zero heuristics observed
 	vcache->GenerateZeroHurMsg(ZeroHurMsg);
 	if (!ZeroHurMsg.IsEmpty()) pMessages->AddWarning(CComBSTR(ZeroHurMsg));
-	
+	*/
+
 	// clear and release evacuees and their paths
 	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
 	Evacuees->clear();

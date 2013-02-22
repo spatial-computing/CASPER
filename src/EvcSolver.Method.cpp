@@ -141,6 +141,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							ipCurrentEdge = ipElement;
 							if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 							myEdge = ecache->New(ipCurrentEdge);
+							tempEvc = vcache->New(evc->Junction, 0);
+							tempEvc->Previous = 0;
 							tempEvc->SetBehindEdge(myEdge);
 							tempEvc->g = evc->g * myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
 							heap->Insert(myEdge);
@@ -205,7 +207,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 						if (!restricted)
 						{
-							if (TimeToBeat >  costLeft + myVertex->g)
+							if (TimeToBeat > costLeft + myVertex->g)
 							{
 								BetterSafeZone = iterator->second;
 								TimeToBeat = costLeft + myVertex->g;
@@ -297,7 +299,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (population2Route <= 0.0) population2Route = populationLeft;	
 						population2Route = min(population2Route, populationLeft);			
 					}
-					populationLeft  -= population2Route;
+					populationLeft -= population2Route;
 
 					// create a new path for this portion of the population
 					path = new DEBUG_NEW_PLACEMENT EvcPath(population2Route, ++pathGenerationCount, currentEvacuee);
@@ -456,7 +458,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	//search for min population on graph evacuees left to be routed
 	// The next if has to be in tune with what population will be routed next.
 	// the h values should always be an understimation
-	if (this->solverMethod != EVC_SOLVER_METHOD_CCRP)
+	if (this->solverMethod != EVC_SOLVER_METHOD_CCRP && !separable)
 	{
 		minPop2Route = FLT_MAX;
 		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
@@ -494,6 +496,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				ipCurrentEdge = ipElement;
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				myEdge = ecache->New(ipCurrentEdge);
+				tempZone = vcache->New(zone->Junction, 0);
+				tempZone->Previous = 0;
 				tempZone->SetBehindEdge(myEdge);
 				tempZone->g = zone->g * myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
 				heap->Insert(myEdge);
