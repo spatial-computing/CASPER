@@ -8,7 +8,6 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "winres.h"
-#include "CommCtrl.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -103,9 +102,9 @@ FONT 8, "Arial", 0, 0, 0x1
 BEGIN
     GROUPBOX        "General Options",IDC_SearchGroup,7,12,190,177
     LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,217,62,119,8
-    EDITTEXT        IDC_EDIT_SAT,339,58,46,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_SAT,339,58,46,14,ES_AUTOHSCROLL
     LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,44,108,8
-    EDITTEXT        IDC_EDIT_Critical,339,40,46,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_Critical,339,40,46,14,ES_AUTOHSCROLL
     LTEXT           "Capacity Network Attribute:",IDC_STATIC_Capacity,20,28,104,8
     COMBOBOX        IDC_COMBO_CAPACITY,127,26,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,65,102,8
@@ -118,7 +117,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,160,115,13
     GROUPBOX        "Traffic Modeling",IDC_CapacityOptions,202,12,190,68
     LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,20,106,95,8
-    EDITTEXT        IDC_EDIT_ZoneDensity,127,103,63,14,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_ZoneDensity,127,103,63,14,ES_AUTOHSCROLL
     GROUPBOX        "Flocking Model Options",IDC_FlockOptions,201,87,191,82
     CONTROL         "Flocking enabled?",IDC_CHECK_Flock,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,217,101,74,14
     EDITTEXT        IDC_EDIT_FlockSnapInterval,339,130,46,14,ES_AUTOHSCROLL
@@ -133,8 +132,8 @@ BEGIN
     LTEXT           "Flocking Profile:",IDC_STATIC_FlockProfile,217,116,61,8
     COMBOBOX        IDC_COMBO_PROFILE,322,113,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,123,95,8
-    EDITTEXT        IDC_EDIT_CARMA,127,120,63,14,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink", WS_TABSTOP,7,194,114,13,WS_EX_TRANSPARENT
+    EDITTEXT        IDC_EDIT_CARMA,127,120,63,14,ES_AUTOHSCROLL
+    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",WS_TABSTOP,7,194,114,13
 END
 
 
