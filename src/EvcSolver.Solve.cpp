@@ -1142,7 +1142,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
-	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) to improve quality and performance."), countCARMALoops);
+	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s)."), countCARMALoops);
 	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0l, peakMemoryUsage - baseMemoryUsage) / 1048576l);
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
