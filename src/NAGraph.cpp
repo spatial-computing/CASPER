@@ -306,21 +306,21 @@ inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 }
 
 // return true if update was unnesecery
-bool NAVertex::UpdateHeuristic(long edgeid, NAVertex * n)
+bool NAVertex::UpdateHeuristic(long edgeid, double hur)
 {
 	bool unnesecery = false;
 	for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++)
 	{
 		if (i->EdgeID == edgeid)
 		{
-			_ASSERT(i->Value <= n->g);
-			unnesecery = i->Value == n->g;
-			i->Value = n->g;
+			_ASSERT(i->Value <= hur);
+			unnesecery = i->Value == hur;
+			i->Value = hur;
 			if (!unnesecery) std::sort(h->begin(), h->end(), HValue::LessThan);
 			return unnesecery;
 		}
 	}
-	h->push_back(HValue(edgeid, n->g));
+	h->push_back(HValue(edgeid, hur));
 	std::sort(h->begin(), h->end(), HValue::LessThan);
 	return unnesecery;	
 }
@@ -329,7 +329,19 @@ bool NAVertex::UpdateHeuristic(long edgeid, NAVertex * n)
 bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n)
 {
 	NAVertexPtr a = Get(n->EID);
-	return a->UpdateHeuristic(edgeid, n);
+	return a->UpdateHeuristic(edgeid, n->g);
+}
+
+void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur)
+{
+	if (heuristicForOutsideVertices < hur)
+	{
+		heuristicForOutsideVertices = hur;
+		for(NAVertexTableItr it = cache->begin(); it != cache->end(); it++)
+		{
+			it->second->UpdateHeuristic(-1, hur);
+		}
+	}
 }
 
 NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, int loopCount)
@@ -342,6 +354,7 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, int loopCount)
 	if (it == cache->end())
 	{
 		n = new DEBUG_NEW_PLACEMENT NAVertex(junction, 0);
+		n->UpdateHeuristic(-1, heuristicForOutsideVertices);
 		cache->insert(NAVertexTablePair(n));
 	}
 	else

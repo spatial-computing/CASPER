@@ -106,7 +106,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			while (populationLeft > 0.0)
 			{
 				// It's now safe to collect-n-clean on the graph (ecache & vcache).
-				// clean up used up vertices from GC
+				// clean used-up vertices from GC
 				vcache->CollectAndRelease();
 
 				// the next 'if' is a distinctive feature by CASPER that CCRP does not have
@@ -434,7 +434,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, minPop2Route = 1.0, maxPredictionCost = FLT_MAX, newCost;
+	double fromPosition, toPosition, minPop2Route = 1.0, maxPredictionCost = FLT_MAX, newCost, lastCost = 0.0;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -523,6 +523,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			goto END_OF_FUNC;
 		}
 
+		// this value is being recorded and will be used as the default
+		// heuristic value for any future vertex
+		lastCost = myVertex->g;
+
 		// part to check if this branch of DJ tree needs expanding to update hueristics
 		// This update should know if this is the first time this vertex is coming out
 		// in this 'CARMALoop' round. Only then we can be sure whether to update to min
@@ -601,6 +605,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			}
 		}
 	}
+
+	// set new default heurisitc value
+	vcache->UpdateHeuristicForOutsideVertices(lastCost);
 
 	// load evacuees into sorted list from the redundent list in reverse
 	SortedEvacuees->clear();

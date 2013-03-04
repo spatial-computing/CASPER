@@ -71,7 +71,7 @@ public:
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
 	inline bool IsHEmpty() const { return h->empty(); }
-	bool UpdateHeuristic(long edgeid, NAVertex * n);
+	bool UpdateHeuristic(long edgeid, double hur);
 	
 	NAVertex(void);
 	~NAVertex(void) { delete h; }
@@ -104,6 +104,7 @@ private:
 	NAVertexTable * cache;
 	std::vector<NAVertex *> * sideCache;
 	NAVertexLoopCountList * noHVertices;
+	double heuristicForOutsideVertices;
 
 public:
 	NAVertexCache(void)
@@ -111,6 +112,7 @@ public:
 		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAVertexPtr>();
 		sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
 		noHVertices = new NAVertexLoopCountList();
+		heuristicForOutsideVertices = 0.0;
 	}
 
 	~NAVertexCache(void) 
@@ -138,6 +140,7 @@ public:
 	}
 	
 	NAVertexPtr New(INetworkJunctionPtr junction, int loopCount);
+	void UpdateHeuristicForOutsideVertices(double hur);
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);
 	void Clear();
