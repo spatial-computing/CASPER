@@ -385,18 +385,18 @@ public:
 	
 	#pragma warning(push)
 	#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
-	void CleanAllEdgesAndRelease(double maxPredictionCost)
+	void CleanAllEdgesAndRelease(double maxCost)
 	{				
 		#ifdef TRACE
 		std::ofstream f;
 		int count = 0;		
 		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++)
 		{
-			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost && (*cit).second->GetReservedPop() <= 0.0) count++;
+			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g >= maxCost && (*cit).second->GetReservedPop() <= 0.0) count++;
 		}
 		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++)
 		{
-			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g > maxPredictionCost && (*cit).second->GetReservedPop() <= 0.0) count++;
+			if ((*cit).second->ToVertex != NULL && (*cit).second->ToVertex->g >= maxCost && (*cit).second->GetReservedPop() <= 0.0) count++;
 		}
 		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 		f << "Outside Edges: " << count << " of " << Size() << std::endl;

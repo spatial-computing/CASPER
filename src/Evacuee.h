@@ -108,7 +108,8 @@ public:
 
 	static bool LessThan(Evacuee * e1, Evacuee * e2)
 	{
-		return e1->PredictedCost < e2->PredictedCost;
+		if (e1->PredictedCost == e2->PredictedCost) return e1->Population < e2->Population;
+		else return e1->PredictedCost < e2->PredictedCost;
 	}
 };
 

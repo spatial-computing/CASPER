@@ -434,7 +434,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, minPop2Route = 1.0, maxPredictionCost = FLT_MAX, newCost, lastCost = 0.0;
+	double fromPosition, toPosition, minPop2Route = 1.0, newCost, lastCost = 0.0;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -631,20 +631,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	if (!redundentSortedEvacuees->empty())
 	{
 		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);		
-		SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());		
-		redundentSortedEvacuees->clear();
+		SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
 	}
-	// set graph as having all clean edges	
-	for(std::vector<EvacueePtr>::iterator i = SortedEvacuees->begin(); i != SortedEvacuees->end(); i++)
-		if ((*i)->Reachable) 
-		{
-			maxPredictionCost = (*i)->PredictedCost;
-			break;
-		}
-
 	UpdatePeakMemoryUsage();
 
-	ecache->CleanAllEdgesAndRelease(maxPredictionCost * 2.0);
+	// set graph as having all clean edges
+	ecache->CleanAllEdgesAndRelease(lastCost);
 
 END_OF_FUNC:
 

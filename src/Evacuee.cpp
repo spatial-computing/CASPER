@@ -48,6 +48,9 @@ void NAEvacueeVertexTable::Erase(long junctionEID)
 	std::vector<NAVertexPtr>::iterator vi;
 	NAEvacueeVertexTableItr evcItr1, evcItr2 = this->find(junctionEID);
 
+	// this for loop is going to list all discovered evacuees and will
+	// remove them from the entire hash_map... not just this one junction point.
+	/*
 	for(std::vector<EvacueePtr>::iterator i = evcItr2->second->begin(); i != evcItr2->second->end(); i++)
 	{
 		for (vi = (*i)->vertices->begin(); vi != (*i)->vertices->end(); vi++)
@@ -57,6 +60,7 @@ void NAEvacueeVertexTable::Erase(long junctionEID)
 			evcItr1->second->erase(std::find(evcItr1->second->begin(), evcItr1->second->end(), *i));
 		}
 	}
+	*/
 	delete evcItr2->second;
 	erase(junctionEID); 
 }
