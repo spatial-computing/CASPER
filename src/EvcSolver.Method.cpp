@@ -541,7 +541,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		{
 			for (eitr = pairs->begin(); eitr != pairs->end(); eitr++)
 			{
-				(*eitr)->PredictedCost = min((*eitr)->PredictedCost, myVertex->g);
+				if (this->countCARMALoops == 1) (*eitr)->PredictedCost = min((*eitr)->PredictedCost, myVertex->g);
 				redundentSortedEvacuees->push_back(*eitr);
 			}
 			EvacueePairs->Erase(myVertex->EID);
