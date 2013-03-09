@@ -463,7 +463,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		minPop2Route = FLT_MAX;
 		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
 		{
-			if ((*eit)->vertices->empty()) continue;
+			if ((*eit)->vertices->empty() || (*eit)->Population <= 0.0) continue;
 			minPop2Route = min(minPop2Route, (*eit)->Population);
 		}
 		minPop2Route = max(minPop2Route, 1.0);
