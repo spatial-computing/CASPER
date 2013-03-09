@@ -332,15 +332,13 @@ bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n)
 	return a->UpdateHeuristic(edgeid, n->g);
 }
 
-void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur)
+void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)
 {
 	if (heuristicForOutsideVertices < hur)
 	{
 		heuristicForOutsideVertices = hur;
-		for(NAVertexTableItr it = cache->begin(); it != cache->end(); it++)
-		{
-			it->second->UpdateHeuristic(-1, hur);
-		}
+		if (goDeep)
+			for(NAVertexTableItr it = cache->begin(); it != cache->end(); it++) it->second->UpdateHeuristic(-1, hur);			
 	}
 }
 

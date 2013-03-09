@@ -140,7 +140,7 @@ public:
 	}
 	
 	NAVertexPtr New(INetworkJunctionPtr junction, int loopCount);
-	void UpdateHeuristicForOutsideVertices(double hur);
+	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);
 	void Clear();

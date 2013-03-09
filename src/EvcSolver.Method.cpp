@@ -607,7 +607,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	}
 
 	// set new default heurisitc value
-	vcache->UpdateHeuristicForOutsideVertices(lastCost);
+	vcache->UpdateHeuristicForOutsideVertices(lastCost, this->countCARMALoops == 1);
 
 	// load evacuees into sorted list from the redundent list in reverse
 	SortedEvacuees->clear();
