@@ -103,7 +103,7 @@ class NAVertexCache
 private:
 	NAVertexTable * cache;
 	std::vector<NAVertex *> * sideCache;
-	NAVertexLoopCountList * noHVertices;
+	// NAVertexLoopCountList * noHVertices;
 	double heuristicForOutsideVertices;
 
 public:
@@ -111,7 +111,7 @@ public:
 	{
 		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAVertexPtr>();
 		sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
-		noHVertices = new NAVertexLoopCountList();
+		// noHVertices = new NAVertexLoopCountList();
 		heuristicForOutsideVertices = 0.0;
 	}
 
@@ -120,10 +120,11 @@ public:
 		Clear();
 		delete cache;
 		delete sideCache;
-		for(NAVertexLoopCountListItr i = noHVertices->begin(); i != noHVertices->end(); i++) delete i->second;
-		delete noHVertices;
+		// for(NAVertexLoopCountListItr i = noHVertices->begin(); i != noHVertices->end(); i++) delete i->second;
+		// delete noHVertices;
 	}
 
+	/*
 	void GenerateZeroHurMsg(CString & msg) const
 	{
 		msg.Empty();
@@ -138,8 +139,9 @@ public:
 			for (j = l->begin(); j != l->end(); j++) msg.AppendFormat(_T("%d, "), *j);
 		}
 	}
+	*/
 	
-	NAVertexPtr New(INetworkJunctionPtr junction, int loopCount);
+	NAVertexPtr New(INetworkJunctionPtr junction);
 	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);

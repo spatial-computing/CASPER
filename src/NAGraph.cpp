@@ -342,7 +342,7 @@ void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)
 	}
 }
 
-NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, int loopCount)
+NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction/*, int loopCount */)
 {
 	NAVertexPtr n = 0;
 	long JunctionEID;
@@ -360,7 +360,7 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, int loopCount)
 		n = new DEBUG_NEW_PLACEMENT NAVertex(*(it->second));
 		sideCache->push_back(n);
 	}
-
+	/*
 	if (loopCount > 0 && n->IsHEmpty())
 	{
 		// we have found a node without an H value
@@ -370,6 +370,7 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, int loopCount)
 		}
 		noHVertices->at(loopCount)->push_back(n->EID);
 	}
+	*/
 
 	return n;
 }

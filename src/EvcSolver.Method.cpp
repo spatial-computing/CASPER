@@ -118,7 +118,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++)
 				{
 					evc = *vit;
-					tempEvc = vcache->New(evc->Junction, countCASPERLoops);
+					tempEvc = vcache->New(evc->Junction);
 					tempEvc->SetBehindEdge(evc->GetBehindEdge());
 					tempEvc->g = evc->g;
 					tempEvc->Junction = evc->Junction;
@@ -141,7 +141,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							ipCurrentEdge = ipElement;
 							if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 							myEdge = ecache->New(ipCurrentEdge);
-							tempEvc = vcache->New(evc->Junction, 0);
+							tempEvc = vcache->New(evc->Junction);
 							tempEvc->Previous = 0;
 							tempEvc->SetBehindEdge(myEdge);
 							tempEvc->g = evc->g * myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
@@ -219,7 +219,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					// termination condition is when we reach the TimeToBeat radius.
 					// this could either be the maximum allowed or it could mean that
 					// the already discovered safe zone is the closest.
-					if (myVertex->g > TimeToBeat) continue;
+					// I'm going to experiment with a new termination condition at the heap->insert line
+					// if (myVertex->g > TimeToBeat) continue;
 
 					// Query adjacencies from the current junction.
 					if (FAILED(hr = myEdge->NetEdge->get_TurnParticipationType(&turnType))) goto END_OF_FUNC;
@@ -269,11 +270,14 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 						else // unvisited edge. create new and insert in heap
 						{						
-							neighbor = vcache->New(ipCurrentJunction, countCASPERLoops);
+							neighbor = vcache->New(ipCurrentJunction);
 							neighbor->SetBehindEdge(currentEdge);
 							neighbor->g = newCost;
 							neighbor->Previous = myVertex;
-							heap->Insert(currentEdge);
+
+							// if the new vertex does have a chance to beat the already
+							// discovered safe node then add it to the heap
+							if (2.0 * (neighbor->g + neighbor->minh()) <= TimeToBeat) heap->Insert(currentEdge);
 						}
 					}
 				}
@@ -472,7 +476,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	for(iterator = safeZoneList->begin(); iterator != safeZoneList->end(); iterator++)
 	{
 		zone = iterator->second;
-		tempZone = vcache->New(zone->Junction, 0);
+		tempZone = vcache->New(zone->Junction);
 		tempZone->SetBehindEdge(zone->GetBehindEdge());
 		tempZone->g = zone->g;
 		tempZone->Junction = zone->Junction;
@@ -496,7 +500,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				ipCurrentEdge = ipElement;
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				myEdge = ecache->New(ipCurrentEdge);
-				tempZone = vcache->New(zone->Junction, 0);
+				tempZone = vcache->New(zone->Junction);
 				tempZone->Previous = 0;
 				tempZone->SetBehindEdge(myEdge);
 				tempZone->g = zone->g * myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
@@ -597,7 +601,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			}
 			else // unvisited vertex. create new and insert in heap
 			{
-				neighbor = vcache->New(ipCurrentJunction, 0);
+				neighbor = vcache->New(ipCurrentJunction);
 				neighbor->SetBehindEdge(currentEdge);
 				neighbor->g = newCost;
 				neighbor->Previous = myVertex;
