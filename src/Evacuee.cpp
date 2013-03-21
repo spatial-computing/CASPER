@@ -13,7 +13,7 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
 		if ((*i)->Reachable)
 		{
 			// reset evacuation prediction
-			// (*i)->PredictedCost = FLT_MAX;
+			(*i)->PredictedCost = FLT_MAX;
 
 			for (v = (*i)->vertices->begin(); v != (*i)->vertices->end(); v++)
 			{
