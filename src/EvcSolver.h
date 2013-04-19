@@ -317,7 +317,7 @@ private:
 	//unsigned int			minEvacueeBucketSize;
 	float                   CARMAPerformanceRatio;
 	int						countCARMALoops;
-	unsigned long			peakMemoryUsage;	
+	SIZE_T					peakMemoryUsage;	
 	HANDLE					hProcessPeakMemoryUsage;
 
 	VARIANT_BOOL twoWayShareCapacity;	

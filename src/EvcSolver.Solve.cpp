@@ -51,7 +51,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	peakMemoryUsage = 0l;
 	hProcessPeakMemoryUsage = NULL;
 	UpdatePeakMemoryUsage();
-	long baseMemoryUsage = peakMemoryUsage;
+	SIZE_T baseMemoryUsage = peakMemoryUsage;
 
 	// Check for null parameter variables (the track cancel variable is typically considered optional)
 	if (!pNAContext || !pMessages) return E_POINTER;
