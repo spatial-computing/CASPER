@@ -401,13 +401,14 @@ void NAVertexCache::CollectAndRelease()
 	}
 	sideCache->clear();
 	// sideCache->shrink_to_fit();
-
+	/*
 	#ifdef TRACE
 	std::ofstream f;
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 	f << "Vertex Cleared: " << count << std::endl;
 	f.close();
 	#endif
+	*/
 }
 
 NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)
