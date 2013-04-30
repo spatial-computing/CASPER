@@ -34,7 +34,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0;
-	int pathGenerationCount = -1;
+	int pathGenerationCount = -1, pathSizeByClosedSizeCount = 0;
 	countCARMALoops = 0;
 	size_t CARMAClosedSize = 0;
 	
@@ -72,8 +72,14 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		// only the last 'k'th evacuees will be bucketed to run each round.
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize))) goto END_OF_FUNC;		
 
-		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, pathSizeByClosedSizeSum = 0.0, pathSizeByClosedSizeMovingAvgRatio = 0.0f, pathSizeByClosedSizeBase = 0.0;
-			seit != sortedEvacuees->end(); seit++)
+		//reset some values
+		pathSizeByClosedSizeCount = 0;
+		countEvacueesInOneBucket = 0;
+		pathSizeByClosedSizeSum = 0.0f;
+		pathSizeByClosedSizeMovingAvgRatio = 0.0f;
+		pathSizeByClosedSizeBase = 0.0f;
+
+		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 		{
 			currentEvacuee = *seit;	
 
@@ -366,12 +372,15 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another 'CARMALoop'
 					// maxPerformanceRatio = max(maxPerformanceRatio, dirtyVerticesInClosedList / closedList->Size());
 
-					pathSizeByClosedSize = sqrt((float)(path->size()) / closedList->Size());
-					pathSizeByClosedSizeSum += pathSizeByClosedSize;
-					pathSizeByClosedSizeBase = max(pathSizeByClosedSizeBase, pathSizeByClosedSize);
-					pathSizeByClosedSizeMovingAvgRatio = pathSizeByClosedSizeSum / (countEvacueesInOneBucket * pathSizeByClosedSizeBase);
-					pathSizeByClosedSizeMovingAvgRatio = 1.0f - pathSizeByClosedSizeMovingAvgRatio * pathSizeByClosedSizeMovingAvgRatio;
-
+					if (closedList->Size() > 300)
+					{
+						pathSizeByClosedSize = (float)(path->size()) / closedList->Size();
+						pathSizeByClosedSizeSum += pathSizeByClosedSize;
+						pathSizeByClosedSizeCount++;
+						pathSizeByClosedSizeBase = max(pathSizeByClosedSizeBase, pathSizeByClosedSize);
+						pathSizeByClosedSizeMovingAvgRatio = pathSizeByClosedSizeSum / (pathSizeByClosedSizeCount * pathSizeByClosedSizeBase);
+						pathSizeByClosedSizeMovingAvgRatio = 1.0f - pathSizeByClosedSizeMovingAvgRatio;
+					}
 					#ifdef DEBUG
 					std::wostringstream os_;
 					os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << closedList->Size() << ',' << path->size() << ','
