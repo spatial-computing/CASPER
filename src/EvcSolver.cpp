@@ -437,7 +437,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 0.0f;
 	//minEvacueeBucketSize = 0;
-	CARMAPerformanceRatio = 0.3f;
+	CARMAPerformanceRatio = 0.94f;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 

@@ -18,8 +18,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
 	// float maxPerformanceRatio = 0.0f, dirtyVerticesInPath = 0.0f, dirtyVerticesInClosedList = 0.0f;
-	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, pathSizeByClosedSizeMovingAvgRatio = 0.0,
-		TimeToBeat = 0.0f, newCost, costLeft = 0.0, pathSizeByClosedSizeSum = 0.0, pathSizeByClosedSize = 0.0, pathSizeByClosedSizeBase = 0.0;
+    float pathSizeByClosedSizeMovingAvgRatio = 0.0f, pathSizeByClosedSizeSum = 0.0f, pathSizeByClosedSize = 0.0f, pathSizeByClosedSizeBase = 0.0f;
+	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
@@ -72,7 +72,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		// only the last 'k'th evacuees will be bucketed to run each round.
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize))) goto END_OF_FUNC;		
 
-		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, pathSizeByClosedSizeSum = 0.0, pathSizeByClosedSizeMovingAvgRatio = 0.0, pathSizeByClosedSizeBase = 0.0;
+		for(seit = sortedEvacuees->begin(), countEvacueesInOneBucket = 0, pathSizeByClosedSizeSum = 0.0, pathSizeByClosedSizeMovingAvgRatio = 0.0f, pathSizeByClosedSizeBase = 0.0;
 			seit != sortedEvacuees->end(); seit++)
 		{
 			currentEvacuee = *seit;	
@@ -366,10 +366,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another 'CARMALoop'
 					// maxPerformanceRatio = max(maxPerformanceRatio, dirtyVerticesInClosedList / closedList->Size());
 
-					pathSizeByClosedSize = (double)(path->size()) / closedList->Size();
+					pathSizeByClosedSize = sqrt((float)(path->size()) / closedList->Size());
 					pathSizeByClosedSizeSum += pathSizeByClosedSize;
 					pathSizeByClosedSizeBase = max(pathSizeByClosedSizeBase, pathSizeByClosedSize);
-					pathSizeByClosedSizeMovingAvgRatio = max(pathSizeByClosedSizeMovingAvgRatio, 1.0 - (pathSizeByClosedSizeSum / (countEvacueesInOneBucket * pathSizeByClosedSizeBase)));
+					pathSizeByClosedSizeMovingAvgRatio = pathSizeByClosedSizeSum / (countEvacueesInOneBucket * pathSizeByClosedSizeBase);
+					pathSizeByClosedSizeMovingAvgRatio = 1.0f - pathSizeByClosedSizeMovingAvgRatio * pathSizeByClosedSizeMovingAvgRatio;
 
 					#ifdef DEBUG
 					std::wostringstream os_;
@@ -404,7 +405,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			currentEvacuee->vertices->clear();
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
-			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && /*maxPerformanceRatio*/ pathSizeByClosedSizeMovingAvgRatio > this->CARMAPerformanceRatio) break;
+			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && pathSizeByClosedSizeMovingAvgRatio > this->CARMAPerformanceRatio) break;
 
 		} // end of for loop over sortedEvacuees
 	}
