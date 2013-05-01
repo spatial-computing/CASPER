@@ -18,7 +18,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
 	// float maxPerformanceRatio = 0.0f, dirtyVerticesInPath = 0.0f, dirtyVerticesInClosedList = 0.0f;
-    float pathSizeByClosedSizeMovingAvgRatio = 0.0f, pathSizeByClosedSizeSum = 0.0f, pathSizeByClosedSize = 0.0f, pathSizeByClosedSizeBase = 0.0f;
+    // float pathSizeByClosedSizeMovingAvgRatio = 0.0f, pathSizeByClosedSizeSum = 0.0f, pathSizeByClosedSize = 0.0f, pathSizeByClosedSizeBase = 0.0f;
 	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
@@ -34,7 +34,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0;
-	int pathGenerationCount = -1, pathSizeByClosedSizeCount = 0;
+	int pathGenerationCount = -1, pathSizeByClosedSizeCount = 0, ClosedListSizeSum = 0;
 	countCARMALoops = 0;
 	size_t CARMAClosedSize = 0;
 	
@@ -73,11 +73,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize))) goto END_OF_FUNC;		
 
 		//reset some values
-		pathSizeByClosedSizeCount = 0;
+		// pathSizeByClosedSizeCount = 0;
 		countEvacueesInOneBucket = 0;
-		pathSizeByClosedSizeSum = 0.0f;
-		pathSizeByClosedSizeMovingAvgRatio = 0.0f;
-		pathSizeByClosedSizeBase = 0.0f;
+		// pathSizeByClosedSizeSum = 0.0f;
+		// pathSizeByClosedSizeMovingAvgRatio = 0.0f;
+		// pathSizeByClosedSizeBase = 0.0f;
+		ClosedListSizeSum = 0;
 
 		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 		{
@@ -368,19 +369,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 					}
 					currentEvacuee->paths->push_front(path);
+					ClosedListSizeSum += closedList->Size();
 
-					// the next line holds a value which will help us determine if the previous DJ run was fast enougth or we need another 'CARMALoop'
-					// maxPerformanceRatio = max(maxPerformanceRatio, dirtyVerticesInClosedList / closedList->Size());
-
-					if (closedList->Size() > 300)
-					{
-						pathSizeByClosedSize = (float)(path->size()) / closedList->Size();
-						pathSizeByClosedSizeSum += pathSizeByClosedSize;
-						pathSizeByClosedSizeCount++;
-						pathSizeByClosedSizeBase = max(pathSizeByClosedSizeBase, pathSizeByClosedSize);
-						pathSizeByClosedSizeMovingAvgRatio = pathSizeByClosedSizeSum / (pathSizeByClosedSizeCount * pathSizeByClosedSizeBase);
-						pathSizeByClosedSizeMovingAvgRatio = 1.0f - pathSizeByClosedSizeMovingAvgRatio;
-					}
 					#ifdef DEBUG
 					std::wostringstream os_;
 					os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << closedList->Size() << ',' << path->size() << ','
@@ -391,8 +381,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					std::ofstream f;
 					f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 					f.precision(3);
-					f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << closedList->Size() << ',' << path->size() << ','
-						<< pathSizeByClosedSize << ',' << pathSizeByClosedSizeSum / countEvacueesInOneBucket << ',' << pathSizeByClosedSizeMovingAvgRatio << std::endl;
+					f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << closedList->Size() << ',' << path->size() << ',' << ClosedListSizeSum << std::endl;
 					f.close();
 					#endif
 				}
@@ -414,7 +403,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			currentEvacuee->vertices->clear();
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
-			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && pathSizeByClosedSizeMovingAvgRatio > this->CARMAPerformanceRatio) break;
+			// if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && pathSizeByClosedSizeMovingAvgRatio > this->CARMAPerformanceRatio) break;
+			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && ClosedListSizeSum > this->CARMAPerformanceRatio * CARMAClosedSize) break;
 
 		} // end of for loop over sortedEvacuees
 	}
