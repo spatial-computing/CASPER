@@ -371,7 +371,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				#ifdef DEBUG
 				std::wostringstream os_;
 				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << countVisitedEdge << ',' << countVisitedDirtyEdge << ','
-				  << countVisitedDirtyEdge / (CARMAPerformanceRatio * countVisitedEdge) << std::endl;
+				    << countVisitedDirtyEdge / (CARMAPerformanceRatio * countVisitedEdge) << std::endl;
 				OutputDebugStringW( os_.str().c_str() );
 				#endif
 				#ifdef TRACE
@@ -394,7 +394,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			currentEvacuee->vertices->clear();
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
-			// if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && pathSizeByClosedSizeMovingAvgRatio > this->CARMAPerformanceRatio) break;
 			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && countVisitedDirtyEdge > this->CARMAPerformanceRatio * countVisitedEdge) break;
 
 		} // end of for loop over sortedEvacuees
