@@ -379,7 +379,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 				f.precision(3);
 				f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << countVisitedEdge << ',' << countVisitedDirtyEdge << ','
-				  << (CARMAPerformanceRatio * countVisitedEdge) / countVisitedDirtyEdge << std::endl;
+				  << countVisitedDirtyEdge / (CARMAPerformanceRatio * countVisitedEdge) << std::endl;
 				f.close();
 				#endif
 
