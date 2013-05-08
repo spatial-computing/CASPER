@@ -370,8 +370,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 				#ifdef DEBUG
 				std::wostringstream os_;
-				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << closedList->Size() << ',' << path->size() << ','
-					<< pathSizeByClosedSize << ',' << pathSizeByClosedSizeSum / countEvacueesInOneBucket << ',' << pathSizeByClosedSizeMovingAvgRatio << std::endl;
+				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << countVisitedEdge << ',' << countVisitedDirtyEdge << ','
+				  << countVisitedDirtyEdge / (CARMAPerformanceRatio * countVisitedEdge) << std::endl;
 				OutputDebugStringW( os_.str().c_str() );
 				#endif
 				#ifdef TRACE
