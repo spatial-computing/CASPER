@@ -33,10 +33,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
-	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0;
-	int pathGenerationCount = -1, pathSizeByClosedSizeCount = 0, ClosedListSizeSum = 0;
-	countCARMALoops = 0;
+	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, countVisitedDirtyEdge = 0, countVisitedEdge = 0;
+	int pathGenerationCount = -1;
 	size_t CARMAClosedSize = 0;
+	countCARMALoops = 0;
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
@@ -72,13 +72,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		// only the last 'k'th evacuees will be bucketed to run each round.
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize))) goto END_OF_FUNC;		
 
-		//reset some values
-		// pathSizeByClosedSizeCount = 0;
 		countEvacueesInOneBucket = 0;
-		// pathSizeByClosedSizeSum = 0.0f;
-		// pathSizeByClosedSizeMovingAvgRatio = 0.0f;
-		// pathSizeByClosedSizeBase = 0.0f;
-		ClosedListSizeSum = 0;
+		countVisitedEdge = 0;
+		countVisitedDirtyEdge = 0;
 
 		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 		{
@@ -162,11 +158,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				TimeToBeat = FLT_MAX;
 				BetterSafeZone = 0;
 				finalVertex = 0;
-
-				// reset counters for dirty stuff
-				// dirtyVerticesInPath = 0.0f;
-				// dirtyVerticesInClosedList = 0.0f;
-
+				
 				// Continue traversing the network while the heap has remaining junctions in it
 				// this is the actual dijkstra code with the Fibonacci Heap
 				while (!heap->IsEmpty())
@@ -182,7 +174,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						goto END_OF_FUNC;
 					}
 
-					// if (myEdge->IsDirty()) dirtyVerticesInClosedList++;
+					if (myEdge->IsDirty()) countVisitedDirtyEdge++;
 
 					// Check for destinations. If a new destination has been found then we sould
 					// first flag this so later we can use to generate route. Also we should
@@ -286,13 +278,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 							// if the new vertex does have a chance to beat the already
 							// discovered safe node then add it to the heap
-							if (2.0 * (neighbor->g + neighbor->minh()) <= TimeToBeat) heap->Insert(currentEdge);
+							if (1.1 * (neighbor->g + neighbor->minh()) <= TimeToBeat) heap->Insert(currentEdge);
 						}
 					}
 				}
 
-				// TODO: some features of CCRP is not yet implemented
-				// 1. CCRP considers vertex/junction capacity as well.
+				countVisitedEdge += closedList->Size();
 
 				population2Route = 0.0;
 				// generate evacuation route if a destination has been found
@@ -369,7 +360,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 					}
 					currentEvacuee->paths->push_front(path);
-					ClosedListSizeSum += closedList->Size();
 
 					#ifdef DEBUG
 					std::wostringstream os_;
@@ -381,7 +371,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					std::ofstream f;
 					f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 					f.precision(3);
-					f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << closedList->Size() << ',' << path->size() << ',' << ClosedListSizeSum << std::endl;
+					f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << countVisitedEdge << ',' << countVisitedDirtyEdge << ','
+					  << (CARMAPerformanceRatio * countVisitedEdge) / countVisitedDirtyEdge << std::endl;
 					f.close();
 					#endif
 				}
@@ -404,7 +395,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
 			// if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && pathSizeByClosedSizeMovingAvgRatio > this->CARMAPerformanceRatio) break;
-			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && ClosedListSizeSum > this->CARMAPerformanceRatio * CARMAClosedSize) break;
+			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && countVisitedDirtyEdge > this->CARMAPerformanceRatio * countVisitedEdge) break;
 
 		} // end of for loop over sortedEvacuees
 	}

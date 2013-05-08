@@ -197,9 +197,7 @@ private:
 	bool  DirtyFlag;
 	float initDelayCostPerPop;
 
-public:	
-	inline void SetClean() { DirtyFlag = false; }
-
+public:
 	EdgeReservations(float capacity, float CriticalDensPerCap, float SaturationDensPerCap, float InitDelayCostPerPop);
 	EdgeReservations(const EdgeReservations& cpy);
 	
@@ -233,6 +231,7 @@ private:
 	EdgeReservations * reservations;
 	EVC_TRAFFIC_MODEL trafficModel;
 	double CASPERRatio;
+	double CleanCost;
 	mutable double cachedCost[2];
 	// mutable unsigned short calcSaved;
 	double GetTrafficSpeedRatio(double allPop) const;
@@ -247,7 +246,11 @@ public:
 	double GetCost(double newPop, EVC_SOLVER_METHOD method) const;
 	double GetCurrentCost() const;
 	double LeftCapacity() const;
-	double OriginalCapacity() const;
+
+	inline void SetClean() { reservations->DirtyFlag = false; CleanCost = -1.0; }
+
+	// Special function for Flocking: to check how much capacity the edge had originally
+	double OriginalCapacity() const { return reservations->Capacity; }
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	bool AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population);
@@ -383,7 +386,7 @@ public:
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
-	size_t Size() const { return cacheAlong->size() + cacheAgainst->size();}
+	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
 	
 	#pragma warning(push)
 	#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
@@ -405,8 +408,8 @@ public:
 		f.close();
 		#endif
 
-		for(NAResTableItr cit = resTableAlong->begin(); cit != resTableAlong->end(); cit++) (*cit).second->SetClean();
-		for(NAResTableItr cit = resTableAgainst->begin(); cit != resTableAgainst->end(); cit++) (*cit).second->SetClean();
+		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) cit->second->SetClean();
+		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean();
 	}
 	#pragma warning(pop)
 	/*

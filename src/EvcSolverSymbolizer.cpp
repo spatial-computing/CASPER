@@ -323,10 +323,13 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   return S_OK;
 }
 
+#pragma warning(push)
+#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
 STDMETHODIMP EvcSolverSymbolizer::UpdateLayer(INALayer* pNALayer, VARIANT_BOOL* pUpdated)
 {
   return E_NOTIMPL;
 }
+#pragma warning(pop)
 
 STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer *pNALayer)
 {

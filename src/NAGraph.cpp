@@ -43,13 +43,15 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	LastExteriorEdge = cpy.LastExteriorEdge;
 	trafficModel = cpy.trafficModel;
 	CASPERRatio = cpy.CASPERRatio;
-	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];	
+	CleanCost = cpy.CleanCost;
+	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
 	// calcSaved = cpy.calcSaved;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable * resTable, float InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
 	// calcSaved = 0;
+	CleanCost = -1.0;
 	ToVertex = 0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
@@ -102,12 +104,6 @@ HRESULT NAEdge::QuerySourceStuff(long * sourceOID, long * sourceID, double * fro
 	if (FAILED(hr = NetEdge->get_SourceID(sourceID))) return hr;
 	if (FAILED(hr = NetEdge->QueryPositions(fromPosition, toPosition))) return hr;
 	return S_OK;
-}
-
-// Special function for Flocking: to check how much capacity the edge had originally
-double NAEdge::OriginalCapacity() const
-{
-	return reservations->Capacity;
 }
 
 // Special function for CCRP: to check how much capacity is left on this edge.
@@ -179,14 +175,20 @@ double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 	return OriginalCost / speedPercent;
 }
 
+// this function addes the resrvation also determines if the new added population makes the edge dirty.
+// if this new reservation made the edge change from clean to dirty then the return is true otherwise returns false.
 bool NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population)
 {
-	bool ret = reservations->DirtyFlag;
+	if (CleanCost < 0.0) CleanCost = this->GetCurrentCost();	
+	
+	// actual reservation code
 	// reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
 	float newPop = (float)population;
 	if (reservations->initDelayCostPerPop > 0.0f) newPop = min(newPop, (float)(OriginalCost / reservations->initDelayCostPerPop));
 	reservations->ReservedPop += newPop;
-	reservations->DirtyFlag = true;
+
+	bool ret = (!reservations->DirtyFlag) && (CleanCost / this->GetCurrentCost() < 0.9);	
+	reservations->DirtyFlag |= ret;
 	return ret;
 }
 
