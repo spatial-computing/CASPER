@@ -360,21 +360,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						}
 					}
 					currentEvacuee->paths->push_front(path);
-
-					#ifdef DEBUG
-					std::wostringstream os_;
-					os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << closedList->Size() << ',' << path->size() << ','
-						<< pathSizeByClosedSize << ',' << pathSizeByClosedSizeSum / countEvacueesInOneBucket << ',' << pathSizeByClosedSizeMovingAvgRatio << std::endl;
-					OutputDebugStringW( os_.str().c_str() );
-					#endif
-					#ifdef TRACE
-					std::ofstream f;
-					f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-					f.precision(3);
-					f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << countVisitedEdge << ',' << countVisitedDirtyEdge << ','
-					  << (CARMAPerformanceRatio * countVisitedEdge) / countVisitedDirtyEdge << std::endl;
-					f.close();
-					#endif
 				}
 				else
 				{
@@ -382,6 +367,21 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					// population at this location have no path as well
 					populationLeft = 0.0;
 				}
+
+				#ifdef DEBUG
+				std::wostringstream os_;
+				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << closedList->Size() << ',' << path->size() << ','
+					<< pathSizeByClosedSize << ',' << pathSizeByClosedSizeSum / countEvacueesInOneBucket << ',' << pathSizeByClosedSizeMovingAvgRatio << std::endl;
+				OutputDebugStringW( os_.str().c_str() );
+				#endif
+				#ifdef TRACE
+				std::ofstream f;
+				f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+				f.precision(3);
+				f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << countVisitedEdge << ',' << countVisitedDirtyEdge << ','
+				  << (CARMAPerformanceRatio * countVisitedEdge) / countVisitedDirtyEdge << std::endl;
+				f.close();
+				#endif
 
 				// cleanup search heap and closedlist
 				UpdatePeakMemoryUsage();
