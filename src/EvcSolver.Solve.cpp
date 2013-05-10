@@ -494,6 +494,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		f << "Search throw: " << ex.what() << std::endl;
 		f.close();
 		#endif
+		(ex);
 	}
 
 	if (FAILED(hr))

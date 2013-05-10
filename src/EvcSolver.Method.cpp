@@ -20,6 +20,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	// float maxPerformanceRatio = 0.0f, dirtyVerticesInPath = 0.0f, dirtyVerticesInClosedList = 0.0f;
     // float pathSizeByClosedSizeMovingAvgRatio = 0.0f, pathSizeByClosedSizeSum = 0.0f, pathSizeByClosedSize = 0.0f, pathSizeByClosedSizeBase = 0.0f;
 	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
+	float sumVisitedDirtyEdge = 0.0f, sumVisitedEdge = 0.0f;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
@@ -33,7 +34,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
-	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, countVisitedDirtyEdge = 0, countVisitedEdge = 0;
+	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, countVisitedDirtyEdge = 0;
 	int pathGenerationCount = -1;
 	size_t CARMAClosedSize = 0;
 	countCARMALoops = 0;
@@ -73,6 +74,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize))) goto END_OF_FUNC;		
 
 		countEvacueesInOneBucket = 0;
+		sumVisitedDirtyEdge = 0.0f;
+		sumVisitedEdge = 0.0f;
 
 		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 		{
@@ -156,7 +159,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				TimeToBeat = FLT_MAX;
 				BetterSafeZone = 0;
 				finalVertex = 0;
-				countVisitedEdge = 0;
 				countVisitedDirtyEdge = 0;
 				
 				// Continue traversing the network while the heap has remaining junctions in it
@@ -283,7 +285,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 				}
 
-				countVisitedEdge += closedList->Size();
+				sumVisitedEdge = closedList->Size() + sumVisitedEdge / 1.1f;
+				sumVisitedDirtyEdge = countVisitedDirtyEdge + sumVisitedDirtyEdge / 1.1f;
 
 				population2Route = 0.0;
 				// generate evacuation route if a destination has been found
@@ -370,16 +373,17 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 				#ifdef DEBUG
 				std::wostringstream os_;
-				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << countVisitedEdge << ',' << countVisitedDirtyEdge << ','
-				    << countVisitedDirtyEdge / (CARMAPerformanceRatio * countVisitedEdge) << std::endl;
+				os_.precision(3);
+				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ','
+				    << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 				OutputDebugStringW( os_.str().c_str() );
 				#endif
 				#ifdef TRACE
 				std::ofstream f;
 				f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 				f.precision(3);
-				f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << countVisitedEdge << ',' << countVisitedDirtyEdge << ','
-				  << countVisitedDirtyEdge / (CARMAPerformanceRatio * countVisitedEdge) << std::endl;
+				f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ','
+				  << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 				f.close();
 				#endif
 
@@ -394,7 +398,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			currentEvacuee->vertices->clear();
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
-			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && countVisitedDirtyEdge > this->CARMAPerformanceRatio * countVisitedEdge) break;
+			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && sumVisitedDirtyEdge > this->CARMAPerformanceRatio * sumVisitedEdge) break;
 
 		} // end of for loop over sortedEvacuees
 	}

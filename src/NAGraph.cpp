@@ -183,7 +183,7 @@ bool NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost
 	
 	// actual reservation code
 	// reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
-	float newPop = population;
+	float newPop = (float)population;
 	if (reservations->initDelayCostPerPop > 0.0f) newPop = min(newPop, (float)(OriginalCost / reservations->initDelayCostPerPop));
 	reservations->ReservedPop += newPop;
 
