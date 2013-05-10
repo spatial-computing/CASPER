@@ -288,7 +288,7 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*);
-	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr, size_t &);
+	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr, size_t &, NAEdgeClosed *);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -314,7 +314,6 @@ private:
 	float					flockingSimulationInterval;
 	float					initDelayCostPerPop;
 	FLOCK_PROFILE			flockingProfile;
-	//unsigned int			minEvacueeBucketSize;
 	float                   CARMAPerformanceRatio;
 	int						countCARMALoops;
 	SIZE_T					peakMemoryUsage;	

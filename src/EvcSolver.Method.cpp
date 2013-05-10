@@ -10,6 +10,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	// creating the heap for the dijkstra search
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanHur);
 	NAEdgeClosed * closedList = new DEBUG_NEW_PLACEMENT NAEdgeClosed();
+	NAEdgeClosed * carmaClosedList = new DEBUG_NEW_PLACEMENT NAEdgeClosed();
 	NAEdgePtr currentEdge;
 	std::vector<EvacueePtr>::iterator seit;
 	NAVertexPtr neighbor, evc, tempEvc, BetterSafeZone = 0, finalVertex = 0, myVertex, temp;
@@ -17,8 +18,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing, isRestricted;
-	// float maxPerformanceRatio = 0.0f, dirtyVerticesInPath = 0.0f, dirtyVerticesInClosedList = 0.0f;
-    // float pathSizeByClosedSizeMovingAvgRatio = 0.0f, pathSizeByClosedSizeSum = 0.0f, pathSizeByClosedSize = 0.0f, pathSizeByClosedSizeBase = 0.0f;
 	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
@@ -70,7 +69,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	{
 		// indexing all the population by their sorrounding vertices this will be used to sort them by network distance to safe zone.
 		// only the last 'k'th evacuees will be bucketed to run each round.
-		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize))) goto END_OF_FUNC;		
+		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize, carmaClosedList))) goto END_OF_FUNC;		
 
 		countEvacueesInOneBucket = 0;
 		sumVisitedDirtyEdge = 0;
@@ -405,6 +404,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 END_OF_FUNC:
 
+	delete carmaClosedList;
 	delete closedList;
 	delete heap;
 	delete sortedEvacuees;
@@ -412,7 +412,7 @@ END_OF_FUNC:
 }
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
-	NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, size_t & closedSize)
+	NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, size_t & closedSize, NAEdgeClosed * closedList)
 {
 	HRESULT hr = S_OK;
 
@@ -422,8 +422,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	// creating the heap for the dijkstra search
 	long adjacentEdgeCount, i;
-	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanNonHur);
-	NAEdgeClosed * closedList = new DEBUG_NEW_PLACEMENT NAEdgeClosed();
+	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanNonHur);	
 	NAEdge * currentEdge;
 	NAVertexPtr neighbor, zone, tempZone;
 	std::vector<EvacueePtr>::iterator eit;
@@ -459,9 +458,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	INetworkForwardStarAdjacenciesPtr ipNetworkBackwardStarAdjacencies;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC;
 
-	//search for min population on graph evacuees left to be routed
-	// The next if has to be in tune with what population will be routed next.
-	// the h values should always be an understimation
+	// search for min population on graph evacuees left to be routed
+	// The next if has to be in-tune with what population will be routed next.
+	// the h values should always be an underestimation
 	if (this->solverMethod != EVC_SOLVER_METHOD_CCRP && !separable)
 	{
 		minPop2Route = FLT_MAX;
@@ -508,6 +507,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			}
 		}
 	}
+
+	closedList->Clear();
 
 	// if this list is not empty, it means we are going to have another CARMA loop
 	if (!EvacueePairs->empty()) 
@@ -656,8 +657,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 END_OF_FUNC:
 
 	// variable cleanup
-	delete redundentSortedEvacuees;
-	delete closedList;
+	delete redundentSortedEvacuees;	
 	delete heap;
 	delete EvacueePairs;
 
