@@ -20,7 +20,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	// float maxPerformanceRatio = 0.0f, dirtyVerticesInPath = 0.0f, dirtyVerticesInClosedList = 0.0f;
     // float pathSizeByClosedSizeMovingAvgRatio = 0.0f, pathSizeByClosedSizeSum = 0.0f, pathSizeByClosedSize = 0.0f, pathSizeByClosedSizeBase = 0.0f;
 	double fromPosition, toPosition, edgePortion = 1.0, populationLeft, population2Route, leftCap, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
-	float sumVisitedDirtyEdge = 0.0f, sumVisitedEdge = 0.0f;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, sourceOID, sourceID, eid;
@@ -34,7 +33,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
-	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, countVisitedDirtyEdge = 0;
+	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0, sumVisitedEdge = 0;
 	int pathGenerationCount = -1;
 	size_t CARMAClosedSize = 0;
 	countCARMALoops = 0;
@@ -74,8 +73,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize))) goto END_OF_FUNC;		
 
 		countEvacueesInOneBucket = 0;
-		sumVisitedDirtyEdge = 0.0f;
-		sumVisitedEdge = 0.0f;
+		sumVisitedDirtyEdge = 0;
+		sumVisitedEdge = 0;
 
 		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 		{
@@ -159,7 +158,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				TimeToBeat = FLT_MAX;
 				BetterSafeZone = 0;
 				finalVertex = 0;
-				countVisitedDirtyEdge = 0;
 				
 				// Continue traversing the network while the heap has remaining junctions in it
 				// this is the actual dijkstra code with the Fibonacci Heap
@@ -176,7 +174,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						goto END_OF_FUNC;
 					}
 
-					if (myEdge->IsDirty()) countVisitedDirtyEdge++;
+					if (myEdge->IsDirty()) sumVisitedDirtyEdge++;
 
 					// Check for destinations. If a new destination has been found then we sould
 					// first flag this so later we can use to generate route. Also we should
@@ -285,8 +283,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 				}
 
-				sumVisitedEdge = closedList->Size() + sumVisitedEdge / 1.1f;
-				sumVisitedDirtyEdge = countVisitedDirtyEdge + sumVisitedDirtyEdge / 1.1f;
+				sumVisitedEdge += closedList->Size();
 
 				population2Route = 0.0;
 				// generate evacuation route if a destination has been found
