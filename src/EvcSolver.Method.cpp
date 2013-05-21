@@ -32,9 +32,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
-	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0, sumVisitedEdge = 0;
+	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
 	int pathGenerationCount = -1;
-	size_t CARMAClosedSize = 0;
+	size_t CARMAClosedSize = 0, sumVisitedEdge = 0;
 	countCARMALoops = 0;
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
