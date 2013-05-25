@@ -46,11 +46,14 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	CleanCost = cpy.CleanCost;
 	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
 	// calcSaved = cpy.calcSaved;
+	TreePrevious = cpy.TreePrevious;
+	TreeNext = cpy.TreeNext;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable * resTable, float InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
 {
 	// calcSaved = 0;
+	TreePrevious = NULL;
 	CleanCost = -1.0;
 	ToVertex = 0;
 	trafficModel = TrafficModel;
@@ -427,9 +430,9 @@ void NAVertexCollector::Clear()
 }
 
 //////////////////////////////////////////////////////////////////
-//// NAEdgeClosed Methods
+//// NAEdgeMap Methods
 
-bool NAEdgeClosed::IsClosed(NAEdgePtr edge)
+bool NAEdgeMap::Exist(NAEdgePtr edge)
 {
 	NAEdgeTable * cache = 0;
 
@@ -439,7 +442,17 @@ bool NAEdgeClosed::IsClosed(NAEdgePtr edge)
 	return cache->find(edge->EID) != cache->end();
 }
 
-HRESULT NAEdgeClosed::Insert(NAEdgePtr edge)
+void NAEdgeMap::Erase(NAEdgePtr edge)
+{
+	NAEdgeTable * cache = 0;
+	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
+	else cache = cacheAgainst;
+
+	NAEdgeTableItr i = cache->find(edge->EID);
+	if (i != cache->end()) cache->erase(i);
+}
+
+HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
 {
 	NAEdgeTable * cache = 0;
 
@@ -459,15 +472,9 @@ bool NAEdgeContainer::Exist(INetworkEdgePtr edge)
 {
 	esriNetworkEdgeDirection dir;
 	long eid;
-	stdext::hash_map<long, char> * cache = 0;
-
 	if (FAILED(edge->get_EID(&eid))) return false;
 	if (FAILED(edge->get_Direction(&dir))) return false;
-
-	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
-	else cache = cacheAgainst;
-
-	return cache->find(eid) != cache->end();
+	return Exist(eid, dir);
 }
 
 HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
@@ -475,11 +482,25 @@ HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 	esriNetworkEdgeDirection dir;
 	long eid;
 	HRESULT hr;
-
 	if (FAILED(hr = edge->get_EID(&eid))) return hr;
 	if (FAILED(hr = edge->get_Direction(&dir))) return hr;
+	return Insert(eid, dir);
+}
 
-	if (dir == esriNEDAlongDigitized) cacheAlong->insert(NAEdgeContainerPair(eid));
-	else  cacheAgainst->insert(NAEdgeContainerPair(eid));
+bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
+{
+	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
+	bool ret = false;
+	unsigned char d = 1 + (unsigned char)dir;
+	if (i != cache->end() && i->second != 0) ret = i->second & d > 0;	
+	return ret;
+}
+
+HRESULT NAEdgeContainer::Insert(long eid, esriNetworkEdgeDirection dir)
+{
+	unsigned char d = 1 + (unsigned char)dir;
+	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
+	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, d));
+	else i->second |= d;
 	return S_OK;
 }

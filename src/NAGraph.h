@@ -240,14 +240,15 @@ public:
 	double OriginalCost;
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
+	NAEdge * TreePrevious;
+	std::vector<NAEdge *> TreeNext;
 	INetworkEdgePtr NetEdge;
 	INetworkEdgePtr LastExteriorEdge;	
 	long EID;
+
 	double GetCost(double newPop, EVC_SOLVER_METHOD method) const;
 	double GetCurrentCost() const;
-	double LeftCapacity() const;
-
-	inline void SetClean() { reservations->DirtyFlag = false; CleanCost = -1.0; }
+	double LeftCapacity() const;	
 
 	// Special function for Flocking: to check how much capacity the edge had originally
 	double OriginalCapacity() const { return reservations->Capacity; }
@@ -259,7 +260,9 @@ public:
 
 	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g < n2->ToVertex->g; }
 	static bool LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh(); }
-
+	
+	inline void SetDirty() { reservations->DirtyFlag = true; }
+	inline void SetClean() { reservations->DirtyFlag = false; CleanCost = -1.0; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	inline bool IsDirty()  const { return reservations->DirtyFlag;   }
 	// inline unsigned short GetCalcSaved() const { return calcSaved; }
@@ -271,59 +274,67 @@ typedef stdext::hash_map<long, NAEdgePtr>::iterator NAEdgeTableItr;
 typedef std::pair<long, NAEdgePtr> _NAEdgeTablePair;
 #define NAEdgeTablePair(a) _NAEdgeTablePair(a->EID, a)
 
-class NAEdgeClosed
+class NAEdgeMap
 {
 private:
 	NAEdgeTable * cacheAlong;
 	NAEdgeTable * cacheAgainst;
 
 public:
-	NAEdgeClosed(void)
+	NAEdgeMap(void)
 	{ 
 		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
 		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
 	}
 
-	~NAEdgeClosed(void) 
+	~NAEdgeMap(void) 
 	{
 		Clear();
 		delete cacheAlong; 
 		delete cacheAgainst; 
 	}
-	
+
+	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty)
+	{
+		if(dirty)
+		{
+			NAEdgeTableItr i;
+			for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->IsDirty()) dirty->push_back(i->second);
+			for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->IsDirty()) dirty->push_back(i->second);
+		}
+	}
+
+	void Erase(NAEdgePtr edge);	
 	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
-	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }
+	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }	
 	HRESULT Insert(NAEdgePtr edge);
-	bool IsClosed(NAEdgePtr edge);
+	bool Exist(NAEdgePtr edge);
 };
 
-typedef std::pair<long, char> _NAEdgeContainerPair;
-#define NAEdgeContainerPair(a) _NAEdgeContainerPair(a, 1)
+typedef std::pair<long, unsigned char> NAEdgeContainerPair;
 
 class NAEdgeContainer
 {
 private:
-	stdext::hash_map<long, char> * cacheAlong;
-	stdext::hash_map<long, char> * cacheAgainst;
+	stdext::hash_map<long, unsigned char> * cache;
 
 public:
 	NAEdgeContainer(void)
 	{ 
-		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, char>();
-		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, char>();
+		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, unsigned char>();
 	}
 
 	~NAEdgeContainer(void) 
 	{
 		Clear();
-		delete cacheAlong; 
-		delete cacheAgainst; 
+		delete cache; 
 	}
 	
-	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
-	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }
+	inline void Clear() { cache->clear(); }
 	HRESULT Insert(INetworkEdgePtr edge);
+	HRESULT Insert(long eid, esriNetworkEdgeDirection dir);
 	bool Exist(INetworkEdgePtr edge);
+	bool Exist(long eid, esriNetworkEdgeDirection dir);
 };
 
 // This collection object has two jobs:
@@ -369,7 +380,7 @@ public:
 		if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
 		else resTableAgainst = new DEBUG_NEW_PLACEMENT NAResTable();
 	}
-
+	
 	~NAEdgeCache(void) 
 	{
 		Clear();

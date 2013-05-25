@@ -1069,7 +1069,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
 	
-	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
+	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
 	m_bPersistDirty = false;
 
 	return S_OK;
