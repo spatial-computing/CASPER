@@ -460,11 +460,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	INetworkForwardStarAdjacenciesPtr ipNetworkBackwardStarAdjacencies;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC;
 
-	// TODO: this is where the new dynamic CARMA starts
-	// at this point you have to clear the dirty section of the carma tree (!?)
-	MarkDirtyEdgesAsUnVisited(closedList, leafs);
-
 	// closedList->Clear(); // with this line commented we go to dynamic carma
+
+	// This is where the new dynamic CARMA starts
+	// at this point you have to clear the dirty section of the carma tree.
+	// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
+	MarkDirtyEdgesAsUnVisited(closedList, leafs);
 
 	// search for min population on graph evacuees left to be routed
 	// The next if has to be in-tune with what population will be routed next.
@@ -519,20 +520,20 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		}
 	}
 
-	// Now insert leaf edges like the destination edges
+	// Now insert leaf edges in heap like the destination edges
 	NAEdgePtr e = NULL;
 	for (NAEdgeIterator i = leafs->begin(); i != leafs->end(); i++)
 	{
 		if (i->second & 1)
 		{
 			e = ecache->Get(i->first, esriNEDAlongDigitized);
-			if (FAILED(hr = InsertLeafToHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
+			if (FAILED(hr = PrepeareLeafEdgeForHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
 			heap->Insert(e);
 		}
 		if (i->second & 2)
 		{
 			e = ecache->Get(i->first, esriNEDAgainstDigitized);
-			if (FAILED(hr = InsertLeafToHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
+			if (FAILED(hr = PrepeareLeafEdgeForHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
 			heap->Insert(e);
 		}
 	}
@@ -759,7 +760,7 @@ void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) cons
 	e->TreeNext.clear();
 }
 
-HRESULT EvcSolver::InsertLeafToHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const
+HRESULT EvcSolver::PrepeareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const
 {
 	HRESULT hr = S_OK;
 	INetworkElementPtr fe, te;

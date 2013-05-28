@@ -297,7 +297,7 @@ private:
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
-	HRESULT InsertLeafToHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const;
+	HRESULT PrepeareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * leafs) const;
 	void    RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const;
 	void    UpdatePeakMemoryUsage();
