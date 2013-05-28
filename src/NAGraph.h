@@ -61,6 +61,12 @@ public:
 		else return ((*h)[0]).Value;
 	}
 
+	double GetH(long eid)
+	{
+		for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++) if (i->EdgeID == eid) return i->Value;
+		return FLT_MAX;
+	}
+
 	void ResetHValues(void)
 	{
 		h->clear(); 
@@ -304,14 +310,17 @@ public:
 		}
 	}
 
-	void Erase(NAEdgePtr edge);	
-	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
-	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }	
+	void Erase(NAEdgePtr edge) {        Erase(edge->EID, edge->Direction)  ; }
+	bool Exist(NAEdgePtr edge) { return Exist(edge->EID, edge->Direction)  ; }
+	void Clear()               { cacheAlong->clear(); cacheAgainst->clear(); }
+	size_t Size()              { return cacheAlong->size() + cacheAgainst->size(); }	
 	HRESULT Insert(NAEdgePtr edge);
-	bool Exist(NAEdgePtr edge);
+	bool Exist(long eid, esriNetworkEdgeDirection dir);
+	void Erase(long eid, esriNetworkEdgeDirection dir);
 };
 
 typedef std::pair<long, unsigned char> NAEdgeContainerPair;
+typedef stdext::hash_map<long, unsigned char>::iterator NAEdgeIterator;
 
 class NAEdgeContainer
 {
@@ -329,10 +338,14 @@ public:
 		Clear();
 		delete cache; 
 	}
-	
+
+	inline  NAEdgeIterator begin() { return cache->begin(); }
+	inline  NAEdgeIterator end()   { return cache->end()  ; }
+	HRESULT Insert(NAEdgePtr edge) { return Insert(edge->EID, edge->Direction); }
 	inline void Clear() { cache->clear(); }
 	HRESULT Insert(INetworkEdgePtr edge);
 	HRESULT Insert(long eid, esriNetworkEdgeDirection dir);
+	void    Insert(NAEdgeContainer * clone);
 	bool Exist(INetworkEdgePtr edge);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
 };
@@ -397,6 +410,7 @@ public:
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
+	NAEdgePtr Get(long eid, esriNetworkEdgeDirection dir) const;
 	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
 	
 	#pragma warning(push)

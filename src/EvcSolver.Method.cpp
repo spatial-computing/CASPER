@@ -36,6 +36,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	int pathGenerationCount = -1;
 	size_t CARMAClosedSize = 0, sumVisitedEdge = 0;
 	countCARMALoops = 0;
+	NAEdgeContainer * leafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
@@ -69,7 +70,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	{
 		// indexing all the population by their sorrounding vertices this will be used to sort them by network distance to safe zone.
 		// only the last 'k'th evacuees will be bucketed to run each round.
-		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize, carmaClosedList))) goto END_OF_FUNC;		
+		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize, carmaClosedList, leafs))) goto END_OF_FUNC;		
 
 		countEvacueesInOneBucket = 0;
 		sumVisitedDirtyEdge = 0;
@@ -407,12 +408,13 @@ END_OF_FUNC:
 	delete carmaClosedList;
 	delete closedList;
 	delete heap;
-	delete sortedEvacuees;
+	delete sortedEvacuees;	
+	delete leafs;
 	return hr;
 }
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
-	NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, size_t & closedSize, NAEdgeMap * closedList)
+	NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, size_t & closedSize, NAEdgeMap * closedList, NAEdgeContainer * leafs)
 {
 	HRESULT hr = S_OK;
 
@@ -441,8 +443,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
-	EvacueeList * redundentSortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
-	NAEdgeContainer * leafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
+	EvacueeList * redundentSortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();	
 	redundentSortedEvacuees->reserve(Evacuees->size());
 
 	// keeping reachable evacuees in a new hashtable for better access
@@ -461,9 +462,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	// TODO: this is where the new dynamic CARMA starts
 	// at this point you have to clear the dirty section of the carma tree (!?)
-	MarkDirtyEdgesasUnVisited(closedList, leafs);
+	MarkDirtyEdgesAsUnVisited(closedList, leafs);
 
-	closedList->Clear();
+	// closedList->Clear(); // with this line commented we go to dynamic carma
 
 	// search for min population on graph evacuees left to be routed
 	// The next if has to be in-tune with what population will be routed next.
@@ -490,9 +491,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		myEdge = tempZone->GetBehindEdge();
 		vcache->Get(tempZone->EID)->ResetHValues();
 
-		// TODO: check to see if the edge you're about to insert is not in the closedList
+		// check to see if the edge you're about to insert is not in the closedList
 
-		if (myEdge) 
+		if (myEdge && !closedList->Exist(myEdge)) 
 		{
 			tempZone->g = zone->g * myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
 			heap->Insert(myEdge);
@@ -508,6 +509,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				ipCurrentEdge = ipElement;
 				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				myEdge = ecache->New(ipCurrentEdge);
+				if (closedList->Exist(myEdge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
 				tempZone = vcache->New(zone->Junction);
 				tempZone->Previous = 0;
 				tempZone->SetBehindEdge(myEdge);
@@ -516,6 +518,27 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			}
 		}
 	}
+
+	// Now insert leaf edges like the destination edges
+	NAEdgePtr e = NULL;
+	for (NAEdgeIterator i = leafs->begin(); i != leafs->end(); i++)
+	{
+		if (i->second & 1)
+		{
+			e = ecache->Get(i->first, esriNEDAlongDigitized);
+			if (FAILED(hr = InsertLeafToHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
+			heap->Insert(e);
+		}
+		if (i->second & 2)
+		{
+			e = ecache->Get(i->first, esriNEDAgainstDigitized);
+			if (FAILED(hr = InsertLeafToHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
+			heap->Insert(e);
+		}
+	}
+
+	// we're done with all these leafs. let's clean up and collect new ones for the next round.
+	leafs->Clear();
 
 	// if this list is not empty, it means we are going to have another CARMA loop
 	if (!EvacueePairs->empty()) 
@@ -534,13 +557,14 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				// closedList violation happened
 				pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
 				hr = -myEdge->EID;
+				_ASSERT(false);
 				goto END_OF_FUNC;
 			}
 
 			// this value is being recorded and will be used as the default heuristic value for any future vertex
 			lastCost = myVertex->g;
 
-			// TODO: code to build the CARMA Tree
+			// Code to build the CARMA Tree
 			if (myVertex->Previous) 
 			{
 				myEdge->TreePrevious = myVertex->Previous->GetBehindEdge();
@@ -575,7 +599,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 						hr = E_ABORT;			
 						goto END_OF_FUNC;
 					}
-				}
+				}				
+				leafs->Insert(myEdge); // because this edge helpped us find a new evacuee, we save it as a leaf for next carma loop
 			}
 
 			// Query adjacencies from the current junction
@@ -656,53 +681,73 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);		
 		SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
 	}
+	
 	UpdatePeakMemoryUsage();
-	{
-		closedSize = closedList->Size();
-		#ifdef TRACE
-		std::ofstream f;
-		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-		f << "CARMA visited edges = " << closedSize << std::endl;
-		f.close();
-		#endif
-	}
-	// set graph as having all clean edges
-	ecache->CleanAllEdgesAndRelease(lastCost);
+	closedSize = closedList->Size();	
+	ecache->CleanAllEdgesAndRelease(lastCost); // set graph as having all clean edges
+		
+	#ifdef TRACE
+	std::ofstream f;
+	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+	f << "CARMA visited edges = " << closedSize << std::endl;
+	f.close();
+	#endif
 
 END_OF_FUNC:
 
 	// variable cleanup
-	delete leafs;
 	delete redundentSortedEvacuees;	
 	delete heap;
 	delete EvacueePairs;
-
 	return hr;
 }
 
-void EvcSolver::MarkDirtyEdgesasUnVisited(NAEdgeMap * closedList, NAEdgeContainer * leafs)
+void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * oldLeafs) const
 {
 	std::vector<NAEdgePtr> * dirtyVisited = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	std::vector<NAEdgePtr>::iterator i;
 	dirtyVisited->reserve(closedList->Size());
+	NAEdgeContainer * tempLeafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
 	//dirtyVisited->clear();
 
 	closedList->GetDirtyEdges(dirtyVisited);
+
 	for(i = dirtyVisited->begin(); i != dirtyVisited->end(); i++)	
 		if (closedList->Exist(*i))
 		{
 			NAEdgePtr leaf = *i;
-			while (leaf->TreePrevious && leaf->TreePrevious->IsDirty()) leaf = leaf->TreePrevious;
+			while (leaf->TreePrevious && leaf->IsDirty()) leaf = leaf->TreePrevious;
 			RecursiveMarkAndRemove(leaf, closedList);
 
-			// TODO: what is the definition of a leaf edge?
-			leafs->Insert(leaf->EID, leaf->Direction);
+			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge)
+			// and has at least one child dirty Edge. So the usual for loop is going to insert distination dirty
+			// edges and the rest are in the leafs list.
+			if (leaf->TreePrevious) tempLeafs->Insert(leaf->EID, leaf->Direction);
 		}
+		
+
+	// removing previously identified leafs from closedList
+	for (NAEdgeIterator i = oldLeafs->begin(); i != oldLeafs->end(); i++) 		
+	{
+		if ((i->second & 1) && closedList->Exist(i->first, esriNEDAlongDigitized))
+		{
+			closedList->Erase(i->first, esriNEDAlongDigitized);
+			tempLeafs->Insert(i->first, esriNEDAlongDigitized);
+		}
+		if ((i->second & 2) && closedList->Exist(i->first, esriNEDAgainstDigitized))
+		{
+			closedList->Erase(i->first, esriNEDAgainstDigitized);
+			tempLeafs->Insert(i->first, esriNEDAgainstDigitized);
+		}
+	}
+	oldLeafs->Clear();
+	oldLeafs->Insert(tempLeafs);
 
 	delete dirtyVisited;
+	delete tempLeafs;
 }
 
-void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList)
+void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
 {
 	closedList->Erase(e);
 	e->SetDirty();
@@ -712,6 +757,28 @@ void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList)
 		RecursiveMarkAndRemove(*i, closedList);
 	}
 	e->TreeNext.clear();
+}
+
+HRESULT EvcSolver::InsertLeafToHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const
+{
+	HRESULT hr = S_OK;
+	INetworkElementPtr fe, te;
+	INetworkJunctionPtr f, t;
+	
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &fe))) return hr;
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &te))) return hr;
+	f = fe; t = te;
+	if (FAILED(hr = edge->NetEdge->QueryJunctions(f, t))) return hr;
+	NAVertexPtr fPtr = vcache->New(f);
+	NAVertexPtr tPtr = vcache->New(t);
+	
+	// by the definition of a leaf, I'm sure it has a TreePrevious
+	fPtr->SetBehindEdge(edge);
+	fPtr->g = tPtr->GetH(edge->TreePrevious->EID) + edge->GetCost(minPop2Route, this->solverMethod);;
+	fPtr->Previous = NULL;
+
+	_ASSERT(fPtr->g < FLT_MAX);
+	return hr;
 }
 
 void EvcSolver::UpdatePeakMemoryUsage()

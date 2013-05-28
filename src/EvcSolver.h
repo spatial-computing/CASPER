@@ -288,7 +288,7 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*);
-	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr, size_t &, NAEdgeMap *);
+	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr, INetworkForwardStarExPtr, size_t &, NAEdgeMap *, NAEdgeContainer *);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -297,8 +297,9 @@ private:
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
-	void    MarkDirtyEdgesasUnVisited(NAEdgeMap * closedList, NAEdgeContainer * leafs);
-	void    RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList);
+	HRESULT InsertLeafToHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const;
+	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * leafs) const;
+	void    RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const;
 	void    UpdatePeakMemoryUsage();
 	
 	esriNAOutputLineType	m_outputLineType;
