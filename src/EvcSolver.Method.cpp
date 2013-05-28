@@ -40,7 +40,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
-	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC; 
+	INetworkForwardStarAdjacenciesPtr ipNetworkBackwardStarAdjacencies;
+	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC;
+	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC; 
 
 	///////////////////////////////////////
 	// Setup a message on our step progressor indicating that we are traversing the network
@@ -138,13 +140,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					else
 					{
 						// if the start point was a single junction, then all the adjacent edges can be start edges
-						if (FAILED(hr = ipNetworkBackwardStarEx->QueryAdjacencies(tempEvc->Junction, 0, 0, ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC; 
-						if (FAILED(hr = ipNetworkForwardStarAdjacencies->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
+						if (FAILED(hr = ipNetworkBackwardStarEx->QueryAdjacencies(tempEvc->Junction, 0, 0, ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC; 
+						if (FAILED(hr = ipNetworkBackwardStarAdjacencies->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
 						for (i = 0; i < adjacentEdgeCount; i++)
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) goto END_OF_FUNC;
 							ipCurrentEdge = ipElement;
-							if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
+							if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 							myEdge = ecache->New(ipCurrentEdge);
 							tempEvc = vcache->New(evc->Junction);
 							tempEvc->Previous = 0;
@@ -458,7 +460,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	// Create a backward Star Adjacencies object (we need this object to hold traversal queries carried out on the Backward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkBackwardStarAdjacencies;
+	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC;
+	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC;
 
 	// closedList->Clear(); // with this line commented we go to dynamic carma
 
@@ -502,13 +506,13 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		else
 		{
 			// if the start point was a single junction, then all the adjacent edges can be start edges
-			if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(tempZone->Junction, 0, 0, ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC; 
-			if (FAILED(hr = ipNetworkBackwardStarAdjacencies->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
+			if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(tempZone->Junction, 0, 0, ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC; 
+			if (FAILED(hr = ipNetworkForwardStarAdjacencies->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
 			for (i = 0; i < adjacentEdgeCount; i++)
 			{
 				if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) goto END_OF_FUNC;
 				ipCurrentEdge = ipElement;
-				if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
+				if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				myEdge = ecache->New(ipCurrentEdge);
 				if (closedList->Exist(myEdge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
 				tempZone = vcache->New(zone->Junction);
@@ -642,13 +646,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 					}
 				}
 				else // unvisited vertex. create new and insert in heap
-				{
-					// TODO: (dynamic carma) check if there is a better previous edge/vertex in closedList for this neighbor
-
-					neighbor = vcache->New(ipCurrentJunction);
-					neighbor->SetBehindEdge(currentEdge);
-					neighbor->g = newCost;
-					neighbor->Previous = myVertex;
+				{					
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost, myVertex,
+						vcache, ipNetworkForwardStarEx, ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC;
 					heap->Insert(currentEdge);
 				}
 			}
@@ -746,6 +746,19 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 
 	delete dirtyVisited;
 	delete tempLeafs;
+}
+
+HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double cost, NAVertexPtr myVertex,
+	NAVertexCache * vcache, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies) const
+{
+	HRESULT hr = S_OK;
+	// TODO: (dynamic carma) check if there is a better previous edge/vertex in closedList for this neighbor
+
+	NAVertexPtr neighbor = vcache->New(junction);
+	neighbor->SetBehindEdge(edge);
+	neighbor->g = cost;
+	neighbor->Previous = myVertex;
+	return hr;
 }
 
 void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
