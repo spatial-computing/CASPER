@@ -85,6 +85,18 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectName)$(PlatformArchitecture)</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -99,6 +111,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <BrowseInformation>true</BrowseInformation>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -128,6 +141,7 @@
       </PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -161,6 +175,7 @@
       </PrecompiledHeaderFile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -194,6 +209,7 @@
       </PrecompiledHeaderFile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <EnablePREfast>true</EnablePREfast>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
