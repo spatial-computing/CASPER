@@ -175,10 +175,12 @@ HRESULT FlockingObject::loadNewEdge(void)
 		
 		// push self location first. this will help the steer library since we're swapping the edge during process.
 		// we'll use the current location shadow on road segment as the start point.
-		OpenSteer::Vec3 o12 = (libpoints[2] - libpoints[1]).normalize();
-		libpoints[0] = libpoints[1] - (max(1.0, o12.dot(libpoints[1] - myVehicle->position())) * o12);
-		_ASSERT(libpoints[0] != libpoints[1]);
-
+		if (pointCount > 2)
+		{
+			OpenSteer::Vec3 o12 = (libpoints[2] - libpoints[1]).normalize();
+			libpoints[0] = libpoints[1] - (max(1.0, o12.dot(libpoints[1] - myVehicle->position())) * o12);
+			_ASSERT(libpoints[0] != libpoints[1]);
+		}
 		// speed limit update
 		if (FAILED(hr = (*pathSegIt)->pline->get_Length(&speedLimit))) return hr;
 		speedLimit = speedLimit / (*pathSegIt)->Edge->OriginalCost;

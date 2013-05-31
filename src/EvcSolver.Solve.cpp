@@ -949,7 +949,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		catch(std::exception& e)
 		{
 			CComBSTR ccombstrErr("Critical error during flocking simulation: ");
-			ccombstrErr.Append(e.what());
+			hr = ccombstrErr.Append(e.what());
 			pMessages->AddError(-1, ccombstrErr);
 		}
 
