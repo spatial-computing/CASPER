@@ -125,9 +125,12 @@ OpenSteer::OpenSteerDemo::initialize (void)
 
         // identify default PlugIn
         if (!selectedPlugIn) errorExit ("no default PlugIn");
-        std::cout << std::endl << "Default plugin:" << std::endl;  // xxx?
-        std::cout << " " << *selectedPlugIn << std::endl;          // xxx?
-        std::cout << std::endl;                                    // xxx?
+		else
+		{
+			std::cout << std::endl << "Default plugin:" << std::endl;  // xxx?
+			std::cout << " " << *selectedPlugIn << std::endl;          // xxx?
+			std::cout << std::endl;                                    // xxx?
+		}
     }
 
     // initialize the default PlugIn

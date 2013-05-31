@@ -158,11 +158,12 @@ void lqInitDatabase (lqInternalDB* lq,
     lq->divy = divy;
     lq->divz = divz;
     {
-	int i;
-	int bincount = divx * divy * divz;
-	int arraysize = sizeof (lqClientProxy*) * bincount;
-	lq->bins = (lqClientProxy**) malloc (arraysize);
-	for (i=0; i<bincount; i++) lq->bins[i] = NULL;
+		int i;
+		int bincount = divx * divy * divz;
+		int arraysize = sizeof (lqClientProxy*) * bincount;
+		lq->bins = (lqClientProxy**) malloc (arraysize);
+#pragma warning(suppress: 6011)
+		for (i=0; i<bincount; i++) lq->bins[i] = NULL;
     }
     lq->other = NULL;
 }
