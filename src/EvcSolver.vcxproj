@@ -427,7 +427,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>
       </RandomizedBaseAddress>
-      <ImageHasSafeExceptionHandlers>true</ImageHasSafeExceptionHandlers>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
@@ -545,7 +545,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <RandomizedBaseAddress>
       </RandomizedBaseAddress>
-      <ImageHasSafeExceptionHandlers>true</ImageHasSafeExceptionHandlers>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
