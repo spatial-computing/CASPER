@@ -66,7 +66,7 @@ using namespace ATL;
 
 // Be sure to set these paths to the version of the software against which you want to run
 
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriSystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriSystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriSystemUI.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
@@ -78,7 +78,7 @@ using namespace ATL;
 
 /*
 
-#import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE") // System
+#import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer") // System
 #import "libid:4ECCA6E2-B16B-4ACA-BD17-E74CAE4C150A" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI") // SystemUI
 #import "libid:866AE5D3-530C-11D2-A2BD-0000F8774FB5" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR") // Framework
 #import "libid:C4B094C2-FF32-4FA1-ABCB-7820F8D6FB68" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI") // Geometry
