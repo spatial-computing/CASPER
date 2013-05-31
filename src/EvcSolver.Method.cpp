@@ -13,7 +13,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	NAEdgeMap * carmaClosedList = new DEBUG_NEW_PLACEMENT NAEdgeMap();
 	NAEdgePtr currentEdge;
 	std::vector<EvacueePtr>::iterator seit;
-	NAVertexPtr neighbor, evc, tempEvc, BetterSafeZone = 0, finalVertex = 0, myVertex, temp;
+	NAVertexPtr neighbor, BetterSafeZone = 0, finalVertex = 0, myVertex, temp;
 	NAEdgePtr myEdge, edge;
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
@@ -37,6 +37,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	size_t CARMAClosedSize = 0, sumVisitedEdge = 0;
 	countCARMALoops = 0;
 	NAEdgeContainer * leafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
+	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
@@ -122,40 +123,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				else population2Route = populationLeft;
 
 				// populate the heap with vextices asociated with the current evacuee
-				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++)
-				{
-					evc = *vit;
-					tempEvc = vcache->New(evc->Junction);
-					tempEvc->SetBehindEdge(evc->GetBehindEdge());
-					tempEvc->g = evc->g;
-					tempEvc->Junction = evc->Junction;
-					tempEvc->Previous = 0;
-					myEdge = tempEvc->GetBehindEdge();
-
-					if (myEdge)
-					{
-						tempEvc->g = evc->g * myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
-						heap->Insert(myEdge);
-					}
-					else
-					{
-						// if the start point was a single junction, then all the adjacent edges can be start edges
-						if (FAILED(hr = ipNetworkBackwardStarEx->QueryAdjacencies(tempEvc->Junction, 0, 0, ipNetworkBackwardStarAdjacencies))) goto END_OF_FUNC; 
-						if (FAILED(hr = ipNetworkBackwardStarAdjacencies->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
-						for (i = 0; i < adjacentEdgeCount; i++)
-						{
-							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) goto END_OF_FUNC;
-							ipCurrentEdge = ipElement;
-							if (FAILED(hr = ipNetworkBackwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
-							myEdge = ecache->New(ipCurrentEdge);
-							tempEvc = vcache->New(evc->Junction);
-							tempEvc->Previous = 0;
-							tempEvc->SetBehindEdge(myEdge);
-							tempEvc->g = evc->g * myEdge->GetCost(population2Route, this->solverMethod) / myEdge->OriginalCost;
-							heap->Insert(myEdge);
-						}
-					}
-				}
+				// prepare and insert them into the heap
+				readyEdges->clear();
+				for(std::vector<NAVertexPtr>::iterator h = currentEvacuee->vertices->begin(); h != currentEvacuee->vertices->end(); h++)
+					if (FAILED(hr = PrepareVerticesForHeap(*h, vcache, ecache, closedList, readyEdges, population2Route, ipNetworkBackwardStarEx,
+						ipNetworkBackwardStarAdjacencies, ipNetworkQuery, this->solverMethod))) goto END_OF_FUNC;
+				for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
 				TimeToBeat = FLT_MAX;
 				BetterSafeZone = 0;
@@ -407,6 +380,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 END_OF_FUNC:
 
+	delete readyEdges;
 	delete carmaClosedList;
 	delete closedList;
 	delete heap;
@@ -428,7 +402,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	long adjacentEdgeCount, i;
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanNonHur);	
 	NAEdge * currentEdge;
-	NAVertexPtr neighbor, zone, tempZone;
+	NAVertexPtr neighbor;
 	std::vector<EvacueePtr>::iterator eit;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr cit;
@@ -446,7 +420,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
 	EvacueeList * redundentSortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();	
-	redundentSortedEvacuees->reserve(Evacuees->size());
+	redundentSortedEvacuees->reserve(Evacuees->size());	
+	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
+	readyEdges->reserve(safeZoneList->size());
 
 	// keeping reachable evacuees in a new hashtable for better access
 	NAEvacueeVertexTable * EvacueePairs = new DEBUG_NEW_PLACEMENT NAEvacueeVertexTable();
@@ -485,44 +461,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		minPop2Route = max(minPop2Route, 1.0);
 	}
 
-	for(iterator = safeZoneList->begin(); iterator != safeZoneList->end(); iterator++)
-	{
-		zone = iterator->second;
-		tempZone = vcache->New(zone->Junction);
-		tempZone->SetBehindEdge(zone->GetBehindEdge());
-		tempZone->g = zone->g;
-		tempZone->Junction = zone->Junction;
-		tempZone->Previous = 0;
-		myEdge = tempZone->GetBehindEdge();
-		vcache->Get(tempZone->EID)->ResetHValues();
-
-		// check to see if the edge you're about to insert is not in the closedList
-
-		if (myEdge && !closedList->Exist(myEdge)) 
-		{
-			tempZone->g = zone->g * myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
-			heap->Insert(myEdge);
-		}
-		else
-		{
-			// if the start point was a single junction, then all the adjacent edges can be start edges
-			if (FAILED(hr = ipNetworkForwardStarEx->QueryAdjacencies(tempZone->Junction, 0, 0, ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC; 
-			if (FAILED(hr = ipNetworkForwardStarAdjacencies->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
-			for (i = 0; i < adjacentEdgeCount; i++)
-			{
-				if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) goto END_OF_FUNC;
-				ipCurrentEdge = ipElement;
-				if (FAILED(hr = ipNetworkForwardStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
-				myEdge = ecache->New(ipCurrentEdge);
-				if (closedList->Exist(myEdge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
-				tempZone = vcache->New(zone->Junction);
-				tempZone->Previous = 0;
-				tempZone->SetBehindEdge(myEdge);
-				tempZone->g = zone->g * myEdge->GetCost(minPop2Route, this->solverMethod) / myEdge->OriginalCost;
-				heap->Insert(myEdge);
-			}
-		}
-	}
+	// prepare and insert safe zone vertices into the heap
+	for (NAVertexTableItr i = safeZoneList->begin(); i != safeZoneList->end(); i++)
+		if (FAILED(hr = PrepareVerticesForHeap(i->second, vcache, ecache, closedList, readyEdges, minPop2Route, ipNetworkForwardStarEx, ipNetworkForwardStarAdjacencies, ipNetworkQuery, solverMethod))) goto END_OF_FUNC;	
+	for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
 	// Now insert leaf edges in heap like the destination edges
 	NAEdgePtr e = NULL;
@@ -531,13 +473,13 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		if (i->second & 1)
 		{
 			e = ecache->Get(i->first, esriNEDAlongDigitized);
-			if (FAILED(hr = PrepeareLeafEdgeForHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
+			if (FAILED(hr = PrepareLeafEdgeForHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
 			heap->Insert(e);
 		}
 		if (i->second & 2)
 		{
 			e = ecache->Get(i->first, esriNEDAgainstDigitized);
-			if (FAILED(hr = PrepeareLeafEdgeForHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
+			if (FAILED(hr = PrepareLeafEdgeForHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
 			heap->Insert(e);
 		}
 	}
@@ -697,6 +639,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 END_OF_FUNC:
 
 	// variable cleanup
+	delete readyEdges;
 	delete redundentSortedEvacuees;	
 	delete heap;
 	delete EvacueePairs;
@@ -724,11 +667,10 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 			// and has at least one child dirty Edge. So the usual for loop is going to insert distination dirty
 			// edges and the rest are in the leafs list.
 			if (leaf->TreePrevious) tempLeafs->Insert(leaf->EID, leaf->Direction);
-		}
-		
+		}		
 
 	// removing previously identified leafs from closedList
-	for (NAEdgeIterator i = oldLeafs->begin(); i != oldLeafs->end(); i++) 		
+	for (NAEdgeIterator i = oldLeafs->begin(); i != oldLeafs->end(); i++)
 	{
 		if ((i->second & 1) && closedList->Exist(i->first, esriNEDAlongDigitized))
 		{
@@ -761,6 +703,59 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	return hr;
 }
 
+HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges,
+		    double pop, INetworkForwardStarExPtr ipNetworkStarEx, INetworkForwardStarAdjacenciesPtr ipNetworkStarAdjacencies, INetworkQueryPtr ipNetworkQuery, char solverMethod)
+{
+	HRESULT hr = S_OK;
+	NAVertexPtr temp;
+	NAEdgePtr edge;
+	INetworkEdgePtr ipCurrentEdge;
+	INetworkJunctionPtr ipCurrentJunction;
+	INetworkElementPtr ipElement;
+	long adjacentEdgeCount;
+	double fromPosition, toPosition;
+
+	if(readyEdges)
+	{
+		temp = vcache->New(point->Junction);
+		temp->SetBehindEdge(point->GetBehindEdge());
+		temp->g = point->g;
+		temp->Junction = point->Junction;
+		temp->Previous = 0;
+		edge = temp->GetBehindEdge();
+
+		// check to see if the edge you're about to insert is not in the closedList
+
+		if (edge && !closedList->Exist(edge)) 
+		{
+			// vcache->Get(temp->EID)->ResetHValues(); /// TODO: why ???
+			temp->g = point->g * edge->GetCost(pop, solverMethod) / edge->OriginalCost;
+			readyEdges->push_back(edge);
+		}
+		else
+		{
+			// if the start point was a single junction, then all the adjacent edges can be start edges
+			if (FAILED(hr = ipNetworkStarEx->QueryAdjacencies(temp->Junction, 0, 0, ipNetworkStarAdjacencies))) return hr; 
+			if (FAILED(hr = ipNetworkStarAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
+			for (long i = 0; i < adjacentEdgeCount; i++)
+			{
+				if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) return hr;
+				ipCurrentEdge = ipElement;
+				if (FAILED(hr = ipNetworkStarAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
+				edge = ecache->New(ipCurrentEdge);
+				if (closedList->Exist(edge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
+				temp = vcache->New(point->Junction);
+				temp->Previous = 0;
+				temp->SetBehindEdge(edge);
+				temp->g = point->g * edge->GetCost(pop, solverMethod) / edge->OriginalCost;
+				// vcache->Get(temp->EID)->ResetHValues();
+				readyEdges->push_back(edge);
+			}
+		}
+	}
+	return hr;
+}
+
 void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
 {
 	closedList->Erase(e);
@@ -773,7 +768,7 @@ void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) cons
 	e->TreeNext.clear();
 }
 
-HRESULT EvcSolver::PrepeareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const
+HRESULT EvcSolver::PrepareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const
 {
 	HRESULT hr = S_OK;
 	INetworkElementPtr fe, te;

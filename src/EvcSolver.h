@@ -297,7 +297,7 @@ private:
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
-	HRESULT PrepeareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const;
+	HRESULT PrepareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const;
 	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr, NAEdgePtr, double, NAVertexPtr, NAVertexCache *, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * leafs) const;
 	void    RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const;
@@ -345,6 +345,9 @@ private:
 
 // Smart Pointer for IEvcSolver (for use within this project)
 _COM_SMARTPTR_TYPEDEF(IEvcSolver, __uuidof(IEvcSolver));
+
+HRESULT PrepareVerticesForHeap(NAVertexPtr, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges,
+		    double pop, INetworkForwardStarExPtr ipNetworkStarEx, INetworkForwardStarAdjacenciesPtr ipNetworkStarAdjacencies, INetworkQueryPtr ipNetworkQuery, char solverMethod);
 
 // Simple helper class for managing the cancel tracker object during Solve
 class CancelTrackerHelper
