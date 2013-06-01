@@ -144,23 +144,23 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INetworkQueryPtr ipNetworkQuery(ipNetworkDataset);
 	INetworkForwardStarPtr ipNetworkForwardStar;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStar(&ipNetworkForwardStar))) return hr;
-	INetworkForwardStarExPtr ipNetworkForwardStarEx(ipNetworkForwardStar);
-	if (FAILED(hr = ipNetworkForwardStarEx->put_BacktrackPolicy(backtrack))) return hr;
+	INetworkForwardStarExPtr ipForwardStar(ipNetworkForwardStar);
+	if (FAILED(hr = ipForwardStar->put_BacktrackPolicy(backtrack))) return hr;
 
 	// this will create the backward traversal object to query for adjacencies during pre-processing
 	INetworkForwardStarPtr ipNetworkBackwardStar;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStar(&ipNetworkBackwardStar))) return hr;
-	INetworkForwardStarExPtr ipNetworkBackwardStarEx(ipNetworkBackwardStar);
-	if (FAILED(hr = ipNetworkBackwardStarEx->put_IsForwardTraversal(VARIANT_FALSE))) return hr;
-	if (FAILED(hr = ipNetworkBackwardStarEx->put_BacktrackPolicy(backtrack))) return hr;
+	INetworkForwardStarExPtr ipBackwardStar(ipNetworkBackwardStar);
+	if (FAILED(hr = ipBackwardStar->put_IsForwardTraversal(VARIANT_FALSE))) return hr;
+	if (FAILED(hr = ipBackwardStar->put_BacktrackPolicy(backtrack))) return hr;
 
 	// Get the "Barriers" NAClass table (we need the NALocation objects from this NAClass to push barriers into the Forward Star)
 	ITablePtr ipBarriersTable;
 	if (FAILED(hr = GetNAClassTable(pNAContext, CComBSTR(CS_BARRIERS_NAME), &ipBarriersTable))) return hr;
 
 	// Load the barriers
-	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipNetworkForwardStarEx))) return hr;
-	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipNetworkBackwardStarEx))) return hr;
+	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipForwardStar))) return hr;
+	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipBackwardStar))) return hr;
 
 	INetworkAttribute2Ptr networkAttrib = 0;
 	VARIANT_BOOL useRestriction;
@@ -172,8 +172,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = networkAttrib->get_UseByDefault(&useRestriction))) return hr;
 		if (useRestriction == VARIANT_TRUE)
 		{
-			if (FAILED(hr = ipNetworkForwardStarEx->AddRestrictionAttribute(networkAttrib))) return hr;
-			if (FAILED(hr = ipNetworkBackwardStarEx->AddRestrictionAttribute(networkAttrib))) return hr;
+			if (FAILED(hr = ipForwardStar->AddRestrictionAttribute(networkAttrib))) return hr;
+			if (FAILED(hr = ipBackwardStar->AddRestrictionAttribute(networkAttrib))) return hr;
 		}
 	}
 
@@ -280,7 +280,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				// We simply add its EID to the heap and break out of the enumerating loop
 				if (elementType == esriNETJunction)
 				{
-					if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipElement, &isRestricted))) return hr;
+					if (FAILED(hr = ipForwardStar->get_IsRestricted(ipElement, &isRestricted))) return hr;
 					if (!isRestricted)
 					{
 						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
@@ -303,7 +303,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						// We will start our traversal from the junctions of this edge
 						// and then we check the other edge in the opposite direction
 
-						if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipEdge, &isRestricted))) return hr;
+						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipEdge, &isRestricted))) return hr;
 						if (!isRestricted)
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
@@ -323,7 +323,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 					if (fromPosition <= posAlong && posAlong <= toPosition)
 					{
-						if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipOtherEdge, &isRestricted))) return hr;
+						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipOtherEdge, &isRestricted))) return hr;
 						if (!isRestricted)
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
@@ -408,7 +408,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				// We simply add its EID to the heap and break out of the enumerating loop
 				if (elementType == esriNETJunction)
 				{
-					if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipElement, &isRestricted))) return hr;
+					if (FAILED(hr = ipForwardStar->get_IsRestricted(ipElement, &isRestricted))) return hr;
 					if (!isRestricted)
 					{
 						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
@@ -430,7 +430,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						// We will start our traversal from the junctions of this edge
 						// and then we check the other edge in the opposite direction
 
-						if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipEdge, &isRestricted))) return hr;
+						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipEdge, &isRestricted))) return hr;
 						if (!isRestricted)
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
@@ -448,7 +448,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 					if (fromPosition <= posAlong && posAlong <= toPosition)
 					{
-						if (FAILED(hr = ipNetworkForwardStarEx->get_IsRestricted(ipOtherEdge, &isRestricted))) return hr;
+						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipOtherEdge, &isRestricted))) return hr;
 						if (!isRestricted)
 						{							
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
@@ -483,7 +483,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, pIsPartialSolution);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, pIsPartialSolution);
 	}
 	catch (std::exception & ex)
 	{
