@@ -474,6 +474,55 @@ HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
 	return S_OK;
 }
 
+HRESULT NAEdgeMap::Insert(NAEdgeMap * edges)
+{
+	NAEdgeTableItr i;
+	for(i = edges->cacheAlong->begin(); i != edges->cacheAlong->end(); i++)	
+		if (cacheAlong->find(i->first) == cacheAlong->end()) cacheAlong->insert(NAEdgeTablePair(i->second));
+	for(i = edges->cacheAgainst->begin(); i != edges->cacheAgainst->end(); i++)	
+		if (cacheAgainst->find(i->first) == cacheAgainst->end()) cacheAgainst->insert(NAEdgeTablePair(i->second));	
+	return S_OK;
+}
+
+//////////////////////////////////////////////////////////////////
+//// NAEdgeMapTwoGen Methods
+
+void NAEdgeMapTwoGen::MarkAllAsOldGen()
+{
+	oldGen->Insert(newGen);
+	newGen->Clear();
+}
+
+void NAEdgeMapTwoGen::Clear(UCHAR gen)
+{
+	if ((gen & NAEdgeMap_OLDGEN) != 0) oldGen->Clear();
+	if ((gen & NAEdgeMap_NEWGEN) != 0) newGen->Clear();
+}
+
+size_t NAEdgeMapTwoGen::Size(UCHAR gen)
+{
+	size_t t = 0;
+	if ((gen & NAEdgeMap_OLDGEN) != 0) t += oldGen->Size();
+	if ((gen & NAEdgeMap_NEWGEN) != 0) t += newGen->Size();
+	return t;
+}
+
+HRESULT NAEdgeMapTwoGen::Insert(NAEdgePtr edge, UCHAR gen)
+{
+	HRESULT hr = S_OK;
+	if ((gen & NAEdgeMap_OLDGEN) != 0) if (FAILED(hr = oldGen->Insert(edge))) return hr;
+	if ((gen & NAEdgeMap_NEWGEN) != 0) if (FAILED(hr = newGen->Insert(edge))) return hr;
+	return hr;
+}
+
+bool NAEdgeMapTwoGen::Exist(long eid, esriNetworkEdgeDirection dir, UCHAR gen)
+{
+	bool e = false;
+	if ((gen & NAEdgeMap_OLDGEN) != 0) e |= oldGen->Exist(eid, dir);
+	if ((gen & NAEdgeMap_NEWGEN) != 0) e |= newGen->Exist(eid, dir);
+	return e;
+}
+
 //////////////////////////////////////////////////////////////////
 //// NAEdgeContainer Methods
 

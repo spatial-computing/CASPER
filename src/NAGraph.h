@@ -315,8 +315,47 @@ public:
 	void Clear()               { cacheAlong->clear(); cacheAgainst->clear(); }
 	size_t Size()              { return cacheAlong->size() + cacheAgainst->size(); }	
 	HRESULT Insert(NAEdgePtr edge);
+	HRESULT Insert(NAEdgeMap * edges);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
 	void Erase(long eid, esriNetworkEdgeDirection dir);
+};
+
+#define NAEdgeMap_NOGEN   0x0
+#define NAEdgeMap_OLDGEN  0x1
+#define NAEdgeMap_NEWGEN  0x2
+#define NAEdgeMap_ALLGENS 0x3
+
+class NAEdgeMapTwoGen
+{
+public:
+	NAEdgeMap * oldGen;
+	NAEdgeMap * newGen;
+
+	NAEdgeMapTwoGen(void)
+	{ 
+		oldGen = new DEBUG_NEW_PLACEMENT NAEdgeMap();
+		newGen = new DEBUG_NEW_PLACEMENT NAEdgeMap();
+	}
+
+	~NAEdgeMapTwoGen(void) 
+	{
+		Clear(NAEdgeMap_ALLGENS);
+		delete oldGen; 
+		delete newGen; 
+	}
+
+	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty)
+	{
+		oldGen->GetDirtyEdges(dirty);
+		newGen->GetDirtyEdges(dirty);
+	}
+
+	void MarkAllAsOldGen();
+	bool Exist(NAEdgePtr edge, UCHAR gen = NAEdgeMap_ALLGENS) { return Exist(edge->EID, edge->Direction, gen)  ; }
+	void Clear(UCHAR gen);
+	size_t Size(UCHAR gen = NAEdgeMap_NEWGEN);
+	HRESULT Insert(NAEdgePtr edge, UCHAR gen = NAEdgeMap_NEWGEN);
+	bool Exist(long eid, esriNetworkEdgeDirection dir, UCHAR gen = NAEdgeMap_ALLGENS);
 };
 
 typedef std::pair<long, unsigned char> NAEdgeContainerPair;
@@ -353,7 +392,7 @@ public:
 // This collection object has two jobs:
 // it makes sure that there exist only one copy of an edge in it that is connected to each INetworkEdge.
 // this will be helpful to avoid duplicate copies pointing to the same edge structure. So data attached
-// to edge will be always fresh and there will be no inconsistancy. Care has to be taken not to overwrite
+// to edge will be always fresh and there will be no inconsistency. Care has to be taken not to overwrite
 // important edges with new ones. The second job is just a GC. since all edges are being newed here,
 // it can all be deleted at the end here as well.
 
