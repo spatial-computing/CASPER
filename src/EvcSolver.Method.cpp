@@ -602,7 +602,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 {
 	HRESULT hr = S_OK;
 	long adjacentEdgeCount;
-	INetworkElementPtr elementE, elementJ;
+	INetworkElementPtr elementE/*, elementJ*/;
 	INetworkEdgePtr tempNetEdge;
 	// INetworkJunctionPtr INbetterMyVertex;
 	NAVertexPtr betterMyVertex;
