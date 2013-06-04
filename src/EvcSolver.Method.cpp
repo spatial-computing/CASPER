@@ -503,6 +503,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			}
 		}
 	}
+	/// TODO check the frequency of H counts for each vertex
 
 	// set new default heuristic value
 	vcache->UpdateHeuristicForOutsideVertices(lastCost, this->countCARMALoops == 1);
