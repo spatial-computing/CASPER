@@ -496,7 +496,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				}
 				else // unvisited vertex. create new and insert in heap
 				{					
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache,
+						                                          closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
 					heap->Insert(currentEdge);
 				}
 			}
@@ -595,14 +596,14 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 		delete tempLeafs;
 }
 
-HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double cost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
+HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
 												 NAVertexCache * vcache, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkQueryPtr ipNetworkQuery) const
 {
 	HRESULT hr = S_OK;
 	long adjacentEdgeCount;
 	INetworkElementPtr elementE, elementJ;
 	INetworkEdgePtr tempNetEdge;
-	INetworkJunctionPtr INbetterMyVertex;
+	// INetworkJunctionPtr INbetterMyVertex;
 	NAVertexPtr betterMyVertex;
 	NAEdgePtr tempEdge, betterEdge = NULL;
 	VARIANT_BOOL isRestricted;
@@ -631,7 +632,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 
 		// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
 		// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
-		tempH = tempVertex->GetH(tempEdge->EID);
+		tempH = tempVertex->GetH(tempEdge->EID); ///TODO: is this cost calculation general enough or I should lookup upper vertex minimum H?
 		if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
 	}
 	if (betterEdge)
@@ -639,13 +640,13 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 		betterMyVertex = vcache->New(myVertex->Junction);
 		betterMyVertex->SetBehindEdge(betterEdge);
 		betterMyVertex->Previous = NULL;
-		betterMyVertex->g = 0.0; /// what should be here? Do I even care?
+		betterMyVertex->g = betterH;
 	}
 	else betterMyVertex = myVertex;
 
 	neighbor = vcache->New(junction);
 	neighbor->SetBehindEdge(edge);
-	neighbor->g = cost;
+	neighbor->g = edgeCost + betterMyVertex->g;
 	neighbor->Previous = betterMyVertex;
 	
 	return hr;
