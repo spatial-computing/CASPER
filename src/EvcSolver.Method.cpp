@@ -453,7 +453,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 						hr = E_ABORT;			
 						goto END_OF_FUNC;
 					}
-				}				
+				}
+				_ASSERT(myEdge->TreePrevious);
 				leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
 			}
 
@@ -739,6 +740,7 @@ HRESULT EvcSolver::PrepareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdg
 
 	// by the definition of a leaf, I'm sure it has a TreePrevious
 	fPtr->SetBehindEdge(edge);
+	_ASSERT(edge->TreePrevious);
 	fPtr->g = tPtr->GetH(edge->TreePrevious->EID) + edge->GetCost(minPop2Route, this->solverMethod);;
 	fPtr->Previous = NULL;
 
