@@ -53,7 +53,7 @@ public:
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
-	// double posAlong;
+	size_t HCount() const { return h->size(); }
 
 	__forceinline double minh() const
 	{
@@ -100,8 +100,8 @@ typedef std::pair<int, std::list<long> *> NAVertexLoopCountListPair;
 // This collection object has two jobs:
 // it makes sure that there exist only one copy of a vertex in it that is connected to each INetworkJunction.
 // this will be helpful to avoid duplicate copies pointing to the same junction structure. So data attached
-// to vertex will be always fresh and there will be no inconsistancy. Care has to be taken not to overwrite
-// important vertices with new ones. The second job is just a GC. since all vertices are being newed here,
+// to vertex will be always fresh and there will be no inconsistency. Care has to be taken not to overwrite
+// important vertices with new ones. The second job is just a GC. since all vertices are being created here,
 // it can all be deleted at the end here as well.
 
 class NAVertexCache
@@ -109,7 +109,6 @@ class NAVertexCache
 private:
 	NAVertexTable * cache;
 	std::vector<NAVertex *> * sideCache;
-	// NAVertexLoopCountList * noHVertices;
 	double heuristicForOutsideVertices;
 
 public:
@@ -117,7 +116,6 @@ public:
 	{
 		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAVertexPtr>();
 		sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
-		// noHVertices = new NAVertexLoopCountList();
 		heuristicForOutsideVertices = 0.0;
 	}
 
@@ -126,27 +124,9 @@ public:
 		Clear();
 		delete cache;
 		delete sideCache;
-		// for(NAVertexLoopCountListItr i = noHVertices->begin(); i != noHVertices->end(); i++) delete i->second;
-		// delete noHVertices;
 	}
 
-	/*
-	void GenerateZeroHurMsg(CString & msg) const
-	{
-		msg.Empty();
-		msg.AppendFormat(_T("These are vertex IDs in each round that were missing huristic value: "));
-		std::list<long> * l;
-		NAVertexLoopCountListItr i;
-		std::list<long>::iterator j;
-		for(i = noHVertices->begin(); i != noHVertices->end(); i++)
-		{
-			l = i->second;
-			msg.AppendFormat(_T("R%d="), i->first);
-			for (j = l->begin(); j != l->end(); j++) msg.AppendFormat(_T("%d, "), *j);
-		}
-	}
-	*/
-	
+	void PrintVertexHeuristicFeq();	
 	NAVertexPtr New(INetworkJunctionPtr junction);
 	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
@@ -230,7 +210,7 @@ typedef std::pair<long, EdgeReservationsPtr> NAResTablePair;
 // information about each edge which are helpful for CASPER algorithm.
 // Capacity: road initial capacity
 // Cost: road initial travel cost
-// reservations: a vector of evacuees commited to use this edge at a certain time/cost period
+// reservations: a vector of evacuees committed to use this edge at a certain time/cost period
 class NAEdge
 {
 private:	

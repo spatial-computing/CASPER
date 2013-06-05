@@ -259,7 +259,8 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <Message>Performing Custom Post-Build Step</Message>
       <Command>cd "$(OutDir)"
 cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
+copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -315,7 +316,8 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <Message>Performing Custom Post-Build Step</Message>
       <Command>cd "$(OutDir)"
 cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
+copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 %WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -374,7 +376,8 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <Message>Performing Custom Post-Build Step</Message>
       <Command>cd "$(OutDir)"
 cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
+copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -433,7 +436,8 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <Message>Performing Custom Post-Build Step</Message>
       <Command>cd "$(OutDir)"
 cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
+copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 %WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -492,7 +496,8 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <Message>Performing Custom Post-Build Step</Message>
       <Command>cd "$(OutDir)"
 cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
+copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -551,7 +556,8 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <Message>Performing Custom Post-Build Step</Message>
       <Command>cd "$(OutDir)"
 cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
+copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 %WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -606,7 +612,8 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <Message>Performing Custom Post-Build Step</Message>
       <Command>cd "$(OutDir)"
 cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
+copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -659,7 +666,8 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <Message>Performing Custom Post-Build Step</Message>
       <Command>cd "$(OutDir)"
 cd ..
-copy /Y "$(TargetDir)$(TargetName).*" *.*
+copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 %WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
 </Command>
     </PostBuildEvent>

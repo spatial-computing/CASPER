@@ -76,7 +76,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// NOTE: this is also a good place to perform any additional necessary validation, such as
 	// synchronizing the attribute names set on your solver with those of the context's network dataset
 
-	// Check for a Step Progressor on the track cancel parameter variable.
+	// Check for a Step Progress bar on the track cancel parameter variable.
 	// This can be used to indicate progress and output messages to the client throughout the solve
 	CancelTrackerHelper cancelTrackerHelper;
 	IStepProgressorPtr ipStepProgressor;
@@ -87,8 +87,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		ipStepProgressor = ipProgressor;
 
-		// We use the cancel tracker helper object to disassociate and reassociate the cancel tracker from the progressor
-		// during and after the Solve, respectively. This prevents calls to ITrackCancel::Continue from stepping our progressor
+		// We use the cancel tracker helper object to disassociate and re-associate the cancel tracker from the progress bar
+		// during and after the Solve, respectively. This prevents calls to ITrackCancel::Continue from stepping our progress bar
 		cancelTrackerHelper.ManageTrackCancel(pTrackCancel);
 	}
 
@@ -137,7 +137,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// This interface can be used to setup necessary traversal constraints on the Forward Star before proceeding
 	// This typically includes:
 	// 1) setting the traversal direction (through INetworkForwardStarSetup::IsForwardTraversal)
-	// 2) setting any restrictions on the forward star (e.g., oneway restrictions, restricted turns, etc.)
+	// 2) setting any restrictions on the forward star (e.g., one-way restrictions, restricted turns, etc.)
 	// 3) setting the U-turn policy (through INetworkForwardStarSetup::Backtrack)
 	// 4) setting the hierarchy (through INetworkForwardStarSetup::HierarchyAttribute)
 	// 5) setting up traversable/non-traversable elements (in our case, we will be setting up barriers as non-traversable)
@@ -534,10 +534,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Now that we have completed our traversal of the network from the Evacuee points, we must output the connected/disconnected edges
 	// to the "LineData" NAClass
 
-	// Setup a message on our step progressor indicating that we are outputting feature information
+	// Setup a message on our step progress bar indicating that we are outputting feature information
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing output features")); 
 
-	// looping through processed evacuees and generate routes in output featureclass
+	// looping through processed evacuees and generate routes in output feature class
 	PathSegment * pathSegment;
 	IFeaturePtr ipSourceFeature;
 	IGeometryPtr ipGeometry;
@@ -560,7 +560,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	BSTR sourceName;
 	std::vector<EvacueePtr>::iterator eit;
 	
-	// load the mercator projection and analysis projection
+	// load the Mercator projection and analysis projection
 	ISpatialReferencePtr ipNAContextSR;
 	if (FAILED(hr = pNAContext->get_SpatialReference(&ipNAContextSR))) return hr;
 
@@ -587,10 +587,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 
 	// If we reach this point, we have some features to output to the Routes NAClass
-	// Reset the progressor based on the number of features that we must output
+	// Reset the progress bar based on the number of features that we must output
 	if (ipStepProgressor)
 	{
-		// Step progressor range = 0 through numberOfOutputSteps
+		// Step progress bar range = 0 through numberOfOutputSteps
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
 		if (exportEdgeStat)
 		{
@@ -645,7 +645,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			pointCount = -1;
 			_ASSERT(pathSegment->EdgePortion > 0.0);
 
-			// retrive street shape for this segment
+			// retrieve street shape for this segment
 			if (FAILED(hr = ipNetworkDataset->get_SourceByID(pathSegment->SourceID, &ipNetworkSource))) return hr;
 			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
 			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
@@ -664,7 +664,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Check to see how much of the line geometry we can copy over
 			if (pathSegment->fromPosition != 0.0 || pathSegment->toPosition != 1.0)
 			{
-				// We must use only a subcurve of the line geometry
+				// We must use only a curve of the line geometry
 				ICurve3Ptr ipCurve(ipGeometry);
 				if (FAILED(hr = ipCurve->GetSubcurve(pathSegment->fromPosition, pathSegment->toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
 				ipGeometry = ipSubCurve;
@@ -680,14 +680,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				pcollect = pathSegment->pline;
 				if (FAILED(hr = pcollect->get_PointCount(&pointCount))) return hr;
 
-				// if this is not the last path segment then the last point is redundent.
+				// if this is not the last path segment then the last point is redundant.
 				pointCount--;						
 				for (i = 0; i < pointCount; i++)
 				{
 					if (FAILED(hr = pcollect->get_Point(i, &p))) return hr;
 					if (FAILED(hr = pline->AddPoint(p))) return hr;
 				}
-				// if (FAILED(hr = pathSegment->pline->Project(ipSpatialRef))) return hr;
 			}			
 			// Final cost calculations
 			path->EvacuationCost += pathSegment->Edge->GetCurrentCost() * pathSegment->EdgePortion;
@@ -717,7 +716,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		predictedCost = max(predictedCost, path->EvacuationCost);
 
-		// Step the progressor before continuing to the next Evacuee point
+		// Step the progress bar before continuing to the next Evacuee point
 		if (ipStepProgressor) ipStepProgressor->Step();
 		
 		// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
@@ -730,7 +729,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	delete type;
 	
-	// fluch the insert buffer
+	// flush the insert buffer
 	ipFeatureCursor->Flush();
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -774,7 +773,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			resPop = edge->GetReservedPop();
 			if (resPop <= 0.0) continue;
 
-			// retrive street shape for this edge
+			// retrieve street shape for this edge
 			if (FAILED(hr = edge->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
 			if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
 			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
@@ -794,7 +793,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Check to see how much of the line geometry we can copy over
 			if (fromPosition != 0.0 || toPosition != 1.0)
 			{
-				// We must use only a subcurve of the line geometry
+				// We must use only a curve of the line geometry
 				ICurve3Ptr ipCurve(ipGeometry);
 				if (FAILED(hr = ipCurve->GetSubcurve(fromPosition, toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
 				ipGeometry = ipSubCurve;
@@ -831,7 +830,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			resPop = edge->GetReservedPop();
 			if (resPop <= 0.0) continue;
 
-			// retrive street shape for this edge
+			// retrieve street shape for this edge
 			if (FAILED(hr = edge->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
 			if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
 			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
@@ -851,7 +850,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Check to see how much of the line geometry we can copy over
 			if (fromPosition != 0.0 || toPosition != 1.0)
 			{
-				// We must use only a subcurve of the line geometry
+				// We must use only a curve of the line geometry
 				ICurve3Ptr ipCurve(ipGeometry);
 				if (FAILED(hr = ipCurve->GetSubcurve(fromPosition, toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
 				ipGeometry = ipSubCurve;
@@ -872,7 +871,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 		}
 
-		// fluch the insert buffer
+		// flush the insert buffer
 		ipFeatureCursor->Flush();
 	}
 
@@ -886,7 +885,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Perform flocking simulation if requested
 
-	// At this stage we create many evacuee points within a flocking simulation enviroment to validate the calculated results
+	// At this stage we create many evacuee points within a flocking simulation environment to validate the calculated results
 	CString collisionMsg, simulationIncompleteEndingMsg;
 	std::vector<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
@@ -915,7 +914,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		costPerDay = GetUnitPerDay(unit, flockProfile.UsualSpeed);
 		costPerSec = costPerDay / (3600.0 * 24.0);
 
-		// project to mercator for the simulator
+		// project to Mercator for the simulator
 		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
 		{
 			// get all points from the stack and make one polyline from them. this will be the path.
@@ -936,7 +935,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// init
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking enviroment"));
+		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking environment"));
 		FlockingEnviroment * flock = new DEBUG_NEW_PLACEMENT FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, initDelayCostPerPop);
 		flock->Init(Evacuees, ipNetworkQuery, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
 		
@@ -953,7 +952,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			pMessages->AddError(-1, ccombstrErr);
 		}
 
-		// retrive results even if it's empty or errored
+		// retrieve results even if it's empty or error
 		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
 
 		if (FAILED(hr))
@@ -991,7 +990,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}			
 		}
 
-		// start writing into the featureclass
+		// start writing into the feature class
 		if (ipStepProgressor)
 		{			
 			ipStepProgressor->put_Message(CComBSTR(L"Writing flocking results"));
@@ -1025,7 +1024,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				if (keepGoing == VARIANT_FALSE) return E_ABORT;
 			}
 
-			// generate time as unicode string
+			// generate time as Unicode string
 			thisTime = baseTime + time_t((*it)->GTime / costPerSec);
 			localtime_s(&local, &thisTime);
 			wcsftime(thisTimeBuf, 25, L"%Y/%m/%d %H:%M:%S", &local);
@@ -1135,16 +1134,17 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	/// Close it and clean it
 	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg;
 #ifdef _FLOCK
-	performanceMsg.Format(_T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
+	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #else
-	performanceMsg.Format(_T("Timeing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f"),
+	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s)."), countCARMALoops);
-	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0l, peakMemoryUsage - baseMemoryUsage) / 1048576l);
+	int mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
+	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0, mem));
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(performanceMsg));
@@ -1158,13 +1158,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		pMessages->AddWarning(CComBSTR(_T("Some collisions have been reported at the following intervals:")));
 		pMessages->AddWarning(CComBSTR(collisionMsg));
 	}
-
-	/*
-	// message about zero heuristics observed
-	vcache->GenerateZeroHurMsg(ZeroHurMsg);
-	if (!ZeroHurMsg.IsEmpty()) pMessages->AddWarning(CComBSTR(ZeroHurMsg));
-	*/
-
+	
 	// clear and release evacuees and their paths
 	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
 	Evacuees->clear();

@@ -356,7 +356,7 @@ void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)
 	}
 }
 
-NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction/*, int loopCount */)
+NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
 {
 	NAVertexPtr n = 0;
 	long JunctionEID;
@@ -374,18 +374,6 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction/*, int loopCount */)
 		n = new DEBUG_NEW_PLACEMENT NAVertex(*(it->second));
 		sideCache->push_back(n);
 	}
-	/*
-	if (loopCount > 0 && n->IsHEmpty())
-	{
-		// we have found a node without an H value
-		if (noHVertices->find(loopCount) == noHVertices->end())
-		{
-			noHVertices->insert(NAVertexLoopCountListPair(loopCount, new std::list<long>()));
-		}
-		noHVertices->at(loopCount)->push_back(n->EID);
-	}
-	*/
-
 	return n;
 }
 
@@ -402,6 +390,17 @@ void NAVertexCache::Clear()
 	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++) delete cit->second;
 	cache->clear();
 	CollectAndRelease();
+}
+
+void NAVertexCache::PrintVertexHeuristicFeq()
+{
+	std::wostringstream os_;
+	size_t freq[20] = {0};
+	
+	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++) freq[cit->second->HCount()]++;
+	os_ << "PrintVertexHeuristicFeq:" << std::endl;
+	for(size_t i = 0; i < 20; i++)	if (freq[i] > 0) os_ << i << '=' << freq[i] << std::endl;	
+	OutputDebugStringW( os_.str().c_str() );
 }
 
 void NAVertexCache::CollectAndRelease()

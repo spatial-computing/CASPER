@@ -269,7 +269,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				f.close();
 #endif
 
-				// cleanup search heap and closedlist
+				// cleanup search heap and closed-list
 				UpdatePeakMemoryUsage();
 				heap->Clear();
 				closedList->Clear();
@@ -503,7 +503,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			}
 		}
 	}
-	/// TODO check the frequency of H counts for each vertex
+	/// Check the frequency of H counts for each vertex
+#ifdef DEBUG
+	vcache->PrintVertexHeuristicFeq();
+#endif
 
 	// set new default heuristic value
 	vcache->UpdateHeuristicForOutsideVertices(lastCost, this->countCARMALoops == 1);
@@ -611,7 +614,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	double betterH, tempH;
 	NAVertexPtr tempVertex, neighbor;
 
-	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closedlist
+	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closed-list
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
 	betterH = myVertex->g;
 	
