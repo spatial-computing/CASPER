@@ -568,7 +568,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ISpatialReferenceFactoryPtr pSpatRefFact = ISpatialReferenceFactoryPtr(CLSID_SpatialReferenceEnvironment);
 	if (FAILED(hr = pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC))) return hr;
 	ISpatialReferencePtr ipSpatialRef = ipNAContextPC;
-	std::vector<EvcPathPtr> * tempPathList = new std::vector<EvcPathPtr>(Evacuees->size());
+	std::vector<EvcPathPtr> * tempPathList = new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>(Evacuees->size());
 	tempPathList->clear();
 
 	for(eit = Evacuees->begin(); eit != Evacuees->end(); eit++)

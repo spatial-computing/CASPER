@@ -178,7 +178,7 @@ double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 	return OriginalCost / speedPercent;
 }
 
-// this function addes the resrvation also determines if the new added population makes the edge dirty.
+// this function adds the reservation also determines if the new added population makes the edge dirty.
 // if this new reservation made the edge change from clean to dirty then the return is true otherwise returns false.
 bool NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population)
 {
@@ -319,7 +319,7 @@ inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 	if (BehindEdge != NULL) BehindEdge->ToVertex = this;
 }
 
-// return true if update was unnesecery
+// return true if update was unnecessary
 bool NAVertex::UpdateHeuristic(long edgeid, double hur)
 {
 	bool unnesecery = false;
@@ -339,7 +339,7 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur)
 	return unnesecery;	
 }
 
-// return true if update was unnesecery
+// return true if update was unnecessary
 bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n)
 {
 	NAVertexPtr a = Get(n->EID);

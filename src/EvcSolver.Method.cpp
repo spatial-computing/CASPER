@@ -611,7 +611,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	NAVertexPtr betterMyVertex;
 	NAEdgePtr tempEdge, betterEdge = NULL;
 	VARIANT_BOOL isRestricted;
-	double betterH, tempH;
+	double betterH, tempH, from, to;
 	NAVertexPtr tempVertex, neighbor;
 
 	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closed-list
@@ -626,6 +626,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	{
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &elementE))) return hr;
 		tempNetEdge = elementE;
+		if (FAILED(hr = ipForwardAdj->QueryEdge(i, tempNetEdge, &from, &to))) return hr;
 		
 		// check restriction for the recently discovered edge
 		if (FAILED(hr = ipForwardStar->get_IsRestricted(tempNetEdge, &isRestricted))) return hr;
@@ -793,7 +794,7 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 
 			if (edgePortion > 0.0)
 			{
-				path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
+				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
 				BetterSafeZone->GetBehindEdge()->AddReservation(population2Route);
 			}
 		}
@@ -804,7 +805,7 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 			if (finalVertex->GetBehindEdge())
 			{
 				if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;	
-				path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
+				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
 				finalVertex->GetBehindEdge()->AddReservation(population2Route);
 			}
 			finalVertex = finalVertex->Previous;
@@ -828,7 +829,7 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 			}
 			else if (edgePortion > 0.0)
 			{							
-				path->push_front(new PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
+				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
 				finalVertex->GetBehindEdge()->AddReservation(population2Route);
 			}
 		}
