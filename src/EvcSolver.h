@@ -298,8 +298,7 @@ private:
 	HRESULT AddLocationFields(IFieldsEdit* pFieldsEdit, IDENetworkDataset* pDENDS);
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
-	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
-	HRESULT PrepareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const;
+	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);	
 	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr, NAEdgePtr, double, NAVertexPtr, NAEdgeCache *,
 		                                  NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr) const;
 	HRESULT GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee) const;

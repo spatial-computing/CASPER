@@ -3,6 +3,8 @@
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 
+HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs, double minPop2Route, EVC_SOLVER_METHOD solverMethod);
+
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
 							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
 							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution)
@@ -375,22 +377,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
 	// Now insert leaf edges in heap like the destination edges
-	NAEdgePtr e = NULL;
-	for (NAEdgeIterator i = leafs->begin(); i != leafs->end(); i++)
-	{
-		if (i->second & 1)
-		{
-			e = ecache->Get(i->first, esriNEDAlongDigitized);
-			if (FAILED(hr = PrepareLeafEdgeForHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
-			heap->Insert(e);
-		}
-		if (i->second & 2)
-		{
-			e = ecache->Get(i->first, esriNEDAgainstDigitized);
-			if (FAILED(hr = PrepareLeafEdgeForHeap(ipNetworkQuery, ecache, vcache, e, minPop2Route))) goto END_OF_FUNC;
-			heap->Insert(e);
-		}
-	}
+	if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;	
 
 	// we're done with all these leafs. let's clean up and collect new ones for the next round.
 	leafs->Clear();
@@ -562,9 +549,9 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 {
 	std::vector<NAEdgePtr> * dirtyVisited = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	std::vector<NAEdgePtr>::iterator i;
+	NAEdgeIterator j;
 	dirtyVisited->reserve(closedList->Size());
 	NAEdgeContainer * tempLeafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
-	//dirtyVisited->clear();
 
 	closedList->GetDirtyEdges(dirtyVisited);
 
@@ -575,30 +562,87 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 			while (leaf->TreePrevious && leaf->IsDirty()) leaf = leaf->TreePrevious;
 			RecursiveMarkAndRemove(leaf, closedList);
 
-			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one child dirty Edge.
+			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
 			// So the usual for loop is going to insert destination dirty edges and the rest are in the leafs list.
-			if (leaf->TreePrevious) tempLeafs->Insert(leaf->EID, leaf->Direction);
+			/*if (leaf->TreePrevious)*/ tempLeafs->Insert(leaf->EID, leaf->Direction);
 		}		
 
-		// removing previously identified leafs from closedList
-		for (NAEdgeIterator i = oldLeafs->begin(); i != oldLeafs->end(); i++)
+	// removing previously identified leafs from closedList
+	for (j = oldLeafs->begin(); j != oldLeafs->end(); j++)
+	{
+		if ((j->second & 1) && closedList->Exist(j->first, esriNEDAlongDigitized))
 		{
-			if ((i->second & 1) && closedList->Exist(i->first, esriNEDAlongDigitized))
-			{
-				closedList->Erase(i->first, esriNEDAlongDigitized);
-				tempLeafs->Insert(i->first, esriNEDAlongDigitized);
-			}
-			if ((i->second & 2) && closedList->Exist(i->first, esriNEDAgainstDigitized))
-			{
-				closedList->Erase(i->first, esriNEDAgainstDigitized);
-				tempLeafs->Insert(i->first, esriNEDAgainstDigitized);
-			}
+			closedList->Erase(j->first, esriNEDAlongDigitized);
+			tempLeafs->Insert(j->first, esriNEDAlongDigitized);
 		}
-		oldLeafs->Clear();
-		oldLeafs->Insert(tempLeafs);
+		if ((j->second & 2) && closedList->Exist(j->first, esriNEDAgainstDigitized))
+		{
+			closedList->Erase(j->first, esriNEDAgainstDigitized);
+			tempLeafs->Insert(j->first, esriNEDAgainstDigitized);
+		}
+	}
+	oldLeafs->Clear();
+	oldLeafs->Insert(tempLeafs);
 
-		delete dirtyVisited;
-		delete tempLeafs;
+	delete dirtyVisited;
+	delete tempLeafs;
+}
+
+void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
+{
+	closedList->Erase(e);
+	e->SetDirty();
+	for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
+	{
+		(*i)->TreePrevious = NULL;
+		RecursiveMarkAndRemove(*i, closedList);
+	}
+	e->TreeNext.clear();
+}
+
+HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdge * leaf, double minPop2Route, EVC_SOLVER_METHOD solverMethod)
+{
+	HRESULT hr = S_OK;
+	INetworkElementPtr fe, te;
+	INetworkJunctionPtr f, t;
+
+	if (leaf->TreePrevious) // it does not have a previous, then it's not a leaf ... it's a destination edge and it will be added to the heap at 'PrepareVerticesForHeap'
+	{
+		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &fe))) return hr;
+		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &te))) return hr;
+		f = fe; t = te;
+		if (FAILED(hr = leaf->NetEdge->QueryJunctions(f, t))) return hr;
+		NAVertexPtr fPtr = vcache->New(f);
+		NAVertexPtr tPtr = vcache->New(t);
+
+		fPtr->SetBehindEdge(leaf);
+		fPtr->g = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCost(minPop2Route, solverMethod);
+		fPtr->Previous = NULL;
+		_ASSERT(fPtr->g < FLT_MAX);		
+		heap->Insert(leaf);
+	}
+	return hr;
+}
+
+HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs, double minPop2Route, EVC_SOLVER_METHOD solverMethod)
+{
+	HRESULT hr = S_OK;
+	NAEdgePtr leaf;
+
+	for (NAEdgeIterator i = leafs->begin(); i != leafs->end(); i++)
+	{
+		if (i->second & 1)
+		{
+			leaf = ecache->Get(i->first, esriNEDAlongDigitized);
+			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, ecache, heap, leaf, minPop2Route, solverMethod))) return hr;
+		}
+		if (i->second & 2)
+		{
+			leaf = ecache->Get(i->first, esriNEDAgainstDigitized);
+			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, ecache, heap, leaf, minPop2Route, solverMethod))) return hr;
+		}
+	}
+	return hr;
 }
 
 HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
@@ -710,41 +754,6 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 			}
 		}
 	}
-	return hr;
-}
-
-void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
-{
-	closedList->Erase(e);
-	e->SetDirty();
-	for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
-	{
-		(*i)->TreePrevious = NULL;
-		RecursiveMarkAndRemove(*i, closedList);
-	}
-	e->TreeNext.clear();
-}
-
-HRESULT EvcSolver::PrepareLeafEdgeForHeap(INetworkQueryPtr ipNetworkQuery, NAEdgeCache * ecache, NAVertexCache * vcache, NAEdgePtr edge, double minPop2Route) const
-{
-	HRESULT hr = S_OK;
-	INetworkElementPtr fe, te;
-	INetworkJunctionPtr f, t;
-
-	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &fe))) return hr;
-	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &te))) return hr;
-	f = fe; t = te;
-	if (FAILED(hr = edge->NetEdge->QueryJunctions(f, t))) return hr;
-	NAVertexPtr fPtr = vcache->New(f);
-	NAVertexPtr tPtr = vcache->New(t);
-
-	// by the definition of a leaf, I'm sure it has a TreePrevious
-	fPtr->SetBehindEdge(edge);
-	_ASSERT(edge->TreePrevious);
-	fPtr->g = tPtr->GetH(edge->TreePrevious->EID) + edge->GetCost(minPop2Route, this->solverMethod);;
-	fPtr->Previous = NULL;
-
-	_ASSERT(fPtr->g < FLT_MAX);
 	return hr;
 }
 
