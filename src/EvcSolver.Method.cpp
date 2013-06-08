@@ -326,7 +326,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, minPop2Route = 1.0, newCost, lastCost = 0.0;
+	double fromPosition, toPosition, minPop2Route = 1.0, newCost, lastCost = 0.0, EdgeCostToBeat;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -403,7 +403,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			if (FAILED(hr = closedList->Insert(myEdge))) goto END_OF_FUNC;
 
 			// this value is being recorded and will be used as the default heuristic value for any future vertex
-			lastCost = myVertex->g;
+			lastCost = max(lastCost, myVertex->g);
 
 			// Code to build the CARMA Tree
 			if (myVertex->Previous) 
@@ -467,8 +467,17 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 				// if node has already been discovered then no need to heap it
 				currentEdge = ecache->New(ipCurrentEdge);
-				if (closedList->Exist(currentEdge)) continue;
+				if (closedList->oldGen->Exist(currentEdge)) continue;
+				
 				newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
+				if (closedList->newGen->Exist(currentEdge))
+				{
+					EdgeCostToBeat = currentEdge->ToVertex->g;
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache,
+						                                          closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
+					_ASSERT(EdgeCostToBeat <= currentEdge->ToVertex->g);
+					continue;
+				}
 
 				if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrease key.
 				{
