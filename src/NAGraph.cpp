@@ -377,6 +377,14 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
 	return n;
 }
 
+	
+NAVertexPtr NAVertexCache::Get(INetworkJunctionPtr junction)
+{
+	long JunctionEID;
+	if (FAILED(junction->get_EID(&JunctionEID))) return 0;
+	return Get(JunctionEID);
+}
+
 NAVertexPtr NAVertexCache::Get(long eid)
 {
 	NAVertexPtr n = 0;

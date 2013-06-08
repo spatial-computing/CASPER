@@ -131,6 +131,7 @@ public:
 	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
 	bool UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);
+	NAVertexPtr Get(INetworkJunctionPtr junction);
 	void Clear();
 	void CollectAndRelease();
 };

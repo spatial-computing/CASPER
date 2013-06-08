@@ -441,7 +441,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 						goto END_OF_FUNC;
 					}
 				}
-				_ASSERT(myEdge->TreePrevious);
 				leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
 			}
 
@@ -606,14 +605,14 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 	INetworkElementPtr fe, te;
 	INetworkJunctionPtr f, t;
 
-	if (leaf->TreePrevious) // it does not have a previous, then it's not a leaf ... it's a destination edge and it will be added to the heap at 'PrepareVerticesForHeap'
+	if (leaf->TreePrevious) // if it does not have a previous, then it's not a leaf ... it's a destination edge and it will be added to the heap at 'PrepareVerticesForHeap'
 	{
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &fe))) return hr;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &te))) return hr;
 		f = fe; t = te;
 		if (FAILED(hr = leaf->NetEdge->QueryJunctions(f, t))) return hr;
 		NAVertexPtr fPtr = vcache->New(f);
-		NAVertexPtr tPtr = vcache->New(t);
+		NAVertexPtr tPtr = vcache->Get(t);
 
 		fPtr->SetBehindEdge(leaf);
 		fPtr->g = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCost(minPop2Route, solverMethod);
@@ -682,7 +681,8 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 
 		// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
 		// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
-		tempH = tempVertex->GetH(tempEdge->EID); ///TODO: is this cost calculation general enough or I should lookup upper vertex minimum H?
+		///TODO: is this cost calculation general enough or I should lookup upper vertex minimum H?
+		tempH = tempVertex->GetH(tempEdge->EID);
 		if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
 	}
 	if (betterEdge)
