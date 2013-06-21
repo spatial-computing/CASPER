@@ -424,7 +424,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// This update should know if this is the first time this vertex is coming out
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min
 			// or update absolutely to this new value.
-			vcache->UpdateHeuristic(myEdge->EID, myVertex);
+			myVertex->UpdateHeuristic(myEdge->EID, myVertex->g, countCARMALoops);
 
 			// termination condition and evacuee discovery
 			if (EvacueePairs->empty()) continue;
@@ -514,7 +514,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 #endif
 
 	// set new default heuristic value
-	vcache->UpdateHeuristicForOutsideVertices(lastCost, this->countCARMALoops == 1);
+	vcache->UpdateHeuristicForOutsideVertices(lastCost, this->countCARMALoops);
 
 	// load evacuees into sorted list from the redundant list in reverse
 	SortedEvacuees->clear();

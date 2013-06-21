@@ -322,7 +322,7 @@ private:
 	float					initDelayCostPerPop;
 	FLOCK_PROFILE			flockingProfile;
 	float                   CARMAPerformanceRatio;
-	int						countCARMALoops;
+	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;	
 	HANDLE					hProcessPeakMemoryUsage;
 

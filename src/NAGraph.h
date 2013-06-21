@@ -29,11 +29,13 @@ struct HValue
 public:
 	double Value;
 	long EdgeID;
+	unsigned short CarmaLoop;
 	
-	HValue(long edgeID, double value)
+	HValue(long edgeID, double value, unsigned short carmaLoop)
 	{
 		EdgeID = edgeID;
 		Value = value;
+		CarmaLoop = carmaLoop;
 	}
 
 	static inline bool LessThan(HValue & a, HValue & b)
@@ -77,10 +79,10 @@ public:
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
 	inline bool IsHEmpty() const { return h->empty(); }
-	bool UpdateHeuristic(long edgeid, double hur);
+	bool UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop);
 	
 	NAVertex(void);
-	~NAVertex(void) { delete h; }
+	void ReleaseH(void) { delete h; }
 	NAVertex(const NAVertex& cpy);
 	NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge);
 };
@@ -128,8 +130,8 @@ public:
 
 	void PrintVertexHeuristicFeq();	
 	NAVertexPtr New(INetworkJunctionPtr junction);
-	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
-	bool UpdateHeuristic(long edgeid, NAVertex * n);
+	void UpdateHeuristicForOutsideVertices(double hur, unsigned short carmaLoop);
+	bool UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop);
 	NAVertexPtr Get(long eid);
 	NAVertexPtr Get(INetworkJunctionPtr junction);
 	void Clear();

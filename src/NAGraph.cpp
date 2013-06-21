@@ -273,7 +273,8 @@ NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
 NAVertex::NAVertex(const NAVertex& cpy)
 {
 	g = cpy.g;
-	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>(*(cpy.h));
+	//h = new DEBUG_NEW_PLACEMENT std::vector<HValue>(*(cpy.h));
+	h = cpy.h;
 	Junction = cpy.Junction;
 	BehindEdge = cpy.BehindEdge;
 	Previous = cpy.Previous;
@@ -320,39 +321,52 @@ inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 }
 
 // return true if update was unnecessary
-bool NAVertex::UpdateHeuristic(long edgeid, double hur)
+bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop)
 {
 	bool unnesecery = false;
 	for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++)
 	{
 		if (i->EdgeID == edgeid)
 		{
-			_ASSERT(i->Value <= hur);
-			unnesecery = i->Value == hur;
-			i->Value = hur;
+			_ASSERT(carmaLoop >= i->CarmaLoop);
+			if (carmaLoop == i->CarmaLoop)
+			{
+				_ASSERT(hur < i->Value);
+				unnesecery = false;
+				i->Value = hur;
+			}
+			else // carmaLoop > i->CarmaLoop
+			{
+				_ASSERT(i->Value <= hur);
+				unnesecery = i->Value == hur;
+				i->Value = hur;
+				i->CarmaLoop = carmaLoop;
+			}
 			if (!unnesecery) std::sort(h->begin(), h->end(), HValue::LessThan);
 			return unnesecery;
 		}
 	}
-	h->push_back(HValue(edgeid, hur));
+	h->push_back(HValue(edgeid, hur, carmaLoop));
 	std::sort(h->begin(), h->end(), HValue::LessThan);
 	return unnesecery;	
 }
 
 // return true if update was unnecessary
-bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n)
+bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop)
 {
 	NAVertexPtr a = Get(n->EID);
-	return a->UpdateHeuristic(edgeid, n->g);
+	return a->UpdateHeuristic(edgeid, n->g, carmaLoop);
 }
 
-void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)
+void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, unsigned short carmaLoop)
 {
+	bool goDeep = carmaLoop == 1;
 	if (heuristicForOutsideVertices < hur)
 	{
 		heuristicForOutsideVertices = hur;
 		if (goDeep)
-			for(NAVertexTableItr it = cache->begin(); it != cache->end(); it++) it->second->UpdateHeuristic(-1, hur);			
+			for(NAVertexTableItr it = cache->begin(); it != cache->end(); it++)
+				it->second->UpdateHeuristic(-1, hur, carmaLoop);			
 	}
 }
 
@@ -366,7 +380,7 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
 	if (it == cache->end())
 	{
 		n = new DEBUG_NEW_PLACEMENT NAVertex(junction, 0);
-		n->UpdateHeuristic(-1, heuristicForOutsideVertices);
+		n->UpdateHeuristic(-1, heuristicForOutsideVertices, 0);
 		cache->insert(NAVertexTablePair(n));
 	}
 	else
@@ -395,9 +409,13 @@ NAVertexPtr NAVertexCache::Get(long eid)
 
 void NAVertexCache::Clear()
 {
-	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++) delete cit->second;
-	cache->clear();
 	CollectAndRelease();
+	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++)
+	{
+		cit->second->ReleaseH();
+		delete cit->second;
+	}
+	cache->clear();
 }
 
 void NAVertexCache::PrintVertexHeuristicFeq()
