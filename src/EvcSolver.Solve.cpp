@@ -45,7 +45,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	HRESULT hr = S_OK;
 	long i;
-	double globalEvcCost = -1.0;
+	double globalEvcCost = -1.0, carmaSec = 0.0;
 
 	// init memory usage function and set the base
 	peakMemoryUsage = 0l;
@@ -483,7 +483,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, pIsPartialSolution);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, pIsPartialSolution, carmaSec);
 	}
 	catch (std::exception & ex)
 	{
@@ -1142,7 +1142,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
-	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s)."), countCARMALoops);
+	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds."), countCARMALoops, carmaSec);
 	int mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0, mem));
 

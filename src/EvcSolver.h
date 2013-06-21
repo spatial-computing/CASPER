@@ -288,7 +288,7 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *,
-		                INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*);
+		                INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*, double &);
 	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr,
 		              INetworkForwardStarExPtr, size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);

@@ -333,6 +333,7 @@ public:
 
 	void MarkAllAsOldGen();
 	bool Exist(NAEdgePtr edge, UCHAR gen = NAEdgeMap_ALLGENS) { return Exist(edge->EID, edge->Direction, gen)  ; }
+	void Erase(NAEdgePtr edge, UCHAR gen = NAEdgeMap_ALLGENS);
 	void Clear(UCHAR gen);
 	size_t Size(UCHAR gen = NAEdgeMap_NEWGEN);
 	HRESULT Insert(NAEdgePtr edge, UCHAR gen = NAEdgeMap_NEWGEN);

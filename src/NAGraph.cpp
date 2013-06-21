@@ -530,6 +530,12 @@ bool NAEdgeMapTwoGen::Exist(long eid, esriNetworkEdgeDirection dir, UCHAR gen)
 	return e;
 }
 
+void NAEdgeMapTwoGen::Erase(NAEdgePtr edge, UCHAR gen)
+{
+	if ((gen & NAEdgeMap_OLDGEN) != 0) oldGen->Erase(edge);
+	if ((gen & NAEdgeMap_NEWGEN) != 0) newGen->Erase(edge);
+}
+
 //////////////////////////////////////////////////////////////////
 //// NAEdgeContainer Methods
 

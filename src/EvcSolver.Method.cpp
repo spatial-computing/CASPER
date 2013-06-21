@@ -7,7 +7,7 @@ HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache *
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
 							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
-							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution)
+							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution, double & carmaSec)
 {	
 	// creating the heap for the dijkstra search
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanHur);
@@ -38,6 +38,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	countCARMALoops = 0;
 	NAEdgeContainer * leafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
+	HANDLE proc = GetCurrentProcess();
+	BOOL dummy;
+	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipForwardAdj;
@@ -71,8 +74,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	do
 	{
 		// indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone.
-		// only the last 'k'th evacuees will be bucketed to run each round.
-		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, CARMAClosedSize, carmaClosedList, leafs))) goto END_OF_FUNC;		
+		// only the last 'k'th evacuees will be bucketed to run each round.		
+		// time the carma loop and add up
+
+		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeS, &cpuTimeS);
+		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, CARMAClosedSize, carmaClosedList, leafs))) goto END_OF_FUNC;
+		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeE, &cpuTimeE);		
+		carmaSec += ((*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS)) + (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS))) / 10000000.0;
 
 		countEvacueesInOneBucket = 0;
 		sumVisitedDirtyEdge = 0;
@@ -467,16 +475,17 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 				// if node has already been discovered then no need to heap it
 				currentEdge = ecache->New(ipCurrentEdge);
-				if (closedList->oldGen->Exist(currentEdge)) continue;
+				if (closedList->Exist(currentEdge, NAEdgeMap_OLDGEN)) continue;
 				
 				newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
-				if (closedList->newGen->Exist(currentEdge))
+				if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
 				{
 					EdgeCostToBeat = currentEdge->ToVertex->g;
 					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache,
 						                                          closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
-					_ASSERT(EdgeCostToBeat <= currentEdge->ToVertex->g);
-					continue;
+					if(EdgeCostToBeat <= currentEdge->ToVertex->g) continue;
+					closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
+					heap->Insert(currentEdge);
 				}
 
 				if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrease key.
