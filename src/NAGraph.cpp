@@ -122,7 +122,7 @@ double NAEdge::LeftCapacity() const
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
-#pragma float_control(precise, off, push)
+//#pragma float_control(precise, off, push)
 double NAEdge::GetTrafficSpeedRatio(double allPop) const
 {
 	if (cachedCost[0] == allPop) { /*calcSaved++;*/ return cachedCost[1]; }
@@ -143,7 +143,7 @@ double NAEdge::GetTrafficSpeedRatio(double allPop) const
 	cachedCost[0] = allPop; cachedCost[1] = speedPercent;
 	return speedPercent;
 }
-#pragma float_control(pop)
+//#pragma float_control(pop)
 
 double NAEdge::GetCurrentCost() const
 {
@@ -337,7 +337,7 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 			}
 			else // carmaLoop > i->CarmaLoop
 			{
-				_ASSERT(i->Value <= hur);
+				_ASSERT(i->Value - hur <= FLT_EPSILON);
 				unnesecery = i->Value == hur;
 				i->Value = hur;
 				i->CarmaLoop = carmaLoop;
