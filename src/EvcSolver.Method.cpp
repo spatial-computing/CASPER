@@ -427,6 +427,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			myVertex->UpdateHeuristic(myEdge->EID, myVertex->g, countCARMALoops);
 
 			// termination condition and evacuee discovery
+			/// TODO: I still don't know how to terminate properly
 			//if (EvacueePairs->empty()) continue;
 
 			pairs = EvacueePairs->Find(myVertex->EID);
@@ -605,6 +606,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 	delete tempLeafs;
 }
 
+/// TODO: this recursive call would be better as a loop ... possible stack overflow in feature
 void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
 {
 	closedList->Erase(e);
