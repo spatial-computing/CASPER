@@ -572,7 +572,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 	NAEdgeContainer * tempLeafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
 
 	closedList->GetDirtyEdges(dirtyVisited);
-
+	
 	for(i = dirtyVisited->begin(); i != dirtyVisited->end(); i++)	
 		if (closedList->Exist(*i))
 		{

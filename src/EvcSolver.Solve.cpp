@@ -488,14 +488,27 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	catch (std::exception & ex)
 	{
 		hr = -1L * abs(ERROR_UNHANDLED_EXCEPTION);
+		(ex);
 		#ifdef TRACE
 		std::ofstream f;
 		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-		f << "Search throw: " << ex.what() << std::endl;
+		f << "Search throws: " << ex.what() << std::endl;
 		f.close();
 		#endif
-		(ex);
+		#ifdef DEBUG
+		std::wostringstream os_;
+		os_ << "Search throws: " << ex.what() << std::endl;
+		OutputDebugStringW( os_.str().c_str() );
+		_ASSERT(0);
+		#endif
 	}
+	#ifdef DEBUG
+	catch(...)
+	{
+		_ASSERT(0);
+		throw;
+	}
+	#endif
 
 	if (FAILED(hr))
 	{
