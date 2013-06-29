@@ -411,7 +411,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			if (FAILED(hr = closedList->Insert(myEdge))) goto END_OF_FUNC;
 
 			// this value is being recorded and will be used as the default heuristic value for any future vertex
-			lastCost = max(lastCost, myVertex->g);
+			lastCost = myVertex->g;
 
 			// Code to build the CARMA Tree
 			if (myVertex->Previous) 
@@ -427,7 +427,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			myVertex->UpdateHeuristic(myEdge->EID, myVertex->g, countCARMALoops);
 
 			// termination condition and evacuee discovery
-			if (EvacueePairs->empty()) continue;
+			//if (EvacueePairs->empty()) continue;
 
 			pairs = EvacueePairs->Find(myVertex->EID);
 			if (pairs)
@@ -479,10 +479,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				
 				newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
 				if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
-				{
-					EdgeCostToBeat = currentEdge->ToVertex->g;
+				{					
 					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache,
 						                                          closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
+					EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
 					if(EdgeCostToBeat <= currentEdge->ToVertex->g) continue;
 					closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
 					heap->Insert(currentEdge);
@@ -663,7 +663,7 @@ HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache *
 }
 
 HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
-												 NAVertexCache * vcache, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkQueryPtr ipNetworkQuery) const
+												 NAVertexCache * vcache, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist) const
 {
 	HRESULT hr = S_OK;
 	long adjacentEdgeCount;
@@ -680,28 +680,31 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
 	betterH = myVertex->g;
 	
-	if (FAILED(hr = ipForwardStar->QueryAdjacencies(myVertex->Junction, edge->NetEdge, 0, ipForwardAdj))) return hr;
-	if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) return hr;
-
-	// Loop through all adjacent edges and update their cost value
-	for (long i = 0; i < adjacentEdgeCount; i++)
+	if (checkOldClosedlist)
 	{
-		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &elementE))) return hr;
-		tempNetEdge = elementE;
-		if (FAILED(hr = ipForwardAdj->QueryEdge(i, tempNetEdge, &from, &to))) return hr;
-		
-		// check restriction for the recently discovered edge
-		if (FAILED(hr = ipForwardStar->get_IsRestricted(tempNetEdge, &isRestricted))) return hr;
-		if (isRestricted) continue;
-		tempEdge = ecache->New(tempNetEdge);
-		if (!closedList->Exist(tempEdge, NAEdgeMap_OLDGEN)) continue; // it has to be present in closed list from previous CARMA loop
-		if (tempEdge->Direction == prevEdge->Direction && tempEdge->EID == prevEdge->EID) continue; // it cannot be the same parent edge
+		if (FAILED(hr = ipForwardStar->QueryAdjacencies(myVertex->Junction, edge->NetEdge, 0, ipForwardAdj))) return hr;
+		if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) return hr;
 
-		// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
-		// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
-		///TODO: is this cost calculation general enough or I should lookup upper vertex minimum H?
-		tempH = tempVertex->GetH(tempEdge->EID);
-		if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
+		// Loop through all adjacent edges and update their cost value
+		for (long i = 0; i < adjacentEdgeCount; i++)
+		{
+			if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &elementE))) return hr;
+			tempNetEdge = elementE;
+			if (FAILED(hr = ipForwardAdj->QueryEdge(i, tempNetEdge, &from, &to))) return hr;
+		
+			// check restriction for the recently discovered edge
+			if (FAILED(hr = ipForwardStar->get_IsRestricted(tempNetEdge, &isRestricted))) return hr;
+			if (isRestricted) continue;
+			tempEdge = ecache->New(tempNetEdge);
+			if (!closedList->Exist(tempEdge, NAEdgeMap_OLDGEN)) continue; // it has to be present in closed list from previous CARMA loop
+			if (tempEdge->Direction == prevEdge->Direction && tempEdge->EID == prevEdge->EID) continue; // it cannot be the same parent edge
+
+			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
+			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
+			///TODO: is this cost calculation general enough or I should lookup upper vertex minimum H?
+			tempH = tempVertex->GetH(tempEdge->EID);
+			if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
+		}
 	}
 	if (betterEdge)
 	{

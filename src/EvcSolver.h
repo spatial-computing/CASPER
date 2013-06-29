@@ -300,7 +300,7 @@ private:
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);	
 	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr, NAEdgePtr, double, NAVertexPtr, NAEdgeCache *,
-		                                  NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr) const;
+		                                  NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, bool checkOldClosedlist = true) const;
 	HRESULT GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * leafs) const;
 	void    RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const;

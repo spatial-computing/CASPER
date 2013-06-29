@@ -190,7 +190,7 @@ bool NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost
 	if (reservations->initDelayCostPerPop > 0.0f) newPop = min(newPop, (float)(OriginalCost / reservations->initDelayCostPerPop));
 	reservations->ReservedPop += newPop;
 
-	bool ret = (!reservations->DirtyFlag) && (CleanCost / this->GetCurrentCost() < 0.8);	
+	bool ret = (!reservations->DirtyFlag) && (CleanCost < this->GetCurrentCost() /* * 0.8 */);
 	reservations->DirtyFlag |= ret;
 	return ret;
 }
