@@ -195,6 +195,22 @@ bool NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost
 	return ret;
 }
 
+void NAEdge::TreeNextEraseFirst(NAEdge * child)
+{
+	if (child)
+	{
+		std::vector<NAEdge *>::size_type j = TreeNext.size();
+		for(std::vector<NAEdge *>::size_type i = 0; i < TreeNext.size(); i++)		
+			if (TreeNext[i]->EID == child->EID && TreeNext[i]->Direction == child->Direction)
+			{
+				j = i;
+				break;
+			}
+			_ASSERT(j < TreeNext.size());
+			if (j < TreeNext.size()) TreeNext.erase(TreeNext.begin() + j);
+	}
+}
+
 /////////////////////////////////////////////////////////////
 // NAEdgeCache
 

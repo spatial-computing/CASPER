@@ -303,7 +303,8 @@ private:
 		                                  NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, bool checkOldClosedlist = true) const;
 	HRESULT GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * leafs) const;
-	void    RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const;
+	void    RecursiveMarkAndRemove   (NAEdgePtr e, NAEdgeMap * closedList) const;
+	void    NonRecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const;
 	void    UpdatePeakMemoryUsage();
 	
 	esriNAOutputLineType	m_outputLineType;

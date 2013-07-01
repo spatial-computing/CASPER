@@ -254,6 +254,7 @@ public:
 	inline void SetClean() { reservations->DirtyFlag = false; CleanCost = -1.0; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	inline bool IsDirty()  const { return reservations->DirtyFlag;   }
+	void TreeNextEraseFirst(NAEdge * child);
 	// inline unsigned short GetCalcSaved() const { return calcSaved; }
 };
 

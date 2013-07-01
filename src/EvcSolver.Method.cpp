@@ -394,6 +394,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	if (!EvacueePairs->empty()) 
 	{
 		countCARMALoops++;
+#ifdef DEBUG
+				std::wostringstream os_;
+				os_ << "CARMALoop #" << countCARMALoops << std::endl;
+				OutputDebugStringW( os_.str().c_str() );
+#endif
 
 		// Continue traversing the network while the heap has remaining junctions in it
 		// this is the actual Dijkstra code with backward network traversal. it will only update h value.
@@ -416,6 +421,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// Code to build the CARMA Tree
 			if (myVertex->Previous) 
 			{
+				if(myEdge->TreePrevious) myEdge->TreePrevious->TreeNextEraseFirst(myEdge);				
 				myEdge->TreePrevious = myVertex->Previous->GetBehindEdge();
 				myEdge->TreePrevious->TreeNext.push_back(myEdge);
 			}
@@ -578,7 +584,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 		{
 			NAEdgePtr leaf = *i;
 			while (leaf->TreePrevious && leaf->IsDirty()) leaf = leaf->TreePrevious;
-			RecursiveMarkAndRemove(leaf, closedList);
+			NonRecursiveMarkAndRemove(leaf, closedList);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
 			// So the usual for loop is going to insert destination dirty edges and the rest are in the leafs list.
@@ -606,7 +612,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 	delete tempLeafs;
 }
 
-/// TODO: this recursive call would be better as a loop ... possible stack overflow in feature
+// this recursive call would be better as a loop ... possible stack overflow in feature
 void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
 {
 	closedList->Erase(e);
@@ -617,6 +623,26 @@ void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) cons
 		RecursiveMarkAndRemove(*i, closedList);
 	}
 	e->TreeNext.clear();
+}
+
+void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList) const
+{
+	NAEdgePtr e = NULL;
+	std::stack<NAEdgePtr> subtree;
+	subtree.push(head);
+	while (!subtree.empty())
+	{
+		e = subtree.top();
+		subtree.pop();
+		closedList->Erase(e);
+		e->SetDirty();
+		for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
+		{
+			(*i)->TreePrevious = NULL;
+			subtree.push(*i);
+		}
+		e->TreeNext.clear();
+	}
 }
 
 HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdge * leaf, double minPop2Route, EVC_SOLVER_METHOD solverMethod)
@@ -637,7 +663,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 		fPtr->SetBehindEdge(leaf);
 		fPtr->g = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCost(minPop2Route, solverMethod);
 		fPtr->Previous = NULL;
-		_ASSERT(fPtr->g < FLT_MAX);		
+		_ASSERT(fPtr->g < FLT_MAX);
 		heap->Insert(leaf);
 	}
 	return hr;
