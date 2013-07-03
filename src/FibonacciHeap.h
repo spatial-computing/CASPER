@@ -9,7 +9,8 @@
 #pragma once
 
 #include <hash_map>
-#include "NAGraph.h"
+#include "NAEdge.h"
+#include "NAVertex.h"
 
 #define HeapDataType NAEdge
  

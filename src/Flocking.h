@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Evacuee.h"
-#include "NAGraph.h"
+#include "NAVertex.h"
+#include "NAedge.h"
 #include "SimpleVehicle.h"
 
 #define FLOCK_OBJ_STAT char

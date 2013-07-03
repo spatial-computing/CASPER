@@ -433,7 +433,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			myVertex->UpdateHeuristic(myEdge->EID, myVertex->g, countCARMALoops);
 
 			// termination condition and evacuee discovery
-			/// TODO: I still don't know how to terminate properly
+			#pragma message ("TODO: I still don't know how to terminate properly")
 			//if (EvacueePairs->empty()) continue;
 
 			pairs = EvacueePairs->Find(myVertex->EID);
@@ -583,7 +583,8 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 		if (closedList->Exist(*i))
 		{
 			NAEdgePtr leaf = *i;
-			while (leaf->TreePrevious && leaf->GetEdgeFlag() == EdgeFlagDirty) leaf = leaf->TreePrevious;
+			#pragma message ("TODO: Double check this while loop making sure it extracts all leafs")
+			while (leaf->TreePrevious && leaf->IsDirty(minPop2Route, method)) leaf = leaf->TreePrevious;
 			NonRecursiveMarkAndRemove(leaf, closedList);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
@@ -616,7 +617,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
 {
 	closedList->Erase(e);
-	e->SetEdgeFlag(EdgeFlagDirty);
+	e->SetDirty();
 	for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
 	{
 		(*i)->TreePrevious = NULL;
@@ -635,7 +636,7 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 		e = subtree.top();
 		subtree.pop();
 		closedList->Erase(e);
-		e->SetEdgeFlag(EdgeFlagDirty);
+		e->SetDirty();
 		for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
 		{
 			(*i)->TreePrevious = NULL;
@@ -708,7 +709,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
 	betterH = myVertex->g;
 	
-	/// TODO: so is it really called only on newly added edges?
+	#pragma message ("TODO: so is it really called only on newly added edges?")
 	/// if (checkOldClosedlist)
 	{
 		if (FAILED(hr = ipForwardStar->QueryAdjacencies(myVertex->Junction, edge->NetEdge, 0, ipForwardAdj))) return hr;
@@ -730,7 +731,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 
 			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
 			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
-			///TODO: is this cost calculation general enough or I should lookup upper vertex minimum H?
+			#pragma message ("TODO: is this cost calculation general enough or I should lookup upper vertex minimum H?")
 			tempH = tempVertex->GetH(tempEdge->EID);
 			if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
 		}
@@ -779,7 +780,8 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 		{
 			if (!closedList->Exist(edge))
 			{
-				// vcache->Get(temp->EID)->ResetHValues(); /// TODO: why ???
+				#pragma message ("TODO: Why do I need to reset the h value for the destination edges?")
+				// vcache->Get(temp->EID)->ResetHValues();
 				temp->g = point->g * edge->GetCost(pop, solverMethod) / edge->OriginalCost;
 				readyEdges->push_back(edge);
 			}

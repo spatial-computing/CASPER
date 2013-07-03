@@ -6,9 +6,6 @@
 class Evacuee;
 class NAEdge;
 
-[ export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC") ] enum EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
-[ export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948") ] enum EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3 };
-
 // The NAVertex class is what sits on top of the INetworkJunction interface and holds extra
 // information about each junction/vertex which are helpful for CASPER algorithm.
 // g: cost from source

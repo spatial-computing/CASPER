@@ -1,6 +1,10 @@
 #pragma once
 
 #include <hash_map>
+#include "Evacuee.h"
+
+[ export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC") ] enum EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
+[ export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948") ] enum EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3 };
 
 struct EdgeReservation
 {
@@ -92,12 +96,13 @@ public:
 	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable *, float InitDelayCostPerPop, EvcTrafficModel);
 	NAEdge(const NAEdge& cpy);
 
-	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g < n2->ToVertex->g; }
-	static bool LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh(); }
+	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2);
+	static bool LessThanHur   (NAEdge * n1, NAEdge * n2);
 	
 	// EdgeDirtyFlagEnum ClarifyEdgeFlag(double minPop2Route, EvcSolverMethod method);
 	// inline void SetEdgeFlag(EdgeDirtyFlagEnum flag) { reservations->DirtyFlag = flag; if (flag == EdgeFlagClean) CleanCost = -1.0; }
 	// inline EdgeDirtyFlagEnum GetEdgeFlag() const { return reservations->DirtyFlag; }
+	inline void SetDirty() { reservations->isDirty = true; }
 	inline bool IsDirty (double minPop2Route, EvcSolverMethod method);
 	inline void SetClean(double minPop2Route, EvcSolverMethod method);
 	inline double GetCleanCost() const { return CleanCost; }

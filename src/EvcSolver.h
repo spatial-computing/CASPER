@@ -15,7 +15,8 @@ static int isDebugLeakLoaded = false;
 
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 #include "Evacuee.h"
-#include "NAGraph.h"
+#include "NAEdge.h"
+#include "NAVertex.h"
 #include "Flocking.h"
 
 // memory leak detection in DEBUG mode
