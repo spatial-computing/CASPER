@@ -49,13 +49,13 @@ __interface IEvcSolver : IUnknown
 		HRESULT CriticalDensPerCap([in] BSTR value);
 	[propget, helpstring("Gets the selected critical density per capacity")]
 		HRESULT CriticalDensPerCap([out, retval] BSTR * value);
-	[propget, helpstring("Lists discriptive attributes from the network dataset")]
+	[propget, helpstring("Lists descriptive attributes from the network dataset")]
 		HRESULT DiscriptiveAttributes([out, retval] BSTR ** names);
 	[propput, helpstring("Sets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([in] unsigned __int3264 index);
-	[propget, helpstring("Gets the selected caspacity attribute index")]
+	[propget, helpstring("Gets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([out, retval] unsigned __int3264 * index);
-	[propget, helpstring("Counts discriptive attributes from the network dataset")]
+	[propget, helpstring("Counts descriptive attributes from the network dataset")]
 		HRESULT DiscriptiveAttributesCount([out, retval] unsigned __int3264 * Count);
 	[propput, helpstring("Sets the separable evacuee flag")]
 		HRESULT SeparableEvacuee([in] VARIANT_BOOL value);
@@ -66,13 +66,13 @@ __interface IEvcSolver : IUnknown
 	[propget, helpstring("Gets the export edge stat flag")]
 		HRESULT ExportEdgeStat([out, retval] VARIANT_BOOL * value);
 	[propput, helpstring("Sets the solver method")]
-		HRESULT SolverMethod([in] EVC_SOLVER_METHOD value);
+		HRESULT SolverMethod([in] EvcSolverMethod value);
 	[propget, helpstring("Gets the selected solver method")]
-		HRESULT SolverMethod([out, retval] EVC_SOLVER_METHOD * value);
+		HRESULT SolverMethod([out, retval] EvcSolverMethod * value);
 	[propput, helpstring("Sets the cost method")]
-		HRESULT TrafficModel([in] EVC_TRAFFIC_MODEL value);
+		HRESULT TrafficModel([in] EvcTrafficModel value);
 	[propget, helpstring("Gets the selected cost method")]
-		HRESULT TrafficModel([out, retval] EVC_TRAFFIC_MODEL * value);
+		HRESULT TrafficModel([out, retval] EvcTrafficModel * value);
 	[propput, helpstring("Sets the cost per safe zone density")]
 		HRESULT CostPerZoneDensity([in] BSTR value);
 	[propget, helpstring("Gets the cost per safe zone density")]
@@ -111,9 +111,9 @@ __interface IEvcSolver : IUnknown
 		HRESULT CostAttribute([in] unsigned __int3264 index);
 	[propget, helpstring("Gets the selected cost attribute index")]
 		HRESULT CostAttribute([out, retval] unsigned __int3264 * index);
-	[propget, helpstring("Lists impedence attributes from the network dataset")]
+	[propget, helpstring("Lists impedance attributes from the network dataset")]
 		HRESULT CostAttributes([out, retval] BSTR ** names);
-	[propget, helpstring("Counts impedence attributes from the network dataset")]
+	[propget, helpstring("Counts impedance attributes from the network dataset")]
 		HRESULT CostAttributesCount([out, retval] unsigned __int3264 * count);
 };
 
@@ -181,10 +181,10 @@ public:
 	STDMETHOD(get_ExportEdgeStat)(VARIANT_BOOL * value);
 	STDMETHOD(put_SeparableEvacuee)(VARIANT_BOOL   value);
 	STDMETHOD(get_SeparableEvacuee)(VARIANT_BOOL * value);
-	STDMETHOD(put_SolverMethod)(EVC_SOLVER_METHOD   value);
-	STDMETHOD(get_SolverMethod)(EVC_SOLVER_METHOD * value);
-	STDMETHOD(put_TrafficModel)(EVC_TRAFFIC_MODEL   value);
-	STDMETHOD(get_TrafficModel)(EVC_TRAFFIC_MODEL * value);
+	STDMETHOD(put_SolverMethod)(EvcSolverMethod   value);
+	STDMETHOD(get_SolverMethod)(EvcSolverMethod * value);
+	STDMETHOD(put_TrafficModel)(EvcTrafficModel   value);
+	STDMETHOD(get_TrafficModel)(EvcTrafficModel * value);
 	STDMETHOD(put_SaturationPerCap)(BSTR   value);
 	STDMETHOD(get_SaturationPerCap)(BSTR * value);
 	STDMETHOD(put_CriticalDensPerCap)(BSTR   value);
@@ -301,10 +301,10 @@ private:
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);	
 	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr, NAEdgePtr, double, NAVertexPtr, NAEdgeCache *,
 		                                  NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, bool checkOldClosedlist = true) const;
-	HRESULT GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee) const;
-	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * leafs) const;
-	void    RecursiveMarkAndRemove   (NAEdgePtr e, NAEdgeMap * closedList) const;
-	void    NonRecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const;
+	HRESULT GeneratePath(NAVertexPtr, NAVertexPtr, double &, int &, EvacueePtr) const;
+	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, NAEdgeContainer *, double, EvcSolverMethod) const;
+	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
+	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *) const;
 	void    UpdatePeakMemoryUsage();
 	
 	esriNAOutputLineType	m_outputLineType;
@@ -314,8 +314,8 @@ private:
 	INAStreetDirectionsAgentPtr pStreetAgent;	
 	float					SaturationPerCap;
 	float					CriticalDensPerCap;
-	EVC_SOLVER_METHOD		solverMethod;
-	EVC_TRAFFIC_MODEL		trafficModel;
+	EvcSolverMethod		solverMethod;
+	EvcTrafficModel		trafficModel;
 	float					costPerDensity;
 	VARIANT_BOOL			flockingEnabled;
 	float					flockingSnapInterval;
@@ -350,7 +350,7 @@ private:
 // Smart Pointer for IEvcSolver (for use within this project)
 _COM_SMARTPTR_TYPEDEF(IEvcSolver, __uuidof(IEvcSolver));
 
-HRESULT PrepareVerticesForHeap(NAVertexPtr, NAVertexCache *, NAEdgeCache *, NAEdgeMap *, std::vector<NAEdgePtr> *, double, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, char);
+HRESULT PrepareVerticesForHeap(NAVertexPtr, NAVertexCache *, NAEdgeCache *, NAEdgeMap *, std::vector<NAEdgePtr> *, double, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, EvcSolverMethod);
 
 // Simple helper class for managing the cancel tracker object during Solve
 class CancelTrackerHelper

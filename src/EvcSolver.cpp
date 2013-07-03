@@ -419,8 +419,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	capAttributeID = -1;
 	SaturationPerCap = 500.0;
 	CriticalDensPerCap = 20.0;
-	solverMethod = EVC_SOLVER_METHOD_CASPER;
-	trafficModel = EVC_TRAFFIC_MODEL_CASPER;
+	solverMethod = CASPERSolver;
+	trafficModel = POWERModel;
 	flockingProfile = FLOCK_PROFILE_CAR;
 	
 	m_CreateTraversalResult = VARIANT_TRUE;
@@ -506,13 +506,13 @@ STDMETHODIMP EvcSolver::put_SeparableEvacuee(VARIANT_BOOL value)
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::get_TrafficModel(EVC_TRAFFIC_MODEL * value)
+STDMETHODIMP EvcSolver::get_TrafficModel(EvcTrafficModel * value)
 {
 	*value = trafficModel;
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_TrafficModel(EVC_TRAFFIC_MODEL value)
+STDMETHODIMP EvcSolver::put_TrafficModel(EvcTrafficModel value)
 {
 	trafficModel = value;
 	m_bPersistDirty = true;
@@ -550,13 +550,13 @@ STDMETHODIMP EvcSolver::put_CARMAPerformanceRatio(BSTR value)
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::get_SolverMethod(EVC_SOLVER_METHOD * value)
+STDMETHODIMP EvcSolver::get_SolverMethod(EvcSolverMethod * value)
 {
 	*value = solverMethod;
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_SolverMethod(EVC_SOLVER_METHOD value)
+STDMETHODIMP EvcSolver::put_SolverMethod(EvcSolverMethod value)
 {
 	solverMethod = value;
 	m_bPersistDirty = true;

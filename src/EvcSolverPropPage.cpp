@@ -30,7 +30,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		size_t i, c, selectedIndex;
 
 		// set the solver method names
-		EVC_SOLVER_METHOD method;
+		EvcSolverMethod method;
 		m_ipEvcSolver->get_SolverMethod(&method);
 		::SendMessage(m_hComboMethod, CB_RESETCONTENT, NULL, NULL);
 		::SendMessage(m_hComboMethod, CB_ADDSTRING, NULL, (LPARAM)(OPTIMIZATION_SP));
@@ -63,7 +63,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		else  ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 
 		// set the solver traffic model names
-		EVC_TRAFFIC_MODEL model;
+		EvcTrafficModel model;
 		m_ipEvcSolver->get_TrafficModel(&model);
 		::SendMessage(m_hComboTrafficModel, CB_RESETCONTENT, NULL, NULL);
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_FLAT));
@@ -72,7 +72,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_EXP));
 		::SendMessage(m_hComboTrafficModel, CB_SETCURSEL, (WPARAM)model, 0);
 
-		// set the loaded network discriptive attribs
+		// set the loaded network descriptive attribs
 		m_ipEvcSolver->get_DiscriptiveAttributesCount(&c);
 		m_ipEvcSolver->get_DiscriptiveAttributes(&names);
 		::SendMessage(m_hCapCombo, CB_RESETCONTENT, NULL, NULL);
@@ -291,9 +291,9 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		selectedIndex = ::SendMessage(m_hCostCombo, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_CostAttribute((size_t)selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboMethod, CB_GETCURSEL, 0, 0);
-		if (selectedIndex > -1) ipSolver->put_SolverMethod((EVC_SOLVER_METHOD)selectedIndex);
+		if (selectedIndex > -1) ipSolver->put_SolverMethod((EvcSolverMethod)selectedIndex);
 		selectedIndex = ::SendMessage(m_hComboTrafficModel, CB_GETCURSEL, 0, 0);
-		if (selectedIndex > -1) ipSolver->put_TrafficModel((EVC_TRAFFIC_MODEL)selectedIndex);
+		if (selectedIndex > -1) ipSolver->put_TrafficModel((EvcTrafficModel)selectedIndex);
 		selectedIndex = ::SendMessage(m_hCmbFlockProfile, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_FlockingProfile((FLOCK_PROFILE)selectedIndex);
 

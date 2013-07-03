@@ -14,7 +14,7 @@ EdgeReservations::EdgeReservations(float capacity, float criticalDensPerCap, flo
 	Capacity = capacity;	
 	CriticalDens = criticalDensPerCap * capacity;
 	SaturationDensPerCap = saturationDensPerCap;
-	DirtyFlag = false;
+	DirtyFlag = EdgeFlagDirty;
 	initDelayCostPerPop = InitDelayCostPerPop;
 }
 
@@ -50,7 +50,7 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	TreeNext = cpy.TreeNext;
 }
 
-NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable * resTable, float InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
+NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable * resTable, float InitDelayCostPerPop, EvcTrafficModel TrafficModel)
 {
 	// calcSaved = 0;
 	TreePrevious = NULL;
@@ -129,14 +129,14 @@ double NAEdge::GetTrafficSpeedRatio(double allPop) const
 	double speedPercent = 1.0;
 	switch (trafficModel)
 	{
-	case EVC_TRAFFIC_MODEL_CASPER:
+	case POWERModel:
 		// z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
 		speedPercent = 1.0 - CASPERRatio * sqrt(allPop);
 		break;
-	case EVC_TRAFFIC_MODEL_LINEAR:
+	case LINEARModel:
 		speedPercent = 1.0 - (allPop - reservations->CriticalDens) / (2.0 * (reservations->SaturationDensPerCap * reservations->Capacity - reservations->CriticalDens));
 		break;
-	case EVC_TRAFFIC_MODEL_STEP:
+	case STEPModel:
 		speedPercent = 0.0;
 		break;
 	}
@@ -156,7 +156,7 @@ double NAEdge::GetCurrentCost() const
 	return OriginalCost / speedPercent;
 }
 
-double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
+double NAEdge::GetCost(double newPop, EvcSolverMethod method) const
 {
 	double speedPercent = 1.0;	
 	if (reservations->initDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / reservations->initDelayCostPerPop);
@@ -166,16 +166,23 @@ double NAEdge::GetCost(double newPop, EVC_SOLVER_METHOD method) const
 	{			
 		switch (method)
 		{
-		case EVC_SOLVER_METHOD_CASPER:
+		case CASPERSolver:
 			speedPercent = GetTrafficSpeedRatio(newPop);
 			break;
-		case EVC_SOLVER_METHOD_CCRP:
+		case CCRPSolver:
 			speedPercent = 0.0;
 			break;
 		}
 		speedPercent = min(1.0, max(0.0001, speedPercent));
 	}
 	return OriginalCost / speedPercent;
+}
+
+EdgeDirtyFlagEnum NAEdge::ClarifyEdgeFlag(double minPop2Route, EvcSolverMethod method) const
+{	
+	_ASSERT(CleanCost > 0.0);
+	if (CleanCost > 0.0 && CleanCost < this->GetCost(minPop2Route, method) /* * 0.8 */) return EdgeFlagDirty;
+	else return EdgeFlagClean;
 }
 
 // this function adds the reservation also determines if the new added population makes the edge dirty.
@@ -190,8 +197,9 @@ bool NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost
 	if (reservations->initDelayCostPerPop > 0.0f) newPop = min(newPop, (float)(OriginalCost / reservations->initDelayCostPerPop));
 	reservations->ReservedPop += newPop;
 
-	bool ret = (!reservations->DirtyFlag) && (CleanCost < this->GetCurrentCost() /* * 0.8 */);
-	reservations->DirtyFlag |= ret;
+	bool costChanged = CleanCost < this->GetCurrentCost() /* * 0.8 */;
+	bool ret = (reservations->DirtyFlag != EdgeFlagDirty) && costChanged;
+	if (costChanged) reservations->DirtyFlag = EdgeFlagDirty; else reservations->DirtyFlag = EdgeFlagMaybe;
 	return ret;
 }
 

@@ -3,7 +3,7 @@
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs, double minPop2Route, EVC_SOLVER_METHOD solverMethod);
+HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs, double minPop2Route, EvcSolverMethod solverMethod);
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
 							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
@@ -58,11 +58,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) goto END_OF_FUNC;
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) goto END_OF_FUNC;
 
-		if (this->solverMethod == EVC_SOLVER_METHOD_CASPER)
+		if (this->solverMethod == CASPERSolver)
 		{
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CASPER search")))) goto END_OF_FUNC;
 		}
-		else if (this->solverMethod == EVC_SOLVER_METHOD_SP)
+		else if (this->solverMethod == SPSolver)
 		{
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing SP search")))) goto END_OF_FUNC;
 		}
@@ -126,7 +126,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 				// the next 'if' is a distinctive feature by CASPER that CCRP does not have
 				// and can actually improve routes even with a STEP traffic model
-				if (this->solverMethod == EVC_SOLVER_METHOD_CCRP) population2Route = 1.0;
+				if (this->solverMethod == CCRPSolver) population2Route = 1.0;
 				else population2Route = populationLeft;
 
 				// populate the heap with vertices associated with the current evacuee
@@ -155,7 +155,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						goto END_OF_FUNC;
 					}
 
-					if (myEdge->IsDirty()) sumVisitedDirtyEdge++;
+					if (myEdge->GetEdgeFlag() == EdgeFlagDirty) sumVisitedDirtyEdge++;
 
 					// Check for destinations. If a new destination has been found then we should
 					// first flag this so later we can use to generate route. Also we should
@@ -290,7 +290,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			currentEvacuee->vertices->clear();
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
-			if (this->solverMethod == EVC_SOLVER_METHOD_CASPER && sumVisitedDirtyEdge > this->CARMAPerformanceRatio * sumVisitedEdge) break;
+			if (this->solverMethod == CASPERSolver && sumVisitedDirtyEdge > this->CARMAPerformanceRatio * sumVisitedEdge) break;
 
 		} // end of for loop over sortedEvacuees
 	}
@@ -362,13 +362,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	// closedList->Clear();        // with this line commented we go to dynamic carma
 	closedList->MarkAllAsOldGen(); // this is what we have to do instead of cleaning
 
-	// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
-	// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
-	MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs);
-
 	// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
 	// the h values should always be an underestimation
-	if (this->solverMethod != EVC_SOLVER_METHOD_CCRP && !separable)
+	if (this->solverMethod != CCRPSolver && !separable)
 	{
 		minPop2Route = FLT_MAX;
 		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
@@ -378,6 +374,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		}
 		minPop2Route = max(minPop2Route, 1.0);
 	}
+
+	// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
+	// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
+	MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, minPop2Route, this->solverMethod);
 
 	// prepare and insert safe zone vertices into the heap
 	for (NAVertexTableItr i = safeZoneList->begin(); i != safeZoneList->end(); i++)
@@ -569,7 +569,7 @@ END_OF_FUNC:
 	return hr;
 }
 
-void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * oldLeafs) const
+void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * oldLeafs, double minPop2Route, EvcSolverMethod method) const
 {
 	std::vector<NAEdgePtr> * dirtyVisited = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	std::vector<NAEdgePtr>::iterator i;
@@ -577,13 +577,13 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 	dirtyVisited->reserve(closedList->Size());
 	NAEdgeContainer * tempLeafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
 
-	closedList->GetDirtyEdges(dirtyVisited);
+	closedList->GetDirtyEdges(dirtyVisited, minPop2Route, method);
 	
 	for(i = dirtyVisited->begin(); i != dirtyVisited->end(); i++)	
 		if (closedList->Exist(*i))
 		{
 			NAEdgePtr leaf = *i;
-			while (leaf->TreePrevious && leaf->IsDirty()) leaf = leaf->TreePrevious;
+			while (leaf->TreePrevious && leaf->GetEdgeFlag() == EdgeFlagDirty) leaf = leaf->TreePrevious;
 			NonRecursiveMarkAndRemove(leaf, closedList);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
@@ -616,7 +616,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
 {
 	closedList->Erase(e);
-	e->SetDirty();
+	e->SetEdgeFlag(EdgeFlagDirty);
 	for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
 	{
 		(*i)->TreePrevious = NULL;
@@ -635,7 +635,7 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 		e = subtree.top();
 		subtree.pop();
 		closedList->Erase(e);
-		e->SetDirty();
+		e->SetEdgeFlag(EdgeFlagDirty);
 		for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
 		{
 			(*i)->TreePrevious = NULL;
@@ -645,7 +645,7 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 	}
 }
 
-HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdge * leaf, double minPop2Route, EVC_SOLVER_METHOD solverMethod)
+HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdge * leaf, double minPop2Route, EvcSolverMethod solverMethod)
 {
 	HRESULT hr = S_OK;
 	INetworkElementPtr fe, te;
@@ -669,7 +669,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 	return hr;
 }
 
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs, double minPop2Route, EVC_SOLVER_METHOD solverMethod)
+HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs, double minPop2Route, EvcSolverMethod solverMethod)
 {
 	HRESULT hr = S_OK;
 	NAEdgePtr leaf;
@@ -753,7 +753,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 }
 
 HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop,
-							   INetworkForwardStarExPtr ipStar, INetworkForwardStarAdjacenciesPtr ipStarAdj, INetworkQueryPtr ipNetworkQuery, char solverMethod)
+							   INetworkForwardStarExPtr ipStar, INetworkForwardStarAdjacenciesPtr ipStarAdj, INetworkQueryPtr ipNetworkQuery, EvcSolverMethod solverMethod)
 {
 	HRESULT hr = S_OK;
 	NAVertexPtr temp;
@@ -833,7 +833,7 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 			while (temp->Previous)
 			{
 				leftCap = temp->GetBehindEdge()->LeftCapacity();
-				if (this->solverMethod == EVC_SOLVER_METHOD_CCRP || leftCap > 0.0) population2Route = min(population2Route, leftCap);
+				if (this->solverMethod == CCRPSolver || leftCap > 0.0) population2Route = min(population2Route, leftCap);
 				temp = temp->Previous;
 			}
 			if (population2Route <= 0.0) population2Route = populationLeft;	

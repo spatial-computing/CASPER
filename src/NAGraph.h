@@ -6,16 +6,8 @@
 class Evacuee;
 class NAEdge;
 
-#define EVC_SOLVER_METHOD			char
-#define EVC_SOLVER_METHOD_SP		0x0
-#define EVC_SOLVER_METHOD_CCRP		0x1
-#define EVC_SOLVER_METHOD_CASPER	0x2
-
-#define EVC_TRAFFIC_MODEL			char
-#define EVC_TRAFFIC_MODEL_FLAT		0x0
-#define EVC_TRAFFIC_MODEL_STEP		0x1
-#define EVC_TRAFFIC_MODEL_LINEAR	0x2
-#define EVC_TRAFFIC_MODEL_CASPER	0x3
+[ export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC") ] enum EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
+[ export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948") ] enum EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3 };
 
 // The NAVertex class is what sits on top of the INetworkJunction interface and holds extra
 // information about each junction/vertex which are helpful for CASPER algorithm.
@@ -175,16 +167,18 @@ public:
 	}
 };
 
+enum EdgeDirtyFlagEnum { EdgeFlagClean = 0x0, EdgeFlagMaybe = 0x1, EdgeFlagDirty = 0x2 };
+
 class EdgeReservations
 {
 private:
+	float  ReservedPop;
+	float  SaturationDensPerCap;
+	float  CriticalDens;
+	float  Capacity;
+	float  initDelayCostPerPop;
+	EdgeDirtyFlagEnum  DirtyFlag;
 	// std::vector<EdgeReservation> * List;
-	float ReservedPop;
-	float SaturationDensPerCap;
-	float CriticalDens;
-	float Capacity;
-	bool  DirtyFlag;
-	float initDelayCostPerPop;
 
 public:
 	EdgeReservations(float capacity, float CriticalDensPerCap, float SaturationDensPerCap, float InitDelayCostPerPop);
@@ -218,7 +212,7 @@ class NAEdge
 {
 private:	
 	EdgeReservations * reservations;
-	EVC_TRAFFIC_MODEL trafficModel;
+	EvcTrafficModel trafficModel;
 	double CASPERRatio;
 	double CleanCost;
 	mutable double cachedCost[2];
@@ -235,7 +229,7 @@ public:
 	INetworkEdgePtr LastExteriorEdge;	
 	long EID;
 
-	double GetCost(double newPop, EVC_SOLVER_METHOD method) const;
+	double GetCost(double newPop, EvcSolverMethod method) const;
 	double GetCurrentCost() const;
 	double LeftCapacity() const;	
 
@@ -244,16 +238,16 @@ public:
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	bool AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population);
-	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable *, float InitDelayCostPerPop, EVC_TRAFFIC_MODEL);
+	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable *, float InitDelayCostPerPop, EvcTrafficModel);
 	NAEdge(const NAEdge& cpy);
 
 	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g < n2->ToVertex->g; }
 	static bool LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh(); }
 	
-	inline void SetDirty() { reservations->DirtyFlag = true; }
-	inline void SetClean() { reservations->DirtyFlag = false; CleanCost = -1.0; }
+	EdgeDirtyFlagEnum ClarifyEdgeFlag(double minPop2Route, EvcSolverMethod method) const;
+	inline void SetEdgeFlag(EdgeDirtyFlagEnum flag) { reservations->DirtyFlag = flag; if (flag == EdgeFlagClean) CleanCost = -1.0; }
+	inline EdgeDirtyFlagEnum GetEdgeFlag() const { return reservations->DirtyFlag; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
-	inline bool IsDirty()  const { return reservations->DirtyFlag;   }
 	void TreeNextEraseFirst(NAEdge * child);
 	// inline unsigned short GetCalcSaved() const { return calcSaved; }
 };
@@ -284,13 +278,21 @@ public:
 		delete cacheAgainst; 
 	}
 
-	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty)
+	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const
 	{
 		if(dirty)
 		{
 			NAEdgeTableItr i;
-			for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->IsDirty()) dirty->push_back(i->second);
-			for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->IsDirty()) dirty->push_back(i->second);
+			for (i = cacheAlong->begin(); i != cacheAlong->end(); i++)
+			{
+				if (i->second->GetEdgeFlag() == EdgeFlagDirty) dirty->push_back(i->second);
+				else if (i->second->GetEdgeFlag() == EdgeFlagMaybe && i->second->ClarifyEdgeFlag(minPop2Route, method) == EdgeFlagDirty) dirty->push_back(i->second);
+			}
+			for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++)
+			{
+				if (i->second->GetEdgeFlag() == EdgeFlagDirty) dirty->push_back(i->second);
+				else if (i->second->GetEdgeFlag() == EdgeFlagMaybe && i->second->ClarifyEdgeFlag(minPop2Route, method) == EdgeFlagDirty) dirty->push_back(i->second);
+			}
 		}
 	}
 
@@ -328,10 +330,10 @@ public:
 		delete newGen; 
 	}
 
-	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty)
+	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const
 	{
-		oldGen->GetDirtyEdges(dirty);
-		newGen->GetDirtyEdges(dirty);
+		oldGen->GetDirtyEdges(dirty, minPop2Route, method);
+		newGen->GetDirtyEdges(dirty, minPop2Route, method);
 	}
 
 	void MarkAllAsOldGen();
@@ -395,11 +397,11 @@ private:
 	NAResTable				* resTableAlong;
 	NAResTable				* resTableAgainst;
 	float					initDelayCostPerPop;
-	EVC_TRAFFIC_MODEL		trafficModel;
+	EvcTrafficModel		    trafficModel;
 
 public:
 
-	NAEdgeCache(long CapacityAttribID, long CostAttribID, float SaturationPerCap, float CriticalDensPerCap, bool TwoWayRoadsShareCap, float InitDelayCostPerPop, EVC_TRAFFIC_MODEL TrafficModel)
+	NAEdgeCache(long CapacityAttribID, long CostAttribID, float SaturationPerCap, float CriticalDensPerCap, bool TwoWayRoadsShareCap, float InitDelayCostPerPop, EvcTrafficModel TrafficModel)
 	{
 		// sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 		initDelayCostPerPop = InitDelayCostPerPop;
@@ -457,8 +459,8 @@ public:
 		f.close();
 		#endif
 
-		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) cit->second->SetClean();
-		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean();
+		for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) cit->second->SetEdgeFlag(EdgeFlagClean);
+		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetEdgeFlag(EdgeFlagClean);
 	}
 	#pragma warning(pop)
 	/*
