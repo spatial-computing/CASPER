@@ -708,7 +708,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
 	betterH = myVertex->g;
 	
-	if (checkOldClosedlist)
+	/// if (checkOldClosedlist)
 	{
 		if (FAILED(hr = ipForwardStar->QueryAdjacencies(myVertex->Junction, edge->NetEdge, 0, ipForwardAdj))) return hr;
 		if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) return hr;
@@ -736,6 +736,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	}
 	if (betterEdge)
 	{
+		_ASSERT(checkOldClosedlist);
 		betterMyVertex = vcache->New(myVertex->Junction);
 		betterMyVertex->SetBehindEdge(betterEdge);
 		betterMyVertex->Previous = NULL;
