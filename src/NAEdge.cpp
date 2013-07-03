@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "NAGraph.h"
+#include "NAEdge.h"
 #include "Evacuee.h"
 #include <cmath>
 #include <algorithm>
@@ -289,187 +289,148 @@ NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
 	else return NULL;
 }
 
-///////////////////////////////////////////////
-// NAVertex methods
+//////////////////////////////////////////////////////////////////
+//// NAEdgeMap Methods
 
-NAVertex::NAVertex(const NAVertex& cpy)
+bool NAEdgeMap::Exist(long eid, esriNetworkEdgeDirection dir)
 {
-	g = cpy.g;
-	//h = new DEBUG_NEW_PLACEMENT std::vector<HValue>(*(cpy.h));
-	h = cpy.h;
-	Junction = cpy.Junction;
-	BehindEdge = cpy.BehindEdge;
-	Previous = cpy.Previous;
-	EID = cpy.EID;
-	// posAlong = cpy.posAlong;
+	NAEdgeTable * cache = 0;
+
+	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
+	else cache = cacheAgainst;
+
+	return cache->find(eid) != cache->end();
 }
 
-NAVertex::NAVertex(void)
+void NAEdgeMap::GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const
 {
-	EID = -1;
-	Junction = 0;
-	BehindEdge = 0;
-	Previous = 0;
-	g = 0.0f;
-	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
-	ResetHValues();
-	// posAlong = 0.0f;
-}
-
-NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
-{
-	Previous = 0;
-	// posAlong = 0.0f;
-	g = 0.0f;
-	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
-	ResetHValues();
-	BehindEdge = behindEdge;
-
-	if (!FAILED(junction->get_EID(&EID)))
-	{		
-		Junction = junction;
-	}
-	else
+	NAEdgeTableItr i;
+	if(dirty)
 	{
-		EID = -1;
-		Junction = 0;
+		for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->IsDirty(minPop2Route, method)) dirty->push_back(i->second);
+		for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->IsDirty(minPop2Route, method)) dirty->push_back(i->second);
 	}
 }
 
-inline void NAVertex::SetBehindEdge(NAEdge * behindEdge) 
+void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
 {
-	BehindEdge = behindEdge;
-	if (BehindEdge != NULL) BehindEdge->ToVertex = this;
+	NAEdgeTable * cache = 0;
+	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
+	else cache = cacheAgainst;
+
+	NAEdgeTableItr i = cache->find(eid);
+	if (i != cache->end()) cache->erase(i);
 }
 
-// return true if update was unnecessary
-bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop)
+HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
 {
-	bool unnesecery = false;
-	for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++)
-	{
-		if (i->EdgeID == edgeid)
-		{
-			_ASSERT(carmaLoop >= i->CarmaLoop);
-			if (carmaLoop == i->CarmaLoop)
-			{
-				_ASSERT(hur < i->Value);
-				unnesecery = false;
-				i->Value = hur;
-			}
-			else // carmaLoop > i->CarmaLoop
-			{
-				_ASSERT(i->Value - hur <= FLT_EPSILON);
-				unnesecery = i->Value == hur;
-				i->Value = hur;
-				i->CarmaLoop = carmaLoop;
-			}
-			if (!unnesecery) std::sort(h->begin(), h->end(), HValue::LessThan);
-			return unnesecery;
-		}
-	}
-	h->push_back(HValue(edgeid, hur, carmaLoop));
-	std::sort(h->begin(), h->end(), HValue::LessThan);
-	return unnesecery;	
+	NAEdgeTable * cache = 0;
+
+	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
+	else cache = cacheAgainst;
+
+	if (cache->find(edge->EID) != cache->end()) return E_FAIL;
+	cache->insert(NAEdgeTablePair(edge));
+
+	return S_OK;
 }
 
-// return true if update was unnecessary
-bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop)
+HRESULT NAEdgeMap::Insert(NAEdgeMap * edges)
 {
-	NAVertexPtr a = Get(n->EID);
-	return a->UpdateHeuristic(edgeid, n->g, carmaLoop);
+	NAEdgeTableItr i;
+	for(i = edges->cacheAlong->begin(); i != edges->cacheAlong->end(); i++)	
+		if (cacheAlong->find(i->first) == cacheAlong->end()) cacheAlong->insert(NAEdgeTablePair(i->second));
+	for(i = edges->cacheAgainst->begin(); i != edges->cacheAgainst->end(); i++)	
+		if (cacheAgainst->find(i->first) == cacheAgainst->end()) cacheAgainst->insert(NAEdgeTablePair(i->second));	
+	return S_OK;
 }
 
-void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, unsigned short carmaLoop)
+//////////////////////////////////////////////////////////////////
+//// NAEdgeMapTwoGen Methods
+
+void NAEdgeMapTwoGen::MarkAllAsOldGen()
 {
-	bool goDeep = carmaLoop == 1;
-	if (heuristicForOutsideVertices < hur)
-	{
-		heuristicForOutsideVertices = hur;
-		if (goDeep) for(NAVertexTableItr it = cache->begin(); it != cache->end(); it++) it->second->UpdateHeuristic(-1, hur, carmaLoop);			
-	}
+	oldGen->Insert(newGen);
+	newGen->Clear();
 }
 
-NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
+void NAEdgeMapTwoGen::Clear(UCHAR gen)
 {
-	NAVertexPtr n = 0;
-	long JunctionEID;
-	if (FAILED(junction->get_EID(&JunctionEID))) return 0;
-	NAVertexTableItr it = cache->find(JunctionEID);
-
-	if (it == cache->end())
-	{
-		n = new DEBUG_NEW_PLACEMENT NAVertex(junction, 0);
-		n->UpdateHeuristic(-1, heuristicForOutsideVertices, 0);
-		cache->insert(NAVertexTablePair(n));
-	}
-	else
-	{
-		n = new DEBUG_NEW_PLACEMENT NAVertex(*(it->second));
-		sideCache->push_back(n);
-	}
-	return n;
+	if ((gen & NAEdgeMap_OLDGEN) != 0) oldGen->Clear();
+	if ((gen & NAEdgeMap_NEWGEN) != 0) newGen->Clear();
 }
 
-	
-NAVertexPtr NAVertexCache::Get(INetworkJunctionPtr junction)
+size_t NAEdgeMapTwoGen::Size(UCHAR gen)
 {
-	long JunctionEID;
-	if (FAILED(junction->get_EID(&JunctionEID))) return 0;
-	return Get(JunctionEID);
+	size_t t = 0;
+	if ((gen & NAEdgeMap_OLDGEN) != 0) t += oldGen->Size();
+	if ((gen & NAEdgeMap_NEWGEN) != 0) t += newGen->Size();
+	return t;
 }
 
-NAVertexPtr NAVertexCache::Get(long eid)
+HRESULT NAEdgeMapTwoGen::Insert(NAEdgePtr edge, UCHAR gen)
 {
-	NAVertexPtr n = 0;
-	NAVertexTableItr it = cache->find(eid);
-	if (it != cache->end()) n = it->second;
-	return n;
+	HRESULT hr = S_OK;
+	if ((gen & NAEdgeMap_OLDGEN) != 0) if (FAILED(hr = oldGen->Insert(edge))) return hr;
+	if ((gen & NAEdgeMap_NEWGEN) != 0) if (FAILED(hr = newGen->Insert(edge))) return hr;
+	return hr;
 }
 
-void NAVertexCache::Clear()
+bool NAEdgeMapTwoGen::Exist(long eid, esriNetworkEdgeDirection dir, UCHAR gen)
 {
-	CollectAndRelease();
-	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++)
-	{
-		cit->second->ReleaseH();
-		delete cit->second;
-	}
-	cache->clear();
+	bool e = false;
+	if ((gen & NAEdgeMap_OLDGEN) != 0) e |= oldGen->Exist(eid, dir);
+	if ((gen & NAEdgeMap_NEWGEN) != 0) e |= newGen->Exist(eid, dir);
+	return e;
 }
 
-void NAVertexCache::PrintVertexHeuristicFeq()
+void NAEdgeMapTwoGen::Erase(NAEdgePtr edge, UCHAR gen)
 {
-	std::wostringstream os_;
-	size_t freq[20] = {0};
-	
-	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++) freq[cit->second->HCount()]++;
-	os_ << "PrintVertexHeuristicFeq:" << std::endl;
-	for(size_t i = 0; i < 20; i++)	if (freq[i] > 0) os_ << i << '=' << freq[i] << std::endl;	
-	OutputDebugStringW( os_.str().c_str() );
+	if ((gen & NAEdgeMap_OLDGEN) != 0) oldGen->Erase(edge);
+	if ((gen & NAEdgeMap_NEWGEN) != 0) newGen->Erase(edge);
 }
 
-void NAVertexCache::CollectAndRelease()
-{	
-	int count = 0;
-	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++)
-	{
-		(*i)->SetBehindEdge(0);
-		delete (*i);
-		count++; 
-	}
-	sideCache->clear();
+//////////////////////////////////////////////////////////////////
+//// NAEdgeContainer Methods
+
+bool NAEdgeContainer::Exist(INetworkEdgePtr edge)
+{
+	esriNetworkEdgeDirection dir;
+	long eid;
+	if (FAILED(edge->get_EID(&eid))) return false;
+	if (FAILED(edge->get_Direction(&dir))) return false;
+	return Exist(eid, dir);
 }
 
-NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)
+HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 {
-	NAVertexPtr n = new DEBUG_NEW_PLACEMENT NAVertex(junction, 0);
-	cache->insert(cache->end(), n);
-	return n;
+	esriNetworkEdgeDirection dir;
+	long eid;
+	HRESULT hr;
+	if (FAILED(hr = edge->get_EID(&eid))) return hr;
+	if (FAILED(hr = edge->get_Direction(&dir))) return hr;
+	return Insert(eid, dir);
 }
 
-void NAVertexCollector::Clear()
+void NAEdgeContainer::Insert(NAEdgeContainer * clone)
 {
-	for(std::vector<NAVertexPtr>::iterator cit = cache->begin(); cit != cache->end(); cit++) delete (*cit);
-	cache->clear();
+	for(NAEdgeIterator i = clone->cache->begin(); i != clone->cache->end(); i++) cache->insert(NAEdgeContainerPair(i->first, i->second));
+}
+
+bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
+{
+	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
+	bool ret = false;
+	unsigned char d = (unsigned char)dir;
+	if (i != cache->end() && i->second != 0) ret = (i->second & d) != 0;	
+	return ret;
+}
+
+HRESULT NAEdgeContainer::Insert(long eid, esriNetworkEdgeDirection dir)
+{
+	unsigned char d = (unsigned char)dir;
+	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
+	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, d));
+	else i->second |= d;
+	return S_OK;
 }

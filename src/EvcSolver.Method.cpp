@@ -155,7 +155,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						goto END_OF_FUNC;
 					}
 
-					if (myEdge->GetEdgeFlag() == EdgeFlagDirty) sumVisitedDirtyEdge++;
+					if (myEdge->IsDirty(1.0, this->solverMethod)) sumVisitedDirtyEdge++;
 
 					// Check for destinations. If a new destination has been found then we should
 					// first flag this so later we can use to generate route. Also we should
@@ -550,7 +550,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	UpdatePeakMemoryUsage();
 	closedSize = closedList->Size();	
-	ecache->CleanAllEdgesAndRelease(lastCost); // set graph as having all clean edges
+	ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod); // set graph as having all clean edges
 
 #ifdef TRACE
 	std::ofstream f;
@@ -857,7 +857,7 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 			if (edgePortion > 0.0)
 			{
 				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
-				BetterSafeZone->GetBehindEdge()->AddReservation(population2Route);
+				BetterSafeZone->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
 			}
 		}
 		edgePortion = 1.0;
@@ -868,7 +868,7 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 			{
 				if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;	
 				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-				finalVertex->GetBehindEdge()->AddReservation(population2Route);
+				finalVertex->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
 			}
 			finalVertex = finalVertex->Previous;
 		}
@@ -892,7 +892,7 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 			else if (edgePortion > 0.0)
 			{							
 				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-				finalVertex->GetBehindEdge()->AddReservation(population2Route);
+				finalVertex->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
 			}
 		}
 		currentEvacuee->paths->push_front(path);
