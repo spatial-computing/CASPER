@@ -178,10 +178,10 @@ double NAEdge::GetCost(double newPop, EvcSolverMethod method) const
 	return OriginalCost / speedPercent;
 }
 
-EdgeDirtyFlagEnum NAEdge::ClarifyEdgeFlag(double minPop2Route, EvcSolverMethod method) const
+EdgeDirtyFlagEnum NAEdge::ClarifyEdgeFlag(double minPop2Route, EvcSolverMethod method)
 {	
-	_ASSERT(CleanCost > 0.0);
-	if (CleanCost > 0.0 && CleanCost < this->GetCost(minPop2Route, method) /* * 0.8 */) return EdgeFlagDirty;
+	if (CleanCost < 0.0) CleanCost = this->GetCurrentCost();
+	if (CleanCost < this->GetCost(minPop2Route, method) /* * 0.8 */) return EdgeFlagDirty;
 	else return EdgeFlagClean;
 }
 
