@@ -695,7 +695,7 @@ copy /Y "$(TargetDir)$(TargetName).pdb" *.*
     <ClCompile Include="FibonacciHeap.cpp" />
     <ClCompile Include="Flocking.cpp" />
     <ClCompile Include="NAEdge.cpp" />
-    <ClCompile Include="NAGraph.cpp" />
+    <ClCompile Include="NAVertex.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">Create</PrecompiledHeader>
@@ -711,7 +711,7 @@ copy /Y "$(TargetDir)$(TargetName).pdb" *.*
     <ClInclude Include="FibonacciHeap.h" />
     <ClInclude Include="Flocking.h" />
     <ClInclude Include="NAEdge.h" />
-    <ClInclude Include="NAGraph.h" />
+    <ClInclude Include="NAVertex.h" />
     <ClInclude Include="NameConstants.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
