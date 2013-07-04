@@ -15,6 +15,7 @@ EdgeReservations::EdgeReservations(float capacity, float criticalDensPerCap, flo
 	SaturationDensPerCap = saturationDensPerCap;
 	//DirtyFlag = EdgeFlagDirty;
 	initDelayCostPerPop = InitDelayCostPerPop;
+	isDirty = true;
 }
 
 EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
@@ -25,6 +26,7 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 	CriticalDens = cpy.CriticalDens;
 	SaturationDensPerCap = cpy.SaturationDensPerCap;
 	initDelayCostPerPop = cpy.initDelayCostPerPop;
+	isDirty = cpy.isDirty;
 }
 
 ///////////////////////////////////////////////////////////////////////

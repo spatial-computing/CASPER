@@ -586,6 +586,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 			NAEdgePtr leaf = *i;
 			while (leaf->TreePrevious && leaf->IsDirty(minPop2Route, method)) leaf = leaf->TreePrevious;
 			NonRecursiveMarkAndRemove(leaf, closedList);
+			if (leaf->TreePrevious) leaf->SetClean(minPop2Route, method);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
 			// So the usual for loop is going to insert destination dirty edges and the rest are in the leafs list.
@@ -617,9 +618,9 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
 {
 	closedList->Erase(e);
-	e->SetDirty();
 	for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
 	{
+		(*i)->SetDirty();
 		(*i)->TreePrevious = NULL;
 		RecursiveMarkAndRemove(*i, closedList);
 	}
@@ -636,9 +637,9 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 		e = subtree.top();
 		subtree.pop();
 		closedList->Erase(e);
-		e->SetDirty();
 		for(std::vector<NAEdgePtr>::iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++) 
 		{
+			(*i)->SetDirty();
 			(*i)->TreePrevious = NULL;
 			subtree.push(*i);
 		}
