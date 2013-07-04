@@ -431,11 +431,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min
 			// or update absolutely to this new value.
 			myVertex->UpdateHeuristic(myEdge->EID, myVertex->g, countCARMALoops);
-
-			// termination condition and evacuee discovery
-			#pragma message ("TODO: I still don't know how to terminate properly")
-			//if (EvacueePairs->empty()) continue;
-
+			
 			pairs = EvacueePairs->Find(myVertex->EID);
 			if (pairs)
 			{
@@ -507,10 +503,15 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 					}
 				}
 				else // unvisited vertex. create new and insert in heap
-				{					
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache,
-						                                          closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
-					heap->Insert(currentEdge);
+				{
+					// termination condition and evacuee discovery
+					#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] I still don't know how to terminate properly")
+					// if (!EvacueePairs->empty())
+					{
+						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache,
+																	  closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
+						heap->Insert(currentEdge);
+					}
 				}
 			}
 		}
@@ -583,13 +584,12 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 		if (closedList->Exist(*i))
 		{
 			NAEdgePtr leaf = *i;
-			#pragma message ("TODO: Double check this while loop making sure it extracts all leafs")
 			while (leaf->TreePrevious && leaf->IsDirty(minPop2Route, method)) leaf = leaf->TreePrevious;
 			NonRecursiveMarkAndRemove(leaf, closedList);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
 			// So the usual for loop is going to insert destination dirty edges and the rest are in the leafs list.
-			/*if (leaf->TreePrevious)*/ tempLeafs->Insert(leaf->EID, leaf->Direction);
+			tempLeafs->Insert(leaf->EID, leaf->Direction);
 		}		
 
 	// removing previously identified leafs from closedList
@@ -652,8 +652,13 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 	INetworkElementPtr fe, te;
 	INetworkJunctionPtr f, t;
 
-	if (leaf->TreePrevious) // if it does not have a previous, then it's not a leaf ... it's a destination edge and it will be added to the heap at 'PrepareVerticesForHeap'
+	// if it does not have a previous, then it's not a leaf ... it's a destination edge and it will be added to the heap at 'PrepareVerticesForHeap'
+	if (leaf->TreePrevious)
 	{
+		// leaf by definition has to be a clean edge with a positive clean cost
+		_ASSERT(leaf->GetCleanCost() > 0.0);
+		_ASSERT(!leaf->IsDirty(minPop2Route, solverMethod));
+
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &fe))) return hr;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &te))) return hr;
 		f = fe; t = te;
@@ -662,7 +667,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 		NAVertexPtr tPtr = vcache->Get(t);
 
 		fPtr->SetBehindEdge(leaf);
-		fPtr->g = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCost(minPop2Route, solverMethod);
+		fPtr->g = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCleanCost();    // tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCost(minPop2Route, solverMethod);
 		fPtr->Previous = NULL;
 		_ASSERT(fPtr->g < FLT_MAX);
 		heap->Insert(leaf);
@@ -709,7 +714,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
 	betterH = myVertex->g;
 	
-	#pragma message ("TODO: so is it really called only on newly added edges?")
+	#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] so is it really called only for newly added edges?")
 	/// if (checkOldClosedlist)
 	{
 		if (FAILED(hr = ipForwardStar->QueryAdjacencies(myVertex->Junction, edge->NetEdge, 0, ipForwardAdj))) return hr;
@@ -731,7 +736,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 
 			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
 			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
-			#pragma message ("TODO: is this cost calculation general enough or I should lookup upper vertex minimum H?")
+			#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] is this cost calculation general enough or I should lookup upper vertex minimum H?")
 			tempH = tempVertex->GetH(tempEdge->EID);
 			if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
 		}
@@ -780,7 +785,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 		{
 			if (!closedList->Exist(edge))
 			{
-				#pragma message ("TODO: Why do I need to reset the h value for the destination edges?")
+				#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] Why do I need to reset the h value for the destination edges?")
 				// vcache->Get(temp->EID)->ResetHValues();
 				temp->g = point->g * edge->GetCost(pop, solverMethod) / edge->OriginalCost;
 				readyEdges->push_back(edge);
@@ -808,13 +813,6 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 		}
 	}
 	return hr;
-}
-
-void EvcSolver::UpdatePeakMemoryUsage()
-{
-	PROCESS_MEMORY_COUNTERS pmc;
-	if(!hProcessPeakMemoryUsage) hProcessPeakMemoryUsage = GetCurrentProcess();
-	if (GetProcessMemoryInfo(hProcessPeakMemoryUsage, &pmc, sizeof(pmc))) peakMemoryUsage = max(peakMemoryUsage, pmc.PagefileUsage);
 }
 
 HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee) const
@@ -908,4 +906,11 @@ END_OF_FUNC:
 
 	if (path && FAILED(hr)) delete path;
 	return hr;
+}
+
+void EvcSolver::UpdatePeakMemoryUsage()
+{
+	PROCESS_MEMORY_COUNTERS pmc;
+	if(!hProcessPeakMemoryUsage) hProcessPeakMemoryUsage = GetCurrentProcess();
+	if (GetProcessMemoryInfo(hProcessPeakMemoryUsage, &pmc, sizeof(pmc))) peakMemoryUsage = max(peakMemoryUsage, pmc.PagefileUsage);
 }

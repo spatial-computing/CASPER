@@ -15,7 +15,10 @@
 #define STRICT
 #endif
 
-// memory leak detection new operator replacment
+#define STRING2(x) #x
+#define STRING(x) STRING2(x)
+
+// memory leak detection new operator replacement
 /// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
 #ifdef _DEBUG
 #define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)

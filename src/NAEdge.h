@@ -280,11 +280,6 @@ public:
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
 	NAEdgePtr Get(long eid, esriNetworkEdgeDirection dir) const;
 	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
-	void Clear();
-	
-	void CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver)
-	{
-		for(NAEdgeTableItr cit = cacheAlong->begin();   cit != cacheAlong->end();   cit++) cit->second->SetClean(minPop2Route, solver);
-		for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean(minPop2Route, solver);
-	}
+	void Clear();	
+	void CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver);
 };

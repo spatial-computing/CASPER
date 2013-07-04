@@ -73,6 +73,7 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 			}
 			else // carmaLoop > i->CarmaLoop
 			{
+				#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] Might not need to check against FLT_EPSILON. Also changing the definition of dirtiness might help.")
 				_ASSERT(i->Value - hur <= FLT_EPSILON);
 				unnesecery = i->Value == hur;
 				i->Value = hur;

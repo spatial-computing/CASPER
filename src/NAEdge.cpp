@@ -179,6 +179,7 @@ double NAEdge::GetCost(double newPop, EvcSolverMethod method) const
 	return OriginalCost / speedPercent;
 }
 
+// this function has to cache the answer and it has to be consistent.
 bool NAEdge::IsDirty(double minPop2Route, EvcSolverMethod method)
 {
 	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) /* * 0.8 */;
@@ -187,7 +188,7 @@ bool NAEdge::IsDirty(double minPop2Route, EvcSolverMethod method)
 
 void NAEdge::SetClean(double minPop2Route, EvcSolverMethod method)
 {
-	CleanCost = this->GetCost(minPop2Route, method) /* * 0.8 */;
+	CleanCost = this->GetCost(minPop2Route, method);
 	reservations->isDirty = false;
 }
 
@@ -200,6 +201,8 @@ void NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost
 	float newPop = (float)population;
 	if (reservations->initDelayCostPerPop > 0.0f) newPop = min(newPop, (float)(OriginalCost / reservations->initDelayCostPerPop));
 	reservations->ReservedPop += newPop;
+
+	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
 	IsDirty(1.0, method);
 }
 
@@ -263,6 +266,12 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 		n = it->second;
 	}
 	return n;
+}
+	
+void NAEdgeCache::CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver)
+{
+	for(NAEdgeTableItr cit = cacheAlong->begin();   cit != cacheAlong->end();   cit++) cit->second->SetClean(minPop2Route, solver);
+	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean(minPop2Route, solver);
 }
 
 void NAEdgeCache::Clear()
