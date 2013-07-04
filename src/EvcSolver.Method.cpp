@@ -502,7 +502,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 						if (FAILED(hr = heap->DecreaseKey(currentEdge))) goto END_OF_FUNC;
 					}
 				}
-				else // unvisited vertex. create new and insert in heap
+				else // unvisited vertex. create new and insert into heap
 				{
 					// termination condition and evacuee discovery
 					#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] I still don't know how to terminate properly")
