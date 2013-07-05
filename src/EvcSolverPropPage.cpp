@@ -61,6 +61,9 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_TwoWayShareCapacity(&val);
 		if (val == VARIANT_TRUE) ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hCheckShareCap, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+		m_ipEvcSolver->get_ThreeGenCARMA(&val);
+		if (val == VARIANT_TRUE) ::SendMessage(m_hThreeGenCARMA, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+		else  ::SendMessage(m_hThreeGenCARMA, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 
 		// set the solver traffic model names
 		EvcTrafficModel model;
@@ -302,6 +305,10 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex == BST_CHECKED) ipSolver->put_SeparableEvacuee(VARIANT_TRUE);
 		else ipSolver->put_SeparableEvacuee(VARIANT_FALSE);
 
+		selectedIndex = ::SendMessage(m_hThreeGenCARMA, BM_GETCHECK, 0, 0);
+		if (selectedIndex == BST_CHECKED) ipSolver->put_ThreeGenCARMA(VARIANT_TRUE);
+		else ipSolver->put_ThreeGenCARMA(VARIANT_FALSE);
+
 		selectedIndex = ::SendMessage(m_hEdgeStat, BM_GETCHECK, 0, 0);
 		if (selectedIndex == BST_CHECKED) ipSolver->put_ExportEdgeStat(VARIANT_TRUE);
 		else ipSolver->put_ExportEdgeStat(VARIANT_FALSE);
@@ -421,6 +428,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hEditInitCost = GetDlgItem(IDC_EDIT_INITDELAY);
 	m_hCmbFlockProfile = GetDlgItem(IDC_COMBO_PROFILE);
 	m_heditCARMA = GetDlgItem(IDC_EDIT_CARMA);
+	m_hThreeGenCARMA = GetDlgItem(IDL_CHECK_CARMAGEN);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
@@ -597,5 +605,14 @@ LRESULT EvcSolverPropPage::OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL
 	NMLINK* pNMLink = (NMLINK*)pNMHDR;
 	LITEM   item    = pNMLink->item;
 	ShellExecute(NULL, L"open", item.szUrl, NULL, NULL, SW_SHOW);
+	return 0;
+}
+
+
+LRESULT EvcSolverPropPage::OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
 	return 0;
 }

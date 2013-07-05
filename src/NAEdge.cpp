@@ -184,7 +184,7 @@ double NAEdge::GetCost(double newPop, EvcSolverMethod method) const
 // this function has to cache the answer and it has to be consistent.
 bool NAEdge::IsDirty(double minPop2Route, EvcSolverMethod method)
 {
-	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) /* * 0.8 */;
+	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) * 0.9;
 	return reservations->isDirty;
 }
 

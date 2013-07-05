@@ -476,6 +476,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 
 	if (ipStepProgressor) if (FAILED(hr = ipStepProgressor->Show())) return hr;
+	std::vector<unsigned int> CARMAExtractCounts;
 
 	///////////////////////////////////////
 	// this will call the core part of the algorithm.
@@ -483,7 +484,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, pIsPartialSolution, carmaSec);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, pIsPartialSolution, carmaSec, CARMAExtractCounts);
 	}
 	catch (std::exception & ex)
 	{
@@ -1145,7 +1146,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg;
+	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg;
 #ifdef _FLOCK
 	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
@@ -1156,12 +1157,19 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
 #endif
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds."), countCARMALoops, carmaSec);
+
+	CARMAExtractsMsg.Format(_T("The following is the number of CARMA heap extracts in each loop: "));
+	for (std::vector<unsigned int>::size_type i = 0; i < CARMAExtractCounts.size(); i++)
+		if (i == 0) CARMAExtractsMsg.AppendFormat(_T("%d"  ), CARMAExtractCounts[0]);
+		else        CARMAExtractsMsg.AppendFormat(_T(", %d"), CARMAExtractCounts[i]);
+	
 	int mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0, mem));
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(performanceMsg));
 	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
+	pMessages->AddMessage(CComBSTR(CARMAExtractsMsg));
 	pMessages->AddMessage(CComBSTR(ExtraInfoMsg));
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(CComBSTR(simulationIncompleteEndingMsg));
@@ -1182,6 +1190,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	delete ecache;
 	for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
 	delete safeZoneList;
+	delete tempPathList;
 
 	return hr;
 }

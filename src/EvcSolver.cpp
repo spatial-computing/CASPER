@@ -433,6 +433,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
 	twoWayShareCapacity = VARIANT_TRUE;
+	ThreeGenCARMA = VARIANT_TRUE;
+	
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 0.0f;
@@ -470,6 +472,19 @@ STDMETHODIMP EvcSolver::put_FlockingEnabled(VARIANT_BOOL value)
 STDMETHODIMP EvcSolver::get_TwoWayShareCapacity(VARIANT_BOOL * value)
 {
 	*value = twoWayShareCapacity;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_ThreeGenCARMA(VARIANT_BOOL value)
+{
+	ThreeGenCARMA = value;
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_ThreeGenCARMA(VARIANT_BOOL * value)
+{
+	*value = ThreeGenCARMA;
 	return S_OK;
 }
 
@@ -1045,6 +1060,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (savedVersion > c_version || savedVersion <= 0) return E_FAIL;
 
 	// We need to read our persisted solver settings
+	// version 1
 	if (FAILED(hr = pStm->Read(&m_outputLineType, sizeof(m_outputLineType), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&costAttributeID, sizeof(costAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&capAttributeID, sizeof(capAttributeID), &numBytes))) return hr;
@@ -1068,6 +1084,16 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
+
+	//version 2
+	if (savedVersion >= 2)
+	{
+		if (FAILED(hr = pStm->Read(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
+	}
+	else
+	{
+		ThreeGenCARMA = VARIANT_TRUE;
+	}
 	
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
 	m_bPersistDirty = false;
@@ -1109,6 +1135,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
 	
 	return S_OK;
 }

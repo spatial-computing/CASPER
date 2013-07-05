@@ -71,7 +71,7 @@ public:
 	bool UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop);
 	
 	NAVertex(void);
-	void ReleaseH(void) { delete h; }
+	void ReleaseH();
 	NAVertex(const NAVertex& cpy);
 	NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge);
 };

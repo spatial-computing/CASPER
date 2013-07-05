@@ -50,6 +50,11 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 	}
 }
 
+void NAVertex::ReleaseH()
+{
+	delete h;
+}
+
 inline void NAVertex::SetBehindEdge(NAEdge * behindEdge) 
 {
 	BehindEdge = behindEdge;

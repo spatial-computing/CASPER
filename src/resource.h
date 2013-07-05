@@ -44,6 +44,8 @@
 #define IDC_STATIC_FlockProfile         243
 #define IDC_COMBO_PROFILE               244
 #define IDC_STATIC_LINE                 245
+#define RMAGEN                          245
+#define IDL_CHECK_CARMAGEN              245
 #define IDC_RELEASE                     247
 
 // Next default values for new objects

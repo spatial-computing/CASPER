@@ -62,6 +62,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT SeparableEvacuee([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the separable evacuee flag")]
 		HRESULT SeparableEvacuee([out, retval] VARIANT_BOOL * value);
+	[propput, helpstring("Sets the 3rd generation carma flag")]
+		HRESULT ThreeGenCARMA([in] VARIANT_BOOL value);
+	[propget, helpstring("Gets the 3rd generation carma flag")]
+		HRESULT ThreeGenCARMA([out, retval] VARIANT_BOOL * value);
 	[propput, helpstring("Sets the export edge stat flag")]
 		HRESULT ExportEdgeStat([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the export edge stat flag")]
@@ -141,7 +145,7 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(1),
+		  c_version(2),
 		  c_featureRetrievalInterval(500)
 	  {
 		  // set program start for memory leak detection (DEBUG Mode)
@@ -178,6 +182,8 @@ public:
 
 	// IEvcSolver	
 	
+	STDMETHOD(put_ThreeGenCARMA)(VARIANT_BOOL threeGenCARMA);
+	STDMETHOD(get_ThreeGenCARMA)(VARIANT_BOOL* threeGenCARMA);
 	STDMETHOD(put_ExportEdgeStat)(VARIANT_BOOL   value);
 	STDMETHOD(get_ExportEdgeStat)(VARIANT_BOOL * value);
 	STDMETHOD(put_SeparableEvacuee)(VARIANT_BOOL   value);
@@ -289,9 +295,9 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *,
-		                INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*, double &);
+		                INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*, double &, std::vector<unsigned int> &);
 	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr,
-		              INetworkForwardStarExPtr, size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *);
+		              INetworkForwardStarExPtr, size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -328,7 +334,8 @@ private:
 	SIZE_T					peakMemoryUsage;	
 	HANDLE					hProcessPeakMemoryUsage;
 
-	VARIANT_BOOL twoWayShareCapacity;	
+	VARIANT_BOOL twoWayShareCapacity;
+	VARIANT_BOOL ThreeGenCARMA;	
 	VARIANT_BOOL separable;
 	VARIANT_BOOL exportEdgeStat;
 	VARIANT_BOOL m_CreateTraversalResult;
