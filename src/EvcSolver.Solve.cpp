@@ -1158,11 +1158,16 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 #endif
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds."), countCARMALoops, carmaSec);
 
+	std::stringstream ss;
+	ss.imbue(std::locale(""));
 	CARMAExtractsMsg.Format(_T("The following is the number of CARMA heap extracts in each loop: "));
 	for (std::vector<unsigned int>::size_type i = 0; i < CARMAExtractCounts.size(); i++)
-		if (i == 0) CARMAExtractsMsg.AppendFormat(_T("%d"  ), CARMAExtractCounts[0]);
-		else        CARMAExtractsMsg.AppendFormat(_T(", %d"), CARMAExtractCounts[i]);
-	
+	{
+		if (i == 0) ss << CARMAExtractCounts[0];
+		else        ss << " | " << CARMAExtractCounts[i];
+	}
+	CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
+
 	int mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0, mem));
 
