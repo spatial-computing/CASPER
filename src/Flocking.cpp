@@ -7,7 +7,7 @@
 // Flocking object implementation
 
 FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
-							   FlockProfile * flockProfile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen)
+							   FlockProfile * flockProfile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen) throw(...)
 {
 	// construct FlockingLocation	
 	HRESULT hr = S_OK;
@@ -70,26 +70,29 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	IPointCollectionPtr pcollect = myPath->back()->pline;
 	long pointCount = 0;
 
-	#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] it's a good idea to throw a logic error after each of these FAILED statements.")
+	// #pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] it's a good idea to throw a logic error after each of these FAILED statements.")
 
 	if (FAILED(hr = pcollect->get_PointCount(&pointCount)))
 	{		
-		OutputDebugString(L"FlockingObject - get_PointCount: failed to get number of path points.");
 		_ASSERT(0);
+		OutputDebugString(L"FlockingObject - get_PointCount: failed to get number of path points.");
+		throw std::exception("FlockingObject - get_PointCount: failed to get number of path points.");
 	}
 	if (pointCount > 0)
 	{
 		if (FAILED(hr = pcollect->get_Point(pointCount - 1, &point)))
 		{
-			OutputDebugString(L"FlockingObject - get_Point: failed to get end path point.");
 			_ASSERT(0);
+			OutputDebugString(L"FlockingObject - get_Point: failed to get end path point.");
+			throw std::exception("FlockingObject - get_Point: failed to get end path point.");
 		}
 		if (point)
 		{
 			if (FAILED(hr = point->QueryCoords(&x, &y)))
 			{
-				OutputDebugString(L"FlockingObject - QueryCoords: failed to get end path point coordinates.");
 				_ASSERT(0);
+				OutputDebugString(L"FlockingObject - QueryCoords: failed to get end path point coordinates.");
+				throw std::exception("FlockingObject - QueryCoords: failed to get end path point coordinates.");
 			}
 			finishPoint.set(x, y, 0.0);
 		}

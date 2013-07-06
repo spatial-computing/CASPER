@@ -16,8 +16,8 @@ class NAEdge;
 struct HValue
 {
 public:
-	double Value;
-	long EdgeID;
+	double   Value;
+	long     EdgeID;
 	unsigned short CarmaLoop;
 	
 	HValue(long edgeID, double value, unsigned short carmaLoop)
@@ -38,6 +38,7 @@ class NAVertex
 private:
 	NAEdge * BehindEdge;
 	std::vector<HValue> * h;
+	bool     isShadowCopy;
 
 public:
 	double g;
@@ -58,22 +59,16 @@ public:
 		return FLT_MAX;
 	}
 
-	void ResetHValues(void)
-	{
-		h->clear(); 
-		h->reserve(2);
-		// h->push_back(HValue(0l, 0.0));
-	}
-
+	void ResetHValues(void)  { h->clear(); }
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
-	inline bool IsHEmpty() const { return h->empty(); }
-	bool UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop);
+	inline bool IsHEmpty()   const { return h->empty(); }
+	bool UpdateHeuristic     (long edgeid, double hur, unsigned short carmaLoop);
 	
-	NAVertex(void);
-	void ReleaseH();
-	NAVertex(const NAVertex& cpy);
-	NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge);
+	NAVertex (void);
+	NAVertex (const NAVertex& cpy);
+	NAVertex (INetworkJunctionPtr junction, NAEdge * behindEdge);
+	~NAVertex(void) { if (!isShadowCopy) delete h; }
 };
 
 typedef NAVertex * NAVertexPtr;

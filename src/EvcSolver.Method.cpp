@@ -105,7 +105,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (!(currentEvacuee->Reachable))
 			{				
 				// cleanup vertices of this evacuee
-				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);	
+				for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);
 				currentEvacuee->vertices->clear();
 				*pIsPartialSolution = VARIANT_TRUE;
 			}
@@ -286,7 +286,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			} // end of while loop for multiple routes single evacuee
 
 			// cleanup vertices of this evacuee since all its population is routed.
-			for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);	
+			for(vit = currentEvacuee->vertices->begin(); vit != currentEvacuee->vertices->end(); vit++) delete (*vit);
 			currentEvacuee->vertices->clear();
 
 			// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
@@ -297,6 +297,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	while (!sortedEvacuees->empty());
 
 	UpdatePeakMemoryUsage();
+	CARMAExtractCounts.pop_back();
 
 END_OF_FUNC:
 
@@ -334,7 +335,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipElement, ipOtherElement;
-	double fromPosition, toPosition, minPop2Route = 1.0, newCost, lastCost = 0.0, EdgeCostToBeat;
+	double fromPosition, toPosition, minPop2Route = 1.0, newCost, lastCost = 0.0, EdgeCostToBeat, SearchRadius = 0.0;
 	VARIANT_BOOL keepGoing, isRestricted;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -457,6 +458,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
 			}
 
+			// this is my new termination condition. let's hope it works. basically i stop inserting new edges if they are above search radius
+			if (EvacueePairs->empty()) SearchRadius = max(SearchRadius, lastCost);
+
 			// Query adjacencies from the current junction
 			if (FAILED(hr = ipBackwardStar->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge, 0, ipBackwardAdj))) goto END_OF_FUNC; 
 
@@ -485,8 +489,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
 				if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
 				{					
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache,
-						                                          closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
 					EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
 					if(EdgeCostToBeat <= currentEdge->ToVertex->g) continue;
 					closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
@@ -507,21 +510,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				else // unvisited vertex. create new and insert into heap
 				{
 					// termination condition and evacuee discovery
-					#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] I still don't know how to terminate properly")
-					//if (!EvacueePairs->empty())
-					{
-						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache,
-																	  closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
-						heap->Insert(currentEdge);
-					}
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
+					if (!EvacueePairs->empty() || currentEdge->ToVertex->g < SearchRadius) heap->Insert(currentEdge);
 				}
 			}
 		}
 	}
-	/// Check the frequency of H counts for each vertex
-#ifdef DEBUG
-	vcache->PrintVertexHeuristicFeq();
-#endif
 
 	// set new default heuristic value
 	vcache->UpdateHeuristicForOutsideVertices(lastCost, this->countCARMALoops);

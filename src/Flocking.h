@@ -86,7 +86,7 @@ public:
 	FLOCK_OBJ_STAT	MyStatus;
 
 	// constructors
-	FlockingLocation(void)
+	FlockingLocation(void) throw(...)
 	{
 		MyTime = -1.0;
 		GTime = -1.0;

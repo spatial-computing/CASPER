@@ -9,13 +9,12 @@
 NAVertex::NAVertex(const NAVertex& cpy)
 {
 	g = cpy.g;
-	//h = new DEBUG_NEW_PLACEMENT std::vector<HValue>(*(cpy.h));
 	h = cpy.h;
 	Junction = cpy.Junction;
 	BehindEdge = cpy.BehindEdge;
 	Previous = cpy.Previous;
 	EID = cpy.EID;
-	// posAlong = cpy.posAlong;
+	isShadowCopy = true;
 }
 
 NAVertex::NAVertex(void)
@@ -27,13 +26,13 @@ NAVertex::NAVertex(void)
 	g = 0.0f;
 	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
 	ResetHValues();
-	// posAlong = 0.0f;
+	isShadowCopy = false;
 }
 
 NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 {
 	Previous = 0;
-	// posAlong = 0.0f;
+	isShadowCopy = false;
 	g = 0.0f;
 	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
 	ResetHValues();
@@ -48,11 +47,6 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 		EID = -1;
 		Junction = 0;
 	}
-}
-
-void NAVertex::ReleaseH()
-{
-	delete h;
 }
 
 inline void NAVertex::SetBehindEdge(NAEdge * behindEdge) 
@@ -80,7 +74,7 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 			{
 				#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] Might not need to check against FLT_EPSILON. Also changing the definition of dirtiness might help.")
 				_ASSERT(i->Value - hur <= FLT_EPSILON);
-				unnesecery = i->Value == hur;
+				unnesecery = hur - i->Value <= FLT_EPSILON;
 				i->Value = hur;
 				i->CarmaLoop = carmaLoop;
 			}
@@ -90,6 +84,7 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 	}
 	h->push_back(HValue(edgeid, hur, carmaLoop));
 	std::sort(h->begin(), h->end(), HValue::LessThan);
+	_ASSERT(!unnesecery);
 	return unnesecery;	
 }
 
@@ -150,11 +145,7 @@ NAVertexPtr NAVertexCache::Get(long eid)
 void NAVertexCache::Clear()
 {
 	CollectAndRelease();
-	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++)
-	{
-		cit->second->ReleaseH();
-		delete cit->second;
-	}
+	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++) delete cit->second;
 	cache->clear();
 }
 
