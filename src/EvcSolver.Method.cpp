@@ -490,7 +490,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
 				if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
 				{					
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery, false))) goto END_OF_FUNC;
 					EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
 					if(EdgeCostToBeat <= currentEdge->ToVertex->g) continue;
 					closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
@@ -511,7 +511,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				else // unvisited vertex. create new and insert into heap
 				{
 					// termination condition and evacuee discovery
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery))) goto END_OF_FUNC;
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery, true))) goto END_OF_FUNC;
 					if (!EvacueePairs->empty() || currentEdge->ToVertex->g < SearchRadius) heap->Insert(currentEdge);
 				}
 			}
@@ -709,8 +709,10 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closed-list
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
 	betterH = myVertex->g;
-	
-	if (checkOldClosedlist)
+
+	#ifndef DEBUG
+	if (checkOldClosedlist && closedList->Size(NAEdgeMap_OLDGEN) > 0)
+	#endif
 	{
 		if (FAILED(hr = ipForwardStar->QueryAdjacencies(myVertex->Junction, edge->NetEdge, 0, ipForwardAdj))) return hr;
 		if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) return hr;
@@ -738,6 +740,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	}
 	if (betterEdge)
 	{
+		_ASSERT(checkOldClosedlist);
 		betterMyVertex = vcache->New(myVertex->Junction);
 		betterMyVertex->SetBehindEdge(betterEdge);
 		betterMyVertex->Previous = NULL;
