@@ -458,8 +458,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
 			}
 
-			// this is my new termination condition. let's hope it works. basically i stop inserting new edges if they are above search radius
-			if (EvacueePairs->empty()) SearchRadius = max(SearchRadius, lastCost);
+			// this is my new termination condition. let's hope it works.
+			// basically i stop inserting new edges if they are above search radius.
+			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
 
 			// Query adjacencies from the current junction
 			if (FAILED(hr = ipBackwardStar->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge, 0, ipBackwardAdj))) goto END_OF_FUNC; 

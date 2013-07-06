@@ -112,22 +112,6 @@ FibonacciHeap::FibonacciHeap(bool (*LessThanMethod)(HeapDataType *, HeapDataType
 	rootListByRank = new DEBUG_NEW_PLACEMENT HeapNodePtr[100];
 }
 
-/*
-FibonacciHeap::FibonacciHeap(HeapDataType * root, (*LessThan)(HeapDataType *, HeapDataType *) LessThanMethod)
-{
-	this->LessThan = LessThanMethod;
-	nodeTable = new DEBUG_NEW_PLACEMENT HeapNodeTable();
-	this->minRoot = new DEBUG_NEW_PLACEMENT HeapNode(root);
-	rootListByRank = new DEBUG_NEW_PLACEMENT HeapNodePtr[100];
-	minRoot->parent = NULL;
-	minRoot->children = NULL;
-	minRoot->leftSibling = NULL;
-	minRoot->rightSibling = NULL;
-	minRoot->rank = 0;
-	nodeTable->Insert(minRoot);
-}
-*/
-
 FibonacciHeap::~FibonacciHeap()
 {
 	Clear();
@@ -294,6 +278,10 @@ bool FibonacciHeap::link(HeapNode * root)
 	}
 }
 
+// =========================================================================
+//	Implementation of class HeapNodeTable
+// =========================================================================
+
 void HeapNodeTable::Erase(HeapDataType * edge)
 {
 	if (edge->Direction == esriNEDAlongDigitized) cacheAlong->erase(edge->EID);
@@ -306,7 +294,7 @@ void HeapNodeTable::Insert(HeapNodePtr node)
 	else cacheAgainst->insert(std::pair<long, HeapNodePtr>(node->data->EID, node));
 }
 
-HeapNodePtr HeapNodeTable::Find(HeapDataType * edge)
+HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 {
 	stdext::hash_map<long, HeapNodePtr> * cache = 0;
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
@@ -318,4 +306,13 @@ HeapNodePtr HeapNodeTable::Find(HeapDataType * edge)
 	return o;
 }
 
+double HeapNodeTable::GetMaxValue(void) const
+{
+	double ret = 0.0;
+	stdext::hash_map<long, HeapNodePtr>::iterator i;
 
+	for(i = cacheAlong->begin();   i != cacheAlong->end();   i++) ret = max(ret, i->second->data->ToVertex->g);
+	for(i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) ret = max(ret, i->second->data->ToVertex->g);
+
+	return ret;
+}

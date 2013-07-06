@@ -80,12 +80,13 @@ public:
 		delete cacheAgainst;
 	}
 	
-	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }
-	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
+	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
+	void Clear()        { cacheAlong->clear(); cacheAgainst->clear(); }
 
+	double GetMaxValue(void) const;
 	void Erase(HeapDataType * edge);
 	void Insert(HeapNode * node);
-	HeapNodePtr Find(HeapDataType * edge);
+	HeapNodePtr Find(HeapDataType * edge) const;
 };
 
 class FibonacciHeap
@@ -100,6 +101,7 @@ private:
 public:
 	FibonacciHeap(bool (*LessThanMethod)(HeapDataType *, HeapDataType *));
 	bool IsVisited(HeapDataType * vertex);
+	inline double GetMaxValue(void) const { return nodeTable->GetMaxValue(); }
 
 	~FibonacciHeap();
 
