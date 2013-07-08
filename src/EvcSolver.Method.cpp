@@ -3,7 +3,11 @@
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"
 
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs, double minPop2Route, EvcSolverMethod solverMethod);
+HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+								#ifdef DEBUG
+								, double minPop2Route, EvcSolverMethod solverMethod
+								#endif
+								);								
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
 							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
@@ -386,8 +390,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		if (FAILED(hr = PrepareVerticesForHeap(i->second, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, ipForwardStar, ipForwardAdj, ipNetworkQuery, solverMethod))) goto END_OF_FUNC;	
 	for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
-	// Now insert leaf edges in heap like the destination edges
-	if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;	
+	// Now insert leaf edges in heap like the destination edges	
+	#ifdef DEBUG
+	if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;
+	#else
+	if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs))) goto END_OF_FUNC;
+	#endif
 
 	// we're done with all these leafs. let's clean up and collect new ones for the next round.
 	leafs->Clear();
@@ -642,7 +650,11 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 	}
 }
 
-HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdge * leaf, double minPop2Route, EvcSolverMethod solverMethod)
+HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, FibonacciHeap * heap, NAEdge * leaf
+							#ifdef DEBUG
+							, double minPop2Route, EvcSolverMethod solverMethod
+							#endif
+							)
 {
 	HRESULT hr = S_OK;
 	INetworkElementPtr fe, te;
@@ -671,7 +683,11 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 	return hr;
 }
 
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs, double minPop2Route, EvcSolverMethod solverMethod)
+HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+								#ifdef DEBUG
+								, double minPop2Route, EvcSolverMethod solverMethod
+								#endif
+								)
 {
 	HRESULT hr = S_OK;
 	NAEdgePtr leaf;
@@ -681,12 +697,20 @@ HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache *
 		if (i->second & 1)
 		{
 			leaf = ecache->Get(i->first, esriNEDAlongDigitized);
-			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, ecache, heap, leaf, minPop2Route, solverMethod))) return hr;
+			#ifdef DEBUG
+			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf, minPop2Route, solverMethod))) return hr;
+			#else
+			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf))) return hr;
+			#endif
 		}
 		if (i->second & 2)
 		{
 			leaf = ecache->Get(i->first, esriNEDAgainstDigitized);
-			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, ecache, heap, leaf, minPop2Route, solverMethod))) return hr;
+			#ifdef DEBUG
+			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf, minPop2Route, solverMethod))) return hr;
+			#else
+			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf))) return hr;
+			#endif
 		}
 	}
 	return hr;
