@@ -740,7 +740,14 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	}
 	if (betterEdge)
 	{
-		_ASSERT(checkOldClosedlist);
+		#ifdef DEBUG
+		if(!checkOldClosedlist)
+		{
+			double CostToBeat = edge->ToVertex->GetH(edge->EID);
+			_ASSERT(CostToBeat - betterH - edgeCost < FLT_EPSILON);
+		}
+		#endif
+
 		betterMyVertex = vcache->New(myVertex->Junction);
 		betterMyVertex->SetBehindEdge(betterEdge);
 		betterMyVertex->Previous = NULL;
