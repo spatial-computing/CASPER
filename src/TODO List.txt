@@ -1,11 +1,11 @@
-- EdgePortion migth be fulty in case of really short paths
+- EdgePortion might be faulty in case of really short paths
 + don't ignore the last turn restriction
-* include a variable for safe area capacity and then inforce it in your DJ code
-+ update the vertex huiristics after each evacuee loop... this needs some thinking
+* include a variable for safe area capacity and then enforce it in your DJ code
++ update the vertex heuristics after each evacuee loop... this needs some thinking
 + the flocking model is gonna take some time to implement
 
-+ fix remaining cost of each edge for pop seperation
++ fix remaining cost of each edge for pop separation
 - fix multi-part turn to be accurate
 + drop menu to select traffic model instead of cost calc model.
 
-+ inteligently repeat the graph/vertex huiristic update after some paths are reserved. maybe size of closed list can help.
++ intelligently repeat the graph/vertex heuristic update after some paths are reserved. maybe size of closed list can help.

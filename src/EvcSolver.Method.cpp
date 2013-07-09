@@ -28,12 +28,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, eid;
-	INetworkEdgePtr ipCurrentEdge, lastExteriorEdge;
+	INetworkEdgePtr ipCurrentEdge, lastExteriorEdge, ipTurnCheckEdge;
 	INetworkJunctionPtr ipCurrentJunction;
-	INetworkElementPtr ipElement, ipOtherElement;
+	INetworkElementPtr ipJunctionElement, ipTurnCheckElement, ipEdgeElement;
 	esriNetworkEdgeDirection dir;
 	bool restricted = false;
-	esriNetworkTurnParticipationType turnType;
+	// esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
@@ -51,6 +51,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	INetworkForwardStarAdjacenciesPtr ipBackwardAdj;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipForwardAdj))) goto END_OF_FUNC;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipBackwardAdj))) goto END_OF_FUNC; 
+	
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipTurnCheckElement))) goto END_OF_FUNC;
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) goto END_OF_FUNC;
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
+	ipCurrentJunction = ipJunctionElement;
+	ipTurnCheckEdge = ipTurnCheckElement;
+	ipCurrentEdge = ipEdgeElement;
 
 	///////////////////////////////////////
 	// Setup a message on our step progress bar indicating that we are traversing the network
@@ -181,13 +188,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
 							for (i = 0; i < adjacentEdgeCount; i++)
 							{
-								if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) goto END_OF_FUNC;
-								ipCurrentEdge = ipElement;
-								if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
-								if (FAILED(hr = ipForwardStar->get_IsRestricted(ipCurrentEdge, &isRestricted))) goto END_OF_FUNC;
+								if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipTurnCheckEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
+								if (FAILED(hr = ipForwardStar->get_IsRestricted(ipTurnCheckEdge, &isRestricted))) goto END_OF_FUNC;
 								if (isRestricted) continue;
-								if (FAILED(hr = ipCurrentEdge->get_EID(&eid))) goto END_OF_FUNC;
-								if (FAILED(hr = ipCurrentEdge->get_Direction(&dir))) goto END_OF_FUNC;
+								if (FAILED(hr = ipTurnCheckEdge->get_EID(&eid))) goto END_OF_FUNC;
+								if (FAILED(hr = ipTurnCheckEdge->get_Direction(&dir))) goto END_OF_FUNC;
 								if (edge->Direction == dir && edge->EID == eid) restricted = false;
 							}
 						}
@@ -203,11 +208,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 
 					// Query adjacencies from the current junction.
+					/*
 					if (FAILED(hr = myEdge->NetEdge->get_TurnParticipationType(&turnType))) goto END_OF_FUNC;
 					if (turnType == 1) lastExteriorEdge = myEdge->LastExteriorEdge;
 					else lastExteriorEdge = 0;
+					*/
 					if (FAILED(hr = ipForwardStar->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge, 0 /*lastExteriorEdge*/, ipForwardAdj))) goto END_OF_FUNC;
-					if (turnType == 2) lastExteriorEdge = myEdge->NetEdge;
+					// if (turnType == 2) lastExteriorEdge = myEdge->NetEdge;
 
 					// Get the adjacent edge count
 					// Loop through all adjacent edges and update their cost value
@@ -215,27 +222,22 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 					for (i = 0; i < adjacentEdgeCount; i++)
 					{
-						if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) goto END_OF_FUNC;
-						if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) goto END_OF_FUNC;					
-						ipCurrentEdge = ipElement;
-						ipCurrentJunction = ipOtherElement;
-
-						if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
-						if (FAILED(hr = ipCurrentEdge->QueryJunctions(0, ipCurrentJunction))) goto END_OF_FUNC;					
+						if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;			
 
 						// check restriction for the recently discovered edge
 						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipCurrentEdge, &isRestricted))) goto END_OF_FUNC;
 						if (isRestricted) continue;
 
 						// if edge has already been discovered then no need to heap it
-						currentEdge = ecache->New(ipCurrentEdge);
+						currentEdge = ecache->New(ipCurrentEdge, ipNetworkQuery);
 						if (closedList->Exist(currentEdge)) continue;
 
 						// multi-part turn restriction flags
+						/*
 						if (FAILED(hr = ipCurrentEdge->get_TurnParticipationType(&turnType))) goto END_OF_FUNC;
 						if (turnType == 1) currentEdge->LastExteriorEdge = lastExteriorEdge;
 						else currentEdge->LastExteriorEdge = 0;
-
+						*/
 						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod);
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrease key.
 						{
@@ -249,14 +251,15 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							}
 						}
 						else // unvisited edge. create new and insert in heap
-						{						
-							neighbor = vcache->New(ipCurrentJunction);
+						{
+							if (FAILED(hr = ipCurrentEdge->QueryJunctions(0, ipCurrentJunction))) goto END_OF_FUNC;
+							neighbor = vcache->New(ipCurrentJunction, ipNetworkQuery);
 							neighbor->SetBehindEdge(currentEdge);
 							neighbor->g = newCost;
 							neighbor->Previous = myVertex;
 
 							// Termination Condition: If the new vertex does have a chance to beat the already discovered safe node then add it to the heap.
-							if (1.1 * (neighbor->g + neighbor->minh()) <= TimeToBeat) heap->Insert(currentEdge);
+							if (neighbor->g + neighbor->minh() <= TimeToBeat) heap->Insert(currentEdge);
 						}
 					}
 				}
@@ -338,10 +341,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	NAVertexTableItr iterator;
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
-	INetworkElementPtr ipElement, ipOtherElement;
+	INetworkElementPtr ipEdgeElement, ipJunctionElement, ipTempEdgeElement;
 	double fromPosition, toPosition, minPop2Route = 1.0, newCost, lastCost = 0.0, EdgeCostToBeat, SearchRadius = 0.0;
 	VARIANT_BOOL keepGoing, isRestricted;
-	INetworkEdgePtr ipCurrentEdge;
+	INetworkEdgePtr ipCurrentEdge, ipTempEdge;
 	INetworkJunctionPtr ipCurrentJunction;
 	EvacueeList * redundentSortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();	
 	redundentSortedEvacuees->reserve(Evacuees->size());	
@@ -355,15 +358,19 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	// also keep unreachable ones in the redundant list	
 	for(std::vector<EvacueePtr>::iterator i = Evacuees->begin(); i != Evacuees->end(); i++)	if (!((*i)->Reachable)) redundentSortedEvacuees->push_back(*i);
-
-	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement);
-	ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement);
-
+	
 	// Create a backward Star Adjacencies object (we need this object to hold traversal queries carried out on the Backward Star)
 	INetworkForwardStarAdjacenciesPtr ipBackwardAdj;
 	INetworkForwardStarAdjacenciesPtr ipForwardAdj;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipBackwardAdj))) goto END_OF_FUNC;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipForwardAdj))) goto END_OF_FUNC;
+
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) goto END_OF_FUNC;
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipTempEdgeElement))) goto END_OF_FUNC;
+    if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
+	ipCurrentJunction = ipJunctionElement;
+	ipCurrentEdge = ipEdgeElement;
+	ipTempEdge = ipTempEdgeElement;
 
 	if (ThreeGenCARMA == VARIANT_TRUE) closedList->MarkAllAsOldGen(); // this is what we have to do instead of cleaning
 	else closedList->Clear(NAEdgeMap_ALLGENS);                        // with this line commented we go to dynamic carma
@@ -404,11 +411,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	if (!EvacueePairs->empty()) 
 	{
 		countCARMALoops++;
-#ifdef DEBUG
-				std::wostringstream os_;
-				os_ << "CARMALoop #" << countCARMALoops << std::endl;
-				OutputDebugStringW( os_.str().c_str() );
-#endif
+		#ifdef DEBUG
+		std::wostringstream os_;
+		os_ << "CARMALoop #" << countCARMALoops << std::endl;
+		OutputDebugStringW( os_.str().c_str() );
+		#endif
 
 		// Continue traversing the network while the heap has remaining junctions in it
 		// this is the actual Dijkstra code with backward network traversal. it will only update h value.
@@ -479,11 +486,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// Loop through all adjacent edges and update their cost value
 			for (i = 0; i < adjacentEdgeCount; i++)
 			{
-				if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) goto END_OF_FUNC;
-				if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) goto END_OF_FUNC;
-				ipCurrentEdge = ipElement;
-				ipCurrentJunction = ipOtherElement;
-
 				if (FAILED(hr = ipBackwardAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				if (FAILED(hr = ipCurrentEdge->QueryJunctions(ipCurrentJunction, 0))) goto END_OF_FUNC;
 
@@ -492,13 +494,13 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				if (isRestricted) continue;
 
 				// if node has already been discovered then no need to heap it
-				currentEdge = ecache->New(ipCurrentEdge);
+				currentEdge = ecache->New(ipCurrentEdge, ipNetworkQuery);
 				if (closedList->Exist(currentEdge, NAEdgeMap_OLDGEN)) continue;
 				
 				newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
 				if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
 				{					
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery, false))) goto END_OF_FUNC;
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery, ipTempEdge, false))) goto END_OF_FUNC;
 					EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
 					if(EdgeCostToBeat <= currentEdge->ToVertex->g) continue;
 					closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
@@ -519,7 +521,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				else // unvisited vertex. create new and insert into heap
 				{
 					// termination condition and evacuee discovery
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery, true))) goto END_OF_FUNC;
+					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->g, myVertex, ecache, closedList, vcache, ipForwardStar, ipForwardAdj, ipNetworkQuery, ipTempEdge, true))) goto END_OF_FUNC;
 					if (!EvacueePairs->empty() || currentEdge->ToVertex->g < SearchRadius) heap->Insert(currentEdge);
 				}
 			}
@@ -717,13 +719,11 @@ HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache *
 }
 
 HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
-												 NAVertexCache * vcache, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist) const
+												 NAVertexCache * vcache, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkQueryPtr ipNetworkQuery,
+												 INetworkEdgePtr tempNetEdge, bool checkOldClosedlist) const
 {
 	HRESULT hr = S_OK;
 	long adjacentEdgeCount;
-	INetworkElementPtr elementE/*, elementJ*/;
-	INetworkEdgePtr tempNetEdge;
-	// INetworkJunctionPtr INbetterMyVertex;
 	NAVertexPtr betterMyVertex;
 	NAEdgePtr tempEdge, betterEdge = NULL;
 	VARIANT_BOOL isRestricted;
@@ -744,14 +744,12 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 		// Loop through all adjacent edges and update their cost value
 		for (long i = 0; i < adjacentEdgeCount; i++)
 		{
-			if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &elementE))) return hr;
-			tempNetEdge = elementE;
 			if (FAILED(hr = ipForwardAdj->QueryEdge(i, tempNetEdge, &from, &to))) return hr;
 		
 			// check restriction for the recently discovered edge
 			if (FAILED(hr = ipForwardStar->get_IsRestricted(tempNetEdge, &isRestricted))) return hr;
 			if (isRestricted) continue;
-			tempEdge = ecache->New(tempNetEdge);
+			tempEdge = ecache->New(tempNetEdge, ipNetworkQuery);
 			if (!closedList->Exist(tempEdge, NAEdgeMap_OLDGEN)) continue; // it has to be present in closed list from previous CARMA loop
 			if (tempEdge->Direction == prevEdge->Direction && tempEdge->EID == prevEdge->EID) continue; // it cannot be the same parent edge
 
@@ -779,7 +777,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	}
 	else betterMyVertex = myVertex;
 
-	neighbor = vcache->New(junction);
+	neighbor = vcache->New(junction, ipNetworkQuery);
 	neighbor->SetBehindEdge(edge);
 	neighbor->g = edgeCost + betterMyVertex->g;
 	neighbor->Previous = betterMyVertex;

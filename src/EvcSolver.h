@@ -306,8 +306,8 @@ private:
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);	
-	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr, NAEdgePtr, double, NAVertexPtr, NAEdgeCache *,
-		                                  NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, bool checkOldClosedlist = true) const;
+	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr, NAEdgePtr, double, NAVertexPtr, NAEdgeCache *, NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr,
+		                                  INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, INetworkEdgePtr, bool checkOldClosedlist = true) const;
 	HRESULT GeneratePath(NAVertexPtr, NAVertexPtr, double &, int &, EvacueePtr) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, NAEdgeContainer *, double, EvcSolverMethod) const;
 	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;

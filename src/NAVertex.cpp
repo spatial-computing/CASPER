@@ -105,16 +105,28 @@ void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, unsigned short
 	}
 }
 
-NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction)
+NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery)
 {
 	NAVertexPtr n = 0;
+	INetworkElementPtr ipJunctionElement;
+	INetworkJunctionPtr junctionClone;
 	long JunctionEID;
 	if (FAILED(junction->get_EID(&JunctionEID))) return 0;
 	NAVertexTableItr it = cache->find(JunctionEID);
 
 	if (it == cache->end())
 	{
-		n = new DEBUG_NEW_PLACEMENT NAVertex(junction, 0);
+		if (ipNetworkQuery)
+		{
+			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) return 0;
+			junctionClone = ipJunctionElement;
+			if (FAILED(ipNetworkQuery->QueryJunction(JunctionEID, junctionClone))) return 0;
+		}
+		else
+		{
+			junctionClone = junction;
+		}
+		n = new DEBUG_NEW_PLACEMENT NAVertex(junctionClone, 0);
 		n->UpdateHeuristic(-1, heuristicForOutsideVertices, 0);
 		cache->insert(NAVertexTablePair(n));
 	}

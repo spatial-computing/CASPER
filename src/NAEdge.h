@@ -81,7 +81,7 @@ public:
 	NAEdge * TreePrevious;
 	std::vector<NAEdge *> TreeNext;
 	INetworkEdgePtr NetEdge;
-	INetworkEdgePtr LastExteriorEdge;	
+	// INetworkEdgePtr LastExteriorEdge;	
 	long EID;
 
 	double GetCost(double newPop, EvcSolverMethod method) const;
@@ -272,7 +272,8 @@ public:
 		if (!twoWayRoadsShareCap) delete resTableAgainst;
 	}
 
-	NAEdgePtr New(INetworkEdgePtr edge, bool replace = false);
+	//NAEdgePtr New(INetworkEdgePtr edge, bool replace = false);
+	NAEdgePtr New(INetworkEdgePtr edge, INetworkQueryPtr ipNetworkQuery = 0);
 
 	NAEdgeTableItr AlongBegin()   const { return cacheAlong->begin();   }
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }

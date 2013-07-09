@@ -47,7 +47,7 @@ public:
 	long EID;
 	size_t HCount() const { return h->size(); }
 
-	__forceinline double minh() const
+	inline double minh() const
 	{
 		if (h->empty()) return 0.0;
 		else return ((*h)[0]).Value;
@@ -113,7 +113,7 @@ public:
 	}
 
 	void PrintVertexHeuristicFeq();	
-	NAVertexPtr New(INetworkJunctionPtr junction);
+	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = 0);
 	void UpdateHeuristicForOutsideVertices(double hur, unsigned short carmaLoop);
 	bool UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop);
 	NAVertexPtr Get(long eid);

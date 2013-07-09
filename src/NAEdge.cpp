@@ -43,7 +43,7 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	Direction = cpy.Direction;
 	EID = cpy.EID;
 	ToVertex = cpy.ToVertex;
-	LastExteriorEdge = cpy.LastExteriorEdge;
+	//LastExteriorEdge = cpy.LastExteriorEdge;
 	trafficModel = cpy.trafficModel;
 	CASPERRatio = cpy.CASPERRatio;
 	CleanCost = cpy.CleanCost;
@@ -61,7 +61,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, f
 	ToVertex = 0;
 	trafficModel = TrafficModel;
 	this->NetEdge = edge;
-	LastExteriorEdge = 0;
+	//LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
 	float capacity = 1.0;
 	cachedCost[0] = FLT_MAX; cachedCost[1] = 0.0;
@@ -226,13 +226,15 @@ void NAEdge::TreeNextEraseFirst(NAEdge * child)
 // NAEdgeCache
 
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
-NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
+NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, INetworkQueryPtr ipNetworkQuery)
 {
 	NAEdgePtr n = 0;
 	long EID;
 	NAEdgeTable * cache = 0;
 	NAResTable  * resTable = 0;
 	esriNetworkEdgeDirection dir;
+	INetworkElementPtr ipEdgeElement;
+	INetworkEdgePtr edgeClone;
 
 	if (FAILED(edge->get_EID(&EID))) return 0;
 	if (FAILED(edge->get_Direction(&dir))) return 0;
@@ -252,17 +254,21 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool replace)
 
 	if (it == cache->end())
 	{
-		n = new DEBUG_NEW_PLACEMENT NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop, trafficModel);
+		if (ipNetworkQuery)
+		{
+			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return 0;
+			edgeClone = ipEdgeElement;
+			if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return 0;			
+		}
+		else 
+		{
+			edgeClone = edge;
+		}
+		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop, trafficModel);
 		cache->insert(NAEdgeTablePair(n));
 	}
 	else
-	{
-		if (replace)
-		{
-			delete it->second;
-			it->second = new DEBUG_NEW_PLACEMENT NAEdge(edge, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop, trafficModel);
-		}
-		else it->second->NetEdge = edge;
+	{		
 		n = it->second;
 	}
 	return n;
