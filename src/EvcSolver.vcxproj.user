@@ -8,7 +8,7 @@
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
-    <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\Users\kshahabi\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
@@ -28,7 +28,7 @@
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\Users\kshahabi\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -38,7 +38,7 @@
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>"$(USERPROFILE)"</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>D:\Users\kshahabi\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
