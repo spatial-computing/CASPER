@@ -65,10 +65,11 @@ public:
 	inline bool IsHEmpty()   const { return h->empty(); }
 	bool UpdateHeuristic     (long edgeid, double hur, unsigned short carmaLoop);
 	
-	NAVertex (void);
-	NAVertex (const NAVertex& cpy);
-	NAVertex (INetworkJunctionPtr junction, NAEdge * behindEdge);
-	~NAVertex(void) { if (!isShadowCopy) delete h; }
+	NAVertex   (void);
+	NAVertex   (const NAVertex& cpy);
+	void Clone (const NAVertex& cpy);
+	NAVertex   (INetworkJunctionPtr junction, NAEdge * behindEdge);
+	~NAVertex  (void) { if (!isShadowCopy) delete h; }
 };
 
 typedef NAVertex * NAVertexPtr;
@@ -90,26 +91,32 @@ typedef std::pair<int, std::list<long> *> NAVertexLoopCountListPair;
 // important vertices with new ones. The second job is just a GC. since all vertices are being created here,
 // it can all be deleted at the end here as well.
 
+#define NAVertexCache_BucketSize 500
+
 class NAVertexCache
 {
 private:
 	NAVertexTable * cache;
-	std::vector<NAVertex *> * sideCache;
+	std::vector<NAVertex *> * bucketCache;
+	NAVertex * currentBucket;
+	size_t currentBucketIndex;
 	double heuristicForOutsideVertices;
 
 public:
 	NAVertexCache(void)
 	{
 		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAVertexPtr>();
-		sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
+		bucketCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
 		heuristicForOutsideVertices = 0.0;
+		currentBucket = NULL;
+		currentBucketIndex = 0;
 	}
 
 	~NAVertexCache(void) 
 	{
 		Clear();
 		delete cache;
-		delete sideCache;
+		delete bucketCache;
 	}
 
 	void PrintVertexHeuristicFeq();	
@@ -118,6 +125,7 @@ public:
 	bool UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop);
 	NAVertexPtr Get(long eid);
 	NAVertexPtr Get(INetworkJunctionPtr junction);
+	NAVertexPtr NewFromBucket(NAVertexPtr clone);
 	void Clear();
 	void CollectAndRelease();
 };

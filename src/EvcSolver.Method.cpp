@@ -23,7 +23,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	NAEdgePtr myEdge, edge;
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
-	VARIANT_BOOL keepGoing, isRestricted;
+	VARIANT_BOOL keepGoing;
 	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
@@ -58,6 +58,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	ipCurrentJunction = ipJunctionElement;
 	ipTurnCheckEdge = ipTurnCheckElement;
 	ipCurrentEdge = ipEdgeElement;
+
 
 	///////////////////////////////////////
 	// Setup a message on our step progress bar indicating that we are traversing the network
@@ -158,6 +159,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					// Remove the next junction EID from the top of the stack
 					myEdge = heap->DeleteMin();
 					myVertex = myEdge->ToVertex;
+					_ASSERT(!closedList->Exist(myEdge));         // closedList violation happened
 					if (FAILED(hr = closedList->Insert(myEdge)))
 					{
 						// closedList violation happened
@@ -188,9 +190,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
 							for (i = 0; i < adjacentEdgeCount; i++)
 							{
-								if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipTurnCheckEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
-								if (FAILED(hr = ipForwardStar->get_IsRestricted(ipTurnCheckEdge, &isRestricted))) goto END_OF_FUNC;
-								if (isRestricted) continue;
+								if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipTurnCheckEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;								
 								if (FAILED(hr = ipTurnCheckEdge->get_EID(&eid))) goto END_OF_FUNC;
 								if (FAILED(hr = ipTurnCheckEdge->get_Direction(&dir))) goto END_OF_FUNC;
 								if (edge->Direction == dir && edge->EID == eid) restricted = false;
@@ -224,10 +224,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					{
 						if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;			
 
+						/* It turns out, I don't need to check this here. the QueryAdjacencies() function have already did it.
 						// check restriction for the recently discovered edge
-						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipCurrentEdge, &isRestricted))) goto END_OF_FUNC;
+						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipCurrentEdge, &isRestricted))) goto END_OF_FUNC;						
 						if (isRestricted) continue;
-
+						*/
 						// if edge has already been discovered then no need to heap it
 						currentEdge = ecache->New(ipCurrentEdge, ipNetworkQuery);
 						if (closedList->Exist(currentEdge)) continue;
@@ -343,7 +344,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipEdgeElement, ipJunctionElement, ipTempEdgeElement;
 	double fromPosition, toPosition, minPop2Route = 1.0, newCost, lastCost = 0.0, EdgeCostToBeat, SearchRadius = 0.0;
-	VARIANT_BOOL keepGoing, isRestricted;
+	VARIANT_BOOL keepGoing;
 	INetworkEdgePtr ipCurrentEdge, ipTempEdge;
 	INetworkJunctionPtr ipCurrentJunction;
 	EvacueeList * redundentSortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();	
@@ -372,8 +373,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	ipCurrentEdge = ipEdgeElement;
 	ipTempEdge = ipTempEdgeElement;
 
-	if (ThreeGenCARMA == VARIANT_TRUE) closedList->MarkAllAsOldGen(); // this is what we have to do instead of cleaning
-	else closedList->Clear(NAEdgeMap_ALLGENS);                        // with this line commented we go to dynamic carma
+	if (ThreeGenCARMA == VARIANT_TRUE) closedList->MarkAllAsOldGen();
+	else closedList->Clear(NAEdgeMap_ALLGENS);
 
 	// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
 	// the h values should always be an underestimation
@@ -424,13 +425,14 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// Remove the next junction EID from the top of the stack
 			myEdge = heap->DeleteMin();
 			myVertex = myEdge->ToVertex;
-			if (closedList->Exist(myEdge))	// closedList violation happened		
-			{				
-				pMessages->AddError(myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
-				hr = -myEdge->EID;				
+			_ASSERT(!closedList->Exist(myEdge));         // closedList violation happened
+			if (FAILED(hr = closedList->Insert(myEdge))) 
+			{
+				// closedList violation happened
+				pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
+				hr = -myEdge->EID;
 				goto END_OF_FUNC;
 			}
-			if (FAILED(hr = closedList->Insert(myEdge))) goto END_OF_FUNC;
 
 			// this value is being recorded and will be used as the default heuristic value for any future vertex
 			lastCost = myVertex->g;
@@ -489,10 +491,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				if (FAILED(hr = ipBackwardAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				if (FAILED(hr = ipCurrentEdge->QueryJunctions(ipCurrentJunction, 0))) goto END_OF_FUNC;
 
+				/* It turns out, I don't need to check this here. the QueryAdjacencies() function have already did it.
 				// check restriction for the recently discovered edge
 				if (FAILED(hr = ipBackwardStar->get_IsRestricted(ipCurrentEdge, &isRestricted))) goto END_OF_FUNC;
 				if (isRestricted) continue;
-
+				*/
 				// if node has already been discovered then no need to heap it
 				currentEdge = ecache->New(ipCurrentEdge, ipNetworkQuery);
 				if (closedList->Exist(currentEdge, NAEdgeMap_OLDGEN)) continue;
@@ -755,7 +758,6 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 
 			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
 			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
-			#pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] is this cost calculation general enough or I should lookup upper vertex minimum H?")
 			tempH = tempVertex->GetH(tempEdge->EID);
 			if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
 		}

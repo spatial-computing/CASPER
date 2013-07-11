@@ -17,6 +17,17 @@ NAVertex::NAVertex(const NAVertex& cpy)
 	isShadowCopy = true;
 }
 
+void NAVertex::Clone(const NAVertex& cpy)
+{
+	g = cpy.g;
+	h = cpy.h;
+	Junction = cpy.Junction;
+	BehindEdge = cpy.BehindEdge;
+	Previous = cpy.Previous;
+	EID = cpy.EID;
+	isShadowCopy = true;
+}
+
 NAVertex::NAVertex(void)
 {
 	EID = -1;
@@ -24,9 +35,8 @@ NAVertex::NAVertex(void)
 	BehindEdge = 0;
 	Previous = 0;
 	g = 0.0f;
-	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
-	ResetHValues();
-	isShadowCopy = false;
+	h = NULL;
+	isShadowCopy = true;
 }
 
 NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
@@ -51,6 +61,7 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 
 inline void NAVertex::SetBehindEdge(NAEdge * behindEdge) 
 {
+	if (behindEdge == NULL && BehindEdge != NULL) BehindEdge->ToVertex = NULL;
 	BehindEdge = behindEdge;
 	if (BehindEdge != NULL) BehindEdge->ToVertex = this;
 }
@@ -132,12 +143,28 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, INetworkQueryPtr ip
 	}
 	else
 	{
-		n = new DEBUG_NEW_PLACEMENT NAVertex(*(it->second));
-		sideCache->push_back(n);
+		n = NewFromBucket(it->second);
 	}
 	return n;
 }
 
+NAVertexPtr NAVertexCache::NewFromBucket(NAVertexPtr clone)
+{
+	NAVertex * n = NULL;
+	if (currentBucketIndex >= NAVertexCache_BucketSize) currentBucket = NULL;
+	if (currentBucket == NULL)
+	{
+		currentBucket = new DEBUG_NEW_PLACEMENT NAVertex[NAVertexCache_BucketSize];
+		currentBucketIndex = 0;
+		bucketCache->push_back(currentBucket);
+	}
+	
+	n = &(currentBucket[currentBucketIndex]);
+	++currentBucketIndex;
+	if (n) n->Clone(*clone);	
+
+	return n;
+}
 	
 NAVertexPtr NAVertexCache::Get(INetworkJunctionPtr junction)
 {
@@ -175,13 +202,17 @@ void NAVertexCache::PrintVertexHeuristicFeq()
 void NAVertexCache::CollectAndRelease()
 {	
 	int count = 0;
-	for(std::vector<NAVertexPtr>::iterator i = sideCache->begin(); i != sideCache->end(); i++)
+	NAVertexPtr temp = NULL;
+	size_t j = 0;
+	for(std::vector<NAVertexPtr>::iterator i = bucketCache->begin(); i != bucketCache->end(); i++)
 	{
-		(*i)->SetBehindEdge(0);
-		delete (*i);
+		temp = (*i);
+		for(j = 0; j < NAVertexCache_BucketSize; ++j) temp[j].SetBehindEdge(0);
+		delete [] temp;
 		count++; 
 	}
-	sideCache->clear();
+	currentBucket = NULL;
+	bucketCache->clear();
 }
 
 NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)

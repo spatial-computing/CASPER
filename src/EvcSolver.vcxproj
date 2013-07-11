@@ -370,7 +370,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <AdditionalDependencies>Psapi.lib;opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -383,6 +383,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <Command>cd "$(OutDir)"
 cd ..
 copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -431,7 +432,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <AdditionalDependencies>Psapi.lib;opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -444,6 +445,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <Command>cd "$(OutDir)"
 cd ..
 copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 %WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -492,7 +494,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <AdditionalDependencies>Psapi.lib;opensteer32.lib;glut32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -505,6 +507,7 @@ if exist $(TargetFileName) ("$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p
       <Command>cd "$(OutDir)"
 cd ..
 copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
@@ -553,7 +556,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <AdditionalDependencies>Psapi.lib;opensteer64.lib;glut64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -566,6 +569,7 @@ if exist $(TargetFileName) (%WINDIR%\system32\regsvr32.exe $(TargetFileName) /s 
       <Command>cd "$(OutDir)"
 cd ..
 copy /Y "$(TargetDir)$(TargetName).dll" *.*
+copy /Y "$(TargetDir)$(TargetName).pdb" *.*
 %WINDIR%\system32\regsvr32.exe $(TargetFileName) /s
 </Command>
     </PostBuildEvent>
