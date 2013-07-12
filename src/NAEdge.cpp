@@ -63,17 +63,25 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, f
 	float capacity = 1.0;
 	cachedCost[0] = FLT_MAX; cachedCost[1] = 0.0;
 	HRESULT hr = 0;
+	
+	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)))
+	{
+		vcap.vt = VT_R8;
+		vcap.dblVal = 1.0;
+	}
+	if (FAILED(hr = edge->get_AttributeValue(costAttribID, &vcost)))
+	{
+		vcost.vt = VT_R8;
+		vcost.dblVal = 1.0;
+	}
 
-	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)) ||	
-		FAILED(hr = edge->get_AttributeValue(costAttribID, &vcost)) ||	
-		FAILED(hr = edge->get_EID(&EID)) ||	
-		FAILED(hr = edge->get_Direction(&Direction)))
+	if (FAILED(hr = edge->get_EID(&EID)) ||	FAILED(hr = edge->get_Direction(&Direction)))
 	{
 		_ASSERT(hr == 0);
 		NetEdge = 0;
 		reservations = 0;
 		EID = -1;
-		throw std::logic_error("Something bad happened while looking up a network edge");
+		throw std::exception("Something bad happened while looking up a network edge");
 	}
 	else
 	{
@@ -156,7 +164,7 @@ double NAEdge::GetCurrentCost() const
 
 double NAEdge::GetCost(double newPop, EvcSolverMethod method) const
 {
-	double speedPercent = 1.0;	
+	double speedPercent = 1.0;
 	if (reservations->initDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / reservations->initDelayCostPerPop);
 	newPop += reservations->ReservedPop;
 

@@ -212,9 +212,6 @@ HeapDataType * FibonacciHeap::DeleteMin()
 bool FibonacciHeap::IsVisited(HeapDataType * vertex)
 {
 	HeapNode * out = nodeTable->Find(vertex);
-	//// HeapDataType * out = 0;
-	//HeapNodeTableItr it = nodeTable->Find(EID);
-	//return /* if (*/ it != nodeTable->end() /* ) out = it->second->data */;
 	return out != 0;
 }
 

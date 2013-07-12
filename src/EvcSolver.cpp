@@ -166,7 +166,7 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 	
 	INetworkAttribute2Ptr networkAttrib = 0;
 	long count, i;
-	HRESULT hr;
+	HRESULT hr = S_OK;
 	esriNetworkAttributeUsageType utype;
 	esriNetworkAttributeDataType dtype;	
 	IUnknownPtr unk;
@@ -192,8 +192,10 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 				discriptiveAttribs.insert(discriptiveAttribs.end(), networkAttrib);
 		}
 
-		if (costAttributeID == -1) costAttribs[0]->get_ID(&costAttributeID);
-		if (capAttributeID  == -1) discriptiveAttribs[0]->get_ID(&capAttributeID);		
+		if (costAttribs.size() < 1 && pMessages) pMessages->AddError(-1, L"There are no cost attributes in the network dataset.");
+		if (discriptiveAttribs.size() < 1 && pMessages) pMessages->AddError(-1, L"There are no descriptive attributes in the network dataset to be used as street capacity.");		
+		if (costAttributeID == -1 && costAttribs.size() > 0) costAttribs[0]->get_ID(&costAttributeID);
+		if (capAttributeID  == -1 && discriptiveAttribs.size() > 0) discriptiveAttribs[0]->get_ID(&capAttributeID);		
 
 		// Agents setup
 		// NOTE: this is an appropriate place to find and attach any agents used by this solver.
@@ -211,7 +213,7 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 		}
 		else pStreetAgent = pStreet;
 	}
-	return S_OK;  
+	return hr;  
 }
 
 STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
