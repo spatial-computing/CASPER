@@ -24,7 +24,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing;
-	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0;
+	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	NAVertexTableItr iterator;
 	long adjacentEdgeCount, i, eid;
@@ -58,8 +58,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	ipCurrentJunction = ipJunctionElement;
 	ipTurnCheckEdge = ipTurnCheckElement;
 	ipCurrentEdge = ipEdgeElement;
-
-
+	
 	///////////////////////////////////////
 	// Setup a message on our step progress bar indicating that we are traversing the network
 	if (ipStepProgressor)
@@ -83,6 +82,16 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CCRP search")))) goto END_OF_FUNC;
 		}		
 	}
+
+	// This is where i figure out what is the smallest population that I should route (or try to route)
+	// at each CASPER loop. Obviously this globalMinPop2Route has to be less than the population of any evacuee point.
+	// Also CASPER and CARMA should be in'sync at this number otherwise all the h values are useless.
+	globalMinPop2Route = 0.0;
+	if (this->separable && this->solverMethod == CASPERSolver)
+	{
+
+	}
+
 	do
 	{
 		// indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone.
