@@ -47,27 +47,24 @@ public:
 	long EID;
 	size_t HCount() const { return h->size(); }
 
-	inline double minh() const
-	{
-		if (h->empty()) return 0.0;
-		else return ((*h)[0]).Value;
-	}
-
 	double GetH(long eid)
 	{
 		for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++) if (i->EdgeID == eid) return i->Value;
 		return FLT_MAX;
 	}
 
-	void ResetHValues(void)  { h->clear(); }
+	friend double GetHeapKeyHur   (const NAEdge * edge);
+	friend double GetHeapKeyNonHur(const NAEdge * edge);
+
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
+	void ResetHValues(void)  { h->clear(); }
 	inline bool IsHEmpty()   const { return h->empty(); }
 	bool UpdateHeuristic     (long edgeid, double hur, unsigned short carmaLoop);
 	
+	inline void Clone (NAVertex * cpy);
 	NAVertex   (void);
 	NAVertex   (const NAVertex& cpy);
-	void Clone (const NAVertex& cpy);
 	NAVertex   (INetworkJunctionPtr junction, NAEdge * behindEdge);
 	~NAVertex  (void) { if (!isShadowCopy) delete h; }
 };

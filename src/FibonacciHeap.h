@@ -17,15 +17,15 @@
 class HeapNode
 {
 public:
-	HeapNode * parent;
-	HeapNode * leftSibling, * rightSibling;
-	HeapNode * children; 
-
-	HeapNode(HeapDataType * data);
-	HeapNode();
-
+	HeapNode     * parent;
+	HeapNode     * leftSibling, * rightSibling;
+	HeapNode     * children;
 	HeapDataType * data;
-	int rank;
+	double         key;
+	int            rank;
+
+	HeapNode(HeapDataType * data, double key);
+	HeapNode();
 	
 	bool addChild(HeapNode * node);
 	bool addSibling(HeapNode * node);
@@ -95,11 +95,11 @@ private:
 	HeapNode ** rootListByRank;
 	HeapNode * minRoot;
 	HeapNodeTable * nodeTable;
-	bool (*LessThan)(HeapDataType *, HeapDataType *);
+	double (*GetHeapKey)(const HeapDataType *);
 	bool link(HeapNode * root);
 
 public:
-	FibonacciHeap(bool (*LessThanMethod)(HeapDataType *, HeapDataType *));
+	FibonacciHeap(double (*GetHeapKeyMethod)(const HeapDataType *));
 	bool IsVisited(HeapDataType * vertex);
 	inline double GetMaxValue(void) const { return nodeTable->GetMaxValue(); }
 

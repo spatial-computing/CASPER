@@ -32,9 +32,6 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 ///////////////////////////////////////////////////////////////////////
 // NAEdge Methods
 
-bool NAEdge::LessThanNonHur(NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g < n2->ToVertex->g; }
-bool NAEdge::LessThanHur   (NAEdge * n1, NAEdge * n2) { return n1->ToVertex->g + n1->ToVertex->minh() < n2->ToVertex->g + n2->ToVertex->minh(); }
-
 NAEdge::NAEdge(const NAEdge& cpy)
 {
 	reservations = cpy.reservations;
@@ -250,7 +247,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, INetworkQueryPtr ipNetworkQuery
 		resTable = resTableAgainst;
 	}
 
-	NAEdgeTableItr it = cache->find(EID);	
+	stdext::hash_map<long, NAEdgePtr>::const_iterator it = cache->find(EID);
 
 	if (it == cache->end())
 	{

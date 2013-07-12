@@ -17,14 +17,14 @@ NAVertex::NAVertex(const NAVertex& cpy)
 	isShadowCopy = true;
 }
 
-void NAVertex::Clone(const NAVertex& cpy)
+void NAVertex::Clone(NAVertex * cpy)
 {
-	g = cpy.g;
-	h = cpy.h;
-	Junction = cpy.Junction;
-	BehindEdge = cpy.BehindEdge;
-	Previous = cpy.Previous;
-	EID = cpy.EID;
+	g = cpy->g;
+	h = cpy->h;
+	Junction = cpy->Junction;
+	BehindEdge = cpy->BehindEdge;
+	Previous = cpy->Previous;
+	EID = cpy->EID;
 	isShadowCopy = true;
 }
 
@@ -99,6 +99,13 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 	return unnesecery;	
 }
 
+double GetHeapKeyNonHur(const NAEdge * edge) { return edge->ToVertex->g; }
+double GetHeapKeyHur   (const NAEdge * edge)
+{
+	if (edge->ToVertex->h->empty()) return edge->ToVertex->g;
+	else return edge->ToVertex->g + edge->ToVertex->h->front().Value;
+}
+
 // return true if update was unnecessary
 bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop)
 {
@@ -161,7 +168,7 @@ NAVertexPtr NAVertexCache::NewFromBucket(NAVertexPtr clone)
 	
 	n = &(currentBucket[currentBucketIndex]);
 	++currentBucketIndex;
-	if (n) n->Clone(*clone);	
+	n->Clone(clone);
 
 	return n;
 }

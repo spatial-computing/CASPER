@@ -13,9 +13,10 @@
 //	Implementation of class Node
 // =========================================================================
 
-HeapNode::HeapNode(HeapDataType * data)
+HeapNode::HeapNode(HeapDataType * data, double key)
 {
 	this->data = data;
+	this->key = key;
 	parent = NULL;
 	children = NULL;
 	leftSibling = NULL;
@@ -26,6 +27,7 @@ HeapNode::HeapNode(HeapDataType * data)
 HeapNode::HeapNode()
 {
 	this->data = 0;
+	this->key = 0;
 	parent = NULL;
 	children = NULL;
 	leftSibling = NULL;
@@ -104,9 +106,9 @@ HeapNode * HeapNode::rightMostSibling()
 //	Implementation of class Fibonacci Heap
 // =========================================================================
 
-FibonacciHeap::FibonacciHeap(bool (*LessThanMethod)(HeapDataType *, HeapDataType *))
+FibonacciHeap::FibonacciHeap(double (*GetHeapKeyMethod)(const HeapDataType *))
 {
-	this->LessThan = LessThanMethod;
+	this->GetHeapKey = GetHeapKeyMethod;
 	minRoot = NULL;
 	nodeTable = new DEBUG_NEW_PLACEMENT HeapNodeTable();
 	rootListByRank = new DEBUG_NEW_PLACEMENT HeapNodePtr[100];
@@ -130,18 +132,18 @@ bool FibonacciHeap::Insert(HeapDataType * node)
 	HeapNode * out = nodeTable->Find(node);
 	if (out)
 	{
-		if ((*LessThan)(node, out->data)) return (DecreaseKey(node) == S_OK);
+		if (GetHeapKey(node) < out->key) return (DecreaseKey(node) == S_OK);
 		else return false;
 	}
 	else
 	{
-		HeapNode * n = new DEBUG_NEW_PLACEMENT HeapNode(node);
+		HeapNode * n = new DEBUG_NEW_PLACEMENT HeapNode(node, GetHeapKey(node));
 
 		if(minRoot == NULL) minRoot = n;
 		else
 		{
 			minRoot->addSibling(n);
-			if((*LessThan)(n->data, minRoot->data)) minRoot = n;
+			if(n->key < minRoot->key) minRoot = n;
 		}
 		
 		nodeTable->Insert(n);
@@ -198,7 +200,7 @@ HeapDataType * FibonacciHeap::DeleteMin()
 	while(temp)
 	{
 		// Check if key of current vertex is smaller than the key of minRoot
-		if((*LessThan)(temp->data,minRoot->data)) minRoot = temp;		
+		if(temp->key < minRoot->key) minRoot = temp;
 
 		nextTemp = temp->rightSibling;		
 		link(temp);
@@ -216,17 +218,18 @@ bool FibonacciHeap::IsVisited(HeapDataType * vertex)
 	return out != 0;
 }
 
-HRESULT FibonacciHeap::DecreaseKey(HeapDataType * vertex)
+HRESULT FibonacciHeap::DecreaseKey(HeapDataType * edge)
 {
-	HeapNode * node = nodeTable->Find(vertex);
+	HeapNode * node = nodeTable->Find(edge);
 	if (!node)
 	{
-		Insert(vertex);
+		Insert(edge);
 		return S_OK;
 	}
 	else 
 	{
-		node->data = vertex;
+		node->data = edge;
+		node->key = GetHeapKey(edge);
 		if(node->parent != NULL) // The vertex has a parent
 		{
 			// Remove vertex and add to root list
@@ -234,7 +237,7 @@ HRESULT FibonacciHeap::DecreaseKey(HeapDataType * vertex)
 			minRoot->addSibling(node);		
 		}
 		// Check if key is smaller than the key of minRoot
-		if((*LessThan)(node->data, minRoot->data)) minRoot = node;
+		if(node->key < minRoot->key) minRoot = node;
 		return S_OK;
 	}
 }
@@ -260,7 +263,7 @@ bool FibonacciHeap::link(HeapNode * root)
 		HeapNode * linkVertex = rootListByRank[root->rank];
 		rootListByRank[root->rank] = NULL;
 		
-		if((*LessThan)(root->data, linkVertex->data) || root == minRoot)
+		if((root->key < linkVertex->key) || root == minRoot)
 		{
 			linkVertex->remove();
 			root->addChild(linkVertex);

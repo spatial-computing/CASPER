@@ -14,7 +14,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution, double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts)
 {	
 	// creating the heap for the dijkstra search
-	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanHur);
+	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyHur);
 	NAEdgeMap * closedList = new DEBUG_NEW_PLACEMENT NAEdgeMap();
 	NAEdgeMapTwoGen * carmaClosedList = new DEBUG_NEW_PLACEMENT NAEdgeMapTwoGen();
 	NAEdgePtr currentEdge;
@@ -260,7 +260,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							neighbor->Previous = myVertex;
 
 							// Termination Condition: If the new vertex does have a chance to beat the already discovered safe node then add it to the heap.
-							if (neighbor->g + neighbor->minh() <= TimeToBeat) heap->Insert(currentEdge);
+							if (GetHeapKeyHur(currentEdge) <= TimeToBeat) heap->Insert(currentEdge);
 						}
 					}
 				}
@@ -328,7 +328,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	// true distance to closest safe zone using backward traversal and Dijkstra
 
 	long adjacentEdgeCount, i;
-	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&NAEdge::LessThanNonHur);	// creating the heap for the dijkstra search
+	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyNonHur);	// creating the heap for the dijkstra search
 	NAEdge * currentEdge;
 	NAVertexPtr neighbor;
 	std::vector<EvacueePtr>::iterator eit;
