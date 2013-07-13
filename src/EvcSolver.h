@@ -367,7 +367,7 @@ HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache *
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod
 								#endif
-								);	
+								);
 
 // Simple helper class for managing the cancel tracker object during Solve
 class CancelTrackerHelper
