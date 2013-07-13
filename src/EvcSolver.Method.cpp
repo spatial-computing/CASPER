@@ -9,9 +9,9 @@ HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache *
 								#endif
 								);								
 
-HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel,
-							   IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
-							   NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution, double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts)
+HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache,
+							   NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution,
+							   double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset)
 {	
 	// creating the heap for the dijkstra search
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyHur);
@@ -32,9 +32,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipJunctionElement, ipTurnCheckElement, ipEdgeElement;
 	esriNetworkEdgeDirection dir;
-	bool restricted = false;
+	bool restricted = false, separationRequired;
 	// esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
+	EvacueeListItr eit;
 	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
 	int pathGenerationCount = -1;
@@ -83,23 +84,16 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		}		
 	}
 
-	// This is where i figure out what is the smallest population that I should route (or try to route)
-	// at each CASPER loop. Obviously this globalMinPop2Route has to be less than the population of any evacuee point.
-	// Also CASPER and CARMA should be in'sync at this number otherwise all the h values are useless.
-	globalMinPop2Route = 0.0;
-	if (this->separable && this->solverMethod == CASPERSolver)
-	{
-
-	}
+	if (FAILED(hr = DeterminMinimumPop2Route(Evacuees, ipNetworkDataset, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;	
 
 	do
 	{
 		// indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone.
-		// only the last 'k'th evacuees will be bucketed to run each round.		
-		// time the carma loop and add up
+		// only the last 'k'th evacuees will be bucketed to run each round.	 Also time the carma loop and add up.
 
 		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeS, &cpuTimeS);
-		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, CARMAClosedSize, carmaClosedList, leafs, CARMAExtractCounts))) goto END_OF_FUNC;
+		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, CARMAClosedSize,
+			                      carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
 		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeE, &cpuTimeE);		
 		carmaSec += ((*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS)) + (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS))) / 10000000.0;
 
@@ -147,7 +141,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 				// the next 'if' is a distinctive feature by CASPER that CCRP does not have
 				// and can actually improve routes even with a STEP traffic model
-				if (this->solverMethod == CCRPSolver) population2Route = 1.0;
+				if (this->solverMethod == CCRPSolver) population2Route = 1.0;				
+				else if (this->solverMethod == CASPERSolver && separationRequired)
+				{
+					if (populationLeft - globalMinPop2Route < globalMinPop2Route) population2Route = populationLeft;
+					else population2Route = globalMinPop2Route;
+				}
 				else population2Route = populationLeft;
 
 				// populate the heap with vertices associated with the current evacuee
@@ -278,7 +277,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				sumVisitedEdge += closedList->Size();
 
 				// generate path for this evacuee if any was found
-				GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee);
+				if (FAILED(hr = GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))) goto END_OF_FUNC;
 
 #ifdef DEBUG
 				std::wostringstream os_;
@@ -328,14 +327,14 @@ END_OF_FUNC:
 	return hr;
 }
 
-HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
-							 NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, size_t & closedSize, NAEdgeMapTwoGen * closedList, NAEdgeContainer * leafs, std::vector<unsigned int> & CARMAExtractCounts)
+HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
+							 NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, size_t & closedSize,
+							 NAEdgeMapTwoGen * closedList, NAEdgeContainer * leafs, std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, bool separationRequired)
 {
 	HRESULT hr = S_OK;
 
 	// performing pre-process: Here we will mark each vertex/junction with a heuristic value indicating
 	// true distance to closest safe zone using backward traversal and Dijkstra
-
 	long adjacentEdgeCount, i;
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyNonHur);	// creating the heap for the dijkstra search
 	NAEdge * currentEdge;
@@ -387,7 +386,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
 	// the h values should always be an underestimation
-	if (this->solverMethod != CCRPSolver && !separable)
+	if (this->solverMethod != CCRPSolver && !separationRequired)
 	{
 		minPop2Route = FLT_MAX;
 		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
@@ -395,8 +394,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			if ((*eit)->vertices->empty() || (*eit)->Population <= 0.0) continue;
 			minPop2Route = min(minPop2Route, (*eit)->Population);
 		}
-		minPop2Route = max(minPop2Route, 1.0);
 	}
+	if (this->solverMethod == CASPERSolver && separationRequired) minPop2Route = globalMinPop2Route;
+	minPop2Route = max(minPop2Route, 1.0);
 
 	// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
 	// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
@@ -846,12 +846,11 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 			}
 		}
 	}
-	return hr;
-}
+	return hr;}
 
-HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee) const
+HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
 {
-	double population2Route = 0.0, leftCap, fromPosition, toPosition, edgePortion;
+	double leftCap, fromPosition, toPosition, edgePortion;
 	long sourceOID, sourceID;
 	HRESULT hr = S_OK;
 	PathSegmentPtr lastAdded;
@@ -862,17 +861,22 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 	{
 		// First find out about remaining capacity of this path
 		NAVertexPtr temp = finalVertex;
-		population2Route = populationLeft;
-		if (separable)				
+		
+		if (this->solverMethod == CCRPSolver)
 		{
-			while (temp->Previous)
+			if (separationRequired)
 			{
-				leftCap = temp->GetBehindEdge()->LeftCapacity();
-				if (this->solverMethod == CCRPSolver || leftCap > 0.0) population2Route = min(population2Route, leftCap);
-				temp = temp->Previous;
+				population2Route = 0.0;
+				while (temp->Previous)
+				{
+					leftCap = temp->GetBehindEdge()->LeftCapacity();
+					if (this->solverMethod == CCRPSolver || leftCap > 0.0) population2Route = min(population2Route, leftCap);
+					temp = temp->Previous;
+				}
+				if (population2Route <= 0.0) population2Route = populationLeft;	
+				population2Route = min(population2Route, populationLeft);			
 			}
-			if (population2Route <= 0.0) population2Route = populationLeft;	
-			population2Route = min(population2Route, populationLeft);			
+			else population2Route = populationLeft;
 		}
 		populationLeft -= population2Route;
 
@@ -939,6 +943,52 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 END_OF_FUNC:
 
 	if (path && FAILED(hr)) delete path;
+	return hr;
+}
+
+// This is where i figure out what is the smallest population that I should route (or try to route)
+// at each CASPER loop. Obviously this globalMinPop2Route has to be less than the population of any evacuee point.
+// Also CASPER and CARMA should be in sync at this number otherwise all the h values are useless.
+HRESULT EvcSolver::DeterminMinimumPop2Route(EvacueeList * Evacuees, INetworkDatasetPtr ipNetworkDataset, double & globalMinPop2Route, bool & separationRequired) const
+{
+	double minPop = 0.0, maxPop = 0.0, CommonCostOfEdgeInUnits = 1.0;
+	HRESULT hr = S_OK;
+	INetworkAttributePtr costAttrib;
+	esriNetworkAttributeUnits unit;
+	globalMinPop2Route = 0.0;
+	separationRequired = this->separable == VARIANT_TRUE;
+
+	if (this->separable && this->solverMethod == CASPERSolver)
+	{
+		minPop  = Evacuees->front()->Population;
+		maxPop  = Evacuees->front()->Population;
+		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
+		{
+			if ((*eit)->Population > maxPop) maxPop = (*eit)->Population;
+			if ((*eit)->Population < minPop) minPop = (*eit)->Population;
+		}
+		
+		// read cost attribute unit
+		if (SUCCEEDED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib)))
+		{
+			if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
+			CommonCostOfEdgeInUnits = GetUnitPerDay(unit, 25.0) / (60.0 * 24.0);
+		}
+		if (initDelayCostPerPop > 0.0 && CommonCostOfEdgeInUnits / initDelayCostPerPop <= SaturationPerCap)
+		{
+			// the maximum possible flow on common edge is not enough to cause congestion alone so separation is not required.
+			separationRequired = false;
+			globalMinPop2Route = 0.0;
+		}
+		else
+		{
+			separationRequired = true;
+			globalMinPop2Route = min(minPop, SaturationPerCap);
+
+			// We don't want the minimum routable population to be less than one third of the minimum population of any evacuee point. That just makes CASPER too slow.
+			if (globalMinPop2Route * 3.0 < minPop) globalMinPop2Route = minPop / 3.0;
+		}
+	}
 	return hr;
 }
 

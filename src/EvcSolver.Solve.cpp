@@ -484,7 +484,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, pIsPartialSolution, carmaSec, CARMAExtractCounts);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, pIsPartialSolution, carmaSec, CARMAExtractCounts, ipNetworkDataset);
 	}
 	catch (std::exception & ex)
 	{
