@@ -1,13 +1,7 @@
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "EvcSolver.h"
-#include "FibonacciHeap.h"
-
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
-								#ifdef DEBUG
-								, double minPop2Route, EvcSolverMethod solverMethod
-								#endif
-								);								
+#include "FibonacciHeap.h"							
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache,
 							   NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution,

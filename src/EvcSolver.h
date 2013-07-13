@@ -359,7 +359,15 @@ private:
 // Smart Pointer for IEvcSolver (for use within this project)
 _COM_SMARTPTR_TYPEDEF(IEvcSolver, __uuidof(IEvcSolver));
 
+// incomplete type def for the heap... I'm really out of options
+class FibonacciHeap;
+
 HRESULT PrepareVerticesForHeap(NAVertexPtr, NAVertexCache *, NAEdgeCache *, NAEdgeMap *, std::vector<NAEdgePtr> *, double, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, EvcSolverMethod);
+HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+								#ifdef DEBUG
+								, double minPop2Route, EvcSolverMethod solverMethod
+								#endif
+								);	
 
 // Simple helper class for managing the cancel tracker object during Solve
 class CancelTrackerHelper
