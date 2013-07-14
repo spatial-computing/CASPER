@@ -381,7 +381,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
 	// the h values should always be an underestimation
-	if (this->solverMethod != CCRPSolver && !separationRequired)
+	minPop2Route = 1.0; // separable CCRPSolver and any case of SPSolver 
+	if ((this->solverMethod == CASPERSolver) || (this->solverMethod == CCRPSolver && !separationRequired))
 	{
 		minPop2Route = FLT_MAX;
 		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
@@ -389,8 +390,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			if ((*eit)->vertices->empty() || (*eit)->Population <= 0.0) continue;
 			minPop2Route = min(minPop2Route, (*eit)->Population);
 		}
+		if (separationRequired) minPop2Route = min(globalMinPop2Route, minPop2Route);
 	}
-	if (this->solverMethod == CASPERSolver && separationRequired) minPop2Route = globalMinPop2Route;
 	minPop2Route = max(minPop2Route, 1.0);
 
 	// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
