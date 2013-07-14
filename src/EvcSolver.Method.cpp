@@ -89,7 +89,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipForwardStar, ipBackwardStar, CARMAClosedSize,
 			                      carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
 		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeE, &cpuTimeE);		
-		carmaSec += ((*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS)) + (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS))) / 10000000.0;
+		carmaSec += (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS)) + (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
 
 		countEvacueesInOneBucket = 0;
 		sumVisitedDirtyEdge = 0;
@@ -312,6 +312,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 END_OF_FUNC:
 
 	_ASSERT(hr >= 0);
+	carmaSec = carmaSec / 10000000.0;
 	delete readyEdges;
 	delete carmaClosedList;
 	delete closedList;
@@ -945,22 +946,26 @@ END_OF_FUNC:
 // Also CASPER and CARMA should be in sync at this number otherwise all the h values are useless.
 HRESULT EvcSolver::DeterminMinimumPop2Route(EvacueeList * Evacuees, INetworkDatasetPtr ipNetworkDataset, double & globalMinPop2Route, bool & separationRequired) const
 {
-	double minPop = 0.0, maxPop = 0.0, CommonCostOfEdgeInUnits = 1.0;
+	double minPop = FLT_MAX, maxPop = 1.0, CommonCostOfEdgeInUnits = 1.0, avgPop = 0.0;
 	HRESULT hr = S_OK;
 	INetworkAttributePtr costAttrib;
 	esriNetworkAttributeUnits unit;
+	size_t count = 0;
 	globalMinPop2Route = 0.0;
 	separationRequired = this->separable == VARIANT_TRUE;
 
 	if (this->separable && this->solverMethod == CASPERSolver)
 	{
-		minPop  = Evacuees->front()->Population;
-		maxPop  = Evacuees->front()->Population;
 		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
-		{
-			if ((*eit)->Population > maxPop) maxPop = (*eit)->Population;
-			if ((*eit)->Population < minPop) minPop = (*eit)->Population;
-		}
+			if ((*eit)->Population > 0.0)
+			{
+				count++;
+				avgPop += (*eit)->Population;
+				if ((*eit)->Population > maxPop) maxPop = (*eit)->Population;
+				if ((*eit)->Population < minPop) minPop = (*eit)->Population;
+			}
+		
+		avgPop = avgPop / count;
 		
 		// read cost attribute unit
 		if (SUCCEEDED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib)))
@@ -968,7 +973,8 @@ HRESULT EvcSolver::DeterminMinimumPop2Route(EvacueeList * Evacuees, INetworkData
 			if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
 			CommonCostOfEdgeInUnits = GetUnitPerDay(unit, 25.0) / (60.0 * 24.0);
 		}
-		if (initDelayCostPerPop > 0.0 && CommonCostOfEdgeInUnits / initDelayCostPerPop <= SaturationPerCap)
+		if ((initDelayCostPerPop > 0.0 && CommonCostOfEdgeInUnits / initDelayCostPerPop <= SaturationPerCap) ||
+			maxPop <= SaturationPerCap)
 		{
 			// the maximum possible flow on common edge is not enough to cause congestion alone so separation is not required.
 			separationRequired = false;
@@ -977,10 +983,12 @@ HRESULT EvcSolver::DeterminMinimumPop2Route(EvacueeList * Evacuees, INetworkData
 		else
 		{
 			separationRequired = true;
-			globalMinPop2Route = min(minPop, SaturationPerCap);
+			if (avgPop < SaturationPerCap) globalMinPop2Route = SaturationPerCap / 2.0;
+			else globalMinPop2Route = SaturationPerCap;
 
 			// We don't want the minimum routable population to be less than one third of the minimum population of any evacuee point. That just makes CASPER too slow.
 			if (globalMinPop2Route * 3.0 < minPop) globalMinPop2Route = minPop / 3.0;
+			if (globalMinPop2Route < 1.0) globalMinPop2Route = 1.0;
 		}
 	}
 	return hr;
