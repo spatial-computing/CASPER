@@ -544,7 +544,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	{
 		for(eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++)
 		{
-			if ((*eit)->Population <= 0.0 || (*eit)->PredictedCost >= FLT_MAX)
+			if ((*eit)->PredictedCost >= FLT_MAX)
 			{
 				(*eit)->Reachable = false;
 #ifdef TRACE
