@@ -124,7 +124,7 @@ class NAEvacueeVertexTable : public stdext::hash_map<long, std::vector<EvacueePt
 public:
 	~NAEvacueeVertexTable();
 
-	void InsertReachable(EvacueeList * list);
+	void InsertReachable(EvacueeList * list, EvacueeList * redundentSortedEvacuees);
 	std::vector<EvacueePtr> * Find(long junctionEID);
 	void Erase(long junctionEID);
 };

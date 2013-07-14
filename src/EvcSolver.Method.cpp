@@ -357,11 +357,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	unsigned int CARMAExtractCount = 0;
 
 	// keeping reachable evacuees in a new hashtable for better access
+	// also keep unreachable ones in the redundant list
 	NAEvacueeVertexTable * EvacueePairs = new DEBUG_NEW_PLACEMENT NAEvacueeVertexTable();
-	EvacueePairs->InsertReachable(Evacuees);
-
-	// also keep unreachable ones in the redundant list	
-	for(std::vector<EvacueePtr>::iterator i = Evacuees->begin(); i != Evacuees->end(); i++)	if (!((*i)->Reachable)) redundentSortedEvacuees->push_back(*i);
+	EvacueePairs->InsertReachable(Evacuees, redundentSortedEvacuees);
 	
 	// Create a backward Star Adjacencies object (we need this object to hold traversal queries carried out on the Backward Star)
 	INetworkForwardStarAdjacenciesPtr ipBackwardAdj;
@@ -546,7 +544,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	{
 		for(eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++)
 		{
-			if ((*eit)->PredictedCost >= FLT_MAX)
+			if ((*eit)->Population <= 0.0 || (*eit)->PredictedCost >= FLT_MAX)
 			{
 				(*eit)->Reachable = false;
 #ifdef TRACE

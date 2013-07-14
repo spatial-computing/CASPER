@@ -2,7 +2,7 @@
 #include "Evacuee.h"
 #include "NAVertex.h"
 
-void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
+void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, EvacueeList * redundentSortedEvacuees)
 {
 	std::vector<EvacueePtr> * p = 0;
 	std::vector<EvacueePtr>::iterator i;
@@ -10,7 +10,7 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
 
 	for(i = list->begin(); i != list->end(); i++)
 	{
-		if ((*i)->Reachable)
+		if ((*i)->Reachable && (*i)->Population > 0.0)
 		{
 			// reset evacuation prediction
 			// (*i)->PredictedCost = FLT_MAX;
@@ -26,6 +26,7 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
 				p->push_back(*i);
 			}
 		}
+		else redundentSortedEvacuees->push_back(*i);
 	}
 }	
 
