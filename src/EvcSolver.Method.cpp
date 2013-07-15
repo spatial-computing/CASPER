@@ -982,8 +982,7 @@ HRESULT EvcSolver::DeterminMinimumPop2Route(EvacueeList * Evacuees, INetworkData
 		else
 		{
 			separationRequired = true;
-			if (avgPop < SaturationPerCap) globalMinPop2Route = SaturationPerCap / 2.0;
-			else globalMinPop2Route = SaturationPerCap;
+			globalMinPop2Route = SaturationPerCap / 2.0;
 
 			// We don't want the minimum routable population to be less than one third of the minimum population of any evacuee point. That just makes CASPER too slow.
 			if (globalMinPop2Route * 3.0 < minPop) globalMinPop2Route = minPop / 3.0;
