@@ -121,8 +121,10 @@ HRESULT NAEdge::QuerySourceStuff(long * sourceOID, long * sourceID, double * fro
 // Will be used to get max capacity available on a path
 double NAEdge::LeftCapacity() const
 {
-	double newPop = reservations->CriticalDens - reservations->ReservedPop;
-	if ((reservations->initDelayCostPerPop > 0.0) && (newPop > OriginalCost / reservations->initDelayCostPerPop)) newPop = 2147483647.0; // max_int	
+	double newPop = 0.0;
+	if (trafficModel == STEPModel) newPop = reservations->CriticalDens - reservations->ReservedPop;
+	else newPop = reservations->CriticalDens - (reservations->SaturationDensPerCap * reservations->Capacity);
+	if ((reservations->initDelayCostPerPop > 0.0) && (newPop > OriginalCost / reservations->initDelayCostPerPop)) newPop = 2147483647.0; // max_int
 	newPop = max(newPop, 0.0);
 	return newPop;
 }
@@ -187,7 +189,7 @@ double NAEdge::GetCost(double newPop, EvcSolverMethod method) const
 // this function has to cache the answer and it has to be consistent.
 bool NAEdge::IsDirty(double minPop2Route, EvcSolverMethod method)
 {
-	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) * 0.9;
+	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) * 0.95;
 	return reservations->isDirty;
 }
 

@@ -68,12 +68,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "USC SSI"
             VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
-            VALUE "FileVersion", "1.1.0.0"
+            VALUE "FileVersion", "1.2.0.0"
             VALUE "InternalName", "EvcSolver.dll"
             VALUE "OriginalFilename", "EvcSolver.dll"
             VALUE "LegalCopyright", "Copyright (C) 2013"
             VALUE "ProductName", "EvcSolver"
-            VALUE "ProductVersion", "1.1.0.0"
+            VALUE "ProductVersion", "1.2.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -134,7 +134,7 @@ BEGIN
     LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,123,95,8
     EDITTEXT        IDC_EDIT_CARMA,127,120,63,14,ES_AUTOHSCROLL
     CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",LWS_RIGHT | WS_TABSTOP,297,195,99,13
-    CONTROL         "Use the 3G CARMA instead of legacy mode",IDL_CHECK_CARMAGEN,
+    CONTROL         "Use the 4G CARMA instead of legacy mode",IDL_CHECK_CARMAGEN,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,188,171,13
 END
 
