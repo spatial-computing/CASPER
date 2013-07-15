@@ -2,7 +2,7 @@
 #include "Evacuee.h"
 #include "NAVertex.h"
 
-void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, EvacueeList * redundentSortedEvacuees)
+void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees)
 {
 	std::vector<EvacueePtr> * p = 0;
 	std::vector<EvacueePtr>::iterator i;
@@ -26,9 +26,12 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, EvacueeList * red
 				p->push_back(*i);
 			}
 		}
-		else redundentSortedEvacuees->push_back(*i);
+		else if (!(*i)->vertices->empty())
+		{
+			redundentSortedEvacuees->push_back(*i);
+		}
 	}
-}	
+}
 
 std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
 {

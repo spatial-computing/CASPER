@@ -330,7 +330,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	// performing pre-process: Here we will mark each vertex/junction with a heuristic value indicating
 	// true distance to closest safe zone using backward traversal and Dijkstra
-	long adjacentEdgeCount, i;
+	long adjacentEdgeCount, index;
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyNonHur);	// creating the heap for the dijkstra search
 	NAEdge * currentEdge;
 	NAVertexPtr neighbor;
@@ -359,7 +359,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	// keeping reachable evacuees in a new hashtable for better access
 	// also keep unreachable ones in the redundant list
 	NAEvacueeVertexTable * EvacueePairs = new DEBUG_NEW_PLACEMENT NAEvacueeVertexTable();
-	EvacueePairs->InsertReachable(Evacuees, redundentSortedEvacuees);
+	EvacueePairs->InsertReachable_KeepOtherWithVertex(Evacuees, redundentSortedEvacuees);
 	
 	// Create a backward Star Adjacencies object (we need this object to hold traversal queries carried out on the Backward Star)
 	INetworkForwardStarAdjacenciesPtr ipBackwardAdj;
@@ -374,43 +374,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	ipCurrentEdge = ipEdgeElement;
 	ipTempEdge = ipTempEdgeElement;
 
-	if (ThreeGenCARMA == VARIANT_TRUE) closedList->MarkAllAsOldGen();
-	else closedList->Clear(NAEdgeMap_ALLGENS);
-
-	// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
-	// the h values should always be an underestimation
-	minPop2Route = 1.0; // separable CCRPSolver and any case of SPSolver 
-	if ((this->solverMethod == CASPERSolver) || (this->solverMethod == CCRPSolver && !separationRequired))
-	{
-		minPop2Route = FLT_MAX;
-		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
-		{
-			if ((*eit)->vertices->empty() || (*eit)->Population <= 0.0) continue;
-			minPop2Route = min(minPop2Route, (*eit)->Population);
-		}
-		if (separationRequired) minPop2Route = min(globalMinPop2Route, minPop2Route);
-	}
-	minPop2Route = max(minPop2Route, 1.0);
-
-	// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
-	// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
-	MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, minPop2Route, this->solverMethod);
-
-	// prepare and insert safe zone vertices into the heap
-	for (NAVertexTableItr i = safeZoneList->begin(); i != safeZoneList->end(); i++)
-		if (FAILED(hr = PrepareVerticesForHeap(i->second, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, ipForwardStar, ipForwardAdj, ipNetworkQuery, solverMethod))) goto END_OF_FUNC;	
-	for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
-
-	// Now insert leaf edges in heap like the destination edges	
-	#ifdef DEBUG
-	if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;
-	#else
-	if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs))) goto END_OF_FUNC;
-	#endif
-
-	// we're done with all these leafs. let's clean up and collect new ones for the next round.
-	leafs->Clear();
-
 	// if this list is not empty, it means we are going to have another CARMA loop
 	if (!EvacueePairs->empty()) 
 	{
@@ -420,6 +383,43 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		os_ << "CARMALoop #" << countCARMALoops << std::endl;
 		OutputDebugStringW( os_.str().c_str() );
 		#endif
+
+		if (ThreeGenCARMA == VARIANT_TRUE) closedList->MarkAllAsOldGen();
+		else closedList->Clear(NAEdgeMap_ALLGENS);
+
+		// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
+		// the h values should always be an underestimation
+		minPop2Route = 1.0; // separable CCRPSolver and any case of SPSolver 
+		if ((this->solverMethod == CASPERSolver) || (this->solverMethod == CCRPSolver && !separationRequired))
+		{
+			minPop2Route = FLT_MAX;
+			for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
+			{
+				if ((*eit)->vertices->empty() || (*eit)->Population <= 0.0) continue;
+				minPop2Route = min(minPop2Route, (*eit)->Population);
+			}
+			if (separationRequired) minPop2Route = min(globalMinPop2Route, minPop2Route);
+		}
+		minPop2Route = max(minPop2Route, 1.0);
+
+		// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
+		// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
+		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, minPop2Route, this->solverMethod);
+
+		// prepare and insert safe zone vertices into the heap
+		for (NAVertexTableItr sz = safeZoneList->begin(); sz != safeZoneList->end(); sz++)
+			if (FAILED(hr = PrepareVerticesForHeap(sz->second, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, ipForwardStar, ipForwardAdj, ipNetworkQuery, solverMethod))) goto END_OF_FUNC;	
+		for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
+
+		// Now insert leaf edges in heap like the destination edges	
+		#ifdef DEBUG
+		if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;
+		#else
+		if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs))) goto END_OF_FUNC;
+		#endif
+
+		// we're done with all these leafs. let's clean up and collect new ones for the next round.
+		leafs->Clear();
 
 		// Continue traversing the network while the heap has remaining junctions in it
 		// this is the actual Dijkstra code with backward network traversal. it will only update h value.
@@ -489,9 +489,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			if (FAILED(hr = ipBackwardAdj->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
 
 			// Loop through all adjacent edges and update their cost value
-			for (i = 0; i < adjacentEdgeCount; i++)
+			for (index = 0; index < adjacentEdgeCount; index++)
 			{
-				if (FAILED(hr = ipBackwardAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
+				if (FAILED(hr = ipBackwardAdj->QueryEdge(index, ipCurrentEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;
 				if (FAILED(hr = ipCurrentEdge->QueryJunctions(ipCurrentJunction, 0))) goto END_OF_FUNC;
 
 				/* It turns out, I don't need to check this here. the QueryAdjacencies() function have already did it.
