@@ -72,6 +72,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_FLAT));
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_STEP));
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_LINEAR));
+		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_POWER));
 		::SendMessage(m_hComboTrafficModel, CB_ADDSTRING, NULL, (LPARAM)(TRAFFIC_MODEL_EXP));
 		::SendMessage(m_hComboTrafficModel, CB_SETCURSEL, (WPARAM)model, 0);
 

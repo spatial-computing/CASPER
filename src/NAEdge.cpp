@@ -42,7 +42,8 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	ToVertex = cpy.ToVertex;
 	//LastExteriorEdge = cpy.LastExteriorEdge;
 	trafficModel = cpy.trafficModel;
-	CASPERRatio = cpy.CASPERRatio;
+	modelRatio = cpy.modelRatio;
+	expGamma = cpy.expGamma;
 	CleanCost = cpy.CleanCost;
 	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
 	// calcSaved = cpy.calcSaved;
@@ -101,10 +102,29 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, f
 			reservations = it->second;
 		}
 		
-		// z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
-		// CASPERRatio = 0.0202 * exp(-0.01127 * reservations->Capacity);
-		CASPERRatio  = 0.5 / (sqrt(reservations->SaturationDensPerCap) * exp(-0.01127));
-		CASPERRatio *= exp(-0.01127 * reservations->Capacity);
+		switch (trafficModel)
+		{
+		case EXPModel:
+			/* Exp Model
+			a = flow of normal speed, 	b = flow where the speed is dropped to half
+			(modelRatio) beta  = b * lane - 1;
+			(expGamma)   gamma = (log(log(0.99) / log(0.5))) / log((a * lane - 1) / (b * lane - 1));
+			*/
+			modelRatio  = reservations->SaturationDensPerCap * reservations->Capacity - 1.0;
+			expGamma    = (log(log(0.99) / log(0.5))) / log((reservations->CriticalDens * reservations->Capacity - 1.0) / (reservations->SaturationDensPerCap * reservations->Capacity - 1.0));
+			break;
+		case POWERModel:
+			/* Power model
+			z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
+			modelRatio = 0.0202 * exp(-0.01127 * reservations->Capacity);
+			*/
+			modelRatio  = 0.5 / (sqrt(reservations->SaturationDensPerCap) * exp(-0.01127));
+			modelRatio *= exp(-0.01127 * reservations->Capacity);
+			break;
+		default:
+			modelRatio = 0.0;
+			expGamma = 0.0;
+		}
 	}
 }
 
@@ -138,9 +158,13 @@ double NAEdge::GetTrafficSpeedRatio(double allPop) const
 	double speedPercent = 1.0;
 	switch (trafficModel)
 	{
+	case EXPModel:
+		// z = exp(-(((flow - 1) / beta) ^ gamma) * log(2));
+		speedPercent = exp(-pow(((allPop - 1.0) / modelRatio), expGamma) * log(2.0));
+		break;
 	case POWERModel:
 		// z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
-		speedPercent = 1.0 - CASPERRatio * sqrt(allPop);
+		speedPercent = 1.0 - modelRatio * sqrt(allPop);
 		break;
 	case LINEARModel:
 		speedPercent = 1.0 - (allPop - reservations->CriticalDens) / (2.0 * (reservations->SaturationDensPerCap * reservations->Capacity - reservations->CriticalDens));

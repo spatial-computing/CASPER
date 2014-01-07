@@ -4,7 +4,7 @@
 #include "Evacuee.h"
 
 [ export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC") ] enum EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
-[ export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948") ] enum EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3 };
+[ export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948") ] enum EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3, EXPModel = 0x4 };
 
 struct EdgeReservation
 {
@@ -68,7 +68,8 @@ class NAEdge
 private:	
 	EdgeReservations * reservations;
 	EvcTrafficModel trafficModel;
-	double CASPERRatio;
+	double modelRatio;
+	double expGamma;
 	double CleanCost;
 	mutable double cachedCost[2];
 	// mutable unsigned short calcSaved;
