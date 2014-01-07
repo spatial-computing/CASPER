@@ -101,6 +101,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, f
 		{
 			reservations = it->second;
 		}
+		double a,b;
 		
 		switch (trafficModel)
 		{
@@ -110,8 +111,10 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, f
 			(modelRatio) beta  = b * lane - 1;
 			(expGamma)   gamma = (log(log(0.97) / log(0.5))) / log((a * lane - 1) / (b * lane - 1));
 			*/
+			a = max(2.0, reservations->CriticalDens);
+			b = max(a + 1.0, reservations->SaturationDensPerCap);
 			modelRatio  = reservations->SaturationDensPerCap * reservations->Capacity - 1.0;
-			expGamma    = (log(log(0.97) / log(0.5))) / log((reservations->CriticalDens * reservations->Capacity - 1.0) / (reservations->SaturationDensPerCap * reservations->Capacity - 1.0));
+			expGamma    = (log(log(0.96) / log(0.5))) / log((a * reservations->Capacity - 1.0) / (b * reservations->Capacity - 1.0));
 			break;
 		case POWERModel:
 			/* Power model
