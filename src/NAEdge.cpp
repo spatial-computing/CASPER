@@ -108,10 +108,10 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, f
 			/* Exp Model
 			a = flow of normal speed, 	b = flow where the speed is dropped to half
 			(modelRatio) beta  = b * lane - 1;
-			(expGamma)   gamma = (log(log(0.99) / log(0.5))) / log((a * lane - 1) / (b * lane - 1));
+			(expGamma)   gamma = (log(log(0.97) / log(0.5))) / log((a * lane - 1) / (b * lane - 1));
 			*/
 			modelRatio  = reservations->SaturationDensPerCap * reservations->Capacity - 1.0;
-			expGamma    = (log(log(0.99) / log(0.5))) / log((reservations->CriticalDens * reservations->Capacity - 1.0) / (reservations->SaturationDensPerCap * reservations->Capacity - 1.0));
+			expGamma    = (log(log(0.97) / log(0.5))) / log((reservations->CriticalDens * reservations->Capacity - 1.0) / (reservations->SaturationDensPerCap * reservations->Capacity - 1.0));
 			break;
 		case POWERModel:
 			/* Power model
