@@ -69,15 +69,15 @@ using namespace ATL;
 
 // Be sure to set these paths to the version of the software against which you want to run
 
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriSystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriSystemUI.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriNetworkAnalyst.olb" named_guids no_namespace raw_interfaces_only no_implementation
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriDisplay.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriDataSourcesRaster.olb" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.1\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriSystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriSystemUI.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriNetworkAnalyst.olb" named_guids no_namespace raw_interfaces_only no_implementation
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDisplay.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDataSourcesRaster.olb" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI")
 
 /*
 
