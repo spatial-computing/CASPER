@@ -17,3 +17,6 @@
 *.exe
 *.sdf
 *.ncb
+
+# Visual Studio
+*.suo
