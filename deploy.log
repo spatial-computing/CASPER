@@ -1,0 +1,186 @@
+Updating e377e0e..2482d27
+Fast-forward
+ .gitignore |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+ create mode 100644 deploy.log
+Microsoft (R) Build Engine version 4.0.30319.18408
+[Microsoft .NET Framework, version 4.0.30319.18444]
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Building the projects in this solution one at a time. To enable parallel build, please add the "/m" switch.
+Build started 3/15/2014 8:00:11 AM.
+Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" on node 1 (build target(s)).
+ValidateSolutionConfiguration:
+  Building solution configuration "Release|Win32".
+Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (1) is building "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) on node 1 (default targets).
+Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (3) on node 1 (default targets).
+InitializeBuildStatus:
+  Creating "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\opensteer.unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+Lib:
+  All outputs are up-to-date.
+  opensteer.vcxproj -> D:\Archive\arccasperdeploy\bin\Release\opensteer32.lib
+FinalizeBuildStatus:
+  Deleting file "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\opensteer.unsuccessfulbuild".
+  Touching "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\opensteer.lastbuildstate".
+Done Building Project "D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (default targets).
+Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (4) on node 1 (default targets).
+InitializeBuildStatus:
+  Creating "D:\Archive\arccasperdeploy\src\obj\Release\Win32\EvcSolver.unsuccessfulbuild" because "AlwaysCreate" was specified.
+PreBuildEvent:
+  Description: Performing Custom Pre-Build Step
+  IF NOT DEFINED NOREG (
+    IF exist "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll" (
+      IF "x86"=="x86" (
+        "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop  "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll" /s /u
+      ) else (
+        regsvr32.exe /u /s "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll" 
+      )
+    )
+  )
+  exit 0
+  :VCEnd
+ClCompile:
+  All outputs are up-to-date.
+ResourceCompile:
+  All outputs are up-to-date.
+Link:
+  All outputs are up-to-date.
+  EvcSolver.vcxproj -> D:\Archive\arccasperdeploy\bin\Release\EvcSolver32.dll
+PostBuildEvent:
+  Description: Performing Custom Post-Build Step
+  copy /Y "D:\Archive\arccasperdeploy\bin\Release\EvcSolver32.dll" "D:\Archive\arccasperdeploy\Package\*.*"
+  copy /Y "D:\Archive\arccasperdeploy\bin\Release\EvcSolver32.pdb" "D:\Archive\arccasperdeploy\Package\*.*"
+  IF NOT DEFINED NOREG (
+    IF exist "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll" (
+      IF "x86"=="x86" (
+        "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll" /s
+      ) else (
+        %WINDIR%\system32\regsvr32.exe /s "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll"
+      )
+    )
+  )
+  exit 0
+  :VCEnd
+          1 file(s) copied.
+          1 file(s) copied.
+FinalizeBuildStatus:
+  Deleting file "D:\Archive\arccasperdeploy\src\obj\Release\Win32\EvcSolver.unsuccessfulbuild".
+  Touching "D:\Archive\arccasperdeploy\src\obj\Release\Win32\EvcSolver.lastbuildstate".
+Done Building Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (default targets).
+Done Building Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (default targets).
+Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (1) is building "D:\Archive\arccasperdeploy\ArcCASPERLog\ArcCASPERLog.csproj" (5) on node 1 (default targets).
+ResolveAssemblyReferences:
+  A TargetFramework profile exclusion list will be generated.
+GenerateTargetFrameworkMonikerAttribute:
+Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+CoreCompile:
+Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+CopyFilesToOutputDirectory:
+  ArcCASPERLog -> C:\Users\kshahabi\Documents\My Data\ArcCASPER\ArcCASPERLog.exe
+Done Building Project "D:\Archive\arccasperdeploy\ArcCASPERLog\ArcCASPERLog.csproj" (default targets).
+Done Building Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (build target(s)).
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.51
+Microsoft (R) Build Engine version 4.0.30319.18408
+[Microsoft .NET Framework, version 4.0.30319.18444]
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Building the projects in this solution one at a time. To enable parallel build, please add the "/m" switch.
+Build started 3/15/2014 8:00:12 AM.
+Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" on node 1 (build target(s)).
+ValidateSolutionConfiguration:
+  Building solution configuration "Release|x64".
+ValidateProjects:
+  The project "ArcCASPERLog" is not selected for building in solution configuration "Release|x64".
+Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (1) is building "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) on node 1 (default targets).
+Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (3) on node 1 (default targets).
+InitializeBuildStatus:
+  Creating "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\opensteer.unsuccessfulbuild" because "AlwaysCreate" was specified.
+ClCompile:
+  All outputs are up-to-date.
+  All outputs are up-to-date.
+Lib:
+  All outputs are up-to-date.
+  opensteer.vcxproj -> D:\Archive\arccasperdeploy\bin\Release\opensteer64.lib
+FinalizeBuildStatus:
+  Deleting file "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\opensteer.unsuccessfulbuild".
+  Touching "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\opensteer.lastbuildstate".
+Done Building Project "D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (default targets).
+Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (4) on node 1 (default targets).
+InitializeBuildStatus:
+  Creating "D:\Archive\arccasperdeploy\src\obj\Release\x64\EvcSolver.unsuccessfulbuild" because "AlwaysCreate" was specified.
+PreBuildEvent:
+  Description: Performing Custom Pre-Build Step
+  IF NOT DEFINED NOREG (
+    IF exist "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll" (
+      IF "x64"=="x86" (
+        "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop  "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll" /s /u
+      ) else (
+        regsvr32.exe /u /s "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll" 
+      )
+    )
+  )
+  exit 0
+  :VCEnd
+ClCompile:
+  All outputs are up-to-date.
+ResourceCompile:
+  All outputs are up-to-date.
+Link:
+  All outputs are up-to-date.
+  EvcSolver.vcxproj -> D:\Archive\arccasperdeploy\bin\Release\EvcSolver64.dll
+PostBuildEvent:
+  Description: Performing Custom Post-Build Step
+  copy /Y "D:\Archive\arccasperdeploy\bin\Release\EvcSolver64.dll" "D:\Archive\arccasperdeploy\Package\*.*"
+  copy /Y "D:\Archive\arccasperdeploy\bin\Release\EvcSolver64.pdb" "D:\Archive\arccasperdeploy\Package\*.*"
+  IF NOT DEFINED NOREG (
+    IF exist "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll" (
+      IF "x64"=="x86" (
+        "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll" /s
+      ) else (
+        %WINDIR%\system32\regsvr32.exe /s "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll"
+      )
+    )
+  )
+  exit 0
+  :VCEnd
+          1 file(s) copied.
+          1 file(s) copied.
+FinalizeBuildStatus:
+  Deleting file "D:\Archive\arccasperdeploy\src\obj\Release\x64\EvcSolver.unsuccessfulbuild".
+  Touching "D:\Archive\arccasperdeploy\src\obj\Release\x64\EvcSolver.lastbuildstate".
+Done Building Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (default targets).
+Done Building Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (default targets).
+Done Building Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (build target(s)).
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.46
+
+7-Zip [64] 9.22 beta  Copyright (c) 1999-2011 Igor Pavlov  2011-04-18
+Scanning
+
+Creating archive ArcCASPER-nigthly-2482d27.zip
+
+Compressing  EvcSolver32.dll
+Compressing  EvcSolver64.dll
+Compressing  glut32.dll
+Compressing  glut64.dll
+Compressing  install.cmd
+Compressing  Manual.pdf
+Compressing  readme.txt
+Compressing  uninstall.cmd
+
+Everything is Ok
+Uploading to dropbox for public access
+ > Uploading "/cygdrive/d/Archive/arccasperdeploy/Package/ArcCASPER-nigthly-2482d27.zip" to "/ArcCASPER-nigthly-2482d27.zip"... DONE
+""
