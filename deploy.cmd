@@ -34,7 +34,8 @@ del /Q Package\EvcSolver64.*
 :: post to dropbox
 cd Package
 set ERRORLEVEL=
-"c:\Program Files\7-Zip\7z.exe" a -bd ArcCASPER-nigthly-%hash%.zip EvcSolver32.dll EvcSolver64.dll glut32.dll glut64.dll Manual.pdf readme.txt  install.cmd uninstall.cmd
+"c:\Program Files\7-Zip\7z.exe" a ArcCASPER-nigthly-%hash%.zip EvcSolver32.dll EvcSolver64.dll glut32.dll glut64.dll Manual.pdf readme.txt install.cmd uninstall.cmd
+echo %ERRORLEVEL
 if %ERRORLEVEL%==0 (
   d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh upload \"$(cygpath -u \"%CD%\ArcCASPER-nigthly-%hash%.zip\")\" ArcCASPER-nigthly-%hash%.zip"
 ) else (
