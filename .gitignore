@@ -20,6 +20,7 @@ src/_EvcSolver32_p.c
 src/_EvcSolver64.h
 src/_EvcSolver64_i.c
 src/_EvcSolver64_p.c
+Package/ArcCASPER-nigthly-*.zip
 
 # Visual Studio
 *.suo
