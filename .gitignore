@@ -14,9 +14,21 @@
 *.dll
 
 # project specific
-*.exe
-*.sdf
-*.ncb
+src/_EvcSolver32.h
+src/_EvcSolver32_i.c
+src/_EvcSolver32_p.c
+src/_EvcSolver64.h
+src/_EvcSolver64_i.c
+src/_EvcSolver64_p.c
 
 # Visual Studio
 *.suo
+*.exe
+*.sdf
+*.opensdf
+*.ncb
+*.idl
+*.tlb
+obj/
+bin/
+*.pdb

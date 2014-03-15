@@ -503,13 +503,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		_ASSERT(0);
 		#endif
 	}
-	#ifdef DEBUG
-	catch(...)
-	{
-		_ASSERT(0);
-		throw;
-	}
-	#endif
 
 	if (FAILED(hr))
 	{
@@ -1168,7 +1161,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 	CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
 
-	int mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
+	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0, mem));
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
