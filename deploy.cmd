@@ -24,11 +24,10 @@ if %iscommit%==1 (
   goto :exit
 )
 
-
 :: build clean
 set NOREG=1
-del /Q EvcSolver32.*
-del /Q EvcSolver64.*
+del /Q Package\EvcSolver32.*
+del /Q Package\EvcSolver64.*
 ::msbuild.exe /target:rebuild /p:Configuration=Release /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
 ::msbuild.exe /target:rebuild /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
 
