@@ -19,13 +19,11 @@ extern "C"   {
 #endif
 
 EXTERN_PROXY_FILE( _EvcSolver32 )
-EXTERN_PROXY_FILE( _EvcSolver64 )
 
 
 PROXYFILE_LIST_START
 /* Start of list */
   REFERENCE_PROXY_FILE( _EvcSolver32 ),
-  REFERENCE_PROXY_FILE( _EvcSolver64 ),
 /* End of list */
 PROXYFILE_LIST_END
 
