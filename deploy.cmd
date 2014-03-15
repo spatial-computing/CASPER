@@ -23,12 +23,13 @@ if %iscommit%==1 ( exit 0 )
 
 
 :: build clean
+set NOREG=1
 msbuild.exe /target:rebuild /p:Configuration=Release /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
 msbuild.exe /target:rebuild /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
 
 :: post to dropbox
 cd Package
-"c:\Program Files\7-Zip\7z.exe" a -bd ArcCASPER-nightly-%hash%.zip EvcSolver32.dll EvcSolver64.dll glut32.dll glut64.dll Manual.pdf readme.txt  install.cmd uninstall.cmd
+"c:\Program Files\7-Zip\7z.exe" a -bd ArcCASPER-nigthly-%hash%.zip EvcSolver32.dll EvcSolver64.dll glut32.dll glut64.dll Manual.pdf readme.txt  install.cmd uninstall.cmd
 d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh upload \"$(cygpath -u \"%CD%\ArcCASPER-nigthly-%hash%.zip\")\" ArcCASPER-nigthly-%hash%.zip"
 
 :: restore current directory
