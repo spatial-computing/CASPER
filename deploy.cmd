@@ -1,4 +1,4 @@
-@ECHO ON
+@ECHO OFF
 
 :: setup my variables
 set OLDDIR=%CD%
@@ -19,10 +19,10 @@ for /f %%i in ('git rev-parse --short HEAD') do set hash=%%i
 
 :: check if there is new commit to be built
 for /f %%i in ('d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh list | grep %hash% | wc -l"') do set iscommit=%%i
-::if %iscommit%==1 (
-::  SET "msg=No new code is commited to dev branch"
-::  goto :exit
-::)
+if %iscommit%==1 (
+  SET "msg=No new code is commited to dev branch"
+  goto :exit
+)
 
 :: build clean
 set NOREG=1
@@ -36,7 +36,7 @@ cd Package
 "c:\Program Files\7-Zip\7z.exe" a ArcCASPER-nigthly-%hash%.zip EvcSolver32.dll EvcSolver64.dll glut32.dll glut64.dll Manual.pdf readme.txt install.cmd uninstall.cmd
 if exist ArcCASPER-nigthly-%hash%.zip (
   echo Uploading to dropbox for public access
-  d:\cygwin64\bin\bash.exe -c '/home/kshahabi/dropbox_uploader.sh upload `cygpath -u %CD%\ArcCASPER-nigthly-%hash%.zip` ArcCASPER-nigthly-%hash%.zip'
+  d:\cygwin64\bin\bash.exe -c '/home/kshahabi/dropbox_uploader.sh upload `cygpath -u "%CD%\ArcCASPER-nigthly-%hash%.zip"` ArcCASPER-nigthly-%hash%.zip'
 ) else (
   SET "msg=Some of the files are not present"
   goto :exit
