@@ -2,7 +2,7 @@
 
 :: setup my variables
 set OLDDIR=%CD%
-SET "dir="D:\Archive (no backup)\arccasperdeploy""
+SET "dir="D:\Archive\arccasperdeploy""
 SET url=git@github.com:kaveh096/ArcCASPER.git
 SET msg=""
 
@@ -36,7 +36,7 @@ cd Package
 "c:\Program Files\7-Zip\7z.exe" a ArcCASPER-nigthly-%hash%.zip EvcSolver32.dll EvcSolver64.dll glut32.dll glut64.dll Manual.pdf readme.txt install.cmd uninstall.cmd
 if exist ArcCASPER-nigthly-%hash%.zip (
   echo Uploading to dropbox for public access
-  d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh upload \"$(cygpath -u \"%CD%\ArcCASPER-nigthly-%hash%.zip\")\" ArcCASPER-nigthly-%hash%.zip"
+  d:\cygwin64\bin\bash.exe -c '/home/kshahabi/dropbox_uploader.sh upload `cygpath -u %CD%\ArcCASPER-nigthly-%hash%.zip` ArcCASPER-nigthly-%hash%.zip'
 ) else (
   SET "msg=Some of the files are not present"
   goto :exit
