@@ -18,6 +18,10 @@ git pull
 for /f %%i in ('git rev-parse --short HEAD') do set hash=%%i
 set out=ArcCASPER-nigthly-%hash%.zip
 
+:: TODO use 'git describe branchname' for release archive name
+:: TODO create changle.log from 'git shortlog --no-merges master --not 
+v1.0.1'
+
 :: check if there is new commit to be built
 for /f %%i in ('d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh list | grep %hash% | wc -l"') do set iscommit=%%i
 if %iscommit%==1 (
