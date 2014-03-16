@@ -33,8 +33,8 @@ if %iscommit%==1 (
 set NOREG=1
 del /Q Package\EvcSolver32.*
 del /Q Package\EvcSolver64.*
-msbuild.exe /target:build /p:Configuration=Release /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
-msbuild.exe /target:build /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
+msbuild.exe /target:build /p:Configuration=ReleaseNoFlock /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
+msbuild.exe /target:build /p:Configuration=ReleaseNoFlock /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
 
 :: post to dropbox
 cd Package
@@ -69,8 +69,8 @@ if %iscommit%==1 (
 set NOREG=1
 del /Q Package\EvcSolver32.*
 del /Q Package\EvcSolver64.*
-msbuild.exe /target:build /p:Configuration=Release /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
-msbuild.exe /target:build /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
+msbuild.exe /target:build /p:Configuration=ReleaseNoFlock /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
+msbuild.exe /target:build /p:Configuration=ReleaseNoFlock /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
 
 :: post to dropbox
 cd Package
