@@ -4,10 +4,11 @@
 | Release Info |                                                                     |
 |:-------------| :-------------------------------------------------------------------|
 | Title        | ArcCASPER Evacuation Routing                                        |
-| Release      | REV                                                         |
+| Web Page     | http://esri.com/arccasper                                           |
+| Revision     | REV                                                                 |
 | Author       | Kaveh Shahabi                                                       |
 | Email        | kshahabi@usc.edu                                                    |
-| Web Page     | http://www-scf.usc.edu/~kshahabi                                    |
+| Author Page  | http://www-scf.usc.edu/~kshahabi                                    |
 | Description  | A Network Analyst tool to intelligently calculate evacuation routes |
 
 ####About
