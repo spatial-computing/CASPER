@@ -39,8 +39,8 @@ if %iscommit%==1 (
 set NOREG=1
 del /Q Package\EvcSolver32.*
 del /Q Package\EvcSolver64.*
-::msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
-::msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
+msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
+msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
 
 :: Generate readme file
 "c:\Program Files (x86)\GnuWin32\bin\sed.exe" -e "s/REV/%revi%/g" README.md > Package\README.md
