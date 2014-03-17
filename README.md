@@ -1,10 +1,10 @@
-ArcCASPER
+﻿ArcCASPER
 =========
 
 | Release Info |                                                                     |
 |:-------------| :-------------------------------------------------------------------|
 | Title        | ArcCASPER Evacuation Routing                                        |
-| Release Date | Mar-07-2012                                                         |
+| Release      | REV                                                         |
 | Author       | Kaveh Shahabi                                                       |
 | Email        | kshahabi@usc.edu                                                    |
 | Web Page     | http://www-scf.usc.edu/~kshahabi                                    |
