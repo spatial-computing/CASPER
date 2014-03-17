@@ -1,5 +1,6 @@
 ArcCASPER
 =========
+
 | Release Info |                                                                     |
 |:-------------| :-------------------------------------------------------------------|
 | Title        | ArcCASPER Evacuation Routing                                        |
@@ -17,10 +18,10 @@ ArcCASPER (Capacity-Aware Shortest Path Evacuation Routing) is a custom Network 
   - Network Analyst Extension
 
 ####Installation
-In order to install, first unzip the downloaded file. Next, execute the "install.cmd" script. This script needs to be run as an administrator in Windows Visa and later operating systems. Make sure any previous ArcCASPER installation is completely uninstalled and removed.
+In order to install, first unzip the downloaded file.  Next, execute the "install.cmd" script.  This script needs to be run as an administrator in Windows Visa and later operating systems.  Make sure any previous ArcCASPER installation is completely uninstalled.  You may find detailed instructions in the user manual.
 
 ####Acknowledgement
-We would like to thank Esri APL team to help us develop this tool.
+We would like to thank ESRI APL and Network Analyst teams to support us during the development of this tool.
 
 ####Copyright / Permission
 ArcCASPER is released as a free closed-source tool.
