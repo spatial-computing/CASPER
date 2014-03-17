@@ -35,6 +35,9 @@ del /Q Package\EvcSolver64.*
 msbuild.exe /m /target:build /p:Configuration=ReleaseNoFlock /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
 msbuild.exe /m /target:build /p:Configuration=ReleaseNoFlock /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
 
+:: TODO Generate readme file
+copy README.md Package
+
 :: post to dropbox
 cd Package
 "c:\Program Files\7-Zip\7z.exe" a %out%  -i@file.list
@@ -72,6 +75,7 @@ msbuild.exe /m /target:build /p:Configuration=Release /p:Platform=Win32 USC.GISR
 msbuild.exe /m /target:build /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
 
 :: TODO Generate readme file
+copy README.md Package
 
 :: post to dropbox
 cd Package
