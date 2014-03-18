@@ -81,16 +81,19 @@ if exist %ELEVATE_VBS% del %ELEVATE_VBS%
 :: ////////////////////////////////////////////////////////////////////////////
 
 IF %PROCESSOR_ARCHITECTURE%==x86 (
-  SET asm="C:\Program Files\Common Files\ArcGIS\bin\ESRIRegAsm.exe"
+  SET asm="%COMMONPROGRAMFILES%\ArcGIS\bin\ESRIRegAsm.exe"
 ) ELSE (
-  SET asm="C:\Program Files (x86)\Common Files\ArcGIS\bin\ESRIRegAsm.exe"
+  SET asm="%COMMONPROGRAMFILES(X86)%\ArcGIS\bin\ESRIRegAsm.exe"
 )
 
-SET bin="%~dp0EvcSolver.dll"
+SET bin32="%~dp0EvcSolver32.dll"
+SET bin64="%~dp0EvcSolver64.dll"
 if not exist %asm% (goto :nofile)
-if not exist %bin% (goto :nofile)
+if not exist %bin64% (goto :nofile)
+if not exist %bin32% (goto :nofile)
 
-%asm% /p:desktop %bin%
+%asm% /p:desktop %bin32%
+IF defined PROGRAMFILES(X86) ( %WINDIR%\system32\regsvr32.exe %bin64% )
 
 goto :end
 

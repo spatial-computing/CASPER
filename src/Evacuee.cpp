@@ -2,7 +2,7 @@
 #include "Evacuee.h"
 #include "NAGraph.h"
 
-void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
+void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees)
 {
 	std::vector<EvacueePtr> * p = 0;
 	std::vector<EvacueePtr>::iterator i;
@@ -10,7 +10,7 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
 
 	for(i = list->begin(); i != list->end(); i++)
 	{
-		if ((*i)->Reachable)
+		if ((*i)->Reachable && (*i)->Population > 0.0)
 		{
 			// reset evacuation prediction
 			// (*i)->PredictedCost = FLT_MAX;
@@ -26,8 +26,12 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list)
 				p->push_back(*i);
 			}
 		}
+		else if (!(*i)->vertices->empty())
+		{
+			redundentSortedEvacuees->push_back(*i);
+		}
 	}
-}	
+}
 
 std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
 {
@@ -53,12 +57,12 @@ void NAEvacueeVertexTable::Erase(long junctionEID)
 	/*
 	for(std::vector<EvacueePtr>::iterator i = evcItr2->second->begin(); i != evcItr2->second->end(); i++)
 	{
-		for (vi = (*i)->vertices->begin(); vi != (*i)->vertices->end(); vi++)
-		{
-			if ((*vi)->EID == junctionEID) continue;
-			evcItr1 = find((*vi)->EID);
-			evcItr1->second->erase(std::find(evcItr1->second->begin(), evcItr1->second->end(), *i));
-		}
+	for (vi = (*i)->vertices->begin(); vi != (*i)->vertices->end(); vi++)
+	{
+	if ((*vi)->EID == junctionEID) continue;
+	evcItr1 = find((*vi)->EID);
+	evcItr1->second->erase(std::find(evcItr1->second->begin(), evcItr1->second->end(), *i));
+	}
 	}
 	*/
 	delete evcItr2->second;
