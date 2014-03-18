@@ -57,12 +57,12 @@ void NAEvacueeVertexTable::Erase(long junctionEID)
 	/*
 	for(std::vector<EvacueePtr>::iterator i = evcItr2->second->begin(); i != evcItr2->second->end(); i++)
 	{
-		for (vi = (*i)->vertices->begin(); vi != (*i)->vertices->end(); vi++)
-		{
-			if ((*vi)->EID == junctionEID) continue;
-			evcItr1 = find((*vi)->EID);
-			evcItr1->second->erase(std::find(evcItr1->second->begin(), evcItr1->second->end(), *i));
-		}
+	for (vi = (*i)->vertices->begin(); vi != (*i)->vertices->end(); vi++)
+	{
+	if ((*vi)->EID == junctionEID) continue;
+	evcItr1 = find((*vi)->EID);
+	evcItr1->second->erase(std::find(evcItr1->second->begin(), evcItr1->second->end(), *i));
+	}
 	}
 	*/
 	delete evcItr2->second;

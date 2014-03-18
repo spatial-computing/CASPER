@@ -161,10 +161,10 @@
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files (x86)\ArcGIS\DeveloperKit10.2\include;$(SolutionDir)\opensteer\include\OpenSteer;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\$(Configuration);$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\$(Configuration);$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\$(Configuration);$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\$(Configuration);$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\$(Configuration);$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\$(Configuration);$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\Release;$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\Release;$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\Debug;$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\Debug;$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\$(Configuration);$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files (x86)\ArcGIS\Desktop10.2\com;$(SolutionDir)bin\$(Configuration);$(SolutionDir)glut;$(LibraryPath)</LibraryPath>
     <EnableManagedIncrementalBuild Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">true</EnableManagedIncrementalBuild>
@@ -794,8 +794,7 @@ exit 0</Command>
     <ClCompile Include="EvcSolverSymbolizer.cpp" />
     <ClCompile Include="FibonacciHeap.cpp" />
     <ClCompile Include="Flocking.cpp" />
-    <ClCompile Include="NAEdge.cpp" />
-    <ClCompile Include="NAVertex.cpp" />
+    <ClCompile Include="NAGraph.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">Create</PrecompiledHeader>
@@ -810,8 +809,7 @@ exit 0</Command>
     <ClInclude Include="EvcSolverSymbolizer.h" />
     <ClInclude Include="FibonacciHeap.h" />
     <ClInclude Include="Flocking.h" />
-    <ClInclude Include="NAEdge.h" />
-    <ClInclude Include="NAVertex.h" />
+    <ClInclude Include="NAGraph.h" />
     <ClInclude Include="NameConstants.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />

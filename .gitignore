@@ -14,13 +14,10 @@
 *.dll
 
 # project specific
-src/_EvcSolver32.h
-src/_EvcSolver32_i.c
-src/_EvcSolver32_p.c
-src/_EvcSolver64.h
-src/_EvcSolver64_i.c
-src/_EvcSolver64_p.c
-Package/ArcCASPER-nigthly-*.zip
+src/_EvcSolver*
+src/_CustomSolver_p.c
+Package/ArcCASPER-*.zip
+src/dlldata.c
 
 # Visual Studio
 *.suo
@@ -33,3 +30,5 @@ Package/ArcCASPER-nigthly-*.zip
 obj/
 bin/
 *.pdb
+ipch/
+

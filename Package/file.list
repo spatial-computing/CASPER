@@ -3,6 +3,10 @@ EvcSolver64.dll
 glut32.dll
 glut64.dll
 Manual.pdf
+<<<<<<< HEAD
 README.md
+=======
+readme.txt
+>>>>>>> hotfix
 install.cmd
 uninstall.cmd
