@@ -45,12 +45,10 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-
     <ClCompile Include="NAEdge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NAVertex.cpp">
-
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -82,12 +80,10 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-
     <ClInclude Include="NAEdge.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NAVertex.h">
-
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

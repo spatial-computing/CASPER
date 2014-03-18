@@ -794,7 +794,8 @@ exit 0</Command>
     <ClCompile Include="EvcSolverSymbolizer.cpp" />
     <ClCompile Include="FibonacciHeap.cpp" />
     <ClCompile Include="Flocking.cpp" />
-    <ClCompile Include="NAGraph.cpp" />
+    <ClCompile Include="NAEdge.cpp" />
+    <ClCompile Include="NAVertex.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">Create</PrecompiledHeader>
@@ -809,8 +810,9 @@ exit 0</Command>
     <ClInclude Include="EvcSolverSymbolizer.h" />
     <ClInclude Include="FibonacciHeap.h" />
     <ClInclude Include="Flocking.h" />
-    <ClInclude Include="NAGraph.h" />
+    <ClInclude Include="NAEdge.h" />
     <ClInclude Include="NameConstants.h" />
+    <ClInclude Include="NAVertex.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
