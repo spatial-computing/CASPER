@@ -36,7 +36,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	int pathGenerationCount = -1;
 	size_t CARMAClosedSize = 0, sumVisitedEdge = 0;
 	countCARMALoops = 0;
-	
+
 	// Create a Forward Star Adjacencies object (we need this object to hold traversal queries carried out on the Forward Star)
 	INetworkForwardStarAdjacenciesPtr ipNetworkForwardStarAdjacencies;
 	if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipNetworkForwardStarAdjacencies))) goto END_OF_FUNC; 
@@ -106,7 +106,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			countEvacueesInOneBucket++;
 			countCASPERLoops++;
 			populationLeft = currentEvacuee->Population;
-			
+
 			while (populationLeft > 0.0)
 			{
 				// It's now safe to collect-n-clean on the graph (ecache & vcache).
@@ -157,7 +157,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				TimeToBeat = FLT_MAX;
 				BetterSafeZone = 0;
 				finalVertex = 0;
-				
+
 				// Continue traversing the network while the heap has remaining junctions in it
 				// this is the actual dijkstra code with the Fibonacci Heap
 				while (!heap->IsEmpty())
@@ -367,21 +367,21 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					populationLeft = 0.0;
 				}
 
-				#ifdef DEBUG
+#ifdef DEBUG
 				std::wostringstream os_;
 				os_.precision(3);
 				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ','
-				    << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
+					<< sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 				OutputDebugStringW( os_.str().c_str() );
-				#endif
-				#ifdef TRACE
+#endif
+#ifdef TRACE
 				std::ofstream f;
 				f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 				f.precision(3);
 				f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ','
-				  << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
+					<< sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 				f.close();
-				#endif
+#endif
 
 				// cleanup search heap and closedlist
 				UpdatePeakMemoryUsage();
@@ -412,7 +412,7 @@ END_OF_FUNC:
 }
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
-	NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, size_t & closedSize, NAEdgeClosed * closedList)
+							 NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipNetworkForwardStarEx, INetworkForwardStarExPtr ipNetworkBackwardStarEx, size_t & closedSize, NAEdgeClosed * closedList)
 {
 	HRESULT hr = S_OK;
 
@@ -445,11 +445,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	redundentSortedEvacuees->reserve(Evacuees->size());
 
 	// keeping reachable evacuees in a new hashtable for better access
+	// also keep unreachable ones in the redundant list
 	NAEvacueeVertexTable * EvacueePairs = new DEBUG_NEW_PLACEMENT NAEvacueeVertexTable();
-	EvacueePairs->InsertReachable(Evacuees);
-
-	// also keep unreachable ones in the redundent list	
-	for(std::vector<EvacueePtr>::iterator i = Evacuees->begin(); i != Evacuees->end(); i++)	if (!((*i)->Reachable)) redundentSortedEvacuees->push_back(*i);
+	EvacueePairs->InsertReachable_KeepOtherWithVertex(Evacuees, redundentSortedEvacuees);
 
 	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement);
 	ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement);
@@ -534,7 +532,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// heuristic value for any future vertex
 			lastCost = myVertex->g;
 
-			// part to check if this branch of DJ tree needs expanding to update hueristics
+			// part to check if this branch of DJ tree needs expanding to update heuristics
 			// This update should know if this is the first time this vertex is coming out
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min
 			// or update absolutely to this new value.
@@ -591,7 +589,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				if (closedList->IsClosed(currentEdge)) continue;
 				newCost = myVertex->g + currentEdge->GetCost(minPop2Route, this->solverMethod);
 
-				if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrese key.
+				if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrease key.
 				{
 					neighbor = currentEdge->ToVertex;
 					if (neighbor->g > newCost)
@@ -614,10 +612,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		}
 	}
 
-	// set new default heurisitc value
+	// set new default heuristic value
 	vcache->UpdateHeuristicForOutsideVertices(lastCost, this->countCARMALoops == 1);
 
-	// load evacuees into sorted list from the redundent list in reverse
+	// load evacuees into sorted list from the redundant list in reverse
 	SortedEvacuees->clear();
 	for (NAEvacueeVertexTableItr evcItr = EvacueePairs->begin(); evcItr != EvacueePairs->end(); evcItr++)
 	{
@@ -626,12 +624,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			if ((*eit)->PredictedCost >= FLT_MAX)
 			{
 				(*eit)->Reachable = false;
-				#ifdef TRACE
+#ifdef TRACE
 				std::ofstream f;
 				f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 				f << "Evacuee " << (*eit)->Name.bstrVal << " is unreachable." << std::endl;
 				f.close();
-				#endif
+#endif
 			}
 			redundentSortedEvacuees->push_back(*eit);
 		}
@@ -644,12 +642,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	UpdatePeakMemoryUsage();
 	{
 		closedSize = closedList->Size();
-		#ifdef TRACE
+#ifdef TRACE
 		std::ofstream f;
 		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 		f << "CARMA visited edges = " << closedSize << std::endl;
 		f.close();
-		#endif
+#endif
 	}
 	// set graph as having all clean edges
 	ecache->CleanAllEdgesAndRelease(lastCost);
@@ -666,7 +664,7 @@ END_OF_FUNC:
 
 void EvcSolver::UpdatePeakMemoryUsage()
 {
-    PROCESS_MEMORY_COUNTERS pmc;
+	PROCESS_MEMORY_COUNTERS pmc;
 	if(!hProcessPeakMemoryUsage) hProcessPeakMemoryUsage = GetCurrentProcess();
 	if (GetProcessMemoryInfo(hProcessPeakMemoryUsage, &pmc, sizeof(pmc))) peakMemoryUsage = max(peakMemoryUsage, pmc.PagefileUsage);
 }

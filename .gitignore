@@ -30,3 +30,4 @@ src/dlldata.c
 obj/
 bin/
 *.pdb
+ipch/
