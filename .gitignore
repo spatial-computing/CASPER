@@ -1,0 +1,33 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.dll
+
+# project specific
+src/_EvcSolver*
+src/_CustomSolver_p.c
+Package/ArcCASPER-nigthly-*.zip
+src/dlldata.c
+
+# Visual Studio
+*.suo
+*.exe
+*.sdf
+*.opensdf
+*.ncb
+*.idl
+*.tlb
+obj/
+bin/
+*.pdb
+ipch/
