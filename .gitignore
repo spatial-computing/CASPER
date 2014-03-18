@@ -20,7 +20,6 @@ Package/ArcCASPER-*.zip
 src/dlldata.c
 
 # Visual Studio
-*.suo
 *.exe
 *.sdf
 *.opensdf
