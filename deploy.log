@@ -1,278 +1,4 @@
-Cloning into 'D:\Archive\arccasperdeploy'...
-Branch dev set up to track remote branch dev from origin.
-Already up-to-date.
-Microsoft (R) Build Engine version 4.0.30319.18408
-[Microsoft .NET Framework, version 4.0.30319.18444]
-Copyright (C) Microsoft Corporation. All rights reserved.
-
-Building the projects in this solution one at a time. To enable parallel build, please add the "/m" switch.
-Build started 3/17/2014 8:00:27 AM.
-Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" on node 1 (build target(s)).
-ValidateSolutionConfiguration:
-  Building solution configuration "ReleaseNoFlock|Win32".
-Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (1) is building "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) on node 1 (default targets).
-Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (3) on node 1 (default targets).
-PrepareForBuild:
-  Creating directory "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\".
-  Creating directory "D:\Archive\arccasperdeploy\bin\Release\".
-InitializeBuildStatus:
-  Creating "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\opensteer.unsuccessfulbuild" because "AlwaysCreate" was specified.
-ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Oi /Ot /Oy /GL /D _CRTDBG_MAP_ALLOC /D WIN32 /D NDEBUG /D _CONSOLE /D _DLL /D _VC80_UPGRADE=0x0710 /D _MBCS /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\\" /Fd"D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\vc11032.pdb" /Gd /TP /analyze- /errorReport:queue ..\src\Camera.cpp ..\src\Clock.cpp ..\src\Draw.cpp ..\src\main.cpp ..\src\OpenSteerDemo.cpp ..\src\Pathway.cpp ..\src\PlugIn.cpp ..\src\SimpleVehicle.cpp ..\src\Vec3.cpp
-  Camera.cpp
-  Clock.cpp
-  Draw.cpp
-D:\Archive\arccasperdeploy\glut\glut.h(549): warning C4505: 'glutCreateMenu_ATEXIT_HACK' : unreferenced local function has been removed [D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj]
-  main.cpp
-  OpenSteerDemo.cpp
-  Pathway.cpp
-  PlugIn.cpp
-  SimpleVehicle.cpp
-  Vec3.cpp
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Oi /Ot /Oy /GL /D _CRTDBG_MAP_ALLOC /D WIN32 /D NDEBUG /D _CONSOLE /D _DLL /D _VC80_UPGRADE=0x0710 /D _MBCS /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\\" /Fd"D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\vc11032.pdb" /Gd /TC /analyze- /errorReport:queue ..\src\lq.c
-  lq.c
-Lib:
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\Lib.exe /OUT:"D:\Archive\arccasperdeploy\bin\Release\opensteer32.lib" /NOLOGO /MACHINE:X86 /LTCG D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\Camera.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\Clock.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\Draw.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\lq.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\main.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\OpenSteerDemo.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\Pathway.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\PlugIn.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\SimpleVehicle.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\Vec3.obj
-  opensteer.vcxproj -> D:\Archive\arccasperdeploy\bin\Release\opensteer32.lib
-FinalizeBuildStatus:
-  Deleting file "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\opensteer.unsuccessfulbuild".
-  Touching "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\Win32\opensteer.lastbuildstate".
-Done Building Project "D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (default targets).
-Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (4) on node 1 (default targets).
-PrepareForBuild:
-  Creating directory "D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\".
-  Creating directory "D:\Archive\arccasperdeploy\bin\ReleaseNoFlock\".
-InitializeBuildStatus:
-  Creating "D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\EvcSolver.unsuccessfulbuild" because "AlwaysCreate" was specified.
-PreBuildEvent:
-  Description: Performing Custom Pre-Build Step
-  IF NOT DEFINED NOREG (
-    IF exist "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll" (
-      IF "x86"=="x86" (
-        "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop  "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll" /s /u
-      ) else (
-        regsvr32.exe /u /s "D:\Archive\arccasperdeploy\Package\EvcSolver32.dll" 
-      )
-    )
-  )
-  exit 0
-  :VCEnd
-ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Ob2 /Oi /Ot /Oy /GL /D WIN32 /D _WINDOWS /D NDEBUG /D _USRDLL /D _ATL_ATTRIBUTES /D _NOFLOCK /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:fast /fp:except- /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\\" /Fd"D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\vc110.pdb" /Gd /TP /analyze- /errorReport:queue CustomSolver.cpp Evacuee.cpp EvcSolver.cpp EvcSolver.Method.cpp EvcSolver.Solve.cpp EvcSolverPropPage.cpp EvcSolverSymbolizer.cpp FibonacciHeap.cpp Flocking.cpp NAEdge.cpp NAVertex.cpp stdafx.cpp
-  CustomSolver.cpp
-  Evacuee.cpp
-  EvcSolver.cpp
-  EvcSolver.Method.cpp
-  EvcSolver.Solve.cpp
-  EvcSolverPropPage.cpp
-  EvcSolverSymbolizer.cpp
-  FibonacciHeap.cpp
-  Flocking.cpp
-  NAEdge.cpp
-  NAVertex.cpp
-  stdafx.cpp
-ResourceCompile:
-  C:\Program Files (x86)\Windows Kits\8.0\bin\x86\rc.exe /D _UNICODE /D UNICODE /D NDEBUG /D _UNICODE /D UNICODE /l"0x0409" /ID:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\ /nologo /fo"D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\EvcSolver.res" EvcSolver.rc 
-Link:
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:QUEUE /OUT:"D:\Archive\arccasperdeploy\bin\ReleaseNoFlock\EvcSolver32.dll" /NOLOGO Psapi.lib opensteer32.lib glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Archive\arccasperdeploy\bin\ReleaseNoFlock\EvcSolver32.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /IDLOUT:"_EvcSolver32.idl" /TLBID:1 /NXCOMPAT /IMPLIB:"D:\Archive\arccasperdeploy\bin\ReleaseNoFlock\EvcSolver32.lib" /MACHINE:X86 /SAFESEH /DLL D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\EvcSolver.res
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\CustomSolver.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\Evacuee.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\EvcSolver.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\EvcSolver.Method.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\EvcSolver.Solve.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\EvcSolverPropPage.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\EvcSolverSymbolizer.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\FibonacciHeap.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\Flocking.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\NAEdge.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\NAVertex.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\Win32\stdafx.obj
-LINK : fatal error LNK1181: cannot open input file 'opensteer32.lib' [D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj]
-Done Building Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (default targets) -- FAILED.
-Done Building Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (default targets) -- FAILED.
-Done Building Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (build target(s)) -- FAILED.
-
-Build FAILED.
-
-"D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (build target) (1) ->
-"D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (default target) (2) ->
-"D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (default target) (3) ->
-(ClCompile target) -> 
-  D:\Archive\arccasperdeploy\glut\glut.h(549): warning C4505: 'glutCreateMenu_ATEXIT_HACK' : unreferenced local function has been removed [D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj]
-
-
-"D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (build target) (1) ->
-"D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (default target) (2) ->
-"D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (default target) (4) ->
-(Link target) -> 
-  LINK : fatal error LNK1181: cannot open input file 'opensteer32.lib' [D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj]
-
-    1 Warning(s)
-    1 Error(s)
-
-Time Elapsed 00:01:07.47
-Microsoft (R) Build Engine version 4.0.30319.18408
-[Microsoft .NET Framework, version 4.0.30319.18444]
-Copyright (C) Microsoft Corporation. All rights reserved.
-
-Building the projects in this solution one at a time. To enable parallel build, please add the "/m" switch.
-Build started 3/17/2014 8:01:35 AM.
-Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" on node 1 (build target(s)).
-ValidateSolutionConfiguration:
-  Building solution configuration "ReleaseNoFlock|x64".
-ValidateProjects:
-  The project "ArcCASPERLog" is not selected for building in solution configuration "ReleaseNoFlock|x64".
-Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (1) is building "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) on node 1 (default targets).
-Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (3) on node 1 (default targets).
-PrepareForBuild:
-  Creating directory "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\".
-InitializeBuildStatus:
-  Creating "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\opensteer.unsuccessfulbuild" because "AlwaysCreate" was specified.
-ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Oi /Ot /Oy /GL /D _CRTDBG_MAP_ALLOC /D WIN32 /D NDEBUG /D _CONSOLE /D _DLL /D _VC80_UPGRADE=0x0710 /D _MBCS /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\\" /Fd"D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\vc11064.pdb" /Gd /TP /analyze- /errorReport:queue ..\src\Camera.cpp ..\src\Clock.cpp ..\src\Draw.cpp ..\src\main.cpp ..\src\OpenSteerDemo.cpp ..\src\Pathway.cpp ..\src\PlugIn.cpp ..\src\SimpleVehicle.cpp ..\src\Vec3.cpp
-  Camera.cpp
-  Clock.cpp
-  Draw.cpp
-C:\Program Files (x86)\Windows Kits\8.0\Include\shared\minwindef.h(127): warning C4005: 'CALLBACK' : macro redefinition [D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj]
-          D:\Archive\arccasperdeploy\glut\glut.h(34) : see previous definition of 'CALLBACK'
-D:\Archive\arccasperdeploy\glut\glut.h(549): warning C4505: 'glutCreateMenu_ATEXIT_HACK' : unreferenced local function has been removed [D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj]
-  main.cpp
-  OpenSteerDemo.cpp
-  Pathway.cpp
-  PlugIn.cpp
-  SimpleVehicle.cpp
-  Vec3.cpp
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Oi /Ot /Oy /GL /D _CRTDBG_MAP_ALLOC /D WIN32 /D NDEBUG /D _CONSOLE /D _DLL /D _VC80_UPGRADE=0x0710 /D _MBCS /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\\" /Fd"D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\vc11064.pdb" /Gd /TC /analyze- /errorReport:queue ..\src\lq.c
-  lq.c
-Lib:
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\Lib.exe /OUT:"D:\Archive\arccasperdeploy\bin\Release\opensteer64.lib" /NOLOGO /MACHINE:X64 /LTCG D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\Camera.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\Clock.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\Draw.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\lq.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\main.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\OpenSteerDemo.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\Pathway.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\PlugIn.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\SimpleVehicle.obj
-  D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\Vec3.obj
-  opensteer.vcxproj -> D:\Archive\arccasperdeploy\bin\Release\opensteer64.lib
-FinalizeBuildStatus:
-  Deleting file "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\opensteer.unsuccessfulbuild".
-  Touching "D:\Archive\arccasperdeploy\opensteer\win32\obj\Release\x64\opensteer.lastbuildstate".
-Done Building Project "D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (default targets).
-Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (4) on node 1 (default targets).
-PrepareForBuild:
-  Creating directory "D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\".
-InitializeBuildStatus:
-  Creating "D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\EvcSolver.unsuccessfulbuild" because "AlwaysCreate" was specified.
-PreBuildEvent:
-  Description: Performing Custom Pre-Build Step
-  IF NOT DEFINED NOREG (
-    IF exist "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll" (
-      IF "x64"=="x86" (
-        "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop  "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll" /s /u
-      ) else (
-        regsvr32.exe /u /s "D:\Archive\arccasperdeploy\Package\EvcSolver64.dll" 
-      )
-    )
-  )
-  exit 0
-  :VCEnd
-ClCompile:
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Ob2 /Oi /Ot /Oy /GL /D WIN64 /D _WINDOWS /D NDEBUG /D _USRDLL /D _ATL_ATTRIBUTES /D _NOFLOCK /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:fast /fp:except- /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\\" /Fd"D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\vc110.pdb" /Gd /TP /analyze- /errorReport:queue CustomSolver.cpp Evacuee.cpp EvcSolver.cpp EvcSolver.Method.cpp EvcSolver.Solve.cpp EvcSolverPropPage.cpp EvcSolverSymbolizer.cpp FibonacciHeap.cpp Flocking.cpp NAEdge.cpp NAVertex.cpp stdafx.cpp
-  CustomSolver.cpp
-  Evacuee.cpp
-  EvcSolver.cpp
-  EvcSolver.Method.cpp
-  EvcSolver.Solve.cpp
-  EvcSolverPropPage.cpp
-  EvcSolverSymbolizer.cpp
-  FibonacciHeap.cpp
-  Flocking.cpp
-  NAEdge.cpp
-  NAVertex.cpp
-  stdafx.cpp
-ResourceCompile:
-  C:\Program Files (x86)\Windows Kits\8.0\bin\x86\rc.exe /D _UNICODE /D UNICODE /D NDEBUG /D _UNICODE /D UNICODE /l"0x0409" /ID:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\ /nologo /fo"D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\EvcSolver.res" EvcSolver.rc 
-Link:
-  C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"D:\Archive\arccasperdeploy\bin\ReleaseNoFlock\EvcSolver64.dll" /NOLOGO Psapi.lib opensteer64.lib glut64.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Archive\arccasperdeploy\bin\ReleaseNoFlock\EvcSolver64.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /IDLOUT:"_EvcSolver64.idl" /TLBID:1 /NXCOMPAT /IMPLIB:"D:\Archive\arccasperdeploy\bin\ReleaseNoFlock\EvcSolver64.lib" /MACHINE:X64 /SAFESEH:NO /DLL D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\EvcSolver.res
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\CustomSolver.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\Evacuee.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\EvcSolver.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\EvcSolver.Method.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\EvcSolver.Solve.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\EvcSolverPropPage.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\EvcSolverSymbolizer.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\FibonacciHeap.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\Flocking.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\NAEdge.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\NAVertex.obj
-  D:\Archive\arccasperdeploy\src\obj\ReleaseNoFlock\x64\stdafx.obj
-LINK : fatal error LNK1181: cannot open input file 'opensteer64.lib' [D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj]
-Done Building Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (default targets) -- FAILED.
-Done Building Project "D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (default targets) -- FAILED.
-Done Building Project "D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (build target(s)) -- FAILED.
-
-Build FAILED.
-
-"D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (build target) (1) ->
-"D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (default target) (2) ->
-"D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj" (default target) (3) ->
-(ClCompile target) -> 
-  C:\Program Files (x86)\Windows Kits\8.0\Include\shared\minwindef.h(127): warning C4005: 'CALLBACK' : macro redefinition [D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj]
-  D:\Archive\arccasperdeploy\glut\glut.h(549): warning C4505: 'glutCreateMenu_ATEXIT_HACK' : unreferenced local function has been removed [D:\Archive\arccasperdeploy\opensteer\win32\opensteer.vcxproj]
-
-
-"D:\Archive\arccasperdeploy\USC.GISResearchLab.ArcCASPER.sln" (build target) (1) ->
-"D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj.metaproj" (default target) (2) ->
-"D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj" (default target) (4) ->
-(Link target) -> 
-  LINK : fatal error LNK1181: cannot open input file 'opensteer64.lib' [D:\Archive\arccasperdeploy\src\EvcSolver.vcxproj]
-
-    2 Warning(s)
-    1 Error(s)
-
-Time Elapsed 00:01:02.63
-
-7-Zip [64] 9.22 beta  Copyright (c) 1999-2011 Igor Pavlov  2011-04-18
-Scanning
-
-
-EvcSolver32.dll:  WARNING: The system cannot find the file specified.
-
-EvcSolver64.dll:  WARNING: The system cannot find the file specified.
-
-
-
-Creating archive ArcCASPER-nigthly-c4b80c6.zip
-
-Compressing  glut32.dll
-Compressing  glut64.dll
-Compressing  install.cmd
-Compressing  Manual.pdf
-Compressing  readme.txt
-Compressing  uninstall.cmd
-
-
-WARNINGS for files:
-
-EvcSolver32.dll : The system cannot find the file specified.
-
-EvcSolver64.dll : The system cannot find the file specified.
-
-----------------
-WARNING: Cannot find 2 files
-Some of the files are not present
-Already up-to-date.
+Updating 229d8ae..79944a7
 Microsoft (R) Build Engine version 4.0.30319.18408
 [Microsoft .NET Framework, version 4.0.30319.18444]
 Copyright (C) Microsoft Corporation. All rights reserved.
@@ -292,4 +18,29 @@ Switch: USC.GISResearchLab.ArcCASPER.sln
 Error:
 Cannot find listfile
 Some of the files are not present
-""
+M	src/EvcSolver.Method.cpp
+M	src/EvcSolver.vcxproj
+M	src/EvcSolver.vcxproj.filters
+M	src/EvcSolver.vcxproj.user
+M	src/stdafx.h
+Your branch is behind 'origin/master' by 7 commits, and can be fast-forwarded.
+Updating 229d8ae..79944a7
+Microsoft (R) Build Engine version 4.0.30319.18408
+[Microsoft .NET Framework, version 4.0.30319.18444]
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+MSBUILD : error MSB1009: Project file does not exist.
+Switch: USC.GISResearchLab.ArcCASPER.sln
+Microsoft (R) Build Engine version 4.0.30319.18408
+[Microsoft .NET Framework, version 4.0.30319.18444]
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+MSBUILD : error MSB1009: Project file does not exist.
+Switch: USC.GISResearchLab.ArcCASPER.sln
+
+7-Zip [64] 9.22 beta  Copyright (c) 1999-2011 Igor Pavlov  2011-04-18
+
+
+Error:
+Cannot find listfile
+Some of the files are not present
