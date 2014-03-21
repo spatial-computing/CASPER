@@ -2,11 +2,12 @@
 
 :: setup my variables
 set OLDDIR=%CD%
-SET "dir="D:\Archive\arccasperdeploy""
+SET dir=d:\Archive\arccasperdeploy
+SET cydir=d:/Archive/arccasperdeploy
 SET url=git@github.com:kaveh096/ArcCASPER.git
 
 :: clean enviroment
-IF NOT EXIST %dir% ( git clone %url% %dir% )
+IF NOT EXIST %dir% ( git clone %url% %cydir% )
 cd %dir%
 
 :: call build function
