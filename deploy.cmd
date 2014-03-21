@@ -13,7 +13,6 @@ cd %dir%
 :: call build function
 echo Going to build a nightly version
 call:buildFunc dev nightly
-echo
 echo Going to build an stable version
 call:buildFunc master stable
 
@@ -43,6 +42,7 @@ if %iscommit%==1 (
 set NOREG=1
 del /Q Package\EvcSolver32.*
 del /Q Package\EvcSolver64.*
+del /Q Package\README.md
 msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 ArcCASPER.sln
 msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=x64   ArcCASPER.sln
 
