@@ -33,7 +33,7 @@ set "out=ArcCASPER-%revi%-%2%.zip"
 :: TODO create changle.log from 'git shortlog --no-merges %1 --not v10.1'
 
 :: check if there is new commit to be built
-for /f %%i in ('d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh list | grep %revi% | wc -l"') do set iscommit=%%i
+for /f %%i in ('d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh list | grep %out% | wc -l"') do set iscommit=%%i
 if %iscommit%==1 (
   echo No new code is commited to %1% branch
   goto :eof
