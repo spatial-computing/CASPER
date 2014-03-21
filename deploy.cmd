@@ -10,7 +10,10 @@ IF NOT EXIST %dir% ( git clone %url% %dir% )
 cd %dir%
 
 :: call build function
+echo Going to build a nightly version
 call:buildFunc dev nightly
+echo
+echo Going to build an stable version
 call:buildFunc master stable
 
 goto :exit
@@ -49,7 +52,6 @@ msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=x64   ArcCAS
 cd Package
 "c:\Program Files\7-Zip\7z.exe" a %out% -i@file.list
 if %errorlevel%==0 (
-  echo Uploading to dropbox for public access
   d:\cygwin64\bin\bash.exe -c '/home/kshahabi/dropbox_uploader.sh upload `cygpath -u "%CD%\%out%"` %out%'
 ) else (
   echo Some of the files are not present
