@@ -8,12 +8,14 @@ SET url=git@github.com:kaveh096/ArcCASPER.git
 
 :: clean enviroment
 IF NOT EXIST %dir% ( git clone %url% %cydir% )
-cd %dir%
 
 :: call build function
 echo Going to build a nightly version
+cd %dir%
 call:buildFunc dev nightly
+
 echo Going to build an stable version
+cd %dir%
 call:buildFunc master stable
 
 goto :exit
