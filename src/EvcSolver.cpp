@@ -435,7 +435,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
 	twoWayShareCapacity = VARIANT_TRUE;
-	ThreeGenCARMA = VARIANT_TRUE;
+	ThreeGenCARMA = VARIANT_FALSE;
 	
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
@@ -1094,7 +1094,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	}
 	else
 	{
-		ThreeGenCARMA = VARIANT_TRUE;
+		ThreeGenCARMA = VARIANT_FALSE;
 	}
 	
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
@@ -1181,7 +1181,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// - OID                          of the search
 	// - Shape
 	// - Name 
-	// - Population					  number of unseperatable people/cars at this location
+	// - Population					  number of un-seperatable people/cars at this location
 	// - (NALocation fields)
 
 	// Barriers (input)               Barriers restrict network edges from being
@@ -1203,9 +1203,9 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// - Shape                        edge/street shape (polyline)
 	// - EdgeID						  Edge ID from NetworkDataset. there could be at most two edges (different directions) with one edgeID.
 	// - Direction					  Direction of travel on this edge
-	// - SourceID					  Referes to source street file ID
-	// - SourceOID					  Referes to oid of the shape in the street file
-	// - ReservPop					  The total population who whould use this edge at some time
+	// - SourceID					  Refers to source street file ID
+	// - SourceOID					  Refers to oid of the shape in the street file
+	// - ReservPop					  The total population who would use this edge at some time
 	// - TravCost					  Traversal cost based on the selected evacuation method on this edge
 	// - OrgCost					  Original traversal cost of the edge without any population
 

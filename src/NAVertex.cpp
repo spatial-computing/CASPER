@@ -77,7 +77,7 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 			_ASSERT(carmaLoop >= i->CarmaLoop);
 			if (carmaLoop == i->CarmaLoop)
 			{
-				_ASSERT(hur < i->Value);
+				_ASSERT(hur <= i->Value);
 				unnesecery = false;
 				i->Value = hur;
 			}

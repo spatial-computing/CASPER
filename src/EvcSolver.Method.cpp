@@ -847,7 +847,6 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 	double leftCap, fromPosition, toPosition, edgePortion;
 	long sourceOID, sourceID;
 	HRESULT hr = S_OK;
-	PathSegmentPtr lastAdded;
 	EvcPath * path = NULL;
 
 	// generate evacuation route if a destination has been found
@@ -868,7 +867,7 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 					temp = temp->Previous;
 				}
 				if (population2Route <= 0.0) population2Route = populationLeft;	
-				population2Route = min(population2Route, populationLeft);			
+				population2Route = min(population2Route, populationLeft);
 			}
 			else population2Route = populationLeft;
 		}
@@ -914,9 +913,10 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 			if (fromPosition < toPosition) fromPosition = toPosition - edgePortion;
 			else fromPosition = toPosition + edgePortion;
 
-			lastAdded = path->front();
-			if (lastAdded->SourceOID == sourceOID && lastAdded->SourceID == sourceID)
-			{
+			// path can be empty if the source and destination are the same vertex
+			if (!path->empty() && path->front()->SourceOID == sourceOID && path->front()->SourceID == sourceID)
+			{				
+				PathSegmentPtr lastAdded = path->front();
 				lastAdded->fromPosition = fromPosition;
 				lastAdded->EdgePortion = abs(lastAdded->toPosition - lastAdded->fromPosition); // 2.0 - (lastAdded->EdgePortion + edgePortion);
 				_ASSERT(lastAdded->EdgePortion > 0.0);
@@ -927,7 +927,8 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 				finalVertex->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
 			}
 		}
-		currentEvacuee->paths->push_front(path);
+		if (path->empty()) delete path;
+		else currentEvacuee->paths->push_front(path);
 	}
 	else
 	{		
