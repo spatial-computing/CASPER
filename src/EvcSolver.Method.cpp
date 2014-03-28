@@ -25,7 +25,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	INetworkEdgePtr ipCurrentEdge, lastExteriorEdge;
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipElement, ipOtherElement;
-	PathSegment * lastAdded = 0;
 	EvcPathPtr path;
 	esriNetworkEdgeDirection dir;
 	bool restricted = false;
@@ -67,7 +66,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 	do
 	{
-		// indexing all the population by their sorrounding vertices this will be used to sort them by network distance to safe zone.
+		// indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone.
 		// only the last 'k'th evacuees will be bucketed to run each round.
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, ipNetworkForwardStarEx, ipNetworkBackwardStarEx, CARMAClosedSize, carmaClosedList))) goto END_OF_FUNC;		
 
@@ -345,9 +344,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (fromPosition < toPosition) fromPosition = toPosition - edgePortion;
 						else fromPosition = toPosition + edgePortion;
 
-						lastAdded = path->front();
-						if (lastAdded->SourceOID == sourceOID && lastAdded->SourceID == sourceID)
-						{
+						// path can be empty if the source and destination are the same vertex
+						if (!path->empty() && path->front()->SourceOID == sourceOID && path->front()->SourceID == sourceID)
+						{				
+							PathSegmentPtr lastAdded = path->front();
 							lastAdded->fromPosition = fromPosition;
 							lastAdded->EdgePortion = abs(lastAdded->toPosition - lastAdded->fromPosition); // 2.0 - (lastAdded->EdgePortion + edgePortion);
 							_ASSERT(lastAdded->EdgePortion > 0.0);
@@ -358,7 +358,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							finalVertex->GetBehindEdge()->AddReservation(population2Route);
 						}
 					}
-					currentEvacuee->paths->push_front(path);
+					if (path->empty()) delete path;
+					else currentEvacuee->paths->push_front(path);
 				}
 				else
 				{
