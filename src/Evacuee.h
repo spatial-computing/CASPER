@@ -18,6 +18,7 @@
 class NAVertex;
 class NAEdge;
 typedef NAVertex * NAVertexPtr;
+enum EvcSolverMethod : unsigned char;
 
 class PathSegment
 {
@@ -128,3 +129,32 @@ public:
 	std::vector<EvacueePtr> * Find(long junctionEID);
 	void Erase(long junctionEID);
 };
+
+class SafeZone
+{
+private:
+	INetworkJunctionPtr junction;
+	NAEdge * behindEdge;
+	double   positionAlong;
+	double   capacity;
+	double   reservedPop;
+
+public:
+	NAVertex * Vertex;
+
+	inline void   Reserve(double pop)      { reservedPop += pop;   }
+	inline double getPositionAlong() const { return positionAlong; }
+	inline NAEdge * getBehindEdge()        { return behindEdge;    }
+	
+	~SafeZone();
+	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap);
+	HRESULT IsRestricted(INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkEdgePtr ipTurnCheckEdge, NAEdge * leadingEdge, bool & restricted);
+	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity);
+};
+
+typedef SafeZone * SafeZonePtr;
+typedef stdext::hash_map<long, SafeZonePtr> SafeZoneTable;
+typedef stdext::hash_map<long, SafeZonePtr>::_Pairib SafeZoneTableInsertReturn;
+typedef stdext::hash_map<long, SafeZonePtr>::iterator SafeZoneTableItr;
+typedef std::pair<long, SafeZonePtr> _SafeZoneTablePair;
+#define SafeZoneTablePair(a) _SafeZoneTablePair(a->Vertex->EID, a)

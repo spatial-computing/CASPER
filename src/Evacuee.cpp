@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Evacuee.h"
 #include "NAVertex.h"
+#include "NAEdge.h"
 
 void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees)
 {
@@ -67,4 +68,49 @@ void NAEvacueeVertexTable::Erase(long junctionEID)
 	*/
 	delete evcItr2->second;
 	erase(junctionEID); 
+}
+
+SafeZone::~SafeZone() { delete Vertex; }
+
+SafeZone::SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap) : junction(_junction), behindEdge(_behindEdge), positionAlong(posAlong), capacity(0.0)
+{
+	reservedPop = 0.0;
+	Vertex = new DEBUG_NEW_PLACEMENT NAVertex(junction,behindEdge);
+	if (cap.vt == VT_R8) capacity = cap.dblVal;
+	else if (cap.vt == VT_BSTR) swscanf_s(cap.bstrVal, L"%f", &capacity);
+	else _ASSERT(0);
+}
+
+double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity)
+{
+	double cost = 0.0;
+	double totalPop = population2Route + reservedPop;
+
+	if (totalPop > capacity) cost += costPerDensity * (1.0 - (totalPop / capacity));
+	if (behindEdge) cost += behindEdge->GetCost(population2Route, solverMethod) * positionAlong;
+	return cost;
+}
+
+HRESULT SafeZone::IsRestricted(INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkEdgePtr ipTurnCheckEdge, NAEdge * leadingEdge, bool & restricted)
+{	
+	HRESULT hr = S_OK;
+	long adjacentEdgeCount, i, eid;
+	double fromPosition, toPosition;
+	esriNetworkEdgeDirection dir;
+	restricted = false;
+
+	if (behindEdge)
+	{
+		restricted = true;
+		if (FAILED(hr = ipForwardStar->QueryAdjacencies(Vertex->Junction, leadingEdge->NetEdge , 0, ipForwardAdj))) return hr;
+		if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) return hr;
+		for (i = 0; i < adjacentEdgeCount; i++)
+		{
+			if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipTurnCheckEdge, &fromPosition, &toPosition))) return hr;								
+			if (FAILED(hr = ipTurnCheckEdge->get_EID(&eid))) return hr;
+			if (FAILED(hr = ipTurnCheckEdge->get_Direction(&dir))) return hr;
+			if (behindEdge->Direction == dir && behindEdge->EID == eid) restricted = false;
+		}
+	}
+	return hr;
 }

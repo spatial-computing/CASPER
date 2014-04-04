@@ -145,7 +145,7 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(2),
+		  c_version(3),
 		  c_featureRetrievalInterval(500)
 	  {
 		  // set program start for memory leak detection (DEBUG Mode)
@@ -294,9 +294,9 @@ public:
 
 private:
 
-	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *,
+	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
 		                INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*, double &, std::vector<unsigned int> &, INetworkDatasetPtr);
-	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, NAVertexTable *, INetworkForwardStarExPtr,
+	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *, INetworkForwardStarExPtr,
 		              INetworkForwardStarExPtr, size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, bool);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
@@ -308,7 +308,7 @@ private:
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);	
 	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr, NAEdgePtr, double, NAVertexPtr, NAEdgeCache *, NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr,
 		                                  INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, INetworkEdgePtr, bool checkOldClosedlist = true) const;
-	HRESULT GeneratePath(NAVertexPtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
+	HRESULT GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	HRESULT DeterminMinimumPop2Route(EvacueeList *, INetworkDatasetPtr, double &, bool &) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, NAEdgeContainer *, double, EvcSolverMethod) const;
 	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
@@ -322,8 +322,8 @@ private:
 	INAStreetDirectionsAgentPtr pStreetAgent;	
 	float					SaturationPerCap;
 	float					CriticalDensPerCap;
-	EvcSolverMethod		solverMethod;
-	EvcTrafficModel		trafficModel;
+	EvcSolverMethod		    solverMethod;
+	EvcTrafficModel		    trafficModel;
 	float					costPerDensity;
 	VARIANT_BOOL			flockingEnabled;
 	float					flockingSnapInterval;
