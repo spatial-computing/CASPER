@@ -30,4 +30,4 @@ obj/
 bin/
 *.pdb
 ipch/
-
+*.aps

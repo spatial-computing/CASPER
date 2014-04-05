@@ -205,7 +205,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	double posAlong, fromPosition, toPosition;
 	VARIANT_BOOL keepGoing, isLocated, isRestricted;
 	esriNetworkElementType elementType;
-	NAVertexPtr myVertex;
+	SafeZonePtr safePoint;
 
 	// Initialize Caches
 	// This cache will maintain a list of all created vertices/edges. You can retrieve
@@ -217,10 +217,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	NAEdgeCache   * ecache = new DEBUG_NEW_PLACEMENT NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE, initDelayCostPerPop, trafficModel);
 
 	// Vertex table structures
-	NAVertexTable * safeZoneList = new DEBUG_NEW_PLACEMENT NAVertexTable();
-	NAVertexTableInsertReturn insertRet;
+	SafeZoneTable * safeZoneList = new DEBUG_NEW_PLACEMENT SafeZoneTable();
+	SafeZoneTableInsertReturn insertRet;
 	INetworkEdgePtr ipEdge(ipElement);
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
+	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l;
+	VARIANT evName, pop, cap;
 
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting input point(s)")); // add more specific information here if appropriate
 
@@ -228,6 +230,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// here we begin collecting safe zone points for all the evacuees
 
 	// Get a cursor on the zones table to loop through each row
+	if (FAILED(hr = ipZonesTable->FindField(CComBSTR(CS_FIELD_CAP), &capFieldIndex))) return hr;
 	if (FAILED(hr = ipZonesTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
@@ -249,12 +252,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}
 
 		// We are only concerned with located safe zone point NALocations
-		if (!isLocated)
-		{
-			// If this point is unlocated, we will only be able to find a partial solution
-			*pIsPartialSolution = VARIANT_TRUE;
-		}
-		else
+		if (isLocated)
 		{
 			// Get the SourceID for the NALocation
 			if (FAILED(hr = ipNALocation->get_SourceID(&sourceID))) return hr;
@@ -267,6 +265,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 			// Once we have a located NALocation, we query the network to obtain its associated network elements
 			if (FAILED(hr = ipNetworkQuery->get_ElementsByOID(sourceID, sourceOID, &ipEnumNetworkElement))) return hr;
+			
+			if (FAILED(hr = ipRow->get_Value(capFieldIndex, &cap))) return hr;
 
 			// We must loop through the returned elements, looking for an appropriate ending point
 			ipEnumNetworkElement->Reset();
@@ -277,19 +277,19 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				ipElement->get_ElementType(&elementType);
 
 				// If the element is a junction, then it is the starting point of traversal 
-				// We simply add its EID to the heap and break out of the enumerating loop
+				// We simply add its EID to the table.
 				if (elementType == esriNETJunction)
 				{
 					if (FAILED(hr = ipForwardStar->get_IsRestricted(ipElement, &isRestricted))) return hr;
 					if (!isRestricted)
 					{
-						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
-						insertRet = safeZoneList->insert(NAVertexTablePair(myVertex));
-						if (!insertRet.second) delete myVertex;
+						safePoint = new DEBUG_NEW_PLACEMENT SafeZone(ipElement, 0, 0, cap);
+						insertRet = safeZoneList->insert(SafeZoneTablePair(safePoint));
+						if (!insertRet.second) delete safePoint;
 					}
 				}
 
-				// If the element is an edge, then we must check the fromPosition and toPosition to be certain it holds an appropriate starting point 
+				// If the element is an edge, then we must check the fromPosition and toPosition
 				if (elementType == esriNETEdge)
 				{
 					if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipOtherElement))) return hr;
@@ -310,11 +310,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
 
-							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->g = posAlong * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);
-
-							insertRet = safeZoneList->insert(NAVertexTablePair(myVertex));
-							if (!insertRet.second) delete myVertex;
+							safePoint = new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge), posAlong, cap);
+							insertRet = safeZoneList->insert(SafeZoneTablePair(safePoint));
+							if (!insertRet.second) delete safePoint;
 						}
 					}
 
@@ -330,10 +328,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;						
 
-							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->g = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost; // / (toPosition - fromPosition);							
-							insertRet = safeZoneList->insert(NAVertexTablePair(myVertex));
-							if (!insertRet.second) delete myVertex;
+							safePoint = new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge), toPosition - posAlong, cap);
+							insertRet = safeZoneList->insert(SafeZoneTablePair(safePoint));
+							if (!insertRet.second) delete safePoint;
 						}
 					}
 				}
@@ -345,12 +342,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipEvacueePointsTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	EvacueeList * Evacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	Evacuee * currentEvacuee;
-	VARIANT evName, pop;
-	long nameFieldIndex = 0l, popFieldIndex = 0l;
+	NAVertexPtr myVertex;
 
 	// pre-process evacuee NALayer primary field index
-	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;		
-	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_EVC_POP), &popFieldIndex))) return hr;		
+	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
+	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_EVC_POP), &popFieldIndex))) return hr;
 
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
@@ -514,8 +510,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// releasing all internal objects
 		delete vcache;
 		delete ecache;
-		for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
-		delete safeZoneList;		
+		for (SafeZoneTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
+		delete safeZoneList;
 
 		#ifdef TRACE
 		std::ofstream f;
@@ -976,7 +972,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// releasing all internal objects
 			delete vcache;
 			delete ecache;
-			for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
+			for (SafeZoneTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
 			delete safeZoneList;
 
 			return hr;
@@ -1186,7 +1182,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// releasing all internal objects
 	delete vcache;
 	delete ecache;
-	for (NAVertexTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
+	for (SafeZoneTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
 	delete safeZoneList;
 	delete tempPathList;
 

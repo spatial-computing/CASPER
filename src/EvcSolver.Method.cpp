@@ -4,7 +4,7 @@
 #include "FibonacciHeap.h"							
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache,
-							   NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution,
+							   NAEdgeCache * ecache, SafeZoneTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, VARIANT_BOOL* pIsPartialSolution,
 							   double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset)
 {	
 	// creating the heap for the dijkstra search
@@ -13,19 +13,19 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	NAEdgeMapTwoGen * carmaClosedList = new DEBUG_NEW_PLACEMENT NAEdgeMapTwoGen();
 	NAEdgePtr currentEdge;
 	std::vector<EvacueePtr>::iterator seit;
-	NAVertexPtr neighbor, BetterSafeZone = 0, finalVertex = 0, myVertex;
-	NAEdgePtr myEdge, edge;
+	NAVertexPtr neighbor, finalVertex = 0, myVertex;
+	SafeZonePtr BetterSafeZone = 0;
+	NAEdgePtr myEdge;
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing;
 	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
-	NAVertexTableItr iterator;
-	long adjacentEdgeCount, i, eid;
+	SafeZoneTableItr iterator;
+	long adjacentEdgeCount, i;
 	INetworkEdgePtr ipCurrentEdge, lastExteriorEdge, ipTurnCheckEdge;
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipJunctionElement, ipTurnCheckElement, ipEdgeElement;
-	esriNetworkEdgeDirection dir;
 	bool restricted = false, separationRequired;
 	// esriNetworkTurnParticipationType turnType;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
@@ -179,27 +179,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (iterator != safeZoneList->end())
 					{
 						// Handle the last turn restriction here ... and the remaining capacity-aware cost.
-						edge = iterator->second->GetBehindEdge();
-						costLeft = iterator->second->g;
-						restricted = false;
-
-						if (edge)
-						{
-							costLeft *= edge->GetCost(population2Route, this->solverMethod) / edge->OriginalCost;
-
-							restricted = true;
-							if (FAILED(hr = ipForwardStar->QueryAdjacencies(myVertex->Junction, myEdge->NetEdge , 0, ipForwardAdj))) goto END_OF_FUNC;
-							if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) goto END_OF_FUNC;
-							for (i = 0; i < adjacentEdgeCount; i++)
-							{
-								if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipTurnCheckEdge, &fromPosition, &toPosition))) goto END_OF_FUNC;								
-								if (FAILED(hr = ipTurnCheckEdge->get_EID(&eid))) goto END_OF_FUNC;
-								if (FAILED(hr = ipTurnCheckEdge->get_Direction(&dir))) goto END_OF_FUNC;
-								if (edge->Direction == dir && edge->EID == eid) restricted = false;
-							}
-						}
+						if (FAILED(hr = iterator->second->IsRestricted(ipForwardStar, ipForwardAdj, ipTurnCheckEdge, myEdge, restricted))) goto END_OF_FUNC;
 						if (!restricted)
 						{
+							costLeft = iterator->second->SafeZoneCost(population2Route, this->solverMethod, this->costPerDensity);
 							if (TimeToBeat > costLeft + myVertex->g)
 							{
 								BetterSafeZone = iterator->second;
@@ -323,7 +306,7 @@ END_OF_FUNC:
 }
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
-							 NAEdgeCache * ecache, NAVertexTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, size_t & closedSize,
+							 NAEdgeCache * ecache, SafeZoneTable * safeZoneList, INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarExPtr ipBackwardStar, size_t & closedSize,
 							 NAEdgeMapTwoGen * closedList, NAEdgeContainer * leafs, std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, bool separationRequired)
 {
 	HRESULT hr = S_OK;
@@ -407,8 +390,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, minPop2Route, this->solverMethod);
 
 		// prepare and insert safe zone vertices into the heap
-		for (NAVertexTableItr sz = safeZoneList->begin(); sz != safeZoneList->end(); sz++)
-			if (FAILED(hr = PrepareVerticesForHeap(sz->second, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, ipForwardStar, ipForwardAdj, ipNetworkQuery, solverMethod))) goto END_OF_FUNC;	
+		for (SafeZoneTableItr sz = safeZoneList->begin(); sz != safeZoneList->end(); sz++)
+			if (FAILED(hr = PrepareVerticesForHeap(sz->second->Vertex, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, ipForwardStar, ipForwardAdj, ipNetworkQuery, solverMethod))) goto END_OF_FUNC;	
 		for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
 		// Now insert leaf edges in heap like the destination edges	
@@ -842,7 +825,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 	}
 	return hr;}
 
-HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
+HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
 {
 	double leftCap, fromPosition, toPosition, edgePortion;
 	long sourceOID, sourceID;
@@ -878,17 +861,17 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 
 		// special case for the last edge.
 		// We have to curve it based on the safe point location along the edge
-		if (BetterSafeZone->GetBehindEdge())
+		if (BetterSafeZone->getBehindEdge())
 		{
-			if (FAILED(hr = BetterSafeZone->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;
-			edgePortion = BetterSafeZone->g / BetterSafeZone->GetBehindEdge()->OriginalCost;
+			if (FAILED(hr = BetterSafeZone->getBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;
+			edgePortion = BetterSafeZone->getPositionAlong();
 			if (fromPosition < toPosition) toPosition = fromPosition + edgePortion;
 			else toPosition = fromPosition - edgePortion;
 
 			if (edgePortion > 0.0)
 			{
-				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->GetBehindEdge(), edgePortion));
-				BetterSafeZone->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
+				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->getBehindEdge(), edgePortion));
+				BetterSafeZone->getBehindEdge()->AddReservation(population2Route, this->solverMethod);
 			}
 		}
 		edgePortion = 1.0;
@@ -927,8 +910,16 @@ HRESULT EvcSolver::GeneratePath(NAVertexPtr BetterSafeZone, NAVertexPtr finalVer
 				finalVertex->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
 			}
 		}
-		if (path->empty()) delete path;
-		else currentEvacuee->paths->push_front(path);
+		if (path->empty()) 
+		{
+			delete path;
+			path = NULL;
+		}
+		else
+		{
+			currentEvacuee->paths->push_front(path);
+			BetterSafeZone->Reserve(path->RoutedPop);
+		}
 	}
 	else
 	{		
