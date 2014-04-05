@@ -77,16 +77,15 @@ SafeZone::SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double p
 	reservedPop = 0.0;
 	Vertex = new DEBUG_NEW_PLACEMENT NAVertex(junction,behindEdge);
 	if (cap.vt == VT_R8) capacity = cap.dblVal;
-	else if (cap.vt == VT_BSTR) swscanf_s(cap.bstrVal, L"%f", &capacity);
-	else _ASSERT(0);
+	else if (cap.vt == VT_BSTR) swscanf_s(cap.bstrVal, L"%lf", &capacity);
 }
 
 double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity)
 {
 	double cost = 0.0;
 	double totalPop = population2Route + reservedPop;
-
-	if (totalPop > capacity) cost += costPerDensity * (1.0 - (totalPop / capacity));
+	if (capacity == 0.0) return FLT_MAX;
+	if (totalPop > capacity && capacity > 0.0) cost += costPerDensity * ((totalPop / capacity) - 1.0);
 	if (behindEdge) cost += behindEdge->GetCost(population2Route, solverMethod) * positionAlong;
 	return cost;
 }

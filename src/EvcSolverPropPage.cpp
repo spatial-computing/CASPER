@@ -10,7 +10,6 @@
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
 
 #include "stdafx.h"
-#include <Windowsx.h>
 #include "EvcSolverPropPage.h"
 #include "NameConstants.h"
 
@@ -21,7 +20,7 @@
 
 STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 {
-	// If we are showing the property page, propulate it
+	// If we are showing the property page, populate it
 	// from the EvcSolver object.
 	if ((nCmdShow & (SW_SHOW|SW_SHOWDEFAULT)))
 	{
@@ -445,10 +444,10 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	::ShowWindow(m_hlblFlockProfile, cmdShow);
 	::ShowWindow(m_hCmbFlockProfile, cmdShow);
 
-	// release date lable
+	// release date label
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
 	wchar_t compileDateBuff[100];
-	swprintf_s(compileDateBuff, 100, L"<a href=\"http://esri.com/arccasper\">Release: %s</a>", _T(__DATE__));
+	swprintf_s(compileDateBuff, 100, L"<a href=\"http://facebook.com/arccasper\">Release: %s</a>", _T(__DATE__));
 	::SendMessage(m_hlblRelease, WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
 
 	return 0;

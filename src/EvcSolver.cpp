@@ -1270,7 +1270,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_CAP));
 	ipFieldEdit->put_Type(esriFieldTypeDouble); // it use to be String. Have to be careful when I'm reading numbers from this field
-	ipFieldEdit->put_DefaultValue(CComVariant(100.0));
+	ipFieldEdit->put_DefaultValue(CComVariant(-1.0));
 	ipFieldEdit->put_IsNullable(VARIANT_FALSE);	
 	ipFieldsEdit->AddField(ipFieldEdit);
 

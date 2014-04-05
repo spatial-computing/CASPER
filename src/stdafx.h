@@ -97,6 +97,7 @@ using namespace ATL;
 #include <ctime>
 #include <sstream>
 #include <windows.h>
+#include <Windowsx.h>
 #include <psapi.h>
 
 #pragma warning(pop)
