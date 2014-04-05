@@ -910,7 +910,11 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 				finalVertex->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
 			}
 		}
-		if (path->empty()) delete path;
+		if (path->empty()) 
+		{
+			delete path;
+			path = NULL;
+		}
 		else
 		{
 			currentEvacuee->paths->push_front(path);
