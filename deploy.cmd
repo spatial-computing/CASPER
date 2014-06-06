@@ -2,83 +2,66 @@
 
 :: setup my variables
 set OLDDIR=%CD%
-SET "dir="D:\Archive\arccasperdeploy""
+SET dir=d:\Archive\arccasperdeploy
+SET cydir=d:/Archive/arccasperdeploy
 SET url=git@github.com:kaveh096/ArcCASPER.git
-SET msg=""
 
 :: clean enviroment
-IF NOT EXIST %dir% ( git clone %url% %dir% )
+IF NOT EXIST %dir% ( git clone %url% %cydir% )
 
-:: update the dev branch
+:: call build function
+echo Going to build a nightly version
 cd %dir%
-git checkout dev
+call:buildFunc dev nightly
+
+echo Going to build an stable version
+cd %dir%
+call:buildFunc master stable
+
+goto :exit
+
+:: ------------------------------------- build and post function
+:buildFunc
+
+:: switch to branch
+git checkout %1
 git pull
 
-:: get hash of dev head
-for /f %%i in ('git rev-parse --short HEAD') do set hash=%%i
-set out=ArcCASPER-nigthly-%hash%.zip
+:: get hash of head
+for /f %%i in ('git describe') do set revi=%%i
+set "out=ArcCASPER-%revi%-%2%.zip"
+
+:: TODO create changle.log from 'git shortlog --no-merges %1 --not v10.1'
 
 :: check if there is new commit to be built
-for /f %%i in ('d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh list | grep %hash% | wc -l"') do set iscommit=%%i
+for /f %%i in ('d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh list | grep %out% | wc -l"') do set iscommit=%%i
 if %iscommit%==1 (
-  echo No new code is commited to dev branch
-  goto :stable
+  echo No new code is commited to %1% branch
+  goto :eof
 )
 
 :: build clean
 set NOREG=1
 del /Q Package\EvcSolver32.*
 del /Q Package\EvcSolver64.*
-msbuild.exe /target:build /p:Configuration=Release /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
-msbuild.exe /target:build /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
+del /Q Package\README.md
+msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 ArcCASPER.sln
+msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=x64   ArcCASPER.sln
+
+:: Generate readme file
+"c:\Program Files (x86)\GnuWin32\bin\sed.exe" -e "s/REV/%revi%/g" README.md > Package\README.md
 
 :: post to dropbox
 cd Package
-"c:\Program Files\7-Zip\7z.exe" a %out%  -i@file.list
+"c:\Program Files\7-Zip\7z.exe" a %out% -i@file.list
 if %errorlevel%==0 (
-  echo Uploading to dropbox for public access
   d:\cygwin64\bin\bash.exe -c '/home/kshahabi/dropbox_uploader.sh upload `cygpath -u "%CD%\%out%"` %out%'
 ) else (
   echo Some of the files are not present
 )
-
-:stable
-:: checkout master for stable release
-
-:: update the dev branch
-cd %dir%
-git checkout master
-git pull
-
-:: get hash of dev head
-for /f %%i in ('git rev-parse --short HEAD') do set hash=%%i
-set out=ArcCASPER-stable-%hash%.zip
-
-:: check if there is new commit to be built
-for /f %%i in ('d:\cygwin64\bin\bash.exe -c "/home/kshahabi/dropbox_uploader.sh list | grep %hash% | wc -l"') do set iscommit=%%i
-if %iscommit%==1 (
-  set "msg=No new code is commited to master branch"
-  goto :exit
-)
-
-:: build clean
-set NOREG=1
-del /Q Package\EvcSolver32.*
-del /Q Package\EvcSolver64.*
-msbuild.exe /target:build /p:Configuration=Release /p:Platform=Win32 USC.GISResearchLab.ArcCASPER.sln
-msbuild.exe /target:build /p:Configuration=Release /p:Platform=x64   USC.GISResearchLab.ArcCASPER.sln
-
-:: post to dropbox
-cd Package
-"c:\Program Files\7-Zip\7z.exe" a %out%  -i@file.list
-if %errorlevel%==0 (
-  echo Uploading to dropbox for public access
-  d:\cygwin64\bin\bash.exe -c '/home/kshahabi/dropbox_uploader.sh upload `cygpath -u "%CD%\%out%"` %out%'
-) else (
-  echo Some of the files are not present
-)
+goto :eof
+:: ------------------------------------- end of build function
 
 :: restore current directory and then exit
 :exit
-echo %msg%
 chdir /d %OLDDIR%

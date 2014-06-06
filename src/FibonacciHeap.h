@@ -9,22 +9,23 @@
 #pragma once
 
 #include <hash_map>
-#include "NAGraph.h"
+#include "NAEdge.h"
+#include "NAVertex.h"
 
 #define HeapDataType NAEdge
  
 class HeapNode
 {
 public:
-	HeapNode * parent;
-	HeapNode * leftSibling, * rightSibling;
-	HeapNode * children; 
-
-	HeapNode(HeapDataType * data);
-	HeapNode();
-
+	HeapNode     * parent;
+	HeapNode     * leftSibling, * rightSibling;
+	HeapNode     * children;
 	HeapDataType * data;
-	int rank;
+	double         key;
+	int            rank;
+
+	HeapNode(HeapDataType * data, double key);
+	HeapNode();
 	
 	bool addChild(HeapNode * node);
 	bool addSibling(HeapNode * node);
@@ -79,12 +80,13 @@ public:
 		delete cacheAgainst;
 	}
 	
-	size_t Size() { return cacheAlong->size() + cacheAgainst->size(); }
-	void Clear() { cacheAlong->clear(); cacheAgainst->clear(); }
+	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
+	void Clear()        { cacheAlong->clear(); cacheAgainst->clear(); }
 
+	double GetMaxValue(void) const;
 	void Erase(HeapDataType * edge);
 	void Insert(HeapNode * node);
-	HeapNodePtr Find(HeapDataType * edge);
+	HeapNodePtr Find(HeapDataType * edge) const;
 };
 
 class FibonacciHeap
@@ -93,12 +95,13 @@ private:
 	HeapNode ** rootListByRank;
 	HeapNode * minRoot;
 	HeapNodeTable * nodeTable;
-	bool (*LessThan)(HeapDataType *, HeapDataType *);
+	double (*GetHeapKey)(const HeapDataType *);
 	bool link(HeapNode * root);
 
 public:
-	FibonacciHeap(bool (*LessThanMethod)(HeapDataType *, HeapDataType *));
+	FibonacciHeap(double (*GetHeapKeyMethod)(const HeapDataType *));
 	bool IsVisited(HeapDataType * vertex);
+	inline double GetMaxValue(void) const { return nodeTable->GetMaxValue(); }
 
 	~FibonacciHeap();
 

@@ -15,7 +15,6 @@
 #define STRICT
 #endif
 
-// memory leak detection new operator replacement
 /// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
 #ifdef _DEBUG
 #define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)
@@ -76,7 +75,7 @@ using namespace ATL;
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI")
 
 /*
-#import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE") // System
+#import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer") // System
 #import "libid:4ECCA6E2-B16B-4ACA-BD17-E74CAE4C150A" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI") // SystemUI
 #import "libid:866AE5D3-530C-11D2-A2BD-0000F8774FB5" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR") // Framework
 #import "libid:C4B094C2-FF32-4FA1-ABCB-7820F8D6FB68" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI") // Geometry
@@ -98,6 +97,7 @@ using namespace ATL;
 #include <ctime>
 #include <sstream>
 #include <windows.h>
+#include <Windowsx.h>
 #include <psapi.h>
 
 #pragma warning(pop)

@@ -68,12 +68,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "USC SSI"
             VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
-            VALUE "FileVersion", "1.1.0.0"
+            VALUE "FileVersion", "1.3.0.0"
             VALUE "InternalName", "EvcSolver.dll"
             VALUE "OriginalFilename", "EvcSolver.dll"
             VALUE "LegalCopyright", "Copyright (C) 2013"
             VALUE "ProductName", "EvcSolver"
-            VALUE "ProductVersion", "1.1.0.0"
+            VALUE "ProductVersion", "1.3.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -95,12 +95,12 @@ IDR_CUSTOMSOLVER        REGISTRY                "EvcSolver.rgs"
 // Dialog
 //
 
-IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 214
+IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 226
 STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "General Options",IDC_SearchGroup,7,12,190,177
+    GROUPBOX        "General Options",IDC_SearchGroup,7,12,190,191
     LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,217,62,119,8
     EDITTEXT        IDC_EDIT_SAT,339,58,46,14,ES_AUTOHSCROLL
     LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,44,108,8
@@ -133,7 +133,8 @@ BEGIN
     COMBOBOX        IDC_COMBO_PROFILE,322,113,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,123,95,8
     EDITTEXT        IDC_EDIT_CARMA,127,120,63,14,ES_AUTOHSCROLL
-    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",WS_TABSTOP,7,194,114,13
+    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink", WS_TABSTOP,20,207,83,13
+    CONTROL         "Run CARMA with DSPT (experimental)",IDL_CHECK_CARMAGEN,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,188,171,13
 END
 
 
@@ -150,7 +151,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 396
         TOPMARGIN, 7
-        BOTTOMMARGIN, 207
+        BOTTOMMARGIN, 220
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -179,7 +180,8 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
+
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

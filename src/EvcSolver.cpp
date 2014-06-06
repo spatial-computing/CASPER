@@ -166,7 +166,7 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 	
 	INetworkAttribute2Ptr networkAttrib = 0;
 	long count, i;
-	HRESULT hr;
+	HRESULT hr = S_OK;
 	esriNetworkAttributeUsageType utype;
 	esriNetworkAttributeDataType dtype;	
 	IUnknownPtr unk;
@@ -192,8 +192,10 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 				discriptiveAttribs.insert(discriptiveAttribs.end(), networkAttrib);
 		}
 
-		if (costAttributeID == -1) costAttribs[0]->get_ID(&costAttributeID);
-		if (capAttributeID  == -1) discriptiveAttribs[0]->get_ID(&capAttributeID);		
+		if (costAttribs.size() < 1 && pMessages) pMessages->AddError(-1, L"There are no cost attributes in the network dataset.");
+		if (discriptiveAttribs.size() < 1 && pMessages) pMessages->AddError(-1, L"There are no descriptive attributes in the network dataset to be used as street capacity.");		
+		if (costAttributeID == -1 && costAttribs.size() > 0) costAttribs[0]->get_ID(&costAttributeID);
+		if (capAttributeID  == -1 && discriptiveAttribs.size() > 0) discriptiveAttribs[0]->get_ID(&capAttributeID);		
 
 		// Agents setup
 		// NOTE: this is an appropriate place to find and attach any agents used by this solver.
@@ -211,7 +213,7 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 		}
 		else pStreetAgent = pStreet;
 	}
-	return S_OK;  
+	return hr;  
 }
 
 STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
@@ -419,8 +421,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	capAttributeID = -1;
 	SaturationPerCap = 500.0;
 	CriticalDensPerCap = 20.0;
-	solverMethod = EVC_SOLVER_METHOD_CASPER;
-	trafficModel = EVC_TRAFFIC_MODEL_CASPER;
+	solverMethod = CASPERSolver;
+	trafficModel = POWERModel;
 	flockingProfile = FLOCK_PROFILE_CAR;
 	
 	m_CreateTraversalResult = VARIANT_TRUE;
@@ -433,6 +435,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
 	twoWayShareCapacity = VARIANT_TRUE;
+	ThreeGenCARMA = VARIANT_FALSE;
+	
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 0.0f;
@@ -473,6 +477,19 @@ STDMETHODIMP EvcSolver::get_TwoWayShareCapacity(VARIANT_BOOL * value)
 	return S_OK;
 }
 
+STDMETHODIMP EvcSolver::put_ThreeGenCARMA(VARIANT_BOOL value)
+{
+	ThreeGenCARMA = value;
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_ThreeGenCARMA(VARIANT_BOOL * value)
+{
+	*value = ThreeGenCARMA;
+	return S_OK;
+}
+
 STDMETHODIMP EvcSolver::put_TwoWayShareCapacity(VARIANT_BOOL value)
 {
 	twoWayShareCapacity = value;
@@ -506,13 +523,13 @@ STDMETHODIMP EvcSolver::put_SeparableEvacuee(VARIANT_BOOL value)
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::get_TrafficModel(EVC_TRAFFIC_MODEL * value)
+STDMETHODIMP EvcSolver::get_TrafficModel(EvcTrafficModel * value)
 {
 	*value = trafficModel;
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_TrafficModel(EVC_TRAFFIC_MODEL value)
+STDMETHODIMP EvcSolver::put_TrafficModel(EvcTrafficModel value)
 {
 	trafficModel = value;
 	m_bPersistDirty = true;
@@ -550,13 +567,13 @@ STDMETHODIMP EvcSolver::put_CARMAPerformanceRatio(BSTR value)
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::get_SolverMethod(EVC_SOLVER_METHOD * value)
+STDMETHODIMP EvcSolver::get_SolverMethod(EvcSolverMethod * value)
 {
 	*value = solverMethod;
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_SolverMethod(EVC_SOLVER_METHOD value)
+STDMETHODIMP EvcSolver::put_SolverMethod(EvcSolverMethod value)
 {
 	solverMethod = value;
 	m_bPersistDirty = true;
@@ -1045,6 +1062,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (savedVersion > c_version || savedVersion <= 0) return E_FAIL;
 
 	// We need to read our persisted solver settings
+	// version 1
 	if (FAILED(hr = pStm->Read(&m_outputLineType, sizeof(m_outputLineType), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&costAttributeID, sizeof(costAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&capAttributeID, sizeof(capAttributeID), &numBytes))) return hr;
@@ -1068,8 +1086,18 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
+
+	//version 2
+	if (savedVersion >= 2)
+	{
+		if (FAILED(hr = pStm->Read(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
+	}
+	else
+	{
+		ThreeGenCARMA = VARIANT_FALSE;
+	}
 	
-	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
+	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
 	m_bPersistDirty = false;
 
 	return S_OK;
@@ -1109,6 +1137,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&initDelayCostPerPop, sizeof(initDelayCostPerPop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
 	
 	return S_OK;
 }
@@ -1152,7 +1181,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// - OID                          of the search
 	// - Shape
 	// - Name 
-	// - Population					  number of unseperatable people/cars at this location
+	// - Population					  number of un-seperatable people/cars at this location
 	// - (NALocation fields)
 
 	// Barriers (input)               Barriers restrict network edges from being
@@ -1174,9 +1203,9 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// - Shape                        edge/street shape (polyline)
 	// - EdgeID						  Edge ID from NetworkDataset. there could be at most two edges (different directions) with one edgeID.
 	// - Direction					  Direction of travel on this edge
-	// - SourceID					  Referes to source street file ID
-	// - SourceOID					  Referes to oid of the shape in the street file
-	// - ReservPop					  The total population who whould use this edge at some time
+	// - SourceID					  Refers to source street file ID
+	// - SourceOID					  Refers to oid of the shape in the street file
+	// - ReservPop					  The total population who would use this edge at some time
 	// - TravCost					  Traversal cost based on the selected evacuation method on this edge
 	// - OrgCost					  Original traversal cost of the edge without any population
 
@@ -1240,8 +1269,9 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_CAP));
-	ipFieldEdit->put_Type(esriFieldTypeString);
-	ipFieldEdit->put_Length(128);
+	ipFieldEdit->put_Type(esriFieldTypeDouble); // it use to be String. Have to be careful when I'm reading numbers from this field
+	ipFieldEdit->put_DefaultValue(CComVariant(-1.0));
+	ipFieldEdit->put_IsNullable(VARIANT_FALSE);	
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	// Add the NALocation fields

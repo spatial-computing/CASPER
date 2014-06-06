@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Evacuee.h"
-#include "NAGraph.h"
+#include "NAVertex.h"
+#include "NAedge.h"
 #include "SimpleVehicle.h"
 
 #define FLOCK_OBJ_STAT char
@@ -85,7 +86,7 @@ public:
 	FLOCK_OBJ_STAT	MyStatus;
 
 	// constructors
-	FlockingLocation(void)
+	FlockingLocation(void) throw(...)
 	{
 		MyTime = -1.0;
 		GTime = -1.0;

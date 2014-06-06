@@ -7,7 +7,7 @@
 // Flocking object implementation
 
 FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
-							   FlockProfile * flockProfile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen)
+							   FlockProfile * flockProfile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen) throw(...)
 {
 	// construct FlockingLocation	
 	HRESULT hr = S_OK;
@@ -28,7 +28,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	newEdgeRequestFlag = true;
 	speedLimit = 0.0;
 
-	// build the path itterator and upcoming vertices
+	// build the path iterator and upcoming vertices
 	if (FAILED(hr = myPath->front()->pline->get_FromPoint(&MyLocation)))
 	{
 		OutputDebugString(L"FlockingObject - get_FromPoint: failed to get start point.");
@@ -70,26 +70,29 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	IPointCollectionPtr pcollect = myPath->back()->pline;
 	long pointCount = 0;
 
-	/// TODO it's a good idea to throw a logic error after each of these FAILED statements.
+	// #pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] it's a good idea to throw a logic error after each of these FAILED statements.")
 
 	if (FAILED(hr = pcollect->get_PointCount(&pointCount)))
 	{		
-		OutputDebugString(L"FlockingObject - get_PointCount: failed to get number of path points.");
 		_ASSERT(0);
+		OutputDebugString(L"FlockingObject - get_PointCount: failed to get number of path points.");
+		throw std::exception("FlockingObject - get_PointCount: failed to get number of path points.");
 	}
 	if (pointCount > 0)
 	{
 		if (FAILED(hr = pcollect->get_Point(pointCount - 1, &point)))
 		{
-			OutputDebugString(L"FlockingObject - get_Point: failed to get end path point.");
 			_ASSERT(0);
+			OutputDebugString(L"FlockingObject - get_Point: failed to get end path point.");
+			throw std::exception("FlockingObject - get_Point: failed to get end path point.");
 		}
 		if (point)
 		{
 			if (FAILED(hr = point->QueryCoords(&x, &y)))
 			{
-				OutputDebugString(L"FlockingObject - QueryCoords: failed to get end path point coordinates.");
 				_ASSERT(0);
+				OutputDebugString(L"FlockingObject - QueryCoords: failed to get end path point coordinates.");
+				throw std::exception("FlockingObject - QueryCoords: failed to get end path point coordinates.");
 			}
 			finishPoint.set(x, y, 0.0);
 		}
@@ -175,10 +178,12 @@ HRESULT FlockingObject::loadNewEdge(void)
 		
 		// push self location first. this will help the steer library since we're swapping the edge during process.
 		// we'll use the current location shadow on road segment as the start point.
-		OpenSteer::Vec3 o12 = (libpoints[2] - libpoints[1]).normalize();
-		libpoints[0] = libpoints[1] - (max(1.0, o12.dot(libpoints[1] - myVehicle->position())) * o12);
-		_ASSERT(libpoints[0] != libpoints[1]);
-
+		if (pointCount > 2)
+		{
+			OpenSteer::Vec3 o12 = (libpoints[2] - libpoints[1]).normalize();
+			libpoints[0] = libpoints[1] - (max(1.0, o12.dot(libpoints[1] - myVehicle->position())) * o12);
+			_ASSERT(libpoints[0] != libpoints[1]);
+		}
 		// speed limit update
 		if (FAILED(hr = (*pathSegIt)->pline->get_Length(&speedLimit))) return hr;
 		speedLimit = speedLimit / (*pathSegIt)->Edge->OriginalCost;
@@ -243,7 +248,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 
 HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt)
 {	
-	// check destination arriaval
+	// check destination arrival
 	HRESULT hr = S_OK;
 	OpenSteer::Vec3 steer = OpenSteer::Vec3::zero, pos = OpenSteer::Vec3::zero, dir = OpenSteer::Vec3::zero;
 	double dist = 0.0;
@@ -293,7 +298,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			// this would be replaced by steerToAvoidNeighbors
 			// steer = myVehicle->steerToAvoidCloseNeighbors(myProfile->CloseNeighborDistance, myNeighborVehicles);
 
-			// sperates you form boids in front
+			// separates you form boids in front
 			steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);
 			steer += myVehicle->steerToAvoidNeighbors(dt, myNeighborVehicles);
 
@@ -368,7 +373,7 @@ bool FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// Flocking enviroment implementation
+// Flocking environment implementation
 
 FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval, double InitDelayCostPerPop)
 {
@@ -404,7 +409,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	minPathLen = FLT_MAX;
 	srand((unsigned int)time(NULL));
 
-	// pre-init clean up just in case the enviroment is being re-used
+	// pre-init clean up just in case the environment is being re-used
 	for (FlockingObjectItr it1 = objects->begin(); it1 != objects->end(); it1++) delete (*it1);
 	for (FlockingLocationItr it2 = history->begin(); it2 != history->end(); it2++) delete (*it2);
 	objects->clear();
@@ -423,7 +428,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 				size = (int)(ceil((*pathItr)->RoutedPop));
 				for (i = 0; i < size; i++)
 				{
-					objects->push_back(new FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name, ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects, pathLen));
+					objects->push_back(new DEBUG_NEW_PLACEMENT FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name, ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects, pathLen));
 				}
 			}
 		}
@@ -502,13 +507,13 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			movingObjectLeft |= newStat != FLOCK_OBJ_STAT_END;
 		}
 
-		// see if any collisions happended and update status if nessecery
+		// see if any collisions happened and update status if necessary
 		if (FlockingObject::DetectCollision(objects)) collisions->push_back(thetime);
 
 		// flush the snapshot objects into history
 		for (FlockingObjectItr it = snapshotTempList->begin(); it != snapshotTempList->end(); it++)
 		{
-			history->push_back(new FlockingLocation(**it));
+			history->push_back(new DEBUG_NEW_PLACEMENT FlockingLocation(**it));
 		}
 		snapshotTempList->clear();
 

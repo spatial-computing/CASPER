@@ -431,10 +431,11 @@ HRESULT EvcSolverSymbolizer::CreateRandomColor(IColor** ppColor)
   *ppColor = 0;
 
   IHsvColorPtr ipHsvColor(CLSID_HsvColor);
-
-  ipHsvColor->put_Hue(::GetTickCount() % 360L);
+#pragma warning(suppress: 28159)
+  DWORD tik = ::GetTickCount();
+  ipHsvColor->put_Hue(tik % 360L);
   ipHsvColor->put_Saturation(c_randomColorHSVSaturation);
-  ipHsvColor->put_Value(c_baseRandomColorHSVValue + (::GetTickCount() % c_maxAboveBaseRandomColorHSVValue));
+  ipHsvColor->put_Value(c_baseRandomColorHSVValue + (tik % c_maxAboveBaseRandomColorHSVValue));
 
   *ppColor = static_cast<IColor*>(ipHsvColor);
 

@@ -16,11 +16,10 @@
 # project specific
 src/_EvcSolver*
 src/_CustomSolver_p.c
-Package/ArcCASPER-nigthly-*.zip
+Package/ArcCASPER-*.zip
 src/dlldata.c
 
 # Visual Studio
-*.suo
 *.exe
 *.sdf
 *.opensdf
@@ -31,3 +30,4 @@ obj/
 bin/
 *.pdb
 ipch/
+*.aps
