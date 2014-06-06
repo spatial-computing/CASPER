@@ -15,8 +15,9 @@
 ArcCASPER (Capacity-Aware Shortest Path Evacuation Routing) is a custom Network Analyst tool that uses a state-of-the-art routing algorithm to produce evacuation routes to the nearest safe area for each evacuee or group of evacuees. It is an innovative new ArcGIS tool that can help city officials, public safety and other emergency departments to perform evacuation planning more intelligently and efficiently.
 
 ####Requirement
-  - ArcGIS Desktop 10.1
-  - Network Analyst Extension
+ - ArcGIS Desktop 10.2
+ - Network Analyst Extension
+ - (Optional) Background Geoprocessing (64-bit)
 
 ####Installation
 In order to install, first unzip the downloaded file.  Next, execute the "install.cmd" script.  This script needs to be run as an administrator in Windows Visa and later operating systems.  Make sure any previous ArcCASPER installation is completely uninstalled.  You may find detailed instructions in the user manual.
@@ -26,6 +27,8 @@ We would like to thank ESRI APL and Network Analyst teams to support us during t
 
 ####Copyright / Permission
 ArcCASPER is released as a free closed-source tool.
+If you decided to use our tool in your work, we would ask that you cite it as:
+K. Shahabi and J. P. Wilson, “CASPER: Intelligent capacity-aware evacuation routing,” Computers, Environment and Urban Systems, vol. 46, pp. 12–24, Apr. 2014
 
 NO WARRANTIES.  The SOFTWARE PRODUCT and any related documentation is provided “as is” without warranty of any kind, either express or implied, including, without limitation, the implied warranties or merchantability, fitness for a particular purpose, or non-infringement. The entire risk arising out of use or performance of the SOFTWARE PRODUCT remains with you.
 
