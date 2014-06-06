@@ -28,6 +28,7 @@ We would like to thank ESRI APL and Network Analyst teams to support us during t
 ####Copyright / Permission
 ArcCASPER is released as a free closed-source tool.
 If you decided to use our tool in your work, we would ask that you cite it as:
+
 K. Shahabi and J. P. Wilson, “CASPER: Intelligent capacity-aware evacuation routing,” Computers, Environment and Urban Systems, vol. 46, pp. 12–24, Apr. 2014
 
 NO WARRANTIES.  The SOFTWARE PRODUCT and any related documentation is provided “as is” without warranty of any kind, either express or implied, including, without limitation, the implied warranties or merchantability, fitness for a particular purpose, or non-infringement. The entire risk arising out of use or performance of the SOFTWARE PRODUCT remains with you.
