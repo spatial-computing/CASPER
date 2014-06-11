@@ -224,7 +224,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (turnType == 1) currentEdge->LastExteriorEdge = lastExteriorEdge;
 						else currentEdge->LastExteriorEdge = 0;
 						*/
-						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
+						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod/*, &globalDeltaCost*/);
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrease key.
 						{
 							neighbor = currentEdge->ToVertex;
