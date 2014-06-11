@@ -133,11 +133,11 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, f
 
 HRESULT NAEdge::QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const
 {
-	HRESULT hr;
+	HRESULT hr = S_OK;
 	if (FAILED(hr = NetEdge->get_OID(sourceOID))) return hr;
 	if (FAILED(hr = NetEdge->get_SourceID(sourceID))) return hr;
 	if (FAILED(hr = NetEdge->QueryPositions(fromPosition, toPosition))) return hr;
-	return S_OK;
+	return hr;
 }
 
 // Special function for CCRP: to check how much capacity is left on this edge.
