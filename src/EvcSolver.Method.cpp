@@ -19,7 +19,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing;
-	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0;
+	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, globalDeltaCost = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	SafeZoneTableItr iterator;
 	long adjacentEdgeCount, i;
@@ -224,7 +224,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (turnType == 1) currentEdge->LastExteriorEdge = lastExteriorEdge;
 						else currentEdge->LastExteriorEdge = 0;
 						*/
-						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod);
+						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrease key.
 						{
 							neighbor = currentEdge->ToVertex;
@@ -408,7 +408,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		// this is the actual Dijkstra code with backward network traversal. it will only update h value.
 		while (!heap->IsEmpty())
 		{
-			// Remove the next junction EID from the top of the stack
+			// Remove the next junction EID from the top of the queue
 			myEdge = heap->DeleteMin();
 			myVertex = myEdge->ToVertex;
 			_ASSERT(!closedList->Exist(myEdge));         // closedList violation happened
@@ -823,7 +823,8 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 			}
 		}
 	}
-	return hr;}
+	return hr;
+}
 
 HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
 {
@@ -860,7 +861,7 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 		path = new DEBUG_NEW_PLACEMENT EvcPath(population2Route, ++pathGenerationCount, currentEvacuee);
 
 		// special case for the last edge.
-		// We have to curve it based on the safe point location along the edge
+		// We have to sub-curve it based on the safe point location along the edge
 		if (BetterSafeZone->getBehindEdge())
 		{
 			if (FAILED(hr = BetterSafeZone->getBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;

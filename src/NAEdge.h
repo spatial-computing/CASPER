@@ -2,9 +2,7 @@
 
 #include <hash_map>
 #include "Evacuee.h"
-
-[ export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC") ] enum EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
-[ export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948") ] enum EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3, EXPModel = 0x4 };
+#include "TrafficModel.h"
 
 struct EdgeReservation
 {
@@ -27,16 +25,14 @@ class EdgeReservations
 {
 private:
 	float  ReservedPop;
-	float  SaturationDensPerCap;
-	float  CriticalDens;
 	float  Capacity;
-	float  initDelayCostPerPop;
 	bool   isDirty;
+	TrafficModel * myTrafficModel;
 	// EdgeDirtyFlagEnum  DirtyFlag;
 	// std::vector<EdgeReservation> * List;
 
 public:
-	EdgeReservations(float capacity, float CriticalDensPerCap, float SaturationDensPerCap, float InitDelayCostPerPop);
+	EdgeReservations(float capacity, TrafficModel * trafficModel);
 	EdgeReservations(const EdgeReservations& cpy);
 	
 	void Clear()
@@ -67,13 +63,15 @@ class NAEdge
 {
 private:	
 	EdgeReservations * reservations;
+	/*
 	EvcTrafficModel trafficModel;
 	double modelRatio;
 	double expGamma;
+	*/
 	double CleanCost;
-	mutable double cachedCost[2];
+	// mutable double cachedCost[2];
 	// mutable unsigned short calcSaved;
-	double GetTrafficSpeedRatio(double allPop) const;
+	double GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const;
 
 public:
 	double OriginalCost;
@@ -85,16 +83,16 @@ public:
 	// INetworkEdgePtr LastExteriorEdge;	
 	long EID;
 
-	double GetCost(double newPop, EvcSolverMethod method) const;
-	double GetCurrentCost() const;
-	double LeftCapacity() const;	
+	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = NULL) const;
+	double GetCurrentCost(EvcSolverMethod method = CASPERSolver) const;
+	double LeftCapacity() const;
 
 	// Special function for Flocking: to check how much capacity the edge had originally
 	double OriginalCapacity() const { return reservations->Capacity; }
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
 	void AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population, EvcSolverMethod method);
-	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable *, float InitDelayCostPerPop, EvcTrafficModel);
+	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
 	NAEdge(const NAEdge& cpy);
 
 	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2);
@@ -229,34 +227,37 @@ public:
 class NAEdgeCache
 {
 private:
-	// std::vector<NAEdgePtr>	* sideCache;
-	NAEdgeTable				* cacheAlong;
-	NAEdgeTable				* cacheAgainst;
-	long					capacityAttribID;
-	long					costAttribID;
-	float					saturationPerCap;
-	float					criticalDensPerCap;
-	bool					twoWayRoadsShareCap;
-	NAResTable				* resTableAlong;
-	NAResTable				* resTableAgainst;
-	float					initDelayCostPerPop;
-	EvcTrafficModel		    trafficModel;
+	NAEdgeTable		* cacheAlong;
+	NAEdgeTable		* cacheAgainst;
+	long			capacityAttribID;
+	long			costAttribID;
+	/*
+	float			saturationPerCap;
+	float			criticalDensPerCap;
+	float			initDelayCostPerPop;
+	EvcTrafficModel	trafficModel;
+	*/
+	bool			twoWayRoadsShareCap;
+	NAResTable		* resTableAlong;
+	NAResTable		* resTableAgainst;
+	TrafficModel    * myTrafficModel;
 
 public:
 
-	NAEdgeCache(long CapacityAttribID, long CostAttribID, float SaturationPerCap, float CriticalDensPerCap, bool TwoWayRoadsShareCap, float InitDelayCostPerPop, EvcTrafficModel TrafficModel)
+	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop, EvcTrafficModel model)
 	{
-		// sideCache = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
-		initDelayCostPerPop = InitDelayCostPerPop;
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
 		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
 		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
+		myTrafficModel = new DEBUG_NEW_PLACEMENT TrafficModel(model, CriticalDensPerCap, SaturationPerCap, InitDelayCostPerPop);
+		/*
+		initDelayCostPerPop = InitDelayCostPerPop;
 		saturationPerCap = SaturationPerCap;
-		criticalDensPerCap = CriticalDensPerCap;
-		if (saturationPerCap <= criticalDensPerCap) saturationPerCap += criticalDensPerCap;
-		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 		trafficModel = TrafficModel;
+		criticalDensPerCap = CriticalDensPerCap;
+		*/		
+		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 
 		resTableAlong = new DEBUG_NEW_PLACEMENT NAResTable();
 		if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
@@ -267,6 +268,7 @@ public:
 	{
 		Clear();
 		// delete sideCache;
+		delete myTrafficModel;
 		delete cacheAlong; 
 		delete cacheAgainst;
 		delete resTableAlong;

@@ -99,5 +99,8 @@ using namespace ATL;
 #include <windows.h>
 #include <Windowsx.h>
 #include <psapi.h>
+#include <vector>
+#include <stack>
+#include <hash_map>
 
 #pragma warning(pop)

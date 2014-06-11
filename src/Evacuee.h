@@ -11,9 +11,7 @@
 
 #pragma once
 
-#include <vector>
-#include <stack>
-#include <hash_map>
+#include "StdAfx.h"
 
 class NAVertex;
 class NAEdge;

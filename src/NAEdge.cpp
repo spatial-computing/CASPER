@@ -6,15 +6,18 @@
 ///////////////////////////////////////////////////////////////////////
 // EdgeReservations Methods
 
-EdgeReservations::EdgeReservations(float capacity, float criticalDensPerCap, float saturationDensPerCap, float InitDelayCostPerPop)
+EdgeReservations::EdgeReservations(float capacity, TrafficModel * trafficModel)
 {
 	//List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>();
 	ReservedPop = 0.0;
-	Capacity = capacity;	
+	Capacity = capacity;
+	myTrafficModel = trafficModel;
+	/*
 	CriticalDens = criticalDensPerCap * capacity;
 	SaturationDensPerCap = saturationDensPerCap;
-	//DirtyFlag = EdgeFlagDirty;
+	DirtyFlag = EdgeFlagDirty;
 	initDelayCostPerPop = InitDelayCostPerPop;
+	*/
 	isDirty = true;
 }
 
@@ -22,10 +25,13 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 {
 	//List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>(*(cpy.List));
 	ReservedPop = cpy.ReservedPop;
-	Capacity = cpy.Capacity;	
+	Capacity = cpy.Capacity;
+	myTrafficModel = cpy.myTrafficModel;
+	/*
 	CriticalDens = cpy.CriticalDens;
 	SaturationDensPerCap = cpy.SaturationDensPerCap;
 	initDelayCostPerPop = cpy.initDelayCostPerPop;
+	*/
 	isDirty = cpy.isDirty;
 }
 
@@ -41,28 +47,29 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	EID = cpy.EID;
 	ToVertex = cpy.ToVertex;
 	//LastExteriorEdge = cpy.LastExteriorEdge;
+	/*
 	trafficModel = cpy.trafficModel;
 	modelRatio = cpy.modelRatio;
 	expGamma = cpy.expGamma;
+	*/
 	CleanCost = cpy.CleanCost;
-	cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
+	// cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
 	// calcSaved = cpy.calcSaved;
 	TreePrevious = cpy.TreePrevious;
 	TreeNext = cpy.TreeNext;
 }
 
-NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, float CriticalDensPerCap, float SaturationDensPerCap, NAResTable * resTable, float InitDelayCostPerPop, EvcTrafficModel TrafficModel)
+NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model)
 {
 	// calcSaved = 0;
 	TreePrevious = NULL;
 	CleanCost = -1.0;
 	ToVertex = 0;
-	trafficModel = TrafficModel;
 	this->NetEdge = edge;
 	//LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
 	float capacity = 1.0;
-	cachedCost[0] = FLT_MAX; cachedCost[1] = 0.0;
+	// cachedCost[0] = FLT_MAX; cachedCost[1] = 0.0;
 	HRESULT hr = 0;
 	
 	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)))
@@ -94,40 +101,13 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, f
 		NAResTableItr it = resTable->find(EID);
 		if (it == resTable->end())
 		{
-			reservations = new DEBUG_NEW_PLACEMENT EdgeReservations(capacity, CriticalDensPerCap, SaturationDensPerCap, InitDelayCostPerPop);
+			reservations = new DEBUG_NEW_PLACEMENT EdgeReservations(capacity, model);
 			resTable->insert(NAResTablePair(EID, reservations));
 		}
 		else
 		{
 			reservations = it->second;
-		}
-		double a,b;
-		
-		switch (trafficModel)
-		{
-		case EXPModel:
-			/* Exp Model
-			a = flow of normal speed, 	b = flow where the speed is dropped to half
-			(modelRatio) beta  = b * lane - 1;
-			(expGamma)   gamma = (log(log(0.96) / log(0.5))) / log((a * lane - 1) / (b * lane - 1));
-			*/
-			a = 2.0; // max(2.0, reservations->CriticalDens);
-			b = max(a + 1.0, reservations->SaturationDensPerCap);
-			modelRatio  = b * reservations->Capacity - 1.0;
-			expGamma    = (log(log(0.9) / log(0.5))) / log((a * reservations->Capacity - 1.0) / (b * reservations->Capacity - 1.0));
-			break;
-		case POWERModel:
-			/* Power model
-			z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
-			modelRatio = 0.0202 * exp(-0.01127 * reservations->Capacity);
-			*/
-			modelRatio  = 0.5 / (sqrt(reservations->SaturationDensPerCap) * exp(-0.01127));
-			modelRatio *= exp(-0.01127 * reservations->Capacity);
-			break;
-		default:
-			modelRatio = 0.0;
-			expGamma = 0.0;
-		}
+		}		
 	}
 }
 
@@ -144,71 +124,41 @@ HRESULT NAEdge::QuerySourceStuff(long * sourceOID, long * sourceID, double * fro
 // Will be used to get max capacity available on a path
 double NAEdge::LeftCapacity() const
 {
-	double newPop = 0.0;
-	if (trafficModel == STEPModel) newPop = reservations->CriticalDens - reservations->ReservedPop;
-	else newPop = reservations->CriticalDens - (reservations->SaturationDensPerCap * reservations->Capacity);
-	if ((reservations->initDelayCostPerPop > 0.0) && (newPop > OriginalCost / reservations->initDelayCostPerPop)) newPop = 2147483647.0; // max_int
-	newPop = max(newPop, 0.0);
-	return newPop;
+	return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost);
 }
 
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
-double NAEdge::GetTrafficSpeedRatio(double allPop) const
+double NAEdge::GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const
 {
-	if (cachedCost[0] == allPop) { /*calcSaved++;*/ return cachedCost[1]; }
 	double speedPercent = 1.0;
-	switch (trafficModel)
-	{
-	case EXPModel:
-		// z = exp(-(((flow - 1) / beta) ^ gamma) * log(2));
-		speedPercent = exp(-pow(((allPop - 1.0) / modelRatio), expGamma) * log(2.0));
-		break;
-	case POWERModel:
-		// z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
-		speedPercent = 1.0 - modelRatio * sqrt(allPop);
-		break;
-	case LINEARModel:
-		speedPercent = 1.0 - (allPop - reservations->CriticalDens) / (2.0 * (reservations->SaturationDensPerCap * reservations->Capacity - reservations->CriticalDens));
-		break;
-	case STEPModel:
-		speedPercent = 0.0;
-		break;
-	}
-	cachedCost[0] = allPop; cachedCost[1] = speedPercent;
+	if (method == CASPERSolver) speedPercent = reservations->myTrafficModel->GetCongestionPercentage(reservations->Capacity, allPop);
+	else if (method == CCRPSolver) speedPercent = allPop > reservations->myTrafficModel->CriticalDensPerCap * reservations->Capacity ? 0.0 : 1.0;
+	speedPercent = min(1.0, max(0.0001, speedPercent));
 	return speedPercent;
 }
 
-double NAEdge::GetCurrentCost() const
+double NAEdge::GetCurrentCost(EvcSolverMethod method) const
 {
-	double speedPercent = 1.0;
-	if (reservations->ReservedPop > reservations->CriticalDens)
-	{
-		speedPercent = GetTrafficSpeedRatio(reservations->ReservedPop);
-		speedPercent = min(1.0, max(0.0001, speedPercent));
-	}
-	return OriginalCost / speedPercent;
+	return OriginalCost / GetTrafficSpeedRatio(reservations->ReservedPop, method);
 }
 
-double NAEdge::GetCost(double newPop, EvcSolverMethod method) const
+double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost) const
 {
 	double speedPercent = 1.0;
-	if (reservations->initDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / reservations->initDelayCostPerPop);
+	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);
 	newPop += reservations->ReservedPop;
-
-	if (newPop > reservations->CriticalDens)
+	
+	speedPercent = GetTrafficSpeedRatio(newPop, method);
+	
+	// this extra output tells CASPER how much will this edge reservation affects the cost according to the traffic model
+	if (globalDeltaCost)
 	{
-		switch (method)
-		{
-		case CASPERSolver:
-			speedPercent = GetTrafficSpeedRatio(newPop);
-			break;
-		case CCRPSolver:
-			speedPercent = 0.0;
-			break;
-		}
-		speedPercent = min(1.0, max(0.0001, speedPercent));
+		double globalDeltaCostPercentage = 0.0;
+		globalDeltaCostPercentage = GetTrafficSpeedRatio(reservations->ReservedPop, method) - speedPercent;
+		_ASSERT(globalDeltaCostPercentage >= 0.0);
+		*globalDeltaCost = OriginalCost * globalDeltaCostPercentage;
 	}
 	return OriginalCost / speedPercent;
 }
@@ -233,7 +183,7 @@ void NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost
 	// actual reservation code
 	// reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
 	float newPop = (float)population;
-	if (reservations->initDelayCostPerPop > 0.0f) newPop = min(newPop, (float)(OriginalCost / reservations->initDelayCostPerPop));
+	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0f) newPop = min(newPop, (float)(OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop));
 	reservations->ReservedPop += newPop;
 
 	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
@@ -298,7 +248,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, INetworkQueryPtr ipNetworkQuery
 		{
 			edgeClone = edge;
 		}
-		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, criticalDensPerCap, saturationPerCap, resTable, initDelayCostPerPop, trafficModel);
+		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, resTable, myTrafficModel);
 		cache->insert(NAEdgeTablePair(n));
 	}
 	else
