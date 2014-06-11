@@ -21,6 +21,8 @@ private:
 	EvcTrafficModel model;
 	double saturationDensPerCap;
 	CapacityFlowsMap * myCache;
+	unsigned int cacheMiss;
+	unsigned int cacheHit;
 
 	double internalGetCongestionPercentage(double capacity, double flow) const;
 
@@ -32,5 +34,6 @@ public:
 	~TrafficModel(void);
 	double GetCongestionPercentage(double capacity, double flow);
 	double LeftCapacityOnEdge(double capacity, double reservedFlow, double originalEdgeCost) const;
+	double GetCacheHitPercentage() const { return 100.0 * cacheHit / (cacheHit + cacheMiss); }
 };
 

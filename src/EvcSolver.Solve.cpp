@@ -657,7 +657,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				if (!sourceNotFoundFlag)
 				{
 					sourceNotFoundFlag = true;
-					pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));							
+					pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));
 				}
 				continue;
 			}
@@ -1135,7 +1135,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg;
+	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg;
 #ifdef _FLOCK
 	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
@@ -1159,12 +1159,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0, mem));
+	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
 	pMessages->AddMessage(CComBSTR(performanceMsg));
 	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
 	pMessages->AddMessage(CComBSTR(CARMAExtractsMsg));
 	pMessages->AddMessage(CComBSTR(ExtraInfoMsg));
+	pMessages->AddMessage(CComBSTR(CacheHitMsg));
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(CComBSTR(simulationIncompleteEndingMsg));
 

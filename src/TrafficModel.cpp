@@ -6,6 +6,8 @@ TrafficModel::TrafficModel(EvcTrafficModel Model, double _criticalDensPerCap, do
 {
 	if (saturationDensPerCap <= CriticalDensPerCap) saturationDensPerCap += CriticalDensPerCap;
 	myCache = new DEBUG_NEW_PLACEMENT CapacityFlowsMap();
+	cacheHit = 0;
+	cacheMiss = 0;
 }
 
 TrafficModel::~TrafficModel(void)
@@ -39,6 +41,7 @@ double TrafficModel::GetCongestionPercentage(double capacity, double flow)
 			{
 				percentage = j->second;
 				found = true;
+				++cacheHit;
 			}
 		}
 		else
@@ -49,8 +52,10 @@ double TrafficModel::GetCongestionPercentage(double capacity, double flow)
 		{
 			percentage = internalGetCongestionPercentage(capacity, flow);
 			myCache->at(capacity)->insert(FlowCongestionMapPair(flow, percentage));
+			++cacheMiss;
 		}
 	}
+	else ++cacheHit;
 	return percentage;
 }
 

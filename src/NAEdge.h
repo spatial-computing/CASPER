@@ -286,4 +286,5 @@ public:
 	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
 	void Clear();	
 	void CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver);
+	double GetCacheHitPercentage() const { return myTrafficModel->GetCacheHitPercentage(); }
 };
