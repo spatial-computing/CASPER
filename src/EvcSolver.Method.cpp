@@ -19,7 +19,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing;
-	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, globalDeltaCost = 0.0;
+	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, globalDeltaCost = 0.0, addedCostAsPenalty = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	SafeZoneTableItr iterator;
 	long adjacentEdgeCount, i;
@@ -225,10 +225,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						else currentEdge->LastExteriorEdge = 0;
 						*/
 						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
+						addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, 0.0);
+						/// TODO what should we do with this addedCost?
+
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrease key.
 						{
 							neighbor = currentEdge->ToVertex;
-							if (neighbor->g > newCost)
+							if (neighbor->g > newCost) /// Why am I comparing only g values?
 							{
 								neighbor->SetBehindEdge(currentEdge);
 								neighbor->g = newCost;
@@ -872,7 +875,7 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 			if (edgePortion > 0.0)
 			{
 				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->getBehindEdge(), edgePortion));
-				BetterSafeZone->getBehindEdge()->AddReservation(population2Route, this->solverMethod);
+				BetterSafeZone->getBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
 			}
 		}
 		edgePortion = 1.0;
@@ -883,7 +886,7 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 			{
 				if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;	
 				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-				finalVertex->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
+				finalVertex->GetBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
 			}
 			finalVertex = finalVertex->Previous;
 		}
@@ -908,7 +911,7 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 			else if (edgePortion > 0.0)
 			{							
 				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-				finalVertex->GetBehindEdge()->AddReservation(population2Route, this->solverMethod);
+				finalVertex->GetBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
 			}
 		}
 		if (path->empty()) 

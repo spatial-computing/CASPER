@@ -21,30 +21,19 @@ public:
 
 // enum EdgeDirtyFlagEnum { EdgeFlagClean = 0x0, EdgeFlagMaybe = 0x1, EdgeFlagDirty = 0x2 };
 
-class EdgeReservations
+class EdgeReservations : std::vector<EvcPathPtr>
 {
 private:
 	float  ReservedPop;
 	float  Capacity;
 	bool   isDirty;
 	TrafficModel * myTrafficModel;
-	// EdgeDirtyFlagEnum  DirtyFlag;
-	// std::vector<EdgeReservation> * List;
 
 public:
 	EdgeReservations(float capacity, TrafficModel * trafficModel);
 	EdgeReservations(const EdgeReservations& cpy);
+	void AddReservation(double newFlow, EvcPathPtr path);
 	
-	void Clear()
-	{
-		//List->clear();
-	}
-	
-	~EdgeReservations(void)
-	{
-		Clear();
-		//delete List;
-	}
 	friend class NAEdge;
 };
 
@@ -63,14 +52,7 @@ class NAEdge
 {
 private:	
 	EdgeReservations * reservations;
-	/*
-	EvcTrafficModel trafficModel;
-	double modelRatio;
-	double expGamma;
-	*/
 	double CleanCost;
-	// mutable double cachedCost[2];
-	// mutable unsigned short calcSaved;
 	double GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const;
 
 public:
@@ -91,7 +73,7 @@ public:
 	double OriginalCapacity() const { return reservations->Capacity; }
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
-	void AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population, EvcSolverMethod method);
+	void AddReservation(EvcPath * evacuee, double fromCost, double toCost, double population, EvcSolverMethod method);
 	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
 	NAEdge(const NAEdge& cpy);
 
@@ -101,13 +83,14 @@ public:
 	// EdgeDirtyFlagEnum ClarifyEdgeFlag(double minPop2Route, EvcSolverMethod method);
 	// inline void SetEdgeFlag(EdgeDirtyFlagEnum flag) { reservations->DirtyFlag = flag; if (flag == EdgeFlagClean) CleanCost = -1.0; }
 	// inline EdgeDirtyFlagEnum GetEdgeFlag() const { return reservations->DirtyFlag; }
+
 	inline void SetDirty() { reservations->isDirty = true; }
 	inline bool IsDirty (double minPop2Route, EvcSolverMethod method);
 	inline void SetClean(double minPop2Route, EvcSolverMethod method);
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	void TreeNextEraseFirst(NAEdge * child);
-	// inline unsigned short GetCalcSaved() const { return calcSaved; }
+	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaFlow, double cutoffCost) const;
 };
 
 typedef NAEdge * NAEdgePtr;
@@ -221,7 +204,7 @@ public:
 // it makes sure that there exist only one copy of an edge in it that is connected to each INetworkEdge.
 // this will be helpful to avoid duplicate copies pointing to the same edge structure. So data attached
 // to edge will be always fresh and there will be no inconsistency. Care has to be taken not to overwrite
-// important edges with new ones. The second job is just a GC. since all edges are being newed here,
+// important edges with new ones. The second job is just a GC. since all edges are being new-ed here,
 // it can all be deleted at the end here as well.
 
 class NAEdgeCache
@@ -231,12 +214,6 @@ private:
 	NAEdgeTable		* cacheAgainst;
 	long			capacityAttribID;
 	long			costAttribID;
-	/*
-	float			saturationPerCap;
-	float			criticalDensPerCap;
-	float			initDelayCostPerPop;
-	EvcTrafficModel	trafficModel;
-	*/
 	bool			twoWayRoadsShareCap;
 	NAResTable		* resTableAlong;
 	NAResTable		* resTableAgainst;
@@ -250,13 +227,7 @@ public:
 		costAttribID = CostAttribID;
 		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
 		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
-		myTrafficModel = new DEBUG_NEW_PLACEMENT TrafficModel(model, CriticalDensPerCap, SaturationPerCap, InitDelayCostPerPop);
-		/*
-		initDelayCostPerPop = InitDelayCostPerPop;
-		saturationPerCap = SaturationPerCap;
-		trafficModel = TrafficModel;
-		criticalDensPerCap = CriticalDensPerCap;
-		*/		
+		myTrafficModel = new DEBUG_NEW_PLACEMENT TrafficModel(model, CriticalDensPerCap, SaturationPerCap, InitDelayCostPerPop);	
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 
 		resTableAlong = new DEBUG_NEW_PLACEMENT NAResTable();
@@ -267,7 +238,6 @@ public:
 	~NAEdgeCache(void) 
 	{
 		Clear();
-		// delete sideCache;
 		delete myTrafficModel;
 		delete cacheAlong; 
 		delete cacheAgainst;
@@ -275,7 +245,6 @@ public:
 		if (!twoWayRoadsShareCap) delete resTableAgainst;
 	}
 
-	//NAEdgePtr New(INetworkEdgePtr edge, bool replace = false);
 	NAEdgePtr New(INetworkEdgePtr edge, INetworkQueryPtr ipNetworkQuery = 0);
 
 	NAEdgeTableItr AlongBegin()   const { return cacheAlong->begin();   }

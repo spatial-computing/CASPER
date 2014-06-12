@@ -8,31 +8,24 @@
 
 EdgeReservations::EdgeReservations(float capacity, TrafficModel * trafficModel)
 {
-	//List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>();
 	ReservedPop = 0.0;
 	Capacity = capacity;
 	myTrafficModel = trafficModel;
-	/*
-	CriticalDens = criticalDensPerCap * capacity;
-	SaturationDensPerCap = saturationDensPerCap;
-	DirtyFlag = EdgeFlagDirty;
-	initDelayCostPerPop = InitDelayCostPerPop;
-	*/
 	isDirty = true;
 }
 
 EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 {
-	//List = new DEBUG_NEW_PLACEMENT std::vector<EdgeReservation>(*(cpy.List));
 	ReservedPop = cpy.ReservedPop;
 	Capacity = cpy.Capacity;
 	myTrafficModel = cpy.myTrafficModel;
-	/*
-	CriticalDens = cpy.CriticalDens;
-	SaturationDensPerCap = cpy.SaturationDensPerCap;
-	initDelayCostPerPop = cpy.initDelayCostPerPop;
-	*/
 	isDirty = cpy.isDirty;
+}
+
+void EdgeReservations::AddReservation(double newFlow, EvcPathPtr path)
+{
+	this->insert(this->end(), path);
+	ReservedPop += (float)newFlow;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -47,21 +40,13 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	EID = cpy.EID;
 	ToVertex = cpy.ToVertex;
 	//LastExteriorEdge = cpy.LastExteriorEdge;
-	/*
-	trafficModel = cpy.trafficModel;
-	modelRatio = cpy.modelRatio;
-	expGamma = cpy.expGamma;
-	*/
 	CleanCost = cpy.CleanCost;
-	// cachedCost[0] = cpy.cachedCost[0]; cachedCost[1] = cpy.cachedCost[1];
-	// calcSaved = cpy.calcSaved;
 	TreePrevious = cpy.TreePrevious;
 	TreeNext = cpy.TreeNext;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model)
 {
-	// calcSaved = 0;
 	TreePrevious = NULL;
 	CleanCost = -1.0;
 	ToVertex = 0;
@@ -69,7 +54,6 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, N
 	//LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
 	float capacity = 1.0;
-	// cachedCost[0] = FLT_MAX; cachedCost[1] = 0.0;
 	HRESULT hr = 0;
 	
 	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)))
@@ -163,6 +147,12 @@ double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDel
 	return OriginalCost / speedPercent;
 }
 
+double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaFlow, double cutoffCost) const
+{
+	/// TODO implement
+	return 0.0;
+}
+
 // this function has to cache the answer and it has to be consistent.
 bool NAEdge::IsDirty(double minPop2Route, EvcSolverMethod method)
 {
@@ -178,13 +168,11 @@ void NAEdge::SetClean(double minPop2Route, EvcSolverMethod method)
 
 // this function adds the reservation also determines if the new added population makes the edge dirty.
 // if this new reservation made the edge change from clean to dirty then the return is true otherwise returns false.
-void NAEdge::AddReservation(/* Evacuee * evacuee, double fromCost, double toCost, */ double population, EvcSolverMethod method)
+void NAEdge::AddReservation(EvcPath * path, double fromCost, double toCost, double population, EvcSolverMethod method)
 {	
 	// actual reservation code
-	// reservations->List->insert(reservations->List->end(), EdgeReservation(evacuee, fromCost, toCost));
-	float newPop = (float)population;
-	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0f) newPop = min(newPop, (float)(OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop));
-	reservations->ReservedPop += newPop;
+	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) population = min(population, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);	
+	reservations->AddReservation(population, path);
 
 	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
 	IsDirty(1.0, method);
@@ -201,8 +189,8 @@ void NAEdge::TreeNextEraseFirst(NAEdge * child)
 				j = i;
 				break;
 			}
-			_ASSERT(j < TreeNext.size());
-			if (j < TreeNext.size()) TreeNext.erase(TreeNext.begin() + j);
+		_ASSERT(j < TreeNext.size());
+		if (j < TreeNext.size()) TreeNext.erase(TreeNext.begin() + j);
 	}
 }
 
