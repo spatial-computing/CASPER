@@ -29,7 +29,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	speedLimit = 0.0;
 
 	// build the path iterator and upcoming vertices
-	if (FAILED(hr = myPath->front()->pline->get_FromPoint(&MyLocation)))
+	if (FAILED(hr = myPath->Front()->pline->get_FromPoint(&MyLocation)))
 	{
 		OutputDebugString(L"FlockingObject - get_FromPoint: failed to get start point.");
 	}
@@ -67,7 +67,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 
 	// finish line construction
 	IPointPtr point;
-	IPointCollectionPtr pcollect = myPath->back()->pline;
+	IPointCollectionPtr pcollect = myPath->Back()->pline;
 	long pointCount = 0;
 
 	// #pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] it's a good idea to throw a logic error after each of these FAILED statements.")
@@ -106,7 +106,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	bool possibleCollision = true;
 	IPointPtr p = 0;
 	double x2, y2, step = myVehicle->radius() * 4.0;
-	((IPointCollectionPtr)(myPath->front()->pline))->get_Point(1, &p);
+	((IPointCollectionPtr)(myPath->Front()->pline))->get_Point(1, &p);
 	p->QueryCoords(&x2, &y2);
 
 	OpenSteer::Vec3 loc(x1, y1, 0.0);
@@ -150,14 +150,14 @@ HRESULT FlockingObject::loadNewEdge(void)
 
 		if (initPathIterator)
 		{
-			pathSegIt = myPath->begin();
+			pathSegIt = myPath->Begin();
 			initPathIterator = false;
 			MyStatus = FLOCK_OBJ_STAT_MOVE;
 		}
 		else pathSegIt++;
 
 		// check if any edge is left
-		if (pathSegIt == myPath->end())
+		if (pathSegIt == myPath->End())
 		{
 			MyStatus = FLOCK_OBJ_STAT_END;
 			return S_OK;
@@ -425,7 +425,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 				pathLen = PathLength(*pathItr);
 				maxPathLen = max(maxPathLen, pathLen);
 				minPathLen = min(minPathLen, pathLen);
-				size = (int)(ceil((*pathItr)->RoutedPop));
+				size = (int)(ceil((*pathItr)->GetRoutedPop()));
 				for (i = 0; i < size; i++)
 				{
 					objects->push_back(new DEBUG_NEW_PLACEMENT FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name, ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects, pathLen));
@@ -549,7 +549,7 @@ void FlockingEnviroment::GetResult(std::vector<FlockingLocationPtr> ** History, 
 double FlockingEnviroment::PathLength(EvcPathPtr path)
 {
 	double len = 0.0, temp = 0.0;
-	for (std::list<PathSegmentPtr>::iterator pathItr = path->begin(); pathItr != path->end(); pathItr++)
+	for (EvcPath::const_iterator pathItr = path->Begin(); pathItr != path->End(); pathItr++)
 	{
 		(*pathItr)->pline->get_Length(&temp);
 		len += temp;

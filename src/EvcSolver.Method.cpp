@@ -874,8 +874,8 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 
 			if (edgePortion > 0.0)
 			{
-				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->getBehindEdge(), edgePortion));
-				BetterSafeZone->getBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
+				path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->getBehindEdge(), edgePortion));
+				// BetterSafeZone->getBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
 			}
 		}
 		edgePortion = 1.0;
@@ -885,8 +885,8 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 			if (finalVertex->GetBehindEdge())
 			{
 				if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;	
-				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-				finalVertex->GetBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
+				path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
+				// finalVertex->GetBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
 			}
 			finalVertex = finalVertex->Previous;
 		}
@@ -901,20 +901,20 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 			else fromPosition = toPosition + edgePortion;
 
 			// path can be empty if the source and destination are the same vertex
-			if (!path->empty() && path->front()->SourceOID == sourceOID && path->front()->SourceID == sourceID)
+			if (!path->Empty() && path->Front()->SourceOID == sourceOID && path->Front()->SourceID == sourceID)
 			{				
-				PathSegmentPtr lastAdded = path->front();
+				PathSegmentPtr lastAdded = path->Front();
 				lastAdded->fromPosition = fromPosition;
 				lastAdded->EdgePortion = abs(lastAdded->toPosition - lastAdded->fromPosition); // 2.0 - (lastAdded->EdgePortion + edgePortion);
 				_ASSERT(lastAdded->EdgePortion > 0.0);
 			}
 			else if (edgePortion > 0.0)
 			{							
-				path->push_front(new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-				finalVertex->GetBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
+				path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
+				// finalVertex->GetBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
 			}
 		}
-		if (path->empty()) 
+		if (path->Empty()) 
 		{
 			delete path;
 			path = NULL;
@@ -922,7 +922,7 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 		else
 		{
 			currentEvacuee->paths->push_front(path);
-			BetterSafeZone->Reserve(path->RoutedPop);
+			BetterSafeZone->Reserve(path->GetRoutedPop());
 		}
 	}
 	else

@@ -44,27 +44,43 @@ public:
 typedef PathSegment * PathSegmentPtr;
 class Evacuee;
 
-class EvcPath : public std::list<PathSegmentPtr>
+class EvcPath : private std::list<PathSegmentPtr>
 {
-public:
-	double RoutedPop;
-	double EvacuationCost;
-	double OrginalCost;
-	int    Order;
+private:
+	double  RoutedPop;
+	double  EvacuationCost;
+	double  OrginalCost;
+	int     Order;
 	Evacuee * myEvc;
 
-	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
+public:
+	typedef std::list<PathSegmentPtr>::const_iterator const_iterator;
+
+	const_iterator Begin() const { return this->begin(); }
+	const_iterator End()   const { return this->end();   }
+	inline double GetRoutedPop() const { return RoutedPop; }
+
+	EvcPath(double routedPop, int order, Evacuee * evc) // : std::list<PathSegmentPtr>()
 	{
 		RoutedPop = routedPop; 
-		EvacuationCost = -1.0;
-		OrginalCost = -1.0;
+		EvacuationCost = 0.0;
+		OrginalCost = 0.0;
 		Order = order;
 		myEvc = evc;
 	}
 
+	void AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment);
+	HRESULT AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, 
+		IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
+		long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex, double & predictedCost);
+
+	bool           Empty() { return std::list<PathSegmentPtr>::empty(); }
+	PathSegmentPtr Front() { return std::list<PathSegmentPtr>::front(); }
+	PathSegmentPtr Back()  { return std::list<PathSegmentPtr>::back();  }
+
 	~EvcPath(void)
 	{
-		for(iterator it = begin(); it != end(); it++) delete (*it);
+		for(const_iterator it = begin(); it != end(); it++) delete (*it);
 		clear();
 	}
 
