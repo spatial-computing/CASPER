@@ -310,9 +310,10 @@ double HeapNodeTable::GetMaxValue(void) const
 {
 	double ret = 0.0;
 	stdext::hash_map<long, HeapNodePtr>::iterator i;
+	/// TODO why am i searching the whole table every time!?
 
-	for(i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->data->ToVertex->g > ret) ret = i->second->data->ToVertex->g;
-	for(i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->data->ToVertex->g > ret) ret = i->second->data->ToVertex->g;
+	for(i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->data->ToVertex->GVal > ret) ret = i->second->data->ToVertex->GVal;
+	for(i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->data->ToVertex->GVal > ret) ret = i->second->data->ToVertex->GVal;
 
 	return ret;
 }

@@ -75,8 +75,8 @@ public:
 
 #define AddCostToPenalty(c, p) (c) + ((p) * 0.1)
 
-inline double GetHeapKeyHur   (const NAEdge * edge);
-inline double GetHeapKeyNonHur(const NAEdge * edge);
+double GetHeapKeyHur   (const NAEdge * edge);
+double GetHeapKeyNonHur(const NAEdge * edge);
 
 typedef NAVertex * NAVertexPtr;
 typedef stdext::hash_map<long, NAVertexPtr> NAVertexTable;

@@ -433,7 +433,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->g = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
+							myVertex->GVal = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);
 						}
 					}
@@ -451,7 +451,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->g = posAlong * myVertex->GetBehindEdge()->OriginalCost;
+							myVertex->GVal = posAlong * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);							
 						}
 					}

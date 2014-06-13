@@ -203,13 +203,13 @@ SafeZone::SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double p
 	else if (cap.vt == VT_BSTR) swscanf_s(cap.bstrVal, L"%lf", &capacity);
 }
 
-double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity)
+double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity, double * globalDeltaCost)
 {
 	double cost = 0.0;
 	double totalPop = population2Route + reservedPop;
 	if (capacity == 0.0) return FLT_MAX;
 	if (totalPop > capacity && capacity > 0.0) cost += costPerDensity * ((totalPop / capacity) - 1.0);
-	if (behindEdge) cost += behindEdge->GetCost(population2Route, solverMethod) * positionAlong;
+	if (behindEdge) cost += behindEdge->GetCost(population2Route, solverMethod, globalDeltaCost) * positionAlong;
 	return cost;
 }
 
