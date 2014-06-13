@@ -60,7 +60,7 @@ public:
 	const_iterator End()   const { return this->end();   }
 	inline double GetRoutedPop() const { return RoutedPop; }
 
-	EvcPath(double routedPop, int order, Evacuee * evc) // : std::list<PathSegmentPtr>()
+	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
 	{
 		RoutedPop = routedPop; 
 		EvacuationCost = 0.0;

@@ -9,6 +9,7 @@
 NAVertex::NAVertex(const NAVertex& cpy)
 {
 	g = cpy.g;
+	globalPenaltyCost = cpy.globalPenaltyCost;
 	h = cpy.h;
 	Junction = cpy.Junction;
 	BehindEdge = cpy.BehindEdge;
@@ -20,6 +21,7 @@ NAVertex::NAVertex(const NAVertex& cpy)
 void NAVertex::Clone(NAVertex * cpy)
 {
 	g = cpy->g;
+	globalPenaltyCost = cpy->globalPenaltyCost;
 	h = cpy->h;
 	Junction = cpy->Junction;
 	BehindEdge = cpy->BehindEdge;
@@ -34,7 +36,8 @@ NAVertex::NAVertex(void)
 	Junction = 0;
 	BehindEdge = 0;
 	Previous = 0;
-	g = 0.0f;
+	g = 0.0;
+	globalPenaltyCost = 0.0;
 	h = NULL;
 	isShadowCopy = true;
 }
@@ -43,7 +46,8 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 {
 	Previous = 0;
 	isShadowCopy = false;
-	g = 0.0f;
+	g = 0.0;
+	globalPenaltyCost = 0.0;
 	h = new DEBUG_NEW_PLACEMENT std::vector<HValue>();
 	ResetHValues();
 	BehindEdge = behindEdge;
@@ -98,18 +102,14 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 	return unnesecery;	
 }
 
-double GetHeapKeyNonHur(const NAEdge * edge) { return edge->ToVertex->g; }
-double GetHeapKeyHur   (const NAEdge * edge)
-{
-	if (edge->ToVertex->h->empty()) return edge->ToVertex->g;
-	else return edge->ToVertex->g + edge->ToVertex->h->front().Value;
-}
+inline double GetHeapKeyNonHur(const NAEdge * edge) { return AddCostToPenalty(edge->ToVertex->GVal, edge->ToVertex->GlobalPenaltyCost) ; }
+inline double GetHeapKeyHur   (const NAEdge * edge) { return AddCostToPenalty(edge->ToVertex->GVal, edge->ToVertex->GlobalPenaltyCost) + edge->ToVertex->GetMinHOrZero(); }
 
 // return true if update was unnecessary
 bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop)
 {
 	NAVertexPtr a = Get(n->EID);
-	return a->UpdateHeuristic(edgeid, n->g, carmaLoop);
+	return a->UpdateHeuristic(edgeid, n->GVal, carmaLoop);
 }
 
 void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, unsigned short carmaLoop)

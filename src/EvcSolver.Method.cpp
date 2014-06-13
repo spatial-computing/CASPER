@@ -224,17 +224,20 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (turnType == 1) currentEdge->LastExteriorEdge = lastExteriorEdge;
 						else currentEdge->LastExteriorEdge = 0;
 						*/
-						newCost = myVertex->g + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
-						addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, 0.0);
-						/// TODO what should we do with this addedCost?
+						newCost = myVertex->GVal + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
 
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrease key.
 						{
 							neighbor = currentEdge->ToVertex;
-							if (neighbor->g > newCost) /// Why am I comparing only g values?
+							addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, newCost + neighbor->GetMinHOrZero());
+							/// TODO how do I compare neighbor node now!?
+							/// TODO what should we do with this addedCost?
+							/// Why am I comparing only g values? maybe the h values are always the same?
+							if (AddCostToPenalty(neighbor->GVal, neighbor->GlobalPenaltyCost) > AddCostToPenalty(newCost, addedCostAsPenalty + myVertex->GlobalPenaltyCost))
 							{
 								neighbor->SetBehindEdge(currentEdge);
-								neighbor->g = newCost;
+								neighbor->GVal = newCost;
+								neighbor->GlobalPenaltyCost = myVertex->GlobalPenaltyCost + addedCostAsPenalty;
 								neighbor->Previous = myVertex;
 								if (FAILED(hr = heap->DecreaseKey(currentEdge))) goto END_OF_FUNC;				
 							}
@@ -244,7 +247,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							if (FAILED(hr = ipCurrentEdge->QueryJunctions(0, ipCurrentJunction))) goto END_OF_FUNC;
 							neighbor = vcache->New(ipCurrentJunction, ipNetworkQuery);
 							neighbor->SetBehindEdge(currentEdge);
-							neighbor->g = newCost;
+							addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, newCost + neighbor->GetMinHOrZero());							
+							neighbor->GlobalPenaltyCost = myVertex->GlobalPenaltyCost + addedCostAsPenalty;
+							neighbor->GVal = newCost;
 							neighbor->Previous = myVertex;
 
 							// Termination Condition: If the new vertex does have a chance to beat the already discovered safe node then add it to the heap.

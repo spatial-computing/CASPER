@@ -41,20 +41,24 @@ private:
 	bool     isShadowCopy;
 
 public:
-	double g;
+	double GVal;
+	double GlobalPenaltyCost;
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
 	size_t HCount() const { return h->size(); }
 
-	double GetH(long eid)
+	double GetH(long eid) const
 	{
 		for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++) if (i->EdgeID == eid) return i->Value;
 		return FLT_MAX;
 	}
 
-	friend double GetHeapKeyHur   (const NAEdge * edge);
-	friend double GetHeapKeyNonHur(const NAEdge * edge);
+	double GetMinHOrZero() const
+	{		
+		if (h->empty()) return 0.0;
+		else return h->front().Value;
+	}
 
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
@@ -68,6 +72,11 @@ public:
 	NAVertex   (INetworkJunctionPtr junction, NAEdge * behindEdge);
 	~NAVertex  (void) { if (!isShadowCopy) delete h; }
 };
+
+#define AddCostToPenalty(c, p) (c) + ((p) * 0.1)
+
+inline double GetHeapKeyHur   (const NAEdge * edge);
+inline double GetHeapKeyNonHur(const NAEdge * edge);
 
 typedef NAVertex * NAVertexPtr;
 typedef stdext::hash_map<long, NAVertexPtr> NAVertexTable;
