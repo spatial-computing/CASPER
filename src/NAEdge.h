@@ -90,7 +90,7 @@ public:
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	void TreeNextEraseFirst(NAEdge * child);
-	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaFlow, double cutoffCost) const;
+	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double cutoffCost) const;
 };
 
 typedef NAEdge * NAEdgePtr;

@@ -147,10 +147,17 @@ double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDel
 	return OriginalCost / speedPercent;
 }
 
-double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaFlow, double cutoffCost) const
+double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double cutoffCost) const
 {
-	/// TODO implement
-	return 0.0;
+	double AddedGlobalCost = 0.0;
+
+	for(std::vector<EvcPathPtr>::const_iterator pi = reservations->begin(); pi != reservations->end(); ++pi)
+	{
+		// if ((*pi)->GetEvacuationCost() <= cutoffCost) continue;
+		AddedGlobalCost = max(AddedGlobalCost, (*pi)->GetEvacuationCost() + deltaCostOfNewFlow);
+	}
+
+	return min(AddedGlobalCost, deltaCostOfNewFlow);
 }
 
 // this function has to cache the answer and it has to be consistent.

@@ -56,9 +56,10 @@ private:
 public:
 	typedef std::list<PathSegmentPtr>::const_iterator const_iterator;
 
-	const_iterator Begin() const { return this->begin(); }
-	const_iterator End()   const { return this->end();   }
-	inline double GetRoutedPop() const { return RoutedPop; }
+	const_iterator Begin()            const { return this->begin();  }
+	const_iterator End()              const { return this->end();    }
+	inline double GetRoutedPop()      const { return RoutedPop;      }
+	inline double GetEvacuationCost() const { return EvacuationCost; }
 
 	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
 	{
