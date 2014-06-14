@@ -73,7 +73,7 @@ public:
 	~NAVertex  (void) { if (!isShadowCopy) delete h; }
 };
 
-#define AddCostToPenalty(c, p) (c) + ((p) * 0.0)
+#define AddCostToPenalty(c, p) (c) + ((p) * 1.0)
 
 double GetHeapKeyHur   (const NAEdge * edge);
 double GetHeapKeyNonHur(const NAEdge * edge);

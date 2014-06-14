@@ -229,9 +229,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						{
 							neighbor = currentEdge->ToVertex;
 							addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, newCost + neighbor->GetMinHOrZero());
-							/// TODO how do I compare neighbor node now!?
-							/// TODO what should we do with this addedCost?
-							/// Why am I comparing only g values? maybe the h values are always the same?
 							if (AddCostToPenalty(neighbor->GVal, neighbor->GlobalPenaltyCost) > AddCostToPenalty(newCost, addedCostAsPenalty + myVertex->GlobalPenaltyCost))
 							{
 								neighbor->SetBehindEdge(currentEdge);
