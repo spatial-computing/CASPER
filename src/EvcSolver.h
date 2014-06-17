@@ -110,6 +110,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT CARMAPerformanceRatio([in] BSTR value);
 	[propget, helpstring("Gets the ratio of CARMA algorithm")]
 		HRESULT CARMAPerformanceRatio([out, retval] BSTR * value);
+	[propput, helpstring("Sets the ratio of selfish routing")]
+		HRESULT SelfishRatio([in] BSTR value);
+	[propget, helpstring("Gets the ratio of selfish routing")]
+		HRESULT SelfishRatio([out, retval] BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
@@ -145,7 +149,7 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(3),
+		  c_version(4),
 		  c_featureRetrievalInterval(500)
 	  {
 		  // set program start for memory leak detection (DEBUG Mode)
@@ -216,6 +220,8 @@ public:
 	STDMETHOD(get_FlockingProfile)(FLOCK_PROFILE * value);
 	STDMETHOD(put_CARMAPerformanceRatio)(BSTR   value);
 	STDMETHOD(get_CARMAPerformanceRatio)(BSTR * value);
+	STDMETHOD(put_SelfishRatio)(BSTR   value);
+	STDMETHOD(get_SelfishRatio)(BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	STDMETHOD(put_CostAttribute)(unsigned __int3264 index);
@@ -331,6 +337,7 @@ private:
 	float					initDelayCostPerPop;
 	FLOCK_PROFILE			flockingProfile;
 	float                   CARMAPerformanceRatio;
+	float                   selfishRatio;
 	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;	
 	HANDLE					hProcessPeakMemoryUsage;
@@ -362,7 +369,8 @@ _COM_SMARTPTR_TYPEDEF(IEvcSolver, __uuidof(IEvcSolver));
 // incomplete type def for the heap... I'm really out of options
 class FibonacciHeap;
 
-HRESULT PrepareVerticesForHeap(NAVertexPtr, NAVertexCache *, NAEdgeCache *, NAEdgeMap *, std::vector<NAEdgePtr> *, double, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, EvcSolverMethod);
+HRESULT PrepareVerticesForHeap(NAVertexPtr, NAVertexCache *, NAEdgeCache *, NAEdgeMap *, std::vector<NAEdgePtr> *, double, INetworkForwardStarExPtr,
+							   INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, EvcSolverMethod, double, double);
 HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod

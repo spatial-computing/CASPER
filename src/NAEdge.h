@@ -90,8 +90,11 @@ public:
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	void TreeNextEraseFirst(NAEdge * child);
-	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double cutoffCost) const;
+	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const;
 };
+
+double GetHeapKeyHur(const NAEdge * edge);
+double GetHeapKeyNonHur(const NAEdge * edge);
 
 typedef NAEdge * NAEdgePtr;
 typedef public stdext::hash_map<long, NAEdgePtr> NAEdgeTable;
@@ -206,7 +209,6 @@ public:
 // to edge will be always fresh and there will be no inconsistency. Care has to be taken not to overwrite
 // important edges with new ones. The second job is just a GC. since all edges are being new-ed here,
 // it can all be deleted at the end here as well.
-
 class NAEdgeCache
 {
 private:

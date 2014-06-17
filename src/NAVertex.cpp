@@ -102,10 +102,6 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 	return unnesecery;	
 }
 
-// double GetHeapKeyNonHur(const NAEdge * edge) { return AddCostToPenalty(edge->ToVertex->GVal, edge->ToVertex->GlobalPenaltyCost); }
-double GetHeapKeyNonHur(const NAEdge * edge) { return edge->ToVertex->GVal; }
-double GetHeapKeyHur   (const NAEdge * edge) { return AddCostToPenalty(edge->ToVertex->GVal, edge->ToVertex->GlobalPenaltyCost) + edge->ToVertex->GetMinHOrZero(); }
-
 // return true if update was unnecessary
 bool NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop)
 {

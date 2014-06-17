@@ -19,7 +19,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing;
-	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, globalDeltaCost = 0.0, addedCostAsPenalty = 0.0;
+	double fromPosition, toPosition, populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0,
+		globalDeltaCost = 0.0, addedCostAsPenalty = 0.0, MaxEvacueeCostSoFar = 0.0;
 	std::vector<NAVertexPtr>::iterator vit;
 	SafeZoneTableItr iterator;
 	long adjacentEdgeCount, i;
@@ -97,7 +98,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 		for(seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 		{
-			currentEvacuee = *seit;	
+			currentEvacuee = *seit;
 
 			// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
 			if (pTrackCancel)
@@ -122,7 +123,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (currentEvacuee->vertices->size() == 0) continue;
 
 			// Step the progress bar before continuing to the next Evacuee point
-			if (ipStepProgressor) ipStepProgressor->Step();	
+			if (ipStepProgressor) ipStepProgressor->Step();
+			MaxEvacueeCostSoFar = max (MaxEvacueeCostSoFar, currentEvacuee->PredictedCost);
 			countEvacueesInOneBucket++;
 			countCASPERLoops++;
 			populationLeft = currentEvacuee->Population;
@@ -146,7 +148,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				// populate the heap with vertices associated with the current evacuee
 				readyEdges->clear();
 				for(std::vector<NAVertexPtr>::iterator h = currentEvacuee->vertices->begin(); h != currentEvacuee->vertices->end(); h++)
-					if (FAILED(hr = PrepareVerticesForHeap(*h, vcache, ecache, closedList, readyEdges, population2Route, ipBackwardStar, ipBackwardAdj, ipNetworkQuery, this->solverMethod))) goto END_OF_FUNC;
+					if (FAILED(hr = PrepareVerticesForHeap(*h, vcache, ecache, closedList, readyEdges, population2Route, ipBackwardStar, ipBackwardAdj, ipNetworkQuery, this->solverMethod, this->selfishRatio, MaxEvacueeCostSoFar))) goto END_OF_FUNC;
 				for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
 				TimeToBeat = FLT_MAX;
@@ -182,10 +184,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (!restricted)
 						{
 							costLeft = iterator->second->SafeZoneCost(population2Route, this->solverMethod, this->costPerDensity, &globalDeltaCost);
-							if (TimeToBeat > AddCostToPenalty(costLeft + myVertex->GVal, myVertex->GlobalPenaltyCost + globalDeltaCost))
+							if (TimeToBeat > costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost)
 							{
 								BetterSafeZone = iterator->second;
-								TimeToBeat = AddCostToPenalty(costLeft + myVertex->GVal, myVertex->GlobalPenaltyCost + globalDeltaCost);
+								TimeToBeat = costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost;
 								finalVertex = myVertex;
 							}
 						}
@@ -228,8 +230,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (heap->IsVisited(currentEdge)) // edge has been visited before. update edge and decrease key.
 						{
 							neighbor = currentEdge->ToVertex;
-							addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, newCost + neighbor->GetMinHOrZero());
-							if (AddCostToPenalty(neighbor->GVal, neighbor->GlobalPenaltyCost) > AddCostToPenalty(newCost, addedCostAsPenalty + myVertex->GlobalPenaltyCost))
+							addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, MaxEvacueeCostSoFar, newCost + neighbor->GetMinHOrZero(), this->selfishRatio);
+							if (neighbor->GVal + neighbor->GlobalPenaltyCost > newCost + addedCostAsPenalty + myVertex->GlobalPenaltyCost)
 							{
 								neighbor->SetBehindEdge(currentEdge);
 								neighbor->GVal = newCost;
@@ -243,7 +245,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							if (FAILED(hr = ipCurrentEdge->QueryJunctions(0, ipCurrentJunction))) goto END_OF_FUNC;
 							neighbor = vcache->New(ipCurrentJunction, ipNetworkQuery);
 							neighbor->SetBehindEdge(currentEdge);
-							addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, newCost + neighbor->GetMinHOrZero());							
+							addedCostAsPenalty = currentEdge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaCost, MaxEvacueeCostSoFar, newCost + neighbor->GetMinHOrZero(), this->selfishRatio);							
 							neighbor->GlobalPenaltyCost = myVertex->GlobalPenaltyCost + addedCostAsPenalty;
 							neighbor->GVal = newCost;
 							neighbor->Previous = myVertex;
@@ -259,6 +261,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 				// generate path for this evacuee if any was found
 				if (FAILED(hr = GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))) goto END_OF_FUNC;
+				MaxEvacueeCostSoFar = max(MaxEvacueeCostSoFar, currentEvacuee->PredictedCost);
 
 #ifdef DEBUG
 				std::wostringstream os_;
@@ -395,7 +398,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 		// prepare and insert safe zone vertices into the heap
 		for (SafeZoneTableItr sz = safeZoneList->begin(); sz != safeZoneList->end(); sz++)
-			if (FAILED(hr = PrepareVerticesForHeap(sz->second->Vertex, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, ipForwardStar, ipForwardAdj, ipNetworkQuery, solverMethod))) goto END_OF_FUNC;	
+			if (FAILED(hr = PrepareVerticesForHeap(sz->second->Vertex, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, ipForwardStar, ipForwardAdj, ipNetworkQuery, solverMethod, 0.0, 0.0))) goto END_OF_FUNC;	
 		for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
 		// Now insert leaf edges in heap like the destination edges	
@@ -777,8 +780,8 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	return hr;
 }
 
-HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop,
-							   INetworkForwardStarExPtr ipStar, INetworkForwardStarAdjacenciesPtr ipStarAdj, INetworkQueryPtr ipNetworkQuery, EvcSolverMethod solverMethod)
+HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop, INetworkForwardStarExPtr ipStar,
+							   INetworkForwardStarAdjacenciesPtr ipStarAdj, INetworkQueryPtr ipNetworkQuery, EvcSolverMethod solverMethod, double selfishRatio, double MaxEvacueeCostSoFar)
 {
 	HRESULT hr = S_OK;
 	NAVertexPtr temp;
@@ -805,7 +808,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 			if (!closedList->Exist(edge))
 			{
 				temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) / edge->OriginalCost;
-				temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, temp->GVal + temp->GetMinHOrZero());
+				temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
 				readyEdges->push_back(edge);
 			}
 		}
@@ -825,7 +828,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 				temp->Previous = 0;
 				temp->SetBehindEdge(edge);
 				temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) / edge->OriginalCost;
-				temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, temp->GVal + temp->GetMinHOrZero());
+				temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
 				readyEdges->push_back(edge);
 			}
 		}
@@ -926,6 +929,7 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 		else
 		{
 			currentEvacuee->paths->push_front(path);
+			currentEvacuee->PredictedCost = path->GetEvacuationCost();
 			BetterSafeZone->Reserve(path->GetRoutedPop());
 		}
 	}

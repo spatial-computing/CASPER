@@ -147,17 +147,19 @@ double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDel
 	return OriginalCost / speedPercent;
 }
 
-double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double cutoffCost) const
+double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const
 {
 	double AddedGlobalCost = 0.0;
+	double cutoffCost = max(longestPathSoFar, currentPathSoFar);
 
-	if (deltaCostOfNewFlow > 0.0)
+	if (deltaCostOfNewFlow > 0.0 && selfishRatio > 0.0)
 		for(std::vector<EvcPathPtr>::const_iterator pi = reservations->begin(); pi != reservations->end(); ++pi)
 		{
 			AddedGlobalCost = max(AddedGlobalCost, (*pi)->GetEvacuationCost() + deltaCostOfNewFlow - cutoffCost);
 		}
+	else return 0.0;
 
-	return min(AddedGlobalCost, deltaCostOfNewFlow);
+	return selfishRatio * min(AddedGlobalCost, deltaCostOfNewFlow);
 }
 
 // this function has to cache the answer and it has to be consistent.
@@ -200,6 +202,10 @@ void NAEdge::TreeNextEraseFirst(NAEdge * child)
 		if (j < TreeNext.size()) TreeNext.erase(TreeNext.begin() + j);
 	}
 }
+
+double GetHeapKeyHur(const NAEdge * edge) { return edge->ToVertex->GVal + edge->ToVertex->GlobalPenaltyCost + edge->ToVertex->GetMinHOrZero(); }
+double GetHeapKeyNonHur(const NAEdge * edge) { return edge->ToVertex->GVal; }
+// double NAEdgeCache::GetHeapKeyNonHur(const NAEdge * edge) { return AddCostToPenalty(edge->ToVertex->GVal, edge->ToVertex->GlobalPenaltyCost); }
 
 /////////////////////////////////////////////////////////////
 // NAEdgeCache
