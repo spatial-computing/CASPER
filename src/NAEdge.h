@@ -64,6 +64,8 @@ public:
 	INetworkEdgePtr NetEdge;
 	// INetworkEdgePtr LastExteriorEdge;	
 	long EID;
+	std::vector<NAEdge *> * AdjacentForward;
+	std::vector<NAEdge *> * AdjacentBackward;
 
 	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = NULL) const;
 	double GetCurrentCost(EvcSolverMethod method = CASPERSolver) const;
@@ -212,18 +214,25 @@ public:
 class NAEdgeCache
 {
 private:
-	NAEdgeTable		* cacheAlong;
-	NAEdgeTable		* cacheAgainst;
 	long			capacityAttribID;
 	long			costAttribID;
 	bool			twoWayRoadsShareCap;
+	NAEdgeTable		* cacheAlong;
+	NAEdgeTable		* cacheAgainst;
 	NAResTable		* resTableAlong;
 	NAResTable		* resTableAgainst;
 	TrafficModel    * myTrafficModel;
+	INetworkEdgePtr ipCurrentEdge;
+	INetworkQueryPtr                  ipNetworkQuery;
+	INetworkForwardStarExPtr          ipForwardStar;
+	INetworkForwardStarExPtr          ipBackwardStar;
+	INetworkForwardStarAdjacenciesPtr ipForwardAdjacencies;
+	INetworkForwardStarAdjacenciesPtr ipBackwardAdjacencies;
 
 public:
 
-	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop, EvcTrafficModel model)
+	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop,
+		EvcTrafficModel model, INetworkForwardStarExPtr _ipForwardStar, INetworkForwardStarExPtr _ipBackwardStar, INetworkQueryPtr _ipNetworkQuery, HRESULT & hr)
 	{
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
@@ -235,6 +244,16 @@ public:
 		resTableAlong = new DEBUG_NEW_PLACEMENT NAResTable();
 		if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
 		else resTableAgainst = new DEBUG_NEW_PLACEMENT NAResTable();
+
+		// network variables init		
+		INetworkElementPtr ipEdgeElement;
+		ipNetworkQuery = _ipNetworkQuery;
+		ipForwardStar = _ipForwardStar;
+		ipBackwardStar = _ipBackwardStar;
+		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipForwardAdjacencies))) return;
+		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipBackwardAdjacencies))) return; 
+		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return;
+		ipCurrentEdge = ipEdgeElement;
 	}
 	
 	~NAEdgeCache(void) 
@@ -247,7 +266,7 @@ public:
 		if (!twoWayRoadsShareCap) delete resTableAgainst;
 	}
 
-	NAEdgePtr New(INetworkEdgePtr edge, INetworkQueryPtr ipNetworkQuery = 0);
+	NAEdgePtr New(INetworkEdgePtr edge, bool reuseEdgeElement);
 
 	NAEdgeTableItr AlongBegin()   const { return cacheAlong->begin();   }
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }
@@ -258,4 +277,6 @@ public:
 	void Clear();	
 	void CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver);
 	double GetCacheHitPercentage() const { return myTrafficModel->GetCacheHitPercentage(); }
+	HRESULT QueryAdjacenciesForward(NAVertexPtr ToVertex, NAEdgePtr Edge);
+	HRESULT QueryAdjacenciesBackward(NAVertexPtr ToVertex, NAEdgePtr Edge);
 };

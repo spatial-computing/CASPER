@@ -216,7 +216,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (isRestricted) continue;
 						*/
 						// if edge has already been discovered then no need to heap it
-						currentEdge = ecache->New(ipCurrentEdge, ipNetworkQuery);
+						currentEdge = ecache->New(ipCurrentEdge, false);
 						if (closedList->Exist(currentEdge)) continue;
 
 						// multi-part turn restriction flags
@@ -490,7 +490,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				if (isRestricted) continue;
 				*/
 				// if node has already been discovered then no need to heap it
-				currentEdge = ecache->New(ipCurrentEdge, ipNetworkQuery);
+				currentEdge = ecache->New(ipCurrentEdge, false);
 				if (closedList->Exist(currentEdge, NAEdgeMap_OLDGEN)) continue;
 				
 				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, this->solverMethod);
@@ -744,7 +744,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 			// check restriction for the recently discovered edge.
 			// if (FAILED(hr = ipForwardStar->get_IsRestricted(tempNetEdge, &isRestricted))) return hr;
 			// if (isRestricted) continue;
-			tempEdge = ecache->New(tempNetEdge, ipNetworkQuery);
+			tempEdge = ecache->New(tempNetEdge, false);
 			if (!closedList->Exist(tempEdge, NAEdgeMap_OLDGEN)) continue; // it has to be present in closed list from previous CARMA loop
 			if (tempEdge->Direction == prevEdge->Direction && tempEdge->EID == prevEdge->EID) continue; // it cannot be the same parent edge
 
@@ -821,7 +821,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 				if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) return hr;
 				ipCurrentEdge = ipElement;
 				if (FAILED(hr = ipStarAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-				edge = ecache->New(ipCurrentEdge);
+				edge = ecache->New(ipCurrentEdge, true);
 				if (closedList->Exist(edge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
 				temp = vcache->New(point->Junction);
 				temp->Previous = 0;

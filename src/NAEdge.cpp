@@ -43,6 +43,8 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	CleanCost = cpy.CleanCost;
 	TreePrevious = cpy.TreePrevious;
 	TreeNext = cpy.TreeNext;
+	AdjacentForward = cpy.AdjacentForward;
+	AdjacentBackward = cpy.AdjacentBackward;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model)
@@ -55,6 +57,8 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, N
 	VARIANT vcost, vcap;
 	float capacity = 1.0;
 	HRESULT hr = 0;
+	AdjacentForward = NULL;
+	AdjacentBackward = NULL;
 	
 	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)))
 	{
@@ -211,7 +215,7 @@ double GetHeapKeyNonHur(const NAEdge * edge) { return edge->ToVertex->GVal; }
 // NAEdgeCache
 
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
-NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, INetworkQueryPtr ipNetworkQuery)
+NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 {
 	NAEdgePtr n = 0;
 	long EID;
@@ -239,7 +243,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, INetworkQueryPtr ipNetworkQuery
 
 	if (it == cache->end())
 	{
-		if (ipNetworkQuery)
+		if (!reuseEdgeElement)
 		{
 			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return 0;
 			edgeClone = ipEdgeElement;
@@ -267,8 +271,20 @@ void NAEdgeCache::CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod s
 
 void NAEdgeCache::Clear()
 {
-	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) delete (*cit).second;
-	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) delete (*cit).second;
+	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++)
+	{
+		NAEdgePtr e = (*cit).second;
+		if (e->AdjacentForward) delete e->AdjacentForward;
+		if (e->AdjacentBackward) delete e->AdjacentBackward;
+		delete e;
+	}
+	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++)
+	{
+		NAEdgePtr e = (*cit).second;
+		if (e->AdjacentForward) delete e->AdjacentForward;
+		if (e->AdjacentBackward) delete e->AdjacentBackward;
+		delete e;
+	}
 	for(NAResTableItr ires = resTableAlong->begin(); ires != resTableAlong->end(); ires++) delete (*ires).second;
 
 	cacheAlong->clear();
@@ -289,6 +305,50 @@ NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
 	NAEdgeTableItr i = cache->find(eid);
 	if (i != cache->end()) return i->second;
 	else return NULL;
+}
+
+HRESULT NAEdgeCache::QueryAdjacenciesForward(NAVertexPtr ToVertex, NAEdgePtr Edge)
+{
+	HRESULT hr = S_OK;
+	long adjacentEdgeCount;
+	double fromPosition, toPosition;
+
+	if (!Edge->AdjacentForward)
+	{
+		if (FAILED(hr = ipForwardStar->QueryAdjacencies(ToVertex->Junction, Edge->NetEdge, 0 /*lastExteriorEdge*/, ipForwardAdjacencies))) return hr;
+		if (FAILED(hr = ipForwardAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
+		Edge->AdjacentForward = new std::vector<NAEdgePtr>();
+		Edge->AdjacentForward->reserve(adjacentEdgeCount);
+		for (long i = 0; i < adjacentEdgeCount; i++)
+		{
+			if (FAILED(hr = ipForwardAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
+			Edge->AdjacentForward->push_back(this->New(ipCurrentEdge, false));
+		}
+		_ASSERT(Edge->AdjacentForward->size() == adjacentEdgeCount);
+	}
+	return hr;
+}
+
+HRESULT NAEdgeCache::QueryAdjacenciesBackward(NAVertexPtr ToVertex, NAEdgePtr Edge)
+{
+	HRESULT hr = S_OK;
+	long adjacentEdgeCount;
+	double fromPosition, toPosition;
+
+	if (!Edge->AdjacentBackward)
+	{
+		if (FAILED(hr = ipBackwardStar->QueryAdjacencies(ToVertex->Junction, Edge->NetEdge, 0 /*lastExteriorEdge*/, ipBackwardAdjacencies))) return hr;
+		if (FAILED(hr = ipBackwardAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
+		Edge->AdjacentBackward = new std::vector<NAEdgePtr>();
+		Edge->AdjacentBackward->reserve(adjacentEdgeCount);
+		for (long i = 0; i < adjacentEdgeCount; i++)
+		{
+			if (FAILED(hr = ipBackwardAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
+			Edge->AdjacentBackward->push_back(this->New(ipCurrentEdge, false));
+		}
+		_ASSERT(Edge->AdjacentBackward->size() == adjacentEdgeCount);
+	}
+	return hr;
 }
 
 //////////////////////////////////////////////////////////////////
