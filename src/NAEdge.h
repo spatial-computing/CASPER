@@ -205,6 +205,9 @@ public:
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
 };
 
+enum QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };
+typedef std::vector<NAEdgePtr> * vector_NAEdgePtr_Ptr;
+
 // This collection object has two jobs:
 // it makes sure that there exist only one copy of an edge in it that is connected to each INetworkEdge.
 // this will be helpful to avoid duplicate copies pointing to the same edge structure. So data attached
@@ -277,6 +280,5 @@ public:
 	void Clear();	
 	void CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver);
 	double GetCacheHitPercentage() const { return myTrafficModel->GetCacheHitPercentage(); }
-	HRESULT QueryAdjacenciesForward(NAVertexPtr ToVertex, NAEdgePtr Edge);
-	HRESULT QueryAdjacenciesBackward(NAVertexPtr ToVertex, NAEdgePtr Edge);
+	HRESULT QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, vector_NAEdgePtr_Ptr & neighbors);
 };

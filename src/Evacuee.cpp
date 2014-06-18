@@ -213,25 +213,21 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 	return cost;
 }
 
-HRESULT SafeZone::IsRestricted(INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkEdgePtr ipTurnCheckEdge, NAEdge * leadingEdge, bool & restricted)
+HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool & restricted)
 {	
 	HRESULT hr = S_OK;
-	long adjacentEdgeCount, i, eid;
-	double fromPosition, toPosition;
-	esriNetworkEdgeDirection dir;
 	restricted = false;
+	NAEdgePtr currentEdge = NULL;
+	vector_NAEdgePtr_Ptr adj;
 
 	if (behindEdge)
 	{
 		restricted = true;
-		if (FAILED(hr = ipForwardStar->QueryAdjacencies(Vertex->Junction, leadingEdge->NetEdge , 0, ipForwardAdj))) return hr;
-		if (FAILED(hr = ipForwardAdj->get_Count(&adjacentEdgeCount))) return hr;
-		for (i = 0; i < adjacentEdgeCount; i++)
+		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, adj))) return hr;
+		for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
 		{
-			if (FAILED(hr = ipForwardAdj->QueryEdge(i, ipTurnCheckEdge, &fromPosition, &toPosition))) return hr;								
-			if (FAILED(hr = ipTurnCheckEdge->get_EID(&eid))) return hr;
-			if (FAILED(hr = ipTurnCheckEdge->get_Direction(&dir))) return hr;
-			if (behindEdge->Direction == dir && behindEdge->EID == eid) restricted = false;
+			currentEdge = *e;
+			if (behindEdge->Direction == currentEdge->Direction && behindEdge->EID == currentEdge->EID) restricted = false;
 		}
 	}
 	return hr;

@@ -15,6 +15,7 @@
 
 class NAVertex;
 class NAEdge;
+class NAEdgeCache;
 typedef NAVertex * NAVertexPtr;
 enum EvcSolverMethod : unsigned char;
 
@@ -163,7 +164,7 @@ public:
 	
 	~SafeZone();
 	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap);
-	HRESULT IsRestricted(INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkEdgePtr ipTurnCheckEdge, NAEdge * leadingEdge, bool & restricted);
+	HRESULT IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool & restricted);
 	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity, double * globalDeltaCost = NULL);
 };
 

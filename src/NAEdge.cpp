@@ -307,47 +307,47 @@ NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
 	else return NULL;
 }
 
-HRESULT NAEdgeCache::QueryAdjacenciesForward(NAVertexPtr ToVertex, NAEdgePtr Edge)
+HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, vector_NAEdgePtr_Ptr & neighbors)
 {
 	HRESULT hr = S_OK;
 	long adjacentEdgeCount;
 	double fromPosition, toPosition;
+	INetworkForwardStarExPtr star;
+	INetworkForwardStarAdjacenciesPtr adj;
+	neighbors = NULL;
+	INetworkEdgePtr netEdge = NULL;
 
-	if (!Edge->AdjacentForward)
+	if (Edge)
 	{
-		if (FAILED(hr = ipForwardStar->QueryAdjacencies(ToVertex->Junction, Edge->NetEdge, 0 /*lastExteriorEdge*/, ipForwardAdjacencies))) return hr;
-		if (FAILED(hr = ipForwardAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
-		Edge->AdjacentForward = new std::vector<NAEdgePtr>();
-		Edge->AdjacentForward->reserve(adjacentEdgeCount);
-		for (long i = 0; i < adjacentEdgeCount; i++)
-		{
-			if (FAILED(hr = ipForwardAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-			Edge->AdjacentForward->push_back(this->New(ipCurrentEdge, false));
-		}
-		_ASSERT(Edge->AdjacentForward->size() == adjacentEdgeCount);
+		neighbors = dir == QueryDirection::Forward ? Edge->AdjacentForward : Edge->AdjacentBackward;
+		netEdge = Edge->NetEdge;
 	}
-	return hr;
-}
+	if (neighbors) return hr;
+	neighbors = new std::vector<NAEdgePtr>();
 
-HRESULT NAEdgeCache::QueryAdjacenciesBackward(NAVertexPtr ToVertex, NAEdgePtr Edge)
-{
-	HRESULT hr = S_OK;
-	long adjacentEdgeCount;
-	double fromPosition, toPosition;
-
-	if (!Edge->AdjacentBackward)
+	if (dir == QueryDirection::Forward)
 	{
-		if (FAILED(hr = ipBackwardStar->QueryAdjacencies(ToVertex->Junction, Edge->NetEdge, 0 /*lastExteriorEdge*/, ipBackwardAdjacencies))) return hr;
-		if (FAILED(hr = ipBackwardAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
-		Edge->AdjacentBackward = new std::vector<NAEdgePtr>();
-		Edge->AdjacentBackward->reserve(adjacentEdgeCount);
-		for (long i = 0; i < adjacentEdgeCount; i++)
-		{
-			if (FAILED(hr = ipBackwardAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-			Edge->AdjacentBackward->push_back(this->New(ipCurrentEdge, false));
-		}
-		_ASSERT(Edge->AdjacentBackward->size() == adjacentEdgeCount);
+		star = ipForwardStar;
+		adj = ipForwardAdjacencies;
+		if (Edge) Edge->AdjacentForward = neighbors;
 	}
+	else 
+	{
+		star = ipBackwardStar;
+		adj = ipForwardAdjacencies;
+		if (Edge) Edge->AdjacentBackward = neighbors;
+	}
+
+	if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, 0 /*lastExteriorEdge*/, adj))) return hr;
+	if (FAILED(hr = adj->get_Count(&adjacentEdgeCount))) return hr;	
+	neighbors->reserve(adjacentEdgeCount);
+	for (long i = 0; i < adjacentEdgeCount; i++)
+	{
+		if (FAILED(hr = adj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
+		neighbors->push_back(this->New(ipCurrentEdge, false));
+	}
+	_ASSERT((long)(neighbors->size()) == adjacentEdgeCount);
+	
 	return hr;
 }
 
