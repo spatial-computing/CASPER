@@ -64,8 +64,8 @@
 using namespace ATL;
 
 // Be sure to set these paths to the version of the software against which you want to run
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriSystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriSystemUI.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystemui.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI")

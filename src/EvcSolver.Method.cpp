@@ -722,7 +722,6 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	long adjacentEdgeCount;
 	NAVertexPtr betterMyVertex;
 	NAEdgePtr tempEdge, betterEdge = NULL;
-	VARIANT_BOOL isRestricted;
 	double betterH, tempH, from, to;
 	NAVertexPtr tempVertex, neighbor;
 
@@ -742,9 +741,9 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 		{
 			if (FAILED(hr = ipForwardAdj->QueryEdge(i, tempNetEdge, &from, &to))) return hr;
 		
-			// check restriction for the recently discovered edge
-			if (FAILED(hr = ipForwardStar->get_IsRestricted(tempNetEdge, &isRestricted))) return hr;
-			if (isRestricted) continue;
+			// check restriction for the recently discovered edge.
+			// if (FAILED(hr = ipForwardStar->get_IsRestricted(tempNetEdge, &isRestricted))) return hr;
+			// if (isRestricted) continue;
 			tempEdge = ecache->New(tempNetEdge, ipNetworkQuery);
 			if (!closedList->Exist(tempEdge, NAEdgeMap_OLDGEN)) continue; // it has to be present in closed list from previous CARMA loop
 			if (tempEdge->Direction == prevEdge->Direction && tempEdge->EID == prevEdge->EID) continue; // it cannot be the same parent edge

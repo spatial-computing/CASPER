@@ -177,7 +177,7 @@ void NAEdge::SetClean(double minPop2Route, EvcSolverMethod method)
 
 // this function adds the reservation also determines if the new added population makes the edge dirty.
 // if this new reservation made the edge change from clean to dirty then the return is true otherwise returns false.
-void NAEdge::AddReservation(EvcPath * path, double fromCost, double toCost, double population, EvcSolverMethod method)
+void NAEdge::AddReservation(EvcPath * path, double population, EvcSolverMethod method)
 {	
 	// actual reservation code
 	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) population = min(population, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);	

@@ -73,7 +73,7 @@ public:
 	double OriginalCapacity() const { return reservations->Capacity; }
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
-	void AddReservation(EvcPath * evacuee, double fromCost, double toCost, double population, EvcSolverMethod method);
+	void AddReservation(EvcPath * evacuee, double population, EvcSolverMethod method);
 	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
 	NAEdge(const NAEdge& cpy);
 

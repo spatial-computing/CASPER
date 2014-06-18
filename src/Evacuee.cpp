@@ -6,7 +6,7 @@
 void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment)
 {
 	this->push_front(segment);
-	segment->Edge->AddReservation(this, segment->fromPosition, segment->toPosition, population2Route, method);
+	segment->Edge->AddReservation(this, population2Route, method);
 	EvacuationCost += segment->Edge->GetCurrentCost() * segment->EdgePortion;
 	OrginalCost    += segment->Edge->OriginalCost     * segment->EdgePortion;
 }
