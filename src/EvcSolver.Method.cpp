@@ -23,6 +23,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	std::vector<NAVertexPtr>::iterator vit;
 	SafeZoneTableItr iterator;
 	INetworkJunctionPtr ipCurrentJunction;
+	INetworkElementPtr ipJunctionElement;
 	bool restricted = false, separationRequired;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	EvacueeListItr eit;
@@ -37,6 +38,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	BOOL dummy;
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	vector_NAEdgePtr_Ptr adj;
+	
+    if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
+	ipCurrentJunction = ipJunctionElement;
 	
 	///////////////////////////////////////
 	// Setup a message on our step progress bar indicating that we are traversing the network

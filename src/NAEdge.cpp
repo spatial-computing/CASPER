@@ -323,7 +323,7 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 		netEdge = Edge->NetEdge;
 	}
 	if (neighbors) return hr;
-	neighbors = new std::vector<NAEdgePtr>();
+	neighbors = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 
 	if (dir == QueryDirection::Forward)
 	{

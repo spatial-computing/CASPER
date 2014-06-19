@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hash_map>
-#include <fstream>
 
 class Evacuee;
 class NAEdge;
