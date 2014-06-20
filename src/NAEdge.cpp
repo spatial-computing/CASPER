@@ -45,10 +45,12 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	TreeNext = cpy.TreeNext;
 	AdjacentForward = cpy.AdjacentForward;
 	AdjacentBackward = cpy.AdjacentBackward;
+	myGeometry = cpy.myGeometry;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model)
 {
+	myGeometry = NULL;
 	TreePrevious = NULL;
 	CleanCost = -1.0;
 	ToVertex = 0;
@@ -105,6 +107,75 @@ HRESULT NAEdge::QuerySourceStuff(long * sourceOID, long * sourceID, double * fro
 	if (FAILED(hr = NetEdge->get_OID(sourceOID))) return hr;
 	if (FAILED(hr = NetEdge->get_SourceID(sourceID))) return hr;
 	if (FAILED(hr = NetEdge->QueryPositions(fromPosition, toPosition))) return hr;
+	return hr;
+}
+
+HRESULT NAEdge::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry)
+{
+	HRESULT hr = S_OK;
+	long sourceOID, sourceID;
+	double fromPosition, toPosition;
+	INetworkSourcePtr ipNetworkSource;
+	BSTR sourceName;
+	IFeatureClassPtr ipNetworkSourceFC;
+	IFeaturePtr ipSourceFeature;
+	ICurvePtr ipSubCurve;
+	
+	if (!myGeometry)
+	{
+		// retrieve street shape for this edge
+		if (FAILED(hr = this->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
+		if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
+		if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
+		if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
+		if (!ipNetworkSourceFC)
+		{
+			sourceNotFoundFlag = true;
+			return hr;
+		}
+		if (FAILED(hr = ipNetworkSourceFC->GetFeature(sourceOID, &ipSourceFeature))) return hr;
+		if (FAILED(hr = ipSourceFeature->get_Shape(&myGeometry))) return hr;
+
+		// Check to see how much of the line geometry we can copy over
+		if (fromPosition != 0.0 || toPosition != 1.0)
+		{
+			// We must use only a curve of the line geometry
+			ICurve3Ptr ipCurve(myGeometry);
+			if (FAILED(hr = ipCurve->GetSubcurve(fromPosition, toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
+			myGeometry = ipSubCurve;
+		}
+	}
+	geometry = myGeometry;
+	return hr;
+}
+
+HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer,
+										   long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
+										   long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag)
+{
+	HRESULT hr = S_OK;
+	long sourceOID, sourceID;
+	double fromPosition, toPosition;
+	IGeometryPtr ipGeometry;
+	BSTR dir = Direction == esriNEDAgainstDigitized ? L"Against" : L"Along";
+
+	float resPop = this->GetReservedPop();
+	if (resPop <= 0.0) return hr;
+
+	// retrieve street shape for this edge
+	if (FAILED(hr = this->GetGeometry(ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipGeometry))) return hr;
+	if (FAILED(hr = this->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
+
+	// Store the feature values on the feature buffer
+	if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, CComVariant(EID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceIDFieldIndex, CComVariant(sourceID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, CComVariant(sourceOID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(GetCurrentCost())))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(OriginalCost)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, CComVariant(GetCurrentCost() / OriginalCost)))) return hr;
 	return hr;
 }
 

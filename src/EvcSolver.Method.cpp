@@ -247,7 +247,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				sumVisitedEdge += closedList->Size();
 
 				// generate path for this evacuee if any was found
-				if (FAILED(hr = GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))) goto END_OF_FUNC;
+				GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired);
 				MaxEvacueeCostSoFar = max(MaxEvacueeCostSoFar, currentEvacuee->PredictedCost);
 
 #ifdef DEBUG
@@ -455,11 +455,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				currentEdge = *e;				
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, 0))) goto END_OF_FUNC;
 
-				/* It turns out, I don't need to check this here. the QueryAdjacencies() function have already did it.
-				// check restriction for the recently discovered edge
-				if (FAILED(hr = ipBackwardStar->get_IsRestricted(ipCurrentEdge, &isRestricted))) goto END_OF_FUNC;
-				if (isRestricted) continue;
-				*/
 				// if node has already been discovered then no need to heap it
 				if (closedList->Exist(currentEdge, NAEdgeMap_OLDGEN)) continue;
 				
@@ -748,9 +743,6 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 	HRESULT hr = S_OK;
 	NAVertexPtr temp;
 	NAEdgePtr edge;
-	INetworkEdgePtr ipCurrentEdge;
-	INetworkJunctionPtr ipCurrentJunction;
-	INetworkElementPtr ipElement;
 	double globalDeltaPenalty = 0.0;
 	vector_NAEdgePtr_Ptr adj;
 
@@ -778,16 +770,10 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 		{
 			// if the start point was a single junction, then all the adjacent edges can be start edges
 			if (FAILED(hr = ecache->QueryAdjacencies(temp, NULL, dir, adj))) return hr;
-			//if (FAILED(hr = ipStar->QueryAdjacencies(temp->Junction, 0, 0, ipStarAdj))) return hr;
-			//if (FAILED(hr = ipStarAdj->get_Count(&adjacentEdgeCount))) return hr;
 			
 			for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
 			{
 				edge = *e;
-				//if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement))) return hr;
-				//ipCurrentEdge = ipElement;
-				//if (FAILED(hr = ipStarAdj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-				//edge = ecache->New(ipCurrentEdge, true);
 				if (closedList->Exist(edge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
 				temp = vcache->New(point->Junction);
 				temp->Previous = 0;
@@ -801,11 +787,9 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 	return hr;
 }
 
-HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
+void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
 {
-	double leftCap, fromPosition, toPosition, edgePortion;
-	long sourceOID, sourceID;
-	HRESULT hr = S_OK;
+	double leftCap, edgePortion;
 	EvcPath * path = NULL;
 
 	// generate evacuation route if a destination has been found
@@ -835,55 +819,40 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 		// create a new path for this portion of the population
 		path = new DEBUG_NEW_PLACEMENT EvcPath(population2Route, ++pathGenerationCount, currentEvacuee);
 
-		// special case for the last edge.
-		// We have to sub-curve it based on the safe point location along the edge
+		// special case for the last edge. We have to sub-curve it based on the safe point location along the edge
 		if (BetterSafeZone->getBehindEdge())
-		{
-			if (FAILED(hr = BetterSafeZone->getBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;
+		{			
 			edgePortion = BetterSafeZone->getPositionAlong();
-			if (fromPosition < toPosition) toPosition = fromPosition + edgePortion;
-			else toPosition = fromPosition - edgePortion;
-
-			if (edgePortion > 0.0)
-			{
-				path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, BetterSafeZone->getBehindEdge(), edgePortion));
-				// BetterSafeZone->getBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
-			}
+			if (edgePortion > 0.0) path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(BetterSafeZone->getBehindEdge(), 0.0, edgePortion));			
 		}
-		edgePortion = 1.0;
 
 		while (finalVertex->Previous)
 		{
-			if (finalVertex->GetBehindEdge())
-			{
-				if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;	
-				path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-				// finalVertex->GetBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
-			}
+			if (finalVertex->GetBehindEdge()) path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(finalVertex->GetBehindEdge()));
 			finalVertex = finalVertex->Previous;
 		}
 
-		// special case for the first edge.
-		// We have to curve it based on the evacuee point location along the edge
+		// special case for the first edge. We have to curve it based on the evacuee point location along the edge
 		if (finalVertex->GetBehindEdge())
 		{
-			if (FAILED(hr = finalVertex->GetBehindEdge()->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) goto END_OF_FUNC;				
-			edgePortion = finalVertex->GVal / finalVertex->GetBehindEdge()->OriginalCost;
-			if (fromPosition < toPosition) fromPosition = toPosition - edgePortion;
-			else fromPosition = toPosition + edgePortion;
+			// search for mother vertex and its position along the edge
+			edgePortion = 1.0;
+			for (std::vector<NAVertexPtr>::const_iterator vi = currentEvacuee->vertices->begin(); vi != currentEvacuee->vertices->end(); ++vi)			
+				if ((*vi)->EID == finalVertex->EID)
+				{
+					edgePortion = (*vi)->GVal / (*vi)->GetBehindEdge()->OriginalCost;
+					break;
+				}
 
 			// path can be empty if the source and destination are the same vertex
-			if (!path->Empty() && path->Front()->SourceOID == sourceOID && path->Front()->SourceID == sourceID)
+			PathSegmentPtr lastAdded = path->Front();
+			if (!path->Empty() && lastAdded->Edge->EID == finalVertex->GetBehindEdge()->EID && lastAdded->Edge->Direction == finalVertex->GetBehindEdge()->Direction)
 			{				
-				PathSegmentPtr lastAdded = path->Front();
-				lastAdded->fromPosition = fromPosition;
-				lastAdded->EdgePortion = abs(lastAdded->toPosition - lastAdded->fromPosition); // 2.0 - (lastAdded->EdgePortion + edgePortion);
-				_ASSERT(lastAdded->EdgePortion > 0.0);
+				lastAdded->SetFromRatio(1.0 - edgePortion);				
 			}
 			else if (edgePortion > 0.0)
 			{							
-				path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(fromPosition, toPosition, sourceOID, sourceID, finalVertex->GetBehindEdge(), edgePortion));
-				// finalVertex->GetBehindEdge()->AddReservation(path, fromPosition, toPosition, population2Route, this->solverMethod);
+				path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(finalVertex->GetBehindEdge(), 1.0 - edgePortion, 1.0));
 			}
 		}
 		if (path->Empty()) 
@@ -902,11 +871,6 @@ HRESULT EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVer
 	{		
 		populationLeft = 0.0; // since no path could be found for this evacuee, we assume the rest of the population at this location have no path as well
 	}
-
-END_OF_FUNC:
-
-	if (path && FAILED(hr)) delete path;
-	return hr;
 }
 
 // This is where i figure out what is the smallest population that I should route (or try to route)

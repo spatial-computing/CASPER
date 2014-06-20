@@ -21,25 +21,31 @@ enum EvcSolverMethod : unsigned char;
 
 class PathSegment
 {
-public:
-  double fromPosition;
-  double toPosition;
-  long SourceOID;
-  long SourceID;
-  NAEdge * Edge;
-  double EdgePortion;
-  IPolylinePtr pline;
+private:
+	double fromRatio;
+	double toRatio;
 
-  PathSegment(double from, double to, long sourceOID, long sourceID, NAEdge * edge, double edgePortion)
-  {
-	  fromPosition = from;
-	  toPosition = to;
-	  SourceOID = sourceOID;
-	  SourceID = sourceID;
-	  Edge = edge;
-	  EdgePortion = edgePortion;
-	  pline = 0;
-  }
+public:
+    NAEdge * Edge;
+    IPolylinePtr pline;
+
+    double GetEdgePortion() const { return toRatio - fromRatio; }
+	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
+
+    void SetFromRatio(double FromRatio)
+    {
+	    fromRatio = FromRatio;
+	    if (fromRatio == toRatio) fromRatio = toRatio - 0.001;
+    }
+
+    PathSegment(NAEdge * edge, double FromRatio = 0.0, double ToRatio = 1.0)
+    {
+	    fromRatio = FromRatio;
+	    toRatio = ToRatio;
+		_ASSERT(FromRatio < ToRatio);
+	    Edge = edge;
+	    pline = 0;
+    }
 };
 
 typedef PathSegment * PathSegmentPtr;

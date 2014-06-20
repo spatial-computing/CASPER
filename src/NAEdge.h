@@ -50,7 +50,8 @@ typedef std::pair<long, EdgeReservationsPtr> NAResTablePair;
 // reservations: a vector of evacuees committed to use this edge at a certain time/cost period
 class NAEdge
 {
-private:	
+private:
+	IGeometryPtr myGeometry;
 	EdgeReservations * reservations;
 	double CleanCost;
 	double GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const;
@@ -93,6 +94,10 @@ public:
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	void TreeNextEraseFirst(NAEdge * child);
 	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const;
+	HRESULT InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer,
+									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
+									  long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag);
+	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 };
 
 double GetHeapKeyHur(const NAEdge * edge);

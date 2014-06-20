@@ -3,12 +3,28 @@
 #include "NAVertex.h"
 #include "NAEdge.h"
 
+HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry)
+{
+	HRESULT hr = S_OK;
+	ICurvePtr subCurve;
+	if (FAILED(hr = Edge->GetGeometry(ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, geometry))) return hr;
+	if (fromRatio != 0.0 || toRatio != 1.0)
+	{
+		// We must use only a curve of the line geometry
+		ICurve3Ptr ipCurve(geometry);
+		if (FAILED(hr = ipCurve->GetSubcurve(fromRatio, toRatio, VARIANT_TRUE, &subCurve))) return hr;
+		geometry = subCurve;
+	}
+	return hr;
+}
+
 void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment)
 {
 	this->push_front(segment);
 	segment->Edge->AddReservation(this, population2Route, method);
-	EvacuationCost += segment->Edge->GetCurrentCost() * segment->EdgePortion;
-	OrginalCost    += segment->Edge->OriginalCost     * segment->EdgePortion;
+	double p = abs(segment->GetEdgePortion());
+	EvacuationCost += segment->Edge->GetCurrentCost() * p;
+	OrginalCost    += segment->Edge->OriginalCost     * p;
 }
 
 HRESULT EvcPath::AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, 
@@ -22,13 +38,8 @@ HRESULT EvcPath::AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDat
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
 	PathSegmentPtr pathSegment = NULL;
-	INetworkSourcePtr ipNetworkSource;
-	BSTR sourceName;
-	IFeatureClassPtr ipNetworkSourceFC;
-	IFeaturePtr ipSourceFeature;
 	IGeometryPtr ipGeometry;
-	ICurvePtr ipSubCurve;
-	esriGeometryType type; // = new DEBUG_NEW_PLACEMENT esriGeometryType();
+	esriGeometryType type;
 	IPointCollectionPtr pcollect;
 	IPointPtr p;
 	VARIANT featureID;
@@ -45,28 +56,9 @@ HRESULT EvcPath::AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDat
 		// take a path segment from the stack
 		pathSegment = *psit;
 		pointCount = -1;
-		_ASSERT(pathSegment->EdgePortion > 0.0);
-
-		// retrieve street shape for this segment
-		if (FAILED(hr = ipNetworkDataset->get_SourceByID(pathSegment->SourceID, &ipNetworkSource))) return hr;
-		if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
-		if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
-		if (!ipNetworkSourceFC)
-		{
-			sourceNotFoundFlag = true;
-			return hr;
-		}
-		if (FAILED(hr = ipNetworkSourceFC->GetFeature(pathSegment->SourceOID, &ipSourceFeature))) return hr;
-		if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
-
-		// Check to see how much of the line geometry we can copy over
-		if (pathSegment->fromPosition != 0.0 || pathSegment->toPosition != 1.0)
-		{
-			// We must use only a curve of the line geometry
-			ICurve3Ptr ipCurve(ipGeometry);
-			if (FAILED(hr = ipCurve->GetSubcurve(pathSegment->fromPosition, pathSegment->toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
-			ipGeometry = ipSubCurve;
-		}
+		_ASSERT(pathSegment->GetEdgePortion() > 0.0);
+		if (FAILED(hr = pathSegment->GetGeometry(ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipGeometry))) return hr;
+		
 		ipGeometry->get_GeometryType(&type);			
 
 		// get all the points from this polyline and store it in the point stack
@@ -87,8 +79,9 @@ HRESULT EvcPath::AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDat
 			}
 		}			
 		// Final cost calculations
-		EvacuationCost += pathSegment->Edge->GetCurrentCost() * pathSegment->EdgePortion;
-		OrginalCost    += pathSegment->Edge->OriginalCost     * pathSegment->EdgePortion;
+		double p = abs(pathSegment->GetEdgePortion());
+		EvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
+		OrginalCost    += pathSegment->Edge->OriginalCost     * p;
 	}
 
 	// Add the last point of the last path segment to the polyline
@@ -136,8 +129,7 @@ void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * lis
 	{
 		if ((*i)->Reachable && (*i)->Population > 0.0)
 		{
-			// reset evacuation prediction
-			// (*i)->PredictedCost = FLT_MAX;
+			(*i)->PredictedCost = FLT_MAX; // reset evacuation prediction
 
 			for (v = (*i)->vertices->begin(); v != (*i)->vertices->end(); v++)
 			{
@@ -175,20 +167,6 @@ void NAEvacueeVertexTable::Erase(long junctionEID)
 {
 	std::vector<NAVertexPtr>::iterator vi;
 	NAEvacueeVertexTableItr evcItr1, evcItr2 = this->find(junctionEID);
-
-	// this for loop is going to list all discovered evacuees and will
-	// remove them from the entire hash_map... not just this one junction point.
-	/*
-	for(std::vector<EvacueePtr>::iterator i = evcItr2->second->begin(); i != evcItr2->second->end(); i++)
-	{
-	for (vi = (*i)->vertices->begin(); vi != (*i)->vertices->end(); vi++)
-	{
-	if ((*vi)->EID == junctionEID) continue;
-	evcItr1 = find((*vi)->EID);
-	evcItr1->second->erase(std::find(evcItr1->second->begin(), evcItr1->second->end(), *i));
-	}
-	}
-	*/
 	delete evcItr2->second;
 	erase(junctionEID); 
 }

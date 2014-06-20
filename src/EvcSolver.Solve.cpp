@@ -542,24 +542,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing output features")); 
 
 	// looping through processed evacuees and generate routes in output feature class
-	PathSegment * pathSegment;
-	IFeaturePtr ipSourceFeature;
-	IGeometryPtr ipGeometry;
-	ICurvePtr  ipSubCurve;
-	IPointCollectionPtr pcollect = NULL;
-	IPointPtr p = NULL;
 	CComVariant featureID(0);
-	IPointCollectionPtr pline = 0;
 	EvcPathPtr path;
-	EvcPath::const_iterator psit;
 	std::list<EvcPathPtr>::iterator tpit;
 	std::vector<EvcPathPtr>::iterator pit;
 	double predictedCost = 0.0;
 	bool sourceNotFoundFlag = false;
-	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);
-	IFeatureClassPtr ipNetworkSourceFC;
-	INetworkSourcePtr ipNetworkSource;
-	BSTR sourceName;
+	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);	
 	std::vector<EvacueePtr>::iterator eit;
 	
 	// load the Mercator projection and analysis projection
@@ -630,7 +619,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		(*pit)->AddPathToFeatureBuffer(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBuffer, ipFeatureCursor,
 			evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, predictedCost);
 	}
-	if (sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));
 		
 	// flush the insert buffer
 	ipFeatureCursor->Flush();
@@ -643,7 +631,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// Get the "Routes" NAClass feature class
 		IFeatureClassPtr ipEdgesFC(ipEdgesNAClass);
 		NAEdgePtr edge;
-		double resPop;
 		long sourceIDFieldIndex, sourceOIDFieldIndex, resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, dirFieldIndex, eidFieldIndex, congestionFieldIndex;
 
 		// Create an insert cursor and feature buffer from the "EdgeStat" feature class to be used to write edges
@@ -659,9 +646,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_TravCost), &travCostFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_OrgCost), &orgCostFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_EID), &eidFieldIndex))) return hr;
-
-		BSTR dir = L"Along";
-
+		
 		for (NAEdgeTableItr it = ecache->AlongBegin(); it != ecache->AlongEnd(); it++)
 		{
 			if (ipStepProgressor) ipStepProgressor->Step();
@@ -673,52 +658,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 
 			edge = it->second;
-			resPop = edge->GetReservedPop();
-			if (resPop <= 0.0) continue;
-
-			// retrieve street shape for this edge
-			if (FAILED(hr = edge->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
-			if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
-			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
-			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
-			if (!ipNetworkSourceFC)
-			{
-				if (!sourceNotFoundFlag)
-				{
-					sourceNotFoundFlag = true;
-					pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));							
-				}
-				continue;
-			}
-			if (FAILED(hr = ipNetworkSourceFC->GetFeature(sourceOID, &ipSourceFeature))) return hr;
-			if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
-
-			// Check to see how much of the line geometry we can copy over
-			if (fromPosition != 0.0 || toPosition != 1.0)
-			{
-				// We must use only a curve of the line geometry
-				ICurve3Ptr ipCurve(ipGeometry);
-				if (FAILED(hr = ipCurve->GetSubcurve(fromPosition, toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
-				ipGeometry = ipSubCurve;
-			}
-
-			// Store the feature values on the feature buffer
-			if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, CComVariant(edge->EID)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(sourceIDFieldIndex, CComVariant(sourceID)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, CComVariant(sourceOID)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCurrentCost())))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->OriginalCost)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, CComVariant(edge->GetCurrentCost() / edge->OriginalCost)))) return hr;
+			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex, 
+				                                            resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, congestionFieldIndex, sourceNotFoundFlag))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 		}
-
-		dir = L"Against";
-
+		
 		for (NAEdgeTableItr it = ecache->AgainstBegin(); it != ecache->AgainstEnd(); it++)
 		{
 			if (ipStepProgressor) ipStepProgressor->Step();
@@ -730,45 +676,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 
 			edge = it->second;
-			resPop = edge->GetReservedPop();
-			if (resPop <= 0.0) continue;
-
-			// retrieve street shape for this edge
-			if (FAILED(hr = edge->QuerySourceStuff(&sourceOID, &sourceID, &fromPosition, &toPosition))) return hr;
-			if (FAILED(hr = ipNetworkDataset->get_SourceByID(sourceID, &ipNetworkSource))) return hr;
-			if (FAILED(hr = ipNetworkSource->get_Name(&sourceName))) return hr;
-			if (FAILED(hr = ipFeatureClassContainer->get_ClassByName(sourceName, &ipNetworkSourceFC))) return hr;
-			if (!ipNetworkSourceFC)
-			{
-				if (!sourceNotFoundFlag)
-				{
-					sourceNotFoundFlag = true;
-					pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));							
-				}
-				continue;
-			}
-			if (FAILED(hr = ipNetworkSourceFC->GetFeature(sourceOID, &ipSourceFeature))) return hr;
-			if (FAILED(hr = ipSourceFeature->get_Shape(&ipGeometry))) return hr;
-
-			// Check to see how much of the line geometry we can copy over
-			if (fromPosition != 0.0 || toPosition != 1.0)
-			{
-				// We must use only a curve of the line geometry
-				ICurve3Ptr ipCurve(ipGeometry);
-				if (FAILED(hr = ipCurve->GetSubcurve(fromPosition, toPosition, VARIANT_TRUE, &ipSubCurve))) return hr;
-				ipGeometry = ipSubCurve;
-			}
-
-			// Store the feature values on the feature buffer
-			if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, CComVariant(edge->EID)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(sourceIDFieldIndex, CComVariant(sourceID)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, CComVariant(sourceOID)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(edge->GetCurrentCost())))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(edge->OriginalCost)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, CComVariant(edge->GetCurrentCost() / edge->OriginalCost)))) return hr;
+			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex, 
+				                                            resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, congestionFieldIndex, sourceNotFoundFlag))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
@@ -776,6 +685,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// flush the insert buffer
 		ipFeatureCursor->Flush();
+	
+		if (!sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));	
 	}
 
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -800,6 +711,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (this->flockingEnabled)
 	{
 		// Get the "Flocks" NAClass feature class
+		PathSegment * pathSegment;
+		EvcPath::const_iterator psit;
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
 		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex, statFieldIndex, ptimeFieldIndex;
 		double costPerDay = 1.0, costPerSec = 1.0;
