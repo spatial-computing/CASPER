@@ -249,7 +249,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				// generate path for this evacuee if any was found
 				GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired);
 				MaxEvacueeCostSoFar = max(MaxEvacueeCostSoFar, currentEvacuee->PredictedCost);
-
 #ifdef DEBUG
 				std::wostringstream os_;
 				os_.precision(3);
@@ -265,7 +264,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					<< sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 				f.close();
 #endif
-
 				// cleanup search heap and closed-list
 				UpdatePeakMemoryUsage();
 				heap->Clear();
@@ -704,7 +702,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 		{
 			tempEdge = *e;
 			if (!closedList->Exist(tempEdge, NAEdgeMap_OLDGEN)) continue; // it has to be present in closed list from previous CARMA loop
-			if (tempEdge->Direction == prevEdge->Direction && tempEdge->EID == prevEdge->EID) continue; // it cannot be the same parent edge
+			if (IsEqual(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
 
 			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
 			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
@@ -846,7 +844,7 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 
 			// path can be empty if the source and destination are the same vertex
 			PathSegmentPtr lastAdded = path->Front();
-			if (!path->Empty() && lastAdded->Edge->EID == finalVertex->GetBehindEdge()->EID && lastAdded->Edge->Direction == finalVertex->GetBehindEdge()->Direction)
+			if (!path->Empty() && IsEqual(lastAdded->Edge, finalVertex->GetBehindEdge()))
 			{				
 				lastAdded->SetFromRatio(1.0 - edgePortion);				
 			}

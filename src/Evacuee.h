@@ -82,9 +82,9 @@ public:
 		IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 		long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex, double & predictedCost);
 
-	bool           Empty() { return std::list<PathSegmentPtr>::empty(); }
-	PathSegmentPtr Front() { return std::list<PathSegmentPtr>::front(); }
-	PathSegmentPtr Back()  { return std::list<PathSegmentPtr>::back();  }
+	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
+	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
+	PathSegmentPtr Back()        { return std::list<PathSegmentPtr>::back();  }
 
 	~EvcPath(void)
 	{

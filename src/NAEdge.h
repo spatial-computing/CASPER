@@ -76,17 +76,10 @@ public:
 	double OriginalCapacity() const { return reservations->Capacity; }
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
-	void AddReservation(EvcPath * evacuee, double population, EvcSolverMethod method);
+	void AddReservation(EvcPath * path, double population, EvcSolverMethod method);
 	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
 	NAEdge(const NAEdge& cpy);
-
-	static bool LessThanNonHur(NAEdge * n1, NAEdge * n2);
-	static bool LessThanHur   (NAEdge * n1, NAEdge * n2);
 	
-	// EdgeDirtyFlagEnum ClarifyEdgeFlag(double minPop2Route, EvcSolverMethod method);
-	// inline void SetEdgeFlag(EdgeDirtyFlagEnum flag) { reservations->DirtyFlag = flag; if (flag == EdgeFlagClean) CleanCost = -1.0; }
-	// inline EdgeDirtyFlagEnum GetEdgeFlag() const { return reservations->DirtyFlag; }
-
 	inline void SetDirty() { reservations->isDirty = true; }
 	inline bool IsDirty (double minPop2Route, EvcSolverMethod method);
 	inline void SetClean(double minPop2Route, EvcSolverMethod method);
@@ -100,8 +93,9 @@ public:
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 };
 
-double GetHeapKeyHur(const NAEdge * edge);
-double GetHeapKeyNonHur(const NAEdge * edge);
+double GetHeapKeyHur   (const NAEdge * e);
+double GetHeapKeyNonHur(const NAEdge * e);
+bool   IsEqual         (const NAEdge * n1, const NAEdge * n2);
 
 typedef NAEdge * NAEdgePtr;
 typedef public stdext::hash_map<long, NAEdgePtr> NAEdgeTable;
@@ -234,8 +228,7 @@ private:
 	INetworkQueryPtr                  ipNetworkQuery;
 	INetworkForwardStarExPtr          ipForwardStar;
 	INetworkForwardStarExPtr          ipBackwardStar;
-	INetworkForwardStarAdjacenciesPtr ipForwardAdjacencies;
-	INetworkForwardStarAdjacenciesPtr ipBackwardAdjacencies;
+	INetworkForwardStarAdjacenciesPtr ipAdjacencies;
 
 public:
 
@@ -258,8 +251,7 @@ public:
 		ipNetworkQuery = _ipNetworkQuery;
 		ipForwardStar = _ipForwardStar;
 		ipBackwardStar = _ipBackwardStar;
-		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipForwardAdjacencies))) return;
-		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipBackwardAdjacencies))) return; 
+		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipAdjacencies))) return;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return;
 		ipCurrentEdge = ipEdgeElement;
 	}

@@ -205,7 +205,7 @@ HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool 
 		for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
 		{
 			currentEdge = *e;
-			if (behindEdge->Direction == currentEdge->Direction && behindEdge->EID == currentEdge->EID) restricted = false;
+			if (IsEqual(behindEdge, currentEdge)) restricted = false;
 		}
 	}
 	return hr;

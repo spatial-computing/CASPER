@@ -19,7 +19,7 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerAttach>true</LocalDebuggerAttach>
     <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerDebuggerType>NativeOnly</LocalDebuggerDebuggerType>
+    <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
     <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>

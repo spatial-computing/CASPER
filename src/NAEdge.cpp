@@ -268,7 +268,7 @@ void NAEdge::TreeNextEraseFirst(NAEdge * child)
 	{
 		std::vector<NAEdge *>::size_type j = TreeNext.size();
 		for(std::vector<NAEdge *>::size_type i = 0; i < TreeNext.size(); i++)		
-			if (TreeNext[i]->EID == child->EID && TreeNext[i]->Direction == child->Direction)
+			if (IsEqual(TreeNext[i], child))
 			{
 				j = i;
 				break;
@@ -278,13 +278,12 @@ void NAEdge::TreeNextEraseFirst(NAEdge * child)
 	}
 }
 
-double GetHeapKeyHur(const NAEdge * edge) { return edge->ToVertex->GVal + edge->ToVertex->GlobalPenaltyCost + edge->ToVertex->GetMinHOrZero(); }
-double GetHeapKeyNonHur(const NAEdge * edge) { return edge->ToVertex->GVal; }
-// double NAEdgeCache::GetHeapKeyNonHur(const NAEdge * edge) { return AddCostToPenalty(edge->ToVertex->GVal, edge->ToVertex->GlobalPenaltyCost); }
+double GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
+double GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
+bool   IsEqual         (const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
 
 /////////////////////////////////////////////////////////////
 // NAEdgeCache
-
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
 NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 {
@@ -384,7 +383,6 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 	long adjacentEdgeCount;
 	double fromPosition, toPosition;
 	INetworkForwardStarExPtr star;
-	INetworkForwardStarAdjacenciesPtr adj;
 	neighbors = NULL;
 	INetworkEdgePtr netEdge = NULL;
 
@@ -399,25 +397,22 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 	if (dir == QueryDirection::Forward)
 	{
 		star = ipForwardStar;
-		adj = ipForwardAdjacencies;
 		if (Edge) Edge->AdjacentForward = neighbors;
 	}
 	else 
 	{
 		star = ipBackwardStar;
-		adj = ipForwardAdjacencies;
 		if (Edge) Edge->AdjacentBackward = neighbors;
 	}
 
-	if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, 0 /*lastExteriorEdge*/, adj))) return hr;
-	if (FAILED(hr = adj->get_Count(&adjacentEdgeCount))) return hr;	
+	if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, 0 /*lastExteriorEdge*/, ipAdjacencies))) return hr;
+	if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;	
 	neighbors->reserve(adjacentEdgeCount);
 	for (long i = 0; i < adjacentEdgeCount; i++)
 	{
-		if (FAILED(hr = adj->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
+		if (FAILED(hr = ipAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
 		neighbors->push_back(this->New(ipCurrentEdge, false));
 	}
-	_ASSERT((long)(neighbors->size()) == adjacentEdgeCount);
 	
 	return hr;
 }
