@@ -84,7 +84,7 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 {
 	double cost = 0.0;
 	double totalPop = population2Route + reservedPop;
-	if (capacity == 0.0) return FLT_MAX;
+	if (capacity == 0.0 && costPerDensity > 0.0) return FLT_MAX;
 	if (totalPop > capacity && capacity > 0.0) cost += costPerDensity * ((totalPop / capacity) - 1.0);
 	if (behindEdge) cost += behindEdge->GetCost(population2Route, solverMethod) * positionAlong;
 	return cost;
