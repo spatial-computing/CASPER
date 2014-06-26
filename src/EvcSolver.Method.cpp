@@ -24,7 +24,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	SafeZoneTableItr iterator;
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipJunctionElement;
-	bool restricted = false, separationRequired;
+	bool restricted = false, separationRequired, foundRestrictedSafezone = false;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	EvacueeListItr eit;
 	sortedEvacuees->reserve(Evacuees->size());
@@ -139,8 +139,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				for(std::vector<NAEdgePtr>::iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
 				TimeToBeat = FLT_MAX;
-				BetterSafeZone = 0;
-				finalVertex = 0;
+				BetterSafeZone = NULL;
+				finalVertex = NULL;
+				foundRestrictedSafezone = false;
 
 				// Continue traversing the network while the heap has remaining junctions in it
 				// this is the actual dijkstra code with the Fibonacci Heap
@@ -167,7 +168,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (iterator != safeZoneList->end())
 					{
 						// Handle the last turn restriction here ... and the remaining capacity-aware cost.
-						if (FAILED(hr = iterator->second->IsRestricted(ecache, myEdge, restricted))) goto END_OF_FUNC;
+						if (FAILED(hr = iterator->second->IsRestricted(ecache, myEdge, restricted, this->costPerDensity))) goto END_OF_FUNC;
 						if (!restricted)
 						{
 							costLeft = iterator->second->SafeZoneCost(population2Route, this->solverMethod, this->costPerDensity, &globalDeltaCost);
@@ -177,6 +178,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 								TimeToBeat = costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost;
 								finalVertex = myVertex;
 							}
+						}
+						else 
+						{
+							// found a safe zone but it was restricted
+							foundRestrictedSafezone = true;
 						}
 					}
 
@@ -247,6 +253,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				sumVisitedEdge += closedList->Size();
 
 				// generate path for this evacuee if any was found
+				if (!BetterSafeZone && foundRestrictedSafezone)
+				{
+					/// TODO something needs to be done here because we couldn't
+					/// find a path despite the fact that a safe zone (restricted) was found
+					/// This addresses issue number 4: https://github.com/kaveh096/ArcCASPER/issues/4
+				}
 				GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired);
 				MaxEvacueeCostSoFar = max(MaxEvacueeCostSoFar, currentEvacuee->PredictedCost);
 #ifdef DEBUG
