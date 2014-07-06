@@ -45,6 +45,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	HRESULT hr = S_OK;
 	double globalEvcCost = -1.0, carmaSec = 0.0;
+	bool foundRestrictedSafezone = false;
 
 	// init memory usage function and set the base
 	peakMemoryUsage = 0l;
@@ -481,7 +482,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, pIsPartialSolution, carmaSec, CARMAExtractCounts, ipNetworkDataset);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, pIsPartialSolution, carmaSec, CARMAExtractCounts, ipNetworkDataset, foundRestrictedSafezone);
 	}
 	catch (std::exception & ex)
 	{
@@ -980,6 +981,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	pMessages->AddMessage(CComBSTR(CARMAExtractsMsg));
 	pMessages->AddMessage(CComBSTR(ExtraInfoMsg));
 	pMessages->AddMessage(CComBSTR(CacheHitMsg));
+	if (foundRestrictedSafezone) pMessages->AddWarning(CComBSTR(_T("For at least one evacuee, a route could have not been found because all reachable safe zones were restricted. Make sure you have some non-restricted safe zones with a non-zero capacity.")));
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(CComBSTR(simulationIncompleteEndingMsg));
 

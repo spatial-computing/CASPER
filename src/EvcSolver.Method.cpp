@@ -5,7 +5,7 @@
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache,
 							   NAEdgeCache * ecache, SafeZoneTable * safeZoneList, VARIANT_BOOL* pIsPartialSolution,
-							   double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset)
+							   double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset, bool & foundRestrictedSafezone)
 {	
 	// creating the heap for the dijkstra search
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyHur);
@@ -24,7 +24,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	SafeZoneTableItr iterator;
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipJunctionElement;
-	bool restricted = false, separationRequired, foundRestrictedSafezone = false;
+	bool restricted = false, separationRequired;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	EvacueeListItr eit;
 	sortedEvacuees->reserve(Evacuees->size());
@@ -39,6 +39,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	vector_NAEdgePtr_Ptr adj;
 	
+	foundRestrictedSafezone = false;
     if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
 	ipCurrentJunction = ipJunctionElement;
 	
