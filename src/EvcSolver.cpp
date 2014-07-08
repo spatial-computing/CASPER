@@ -441,6 +441,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 0.0f;
 	CARMAPerformanceRatio = 0.1f;
+	selfishRatio = 0.0f;
 
 	backtrack = esriNFSBAtDeadEndsOnly;
 
@@ -563,6 +564,24 @@ STDMETHODIMP EvcSolver::put_CARMAPerformanceRatio(BSTR value)
 {
 	swscanf_s(value, L"%f", &CARMAPerformanceRatio);
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_SelfishRatio(BSTR * value)
+{
+	if (value)
+	{
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
+		swprintf_s(*value, 100, L"%.3f", selfishRatio);
+	}
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_SelfishRatio(BSTR value)
+{
+	swscanf_s(value, L"%f", &selfishRatio);
+	selfishRatio = min(max(selfishRatio, 0.0f), 1.0f);
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -1097,7 +1116,18 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 		ThreeGenCARMA = VARIANT_FALSE;
 	}
 	
+	//version 4
+	if (savedVersion >= 4)
+	{
+		if (FAILED(hr = pStm->Read(&selfishRatio, sizeof(selfishRatio), &numBytes))) return hr;
+	}
+	else
+	{
+		selfishRatio = 0.0f;
+	}
+	
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
+	selfishRatio = min(max(selfishRatio, 0.0f), 1.0f);
 	m_bPersistDirty = false;
 
 	return S_OK;
@@ -1138,6 +1168,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&flockingProfile, sizeof(flockingProfile), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&selfishRatio, sizeof(selfishRatio), &numBytes))) return hr;
 	
 	return S_OK;
 }

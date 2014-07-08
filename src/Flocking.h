@@ -126,7 +126,7 @@ private:
 	OpenSteer::AVGroup			myNeighborVehicles;
 	OpenSteer::Vec3				* libpoints;
 	bool						newEdgeRequestFlag;
-	EvcPath::iterator			pathSegIt;
+	EvcPath::const_iterator		pathSegIt;
 	EvcPathPtr					myPath;
 	double						speedLimit;
 	bool						initPathIterator;

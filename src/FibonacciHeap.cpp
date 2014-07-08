@@ -161,7 +161,7 @@ HeapDataType * FibonacciHeap::DeleteMin()
 	HeapNode * temp = minRoot->children->leftMostSibling();
 	HeapNode * nextTemp = NULL;
 
-	// Adding Children to root list		
+	// Adding Children to root list
 	while(temp != NULL)
 	{
 		nextTemp = temp->rightSibling; // Save next Sibling
@@ -306,13 +306,16 @@ HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 	return o;
 }
 
+// This function is very stupid. I should make it better and faster
+// It looks at all inserted heap nodes (vertices) right after last evacuee is 
+// discovered during carma loop. the value will be used as carma termination condition.
 double HeapNodeTable::GetMaxValue(void) const
 {
 	double ret = 0.0;
 	stdext::hash_map<long, HeapNodePtr>::iterator i;
 
-	for(i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->data->ToVertex->g > ret) ret = i->second->data->ToVertex->g;
-	for(i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->data->ToVertex->g > ret) ret = i->second->data->ToVertex->g;
+	for(i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->data->ToVertex->GVal > ret) ret = i->second->data->ToVertex->GVal;
+	for(i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->data->ToVertex->GVal > ret) ret = i->second->data->ToVertex->GVal;
 
 	return ret;
 }

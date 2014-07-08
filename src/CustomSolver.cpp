@@ -24,5 +24,34 @@
 class CustomSolverModule
 {
 public:
-  // Override CAtlDllModuleT members
+	// Override CAtlDllModuleT members
+	
+	BOOL WINAPI DllMain(DWORD dwReason, LPVOID lpReserved)
+	{
+		// Perform actions based on the reason for calling.
+		switch(dwReason) 
+		{ 
+			case DLL_PROCESS_ATTACH:
+			 // Initialize once for each new process.
+			 // Return FALSE to fail DLL load.
+			 // set program start for memory leak detection (DEBUG Mode)
+			    _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+				break;
+/*
+			case DLL_THREAD_ATTACH:
+			 // Do thread-specific initialization.
+				break;
+
+			case DLL_THREAD_DETACH:
+			 // Do thread-specific cleanup.
+				break;
+
+			case DLL_PROCESS_DETACH:
+			 // Perform any necessary cleanup.
+				_ASSERT_EXPR(_CrtDumpMemoryLeaks() == FALSE, L"EvcSolver memory leak detected");
+				break;
+*/
+		}
+		return TRUE;  // Successful DLL_PROCESS_ATTACH.
+	}
 };

@@ -26,7 +26,6 @@
 #define IDC_ZoneOptions                 229
 #define IDC_LableCARMA                  229
 #define IDC_CASPEROptions               230
-#define IDC_EDIT_ZoneDensity2           230
 #define IDC_EDIT_CARMA                  230
 #define IDC_CapacityOptions             231
 #define IDC_FlockOptions                232
@@ -46,7 +45,10 @@
 #define IDC_STATIC_LINE                 245
 #define RMAGEN                          245
 #define IDL_CHECK_CARMAGEN              245
+#define IDC_LableCARMA2                 246
+#define IDC_Lable_SelfishRatio          246
 #define IDC_RELEASE                     247
+#define IDC_EDIT_SELFISH                248
 
 // Next default values for new objects
 // 

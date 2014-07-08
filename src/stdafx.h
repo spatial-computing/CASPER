@@ -15,13 +15,6 @@
 #define STRICT
 #endif
 
-/// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
-#ifdef _DEBUG
-#define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)
-#else
-#define DEBUG_NEW_PLACEMENT
-#endif
-
 // ref: http://msdn.microsoft.com/en-us/library/windows/desktop/ms683219%28v=vs.85%29.aspx
 #define PSAPI_VERSION 1
 
@@ -64,8 +57,8 @@
 using namespace ATL;
 
 // Be sure to set these paths to the version of the software against which you want to run
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriSystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriSystemUI.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
+#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystemui.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
 #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI")
@@ -99,5 +92,26 @@ using namespace ATL;
 #include <windows.h>
 #include <Windowsx.h>
 #include <psapi.h>
+#include <vector>
+#include <stack>
+#include <hash_map>
+#include <fstream>
+
+// memory leak detection in DEBUG mode
+// ref: http://msdn.microsoft.com/en-us/library/e5ewb1h3%28v=vs.80%29.aspx
+#define _CRTDBG_MAP_ALLOC // defined in project file
+#include <stdlib.h>
+#include <crtdbg.h>
+
+// new memory leak detection library
+// ref: http://vld.codeplex.com/wikipage?title=Using%20Visual%20Leak%20Detector&referringTitle=Documentation
+/// #include <vld.h>
+
+/// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
+#ifdef _DEBUG
+#define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)
+#else
+#define DEBUG_NEW_PLACEMENT
+#endif
 
 #pragma warning(pop)

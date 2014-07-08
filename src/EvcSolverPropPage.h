@@ -81,6 +81,7 @@ public:
 	COMMAND_HANDLER(IDC_CHECK_EDGESTAT, BN_CLICKED, OnBnClickedCheckEdgestat)
 	NOTIFY_HANDLER(IDC_RELEASE, NM_CLICK, OnNMClickRelease)
 	COMMAND_HANDLER(IDL_CHECK_CARMAGEN, BN_CLICKED, OnBnClickedCheckCarmagen)
+	COMMAND_HANDLER(IDC_EDIT_SELFISH, EN_CHANGE, OnEnChangeEditSelfish)
   END_MSG_MAP()
 
   // Handler prototypes:
@@ -133,6 +134,7 @@ private:
   HWND					  m_hCmbFlockProfile;
   HWND					  m_heditCARMA;
   HWND					  m_hThreeGenCARMA;
+  HWND					  m_heditSelfish;
 
   void SetFlockingEnabled();
 
@@ -163,4 +165,6 @@ public:
 	LRESULT OnEnChangeEditCARMA(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnStnClickedLablecarma2(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };

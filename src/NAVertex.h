@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hash_map>
-#include <fstream>
 
 class Evacuee;
 class NAEdge;
@@ -41,20 +40,24 @@ private:
 	bool     isShadowCopy;
 
 public:
-	double g;
+	double GVal;
+	double GlobalPenaltyCost;
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
 	size_t HCount() const { return h->size(); }
 
-	double GetH(long eid)
+	double GetH(long eid) const
 	{
 		for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++) if (i->EdgeID == eid) return i->Value;
 		return FLT_MAX;
 	}
 
-	friend double GetHeapKeyHur   (const NAEdge * edge);
-	friend double GetHeapKeyNonHur(const NAEdge * edge);
+	double GetMinHOrZero() const
+	{		
+		if (h->empty()) return 0.0;
+		else return h->front().Value;
+	}
 
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }

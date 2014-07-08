@@ -42,18 +42,18 @@ namespace ArcCASPERLog
                 var CalcRex = new Regex(@"Calculation = (\d+\.\d+) \(kernel\), (\d+\.\d+) \(user\)", RegexOptions.None);
                 var CarmaRex = new Regex(@"algorithm performed (\d+) CARMA", RegexOptions.None);
                 var CarmaRex2 = new Regex(@"algorithm performed (\d+) CARMA loop\(s\) in (\d+\.\d+) seconds.", RegexOptions.None);
-                var EvcTimeRex = new Regex(@"Global evacuation cost is (\d+\.\d+)", RegexOptions.None);
+                var EvcTimeRex = new Regex(@"Global evacuation cost is (\-?\d+\.\d+)", RegexOptions.None);
                 var MemRex = new Regex(@"Peak memory usage is (\d+) MB", RegexOptions.None);
                 Match m = null;
 
-                csvStrings.Add("Name,CalcTime,CarmaLoops,CarmaTime,EvcTime,MemUsage");
+                csvStrings.Add("Name,CalcTime (min),CarmaLoops,CarmaTime (sec),EvcTime,MemUsage (MB)");
 
                 foreach (string log in logs)
                 {
                     m = NameRex.Match(log);
                     if (m.Success) Name = m.Groups[1].Captures[0].ToString();
                     m = CalcRex.Match(log);
-                    if (m.Success) Calc = "=" + m.Groups[1].Captures[0].ToString() + "+" + m.Groups[2].Captures[0].ToString();
+                    if (m.Success) Calc = "=(" + m.Groups[1].Captures[0].ToString() + "+" + m.Groups[2].Captures[0].ToString() + ")/60";
                     m = CarmaRex2.Match(log);
                     if (m.Success)
                     {

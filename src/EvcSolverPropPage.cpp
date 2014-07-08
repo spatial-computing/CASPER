@@ -135,6 +135,12 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_heditCARMA, WM_SETTEXT, NULL, (LPARAM)carma);
 		delete [] carma;
 
+		// set CARMA ratio
+		BSTR selfish;
+		m_ipEvcSolver->get_SelfishRatio(&selfish);
+		::SendMessage(m_heditSelfish, WM_SETTEXT, NULL, (LPARAM)selfish);
+		delete [] selfish;
+
 		SetFlockingEnabled();
 		SetDirty(FALSE);
 	}
@@ -344,6 +350,14 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_heditCARMA, WM_GETTEXT, size + 1, (LPARAM)carma);
 		ipSolver->put_CARMAPerformanceRatio(carma);
 		delete [] carma;
+		
+		// CARMA ratio
+		BSTR selfish;
+		size = ::SendMessage(m_heditSelfish, WM_GETTEXTLENGTH, 0, 0);
+		selfish = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
+		::SendMessage(m_heditSelfish, WM_GETTEXT, size + 1, (LPARAM)selfish);
+		ipSolver->put_SelfishRatio(selfish);
+		delete [] selfish;
 
 		// saturation density per capacity
 		BSTR sat;
@@ -429,6 +443,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCmbFlockProfile = GetDlgItem(IDC_COMBO_PROFILE);
 	m_heditCARMA = GetDlgItem(IDC_EDIT_CARMA);
 	m_hThreeGenCARMA = GetDlgItem(IDL_CHECK_CARMAGEN);
+	m_heditSelfish = GetDlgItem(IDC_EDIT_SELFISH);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
@@ -610,6 +625,14 @@ LRESULT EvcSolverPropPage::OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL
 
 
 LRESULT EvcSolverPropPage::OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet
