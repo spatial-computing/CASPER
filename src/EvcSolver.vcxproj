@@ -219,7 +219,8 @@
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -274,7 +275,8 @@ IF "$(NOREG)"=="" (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -291,7 +293,8 @@ IF "$(NOREG)"=="" (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -343,7 +346,8 @@ IF "$(NOREG)"=="" (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -357,7 +361,8 @@ IF "$(NOREG)"=="" (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -416,7 +421,8 @@ IF "$(NOREG)"=="" (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -430,7 +436,8 @@ IF "$(NOREG)"=="" (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -489,7 +496,8 @@ IF "$(NOREG)"=="" (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
@@ -503,7 +511,8 @@ IF "$(NOREG)"=="" (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -562,7 +571,8 @@ IF "$(NOREG)"=="" (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">
@@ -576,7 +586,8 @@ IF "$(NOREG)"=="" (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -635,7 +646,8 @@ IF "$(NOREG)"=="" (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">
@@ -649,7 +661,8 @@ IF "$(NOREG)"=="" (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -703,7 +716,8 @@ IF "$(NOREG)"=="" (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">
@@ -717,7 +731,8 @@ IF "$(NOREG)"=="" (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -769,7 +784,8 @@ IF "$(NOREG)"=="" (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)</Command>
+)
+exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

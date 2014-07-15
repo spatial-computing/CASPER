@@ -5,7 +5,7 @@
 |:-------------| :-------------------------------------------------------------------|
 | Title        | ArcCASPER Evacuation Routing                                        |
 | Web Page     | http://esri.com/arccasper                                           |
-| Revision     | REV                                                                 |
+| Revision     | REV                                                   |
 | Author       | Kaveh Shahabi                                                       |
 | Email        | kshahabi@usc.edu                                                    |
 | Author Page  | http://www-scf.usc.edu/~kshahabi                                    |
