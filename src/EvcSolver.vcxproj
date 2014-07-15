@@ -211,7 +211,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF NOT DEFINED NOREG (
+      <Command>IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
@@ -219,8 +219,7 @@
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -267,7 +266,7 @@ exit 0</Command>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
 copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
-IF NOT DEFINED NOREG (
+IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop "$(SolutionDir)Package\$(TargetFileName)" /s
@@ -275,8 +274,7 @@ IF NOT DEFINED NOREG (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -285,7 +283,7 @@ exit 0</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF NOT DEFINED NOREG (
+      <Command>IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
@@ -293,8 +291,7 @@ exit 0</Command>
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -338,7 +335,7 @@ exit 0</Command>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
 copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
-IF NOT DEFINED NOREG (
+IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop "$(SolutionDir)Package\$(TargetFileName)" /s
@@ -346,14 +343,13 @@ IF NOT DEFINED NOREG (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF NOT DEFINED NOREG (
+      <Command>IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
@@ -361,8 +357,7 @@ exit 0</Command>
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -413,7 +408,7 @@ exit 0</Command>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
 copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
-IF NOT DEFINED NOREG (
+IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop "$(SolutionDir)Package\$(TargetFileName)" /s
@@ -421,14 +416,13 @@ IF NOT DEFINED NOREG (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF NOT DEFINED NOREG (
+      <Command>IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
@@ -436,8 +430,7 @@ exit 0</Command>
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -488,7 +481,7 @@ exit 0</Command>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
 copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
-IF NOT DEFINED NOREG (
+IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop "$(SolutionDir)Package\$(TargetFileName)" /s
@@ -496,14 +489,13 @@ IF NOT DEFINED NOREG (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF NOT DEFINED NOREG (
+      <Command>IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
@@ -511,8 +503,7 @@ exit 0</Command>
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -563,7 +554,7 @@ exit 0</Command>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
 copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
-IF NOT DEFINED NOREG (
+IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop "$(SolutionDir)Package\$(TargetFileName)" /s
@@ -571,14 +562,13 @@ IF NOT DEFINED NOREG (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF NOT DEFINED NOREG (
+      <Command>IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
@@ -586,8 +576,7 @@ exit 0</Command>
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -638,7 +627,7 @@ exit 0</Command>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
 copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
-IF NOT DEFINED NOREG (
+IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop "$(SolutionDir)Package\$(TargetFileName)" /s
@@ -646,14 +635,13 @@ IF NOT DEFINED NOREG (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF NOT DEFINED NOREG (
+      <Command>IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
@@ -661,8 +649,7 @@ exit 0</Command>
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -708,7 +695,7 @@ exit 0</Command>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
 copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
-IF NOT DEFINED NOREG (
+IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop "$(SolutionDir)Package\$(TargetFileName)" /s
@@ -716,14 +703,13 @@ IF NOT DEFINED NOREG (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF NOT DEFINED NOREG (
+      <Command>IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
@@ -731,8 +717,7 @@ exit 0</Command>
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Message>
@@ -776,7 +761,7 @@ exit 0</Command>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
 copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
-IF NOT DEFINED NOREG (
+IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop "$(SolutionDir)Package\$(TargetFileName)" /s
@@ -784,8 +769,7 @@ IF NOT DEFINED NOREG (
       %WINDIR%\system32\regsvr32.exe /s "$(SolutionDir)Package\$(TargetFileName)"
     )
   )
-)
-exit 0</Command>
+)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
