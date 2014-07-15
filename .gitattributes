@@ -48,3 +48,5 @@
 *.fsproj text=auto merge=union
 *.dbproj text=auto merge=union
 *.sln -text merge=union 
+*.sln -text merge=union
+* text=auto
