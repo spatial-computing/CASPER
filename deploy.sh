@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "This scripts reads a GitHub repo, compiles with with VS2013 then uploads the package to dropbox"
+echo "This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox"
 
 if [ $# -ne 3 ]; then
   # usage:
@@ -37,11 +37,11 @@ do
   echo "repo is ready for build on branch $branch"
 
   revi=`git describe`
-  out=$repo-$revi.zip
-  if [ "$branch" -eq "master" ]; then
-    set out=$repo-$revi-stable.zip
+  # out=$repo-$revi.zip
+  if [ "$branch" = "master" ]; then
+    out=$repo-$revi-stable.zip
   else
-    set out=$repo-$revi-nightly.zip
+    out=$repo-$revi-nightly.zip
   fi
 
   if [ `$curdir/dropbox_uploader.sh list | grep $out | wc -l` -eq 1 ]; then
