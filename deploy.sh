@@ -56,6 +56,7 @@ do
 
     # Generate readme file
     sed -e "s/REV/$revi/g" README.md > Package/README.md
+    unix2dos Package/README.md
     
     # upload
     echo "Build is complete and ready for zipping and uploading"

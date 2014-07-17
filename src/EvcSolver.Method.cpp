@@ -5,9 +5,9 @@
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache,
 							   NAEdgeCache * ecache, SafeZoneTable * safeZoneList, VARIANT_BOOL* pIsPartialSolution,
-							   double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset, bool & foundRestrictedSafezone)
+							   double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone)
 {	
-	// creating the heap for the dijkstra search
+	// creating the heap for the Dijkstra search
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyHur);
 	NAEdgeMap * closedList = new DEBUG_NEW_PLACEMENT NAEdgeMap();
 	NAEdgeMapTwoGen * carmaClosedList = new DEBUG_NEW_PLACEMENT NAEdgeMapTwoGen();
@@ -24,7 +24,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	SafeZoneTableItr iterator;
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipJunctionElement;
-	bool restricted = false, separationRequired;
+	bool restricted = false, separationRequired, foundRestrictedSafezone;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	EvacueeListItr eit;
 	sortedEvacuees->reserve(Evacuees->size());
@@ -39,7 +39,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	vector_NAEdgePtr_Ptr adj;
 	
-	foundRestrictedSafezone = false;
+	EvacueesWithRestrictedSafezone = 0;
     if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
 	ipCurrentJunction = ipJunctionElement;
 	
@@ -145,7 +145,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				foundRestrictedSafezone = false;
 
 				// Continue traversing the network while the heap has remaining junctions in it
-				// this is the actual dijkstra code with the Fibonacci Heap
+				// this is the actual Dijkstra code with the Fibonacci Heap
 				while (!heap->IsEmpty())
 				{
 					// Remove the next junction EID from the top of the stack
@@ -250,16 +250,14 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					}
 				}
 
-				// collect info for carma
+				// collect info for Carma
 				sumVisitedEdge += closedList->Size();
 
+				/// find a path despite the fact that a safe zone (restricted) was found
+				/// This addresses issue number 4: https://github.com/kaveh096/ArcCASPER/issues/4
+				if (!BetterSafeZone && foundRestrictedSafezone) ++EvacueesWithRestrictedSafezone;				
+
 				// generate path for this evacuee if any was found
-				if (!BetterSafeZone && foundRestrictedSafezone)
-				{
-					/// TODO something needs to be done here because we couldn't
-					/// find a path despite the fact that a safe zone (restricted) was found
-					/// This addresses issue number 4: https://github.com/kaveh096/ArcCASPER/issues/4
-				}
 				GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired);
 				MaxEvacueeCostSoFar = max(MaxEvacueeCostSoFar, currentEvacuee->PredictedCost);
 #ifdef DEBUG

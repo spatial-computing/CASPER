@@ -45,7 +45,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	HRESULT hr = S_OK;
 	double globalEvcCost = -1.0, carmaSec = 0.0;
-	bool foundRestrictedSafezone = false;
+	unsigned int EvacueesWithRestrictedSafezone = 0;
 
 	// init memory usage function and set the base
 	peakMemoryUsage = 0l;
@@ -58,7 +58,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// The partialSolution variable is used to indicate to the caller of this method whether or not we were only able to 
 	// find a partial solution to the problem. We initialize this variable to false and set it to true only in certain
-	// conditional cases (e.g., some stops/points are unreachable, a Evacuee point is unlocated, etc.)
+	// conditional cases (e.g., some stops/points are unreachable, a Evacuee point is not located, etc.)
 	*pIsPartialSolution = VARIANT_FALSE;
 
 	// NOTE: this is an appropriate place to check if the user is licensed to run
@@ -482,7 +482,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, pIsPartialSolution, carmaSec, CARMAExtractCounts, ipNetworkDataset, foundRestrictedSafezone);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, pIsPartialSolution, carmaSec, CARMAExtractCounts, ipNetworkDataset, EvacueesWithRestrictedSafezone);
 	}
 	catch (std::exception & ex)
 	{
@@ -980,8 +980,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
 	pMessages->AddMessage(CComBSTR(CARMAExtractsMsg));
 	pMessages->AddMessage(CComBSTR(ExtraInfoMsg));
-	pMessages->AddMessage(CComBSTR(CacheHitMsg));
-	if (foundRestrictedSafezone) pMessages->AddWarning(CComBSTR(_T("For at least one evacuee, a route could have not been found because all reachable safe zones were restricted. Make sure you have some non-restricted safe zones with a non-zero capacity.")));
+	// pMessages->AddMessage(CComBSTR(CacheHitMsg));
+
+	if (EvacueesWithRestrictedSafezone > 0)
+	{
+		CString RestrictedWarning;
+		RestrictedWarning.Format(_T("For %d evacuee(s), a route could not be found because all reachable safe zones were restricted. Make sure you have some non-restricted safe zones with a non-zero capacity."), EvacueesWithRestrictedSafezone);
+		pMessages->AddWarning(CComBSTR(RestrictedWarning));
+	}
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(CComBSTR(simulationIncompleteEndingMsg));
 
