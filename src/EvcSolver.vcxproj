@@ -389,6 +389,7 @@ exit 0</Command>
       <EnablePREfast>false</EnablePREfast>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <AdditionalOptions>/Qpar /Qpar-report:1 /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -464,6 +465,7 @@ exit 0</Command>
       <EnablePREfast>false</EnablePREfast>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <AdditionalOptions>/Qpar /Qpar-report:1 /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

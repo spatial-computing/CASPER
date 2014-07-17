@@ -179,6 +179,7 @@
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <EnablePREfast>false</EnablePREfast>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion)$(PlatformArchitecture).pdb</ProgramDataBaseFileName>
+      <AdditionalOptions>/Qpar /Qpar-report:1 /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -214,6 +215,7 @@
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <EnablePREfast>false</EnablePREfast>
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion)$(PlatformArchitecture).pdb</ProgramDataBaseFileName>
+      <AdditionalOptions>/Qpar /Qpar-report:1 /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
