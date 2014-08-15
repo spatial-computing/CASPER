@@ -57,8 +57,9 @@ API_SHARES_URL="https://api.dropbox.com/1/shares"
 APP_CREATE_URL="https://www2.dropbox.com/developers/apps"
 RESPONSE_FILE="$TMP_DIR/du_resp_$RANDOM"
 CHUNK_FILE="$TMP_DIR/du_chunk_$RANDOM"
+TEMP_FILE="$TMP_DIR/du_tmp_$RANDOM"
 BIN_DEPS="sed basename date grep stat dd mkdir"
-VERSION="0.13"
+VERSION="0.14"
 
 umask 077
 
@@ -143,6 +144,21 @@ else
     HAVE_READLINK=0
 fi
 
+#Forcing to use the builtin printf, if it's present, because it's better
+#otherwise the external printf program will be used
+#Note that the external printf command can cause character encoding issues!
+builtin printf "" 2> /dev/null
+if [[ $? == 0 ]]; then
+    PRINTF="builtin printf"
+    PRINTF_OPT="-v o"
+else
+    PRINTF=$(which printf)
+    if [[ $? != 0 ]]; then
+        echo -e "Error: Required program could not be found: printf"
+    fi
+    PRINTF_OPT=""
+fi
+
 #Print the message based on $QUIET variable
 function print
 {
@@ -163,6 +179,7 @@ function remove_temp_files
     if [[ $DEBUG == 0 ]]; then
         rm -fr "$RESPONSE_FILE"
         rm -fr "$CHUNK_FILE"
+        rm -fr "$TEMP_FILE"
     fi
 }
 
@@ -300,7 +317,7 @@ function urlencode
         c=${string:$pos:1}
         case "$c" in
             [-_.~a-zA-Z0-9] ) o="${c}" ;;
-            * ) printf -v o '%%%02x' "'$c"
+            * ) $PRINTF $PRINTF_OPT '%%%02x' "'$c"
         esac
         encoded+="${o}"
     done
@@ -435,7 +452,7 @@ function db_upload_file
         return
     fi
 
-    if (( $FILE_SIZE > 157286000 )); then
+    if [[ $FILE_SIZE -gt 157286000 ]]; then
         #If the file is greater than 150Mb, the chunked_upload API will be used
         db_chunked_upload_file "$FILE_SRC" "$FILE_DST"
     else
@@ -518,7 +535,7 @@ function db_chunked_upload_file
             let UPLOAD_ERROR=$UPLOAD_ERROR+1
 
             #On error, the upload is retried for max 3 times
-            if (( $UPLOAD_ERROR > 2 )); then
+            if [[ $UPLOAD_ERROR -gt 2 ]]; then
                 print " FAILED\n"
                 print "An error occurred requesting /chunked_upload\n"
                 ERROR_STATUS=1
@@ -546,7 +563,7 @@ function db_chunked_upload_file
             let UPLOAD_ERROR=$UPLOAD_ERROR+1
 
             #On error, the commit is retried for max 3 times
-            if (( $UPLOAD_ERROR > 2 )); then
+            if [[ $UPLOAD_ERROR -gt 2 ]]; then
                 print " FAILED\n"
                 print "An error occurred requesting /commit_chunked_upload\n"
                 ERROR_STATUS=1
@@ -906,8 +923,20 @@ function db_list
             local DIR_CONTENT=$(sed -n 's/.*: \[{\(.*\)/\1/p' "$RESPONSE_FILE" | sed 's/}, *{/}\
 {/g')
 
-            #Converting escaped quotes to unicode format and extracting files and subfolders
-            echo "$DIR_CONTENT" | sed 's/\\"/\\u0022/' | sed -n 's/.*"bytes": *\([0-9]*\),.*"path": *"\([^"]*\)",.*"is_dir": *\([^"]*\),.*/\2:\3;\1/p' > $RESPONSE_FILE
+            #Converting escaped quotes to unicode format
+            echo "$DIR_CONTENT" | sed 's/\\"/\\u0022/' > "$TEMP_FILE"
+
+            #Extracting files and subfolders
+            rm -fr "$RESPONSE_FILE"
+            while read -r line; do
+
+                local FILE=$(echo "$line" | sed -n 's/.*"path": *"\([^"]*\)".*/\1/p')
+                local IS_DIR=$(echo "$line" | sed -n 's/.*"is_dir": *\([^,]*\).*/\1/p')
+                local SIZE=$(echo "$line" | sed -n 's/.*"bytes": *\([0-9]*\).*/\1/p')
+
+                echo -e "$FILE:$IS_DIR;$SIZE" >> "$RESPONSE_FILE"
+
+            done < "$TEMP_FILE"
 
             #Looking for the biggest file size
             #to calculate the padding to use
@@ -917,12 +946,30 @@ function db_list
                 local META=${line##*:}
                 local SIZE=${META#*;}
 
-                if (( ${#SIZE} > $padding )); then
+                if [[ ${#SIZE} -gt $padding ]]; then
                     padding=${#SIZE}
                 fi
-            done < $RESPONSE_FILE
+            done < "$RESPONSE_FILE"
 
-            #For each entry...
+            #For each entry, printing directories...
+            while read -r line; do
+
+                local FILE=${line%:*}
+                local META=${line##*:}
+                local TYPE=${META%;*}
+                local SIZE=${META#*;}
+
+                #Removing unneeded /
+                FILE=${FILE##*/}
+
+                if [[ $TYPE != "false" ]]; then
+                    FILE=$(echo -e "$FILE")
+                    $PRINTF " [D] %-${padding}s %s\n" "$SIZE" "$FILE"
+                fi
+
+            done < "$RESPONSE_FILE"
+
+            #For each entry, printing files...
             while read -r line; do
 
                 local FILE=${line%:*}
@@ -934,15 +981,11 @@ function db_list
                 FILE=${FILE##*/}
 
                 if [[ $TYPE == "false" ]]; then
-                    TYPE="F"
-                else
-                    TYPE="D"
+                    FILE=$(echo -e "$FILE")
+                    $PRINTF " [F] %-${padding}s %s\n" "$SIZE" "$FILE"
                 fi
 
-                FILE=$(echo -e "$FILE")
-                printf " [$TYPE] %-${padding}s %s\n" "$SIZE" "$FILE"
-
-            done < $RESPONSE_FILE
+            done < "$RESPONSE_FILE"
 
         #It's a file
         else
@@ -1035,7 +1078,7 @@ else
             ACCESS_MSG="Full Dropbox"
         fi
 
-        echo -ne "\n > App key is $APPKEY, App secret is $APPSECRET and Access level is $ACCESS_MSG. Looks ok? [y/n]"
+        echo -ne "\n > App key is $APPKEY, App secret is $APPSECRET and Access level is $ACCESS_MSG. Looks ok? [y/n]: "
         read answer
         if [[ $answer == "y" ]]; then
             break;
@@ -1045,7 +1088,7 @@ else
 
     #TOKEN REQUESTS
     echo -ne "\n > Token request... "
-    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o $RESPONSE_FILE --data "oauth_consumer_key=$APPKEY&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_REQUEST_TOKEN_URL" 2> /dev/null
+    $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_REQUEST_TOKEN_URL" 2> /dev/null
     check_http_response
     OAUTH_TOKEN_SECRET=$(sed -n 's/oauth_token_secret=\([a-z A-Z 0-9]*\).*/\1/p' "$RESPONSE_FILE")
     OAUTH_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\)/\1/p' "$RESPONSE_FILE")
@@ -1068,7 +1111,7 @@ else
 
         #API_ACCESS_TOKEN_URL
         echo -ne " > Access Token request... "
-        $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o $RESPONSE_FILE --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_ACCESS_TOKEN_URL" 2> /dev/null
+        $CURL_BIN $CURL_ACCEPT_CERTIFICATES -s --show-error --globoff -i -o "$RESPONSE_FILE" --data "oauth_consumer_key=$APPKEY&oauth_token=$OAUTH_TOKEN&oauth_signature_method=PLAINTEXT&oauth_signature=$APPSECRET%26$OAUTH_TOKEN_SECRET&oauth_timestamp=$(utime)&oauth_nonce=$RANDOM" "$API_ACCESS_TOKEN_URL" 2> /dev/null
         check_http_response
         OAUTH_ACCESS_TOKEN_SECRET=$(sed -n 's/oauth_token_secret=\([a-z A-Z 0-9]*\)&.*/\1/p' "$RESPONSE_FILE")
         OAUTH_ACCESS_TOKEN=$(sed -n 's/.*oauth_token=\([a-z A-Z 0-9]*\)&.*/\1/p' "$RESPONSE_FILE")
@@ -1112,7 +1155,7 @@ case $COMMAND in
 
     upload)
 
-        if [[ $argnum < 2 ]]; then
+        if [[ $argnum -lt 2 ]]; then
             usage
         fi
 
@@ -1127,7 +1170,7 @@ case $COMMAND in
 
     download)
 
-        if [[ $argnum < 1 ]]; then
+        if [[ $argnum -lt 1 ]]; then
             usage
         fi
 
@@ -1140,7 +1183,7 @@ case $COMMAND in
 
     share)
 
-        if [[ $argnum < 1 ]]; then
+        if [[ $argnum -lt 1 ]]; then
             usage
         fi
 
@@ -1158,7 +1201,7 @@ case $COMMAND in
 
     delete|remove)
 
-        if [[ $argnum < 1 ]]; then
+        if [[ $argnum -lt 1 ]]; then
             usage
         fi
 
@@ -1170,7 +1213,7 @@ case $COMMAND in
 
     move|rename)
 
-        if [[ $argnum < 2 ]]; then
+        if [[ $argnum -lt 2 ]]; then
             usage
         fi
 
@@ -1183,7 +1226,7 @@ case $COMMAND in
 
     copy)
 
-        if [[ $argnum < 2 ]]; then
+        if [[ $argnum -lt 2 ]]; then
             usage
         fi
 
@@ -1196,7 +1239,7 @@ case $COMMAND in
 
     mkdir)
 
-        if [[ $argnum < 1 ]]; then
+        if [[ $argnum -lt 1 ]]; then
             usage
         fi
 
