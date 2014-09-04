@@ -70,7 +70,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// check version lock: if the evclayer is too old to be solved then just return a warning
 	if (OldVersionLock)
 	{
-		pMessages->AddError(CComBSTR(_T("This evacuation routing layer is old and cannot be solved with this version of ArcCASPER. Please create a new layer and copy your data over.")));
+		pMessages->AddAbort(CComBSTR(_T("This evacuation routing layer is old and cannot be solved with this version of ArcCASPER. Please create a new layer and copy your data over.")));
 		return E_ABORT;
 	}
 

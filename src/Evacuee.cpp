@@ -115,6 +115,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	{
 		pathSegment = *psit;
 		segmentCost += pathSegment->Edge->GetCurrentCost() * abs(pathSegment->GetEdgePortion());
+		if (FAILED(hr = ipFeatureBufferE->putref_Shape(pathSegment->pline))) return hr;
 		if (FAILED(hr = ipFeatureBufferE->put_Value(ERRouteFieldIndex, RouteOID))) return hr;
 		if (FAILED(hr = ipFeatureBufferE->put_Value(EREdgeFieldIndex, CComVariant(pathSegment->Edge->EID)))) return hr;
 		if (FAILED(hr = ipFeatureBufferE->put_Value(ERSeqFieldIndex, CComVariant(seq)))) return hr;
