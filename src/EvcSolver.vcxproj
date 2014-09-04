@@ -794,6 +794,7 @@ exit 0</Command>
     <ClCompile Include="CustomSolver.cpp" />
     <ClCompile Include="Evacuee.cpp" />
     <ClCompile Include="EvcSolver.cpp" />
+    <ClCompile Include="EvcSolver.GetSet.cpp" />
     <ClCompile Include="EvcSolver.Method.cpp" />
     <ClCompile Include="EvcSolver.Solve.cpp" />
     <ClCompile Include="EvcSolverPropPage.cpp" />

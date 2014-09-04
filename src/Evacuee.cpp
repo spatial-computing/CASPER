@@ -27,9 +27,10 @@ void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSe
 	OrginalCost    += segment->Edge->OriginalCost     * p;
 }
 
-HRESULT EvcPath::AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, 
-		IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
-		long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex, double & predictedCost)
+HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, 
+	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBufferR, IFeatureBufferPtr ipFeatureBufferE, IFeatureCursorPtr ipFeatureCursorR,
+	IFeatureCursorPtr ipFeatureCursorE, long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex, 
+	long ERRouteFieldIndex, long EREdgeFieldIndex, long ERSeqFieldIndex, long ERFromPosFieldIndex, long ERToPosFieldIndex, long ERCostFieldIndex, double & predictedCost)
 {			
 	HRESULT hr = S_OK;
 	OrginalCost = 0.0;
@@ -42,7 +43,7 @@ HRESULT EvcPath::AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDat
 	esriGeometryType type;
 	IPointCollectionPtr pcollect;
 	IPointPtr p;
-	VARIANT featureID;
+	VARIANT RouteOID, RouteEdgesOID;
 
 	for (const_iterator psit = begin(); psit != end(); ++psit)
 	{
@@ -96,16 +97,33 @@ HRESULT EvcPath::AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDat
 	globalEvcCost = max(globalEvcCost, EvacuationCost);
 
 	// Store the feature values on the feature buffer
-	if (FAILED(hr = ipFeatureBuffer->putref_Shape((IPolylinePtr)pline))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(evNameFieldIndex, myEvc->Name))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(evacTimeFieldIndex, CComVariant(EvacuationCost)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(orgTimeFieldIndex, CComVariant(OrginalCost)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(popFieldIndex, CComVariant(RoutedPop)))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->putref_Shape((IPolylinePtr)pline))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->put_Value(evNameFieldIndex, myEvc->Name))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->put_Value(evacTimeFieldIndex, CComVariant(EvacuationCost)))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->put_Value(orgTimeFieldIndex, CComVariant(OrginalCost)))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->put_Value(popFieldIndex, CComVariant(RoutedPop)))) return hr;
 
 	// Insert the feature buffer in the insert cursor
-	if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
+	if (FAILED(hr = ipFeatureCursorR->InsertFeature(ipFeatureBufferR, &RouteOID))) return hr;
 
 	predictedCost = max(predictedCost, EvacuationCost);
+
+	// now export each path segment into ReouteEdges table
+	long seq = 0;
+	double segmentCost = RoutedPop * initDelayCostPerPop;
+	for (const_iterator psit = begin(); psit != end(); ++psit, ++seq)
+	{
+		pathSegment = *psit;
+		segmentCost += pathSegment->Edge->GetCurrentCost() * abs(pathSegment->GetEdgePortion());
+		if (FAILED(hr = ipFeatureBufferE->put_Value(ERRouteFieldIndex, RouteOID))) return hr;
+		if (FAILED(hr = ipFeatureBufferE->put_Value(EREdgeFieldIndex, CComVariant(pathSegment->Edge->EID)))) return hr;
+		if (FAILED(hr = ipFeatureBufferE->put_Value(ERSeqFieldIndex, CComVariant(seq)))) return hr;
+		if (FAILED(hr = ipFeatureBufferE->put_Value(ERFromPosFieldIndex, CComVariant(pathSegment->GetFromRatio())))) return hr;
+		if (FAILED(hr = ipFeatureBufferE->put_Value(ERToPosFieldIndex, CComVariant(pathSegment->GetToRatio())))) return hr;
+		if (FAILED(hr = ipFeatureBufferE->put_Value(ERCostFieldIndex, CComVariant(segmentCost)))) return hr;
+
+		if (FAILED(hr = ipFeatureCursorE->InsertFeature(ipFeatureBufferE, &RouteEdgesOID))) return hr;
+	}
 
 	// Step the progress bar before continuing to the next Evacuee point
 	if (ipStepProgressor) ipStepProgressor->Step();
@@ -119,7 +137,7 @@ HRESULT EvcPath::AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDat
 	return hr;
 }
 
-void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees)
+void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees, CARMASort sortDir)
 {
 	std::vector<EvacueePtr> * p = 0;
 	std::vector<EvacueePtr>::iterator i;
@@ -129,7 +147,7 @@ void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * lis
 	{
 		if ((*i)->Reachable && (*i)->Population > 0.0)
 		{
-			(*i)->PredictedCost = FLT_MAX; // reset evacuation prediction
+			if (sortDir % 2 == 1) (*i)->PredictedCost = FLT_MAX; // reset evacuation prediction for continues carma sort
 
 			for (v = (*i)->vertices->begin(); v != (*i)->vertices->end(); v++)
 			{

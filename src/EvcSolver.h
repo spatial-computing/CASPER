@@ -62,6 +62,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT SolverMethod([in] EvcSolverMethod value);
 	[propget, helpstring("Gets the selected solver method")]
 		HRESULT SolverMethod([out, retval] EvcSolverMethod * value);
+	[propput, helpstring("Sets the carma sort setting")]
+		HRESULT CARMASortSetting([in] CARMASort value);
+	[propget, helpstring("Gets the carma sort setting")]
+		HRESULT CARMASortSetting([out, retval] CARMASort * value);
 	[propput, helpstring("Sets the cost method")]
 		HRESULT TrafficModel([in] EvcTrafficModel value);
 	[propget, helpstring("Gets the selected cost method")]
@@ -137,8 +141,9 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(4),
-		  c_featureRetrievalInterval(500)
+		  c_version(5),
+		  c_featureRetrievalInterval(500),
+		  OldVersionLock(false)
 	  {
 	  }
 
@@ -175,6 +180,8 @@ public:
 	STDMETHOD(get_SeparableEvacuee)(VARIANT_BOOL * value);
 	STDMETHOD(put_SolverMethod)(EvcSolverMethod   value);
 	STDMETHOD(get_SolverMethod)(EvcSolverMethod * value);
+	STDMETHOD(put_CARMASortSetting)(CARMASort   value);
+	STDMETHOD(get_CARMASortSetting)(CARMASort * value);
 	STDMETHOD(put_TrafficModel)(EvcTrafficModel   value);
 	STDMETHOD(get_TrafficModel)(EvcTrafficModel * value);
 	STDMETHOD(put_SaturationPerCap)(BSTR   value);
@@ -322,6 +329,8 @@ private:
 	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;	
 	HANDLE					hProcessPeakMemoryUsage;
+	CARMASort               carmaSortDirection;
+	bool                    OldVersionLock;
 
 	VARIANT_BOOL twoWayShareCapacity;
 	VARIANT_BOOL ThreeGenCARMA;	
@@ -341,6 +350,7 @@ private:
 	std::vector<INetworkAttribute2Ptr>	discriptiveAttribs;
 	IArray								* allAttribs;
 	const long			c_version;
+	long                savedVersion;
 	const long			c_featureRetrievalInterval;
 };
 

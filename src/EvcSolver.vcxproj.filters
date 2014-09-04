@@ -54,6 +54,9 @@
     <ClCompile Include="TrafficModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EvcSolver.GetSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Evacuee.h">

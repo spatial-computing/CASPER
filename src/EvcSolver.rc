@@ -95,49 +95,51 @@ IDR_CUSTOMSOLVER        REGISTRY                "EvcSolver.rgs"
 // Dialog
 //
 
-IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 249
+IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 251
 STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "General Options",IDC_SearchGroup,7,12,190,208
+    GROUPBOX        "General Options",IDC_SearchGroup,7,12,190,216
     LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,217,62,119,8
     EDITTEXT        IDC_EDIT_SAT,339,58,46,14,ES_AUTOHSCROLL
     LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,44,108,8
     EDITTEXT        IDC_EDIT_Critical,339,40,46,14,ES_AUTOHSCROLL
     LTEXT           "Capacity Network Attribute:",IDC_STATIC_Capacity,20,28,104,8
     COMBOBOX        IDC_COMBO_CAPACITY,127,26,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,65,102,8
-    COMBOBOX        IDC_COMBO_METHOD,127,63,63,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,63,102,8
+    COMBOBOX        IDC_COMBO_METHOD,127,61,63,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Traffic Model:",IDC_STATIC,217,26,84,8
     COMBOBOX        IDC_COMBO_TRAFFICMODEL,322,24,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Population at each location is separable",IDC_CHECK_SEPARABLE,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,162,147,12
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,171,147,12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,177,115,13
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,186,115,13
     GROUPBOX        "Traffic Modeling",IDC_CapacityOptions,202,12,190,68
-    LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,20,106,95,8
-    EDITTEXT        IDC_EDIT_ZoneDensity,127,103,63,14,ES_AUTOHSCROLL
+    LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,20,118,95,8
+    EDITTEXT        IDC_EDIT_ZoneDensity,127,115,63,14,ES_AUTOHSCROLL
     GROUPBOX        "Flocking Model Options",IDC_FlockOptions,201,87,191,82
     CONTROL         "Flocking enabled?",IDC_CHECK_Flock,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,217,101,74,14
     EDITTEXT        IDC_EDIT_FlockSnapInterval,339,130,46,14,ES_AUTOHSCROLL
     LTEXT           "Snapshot Interval:",IDC_STATIC_FlockSnapInterval,217,134,59,8
     EDITTEXT        IDC_EDIT_FlockSimulationInterval,339,149,46,14,ES_AUTOHSCROLL
     LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,217,152,60,8
-    LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,20,47,104,8
-    COMBOBOX        IDC_COMBO_COST,127,45,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,191,129,13
-    LTEXT           "Init Delay Cost Per Evacuee:",IDC_STATIC_INITDELAY,20,87,102,8
-    EDITTEXT        IDC_EDIT_INITDELAY,127,85,63,14,ES_AUTOHSCROLL
+    LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,20,46,104,8
+    COMBOBOX        IDC_COMBO_COST,127,44,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,200,129,13
+    LTEXT           "Init Delay Cost Per Evacuee:",IDC_STATIC_INITDELAY,20,99,102,8
+    EDITTEXT        IDC_EDIT_INITDELAY,127,97,63,14,ES_AUTOHSCROLL
     LTEXT           "Flocking Profile:",IDC_STATIC_FlockProfile,217,116,61,8
     COMBOBOX        IDC_COMBO_PROFILE,322,113,63,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,123,95,8
-    EDITTEXT        IDC_EDIT_CARMA,127,120,63,14,ES_AUTOHSCROLL
-    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",WS_TABSTOP,20,230,83,13
+    LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,135,95,8
+    EDITTEXT        IDC_EDIT_CARMA,127,132,63,14,ES_AUTOHSCROLL
+    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",WS_TABSTOP,20,232,83,13
     CONTROL         "Run CARMA with DSPT (experimental)",IDL_CHECK_CARMAGEN,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,205,171,13
-    EDITTEXT        IDC_EDIT_SELFISH,127,137,63,14,ES_AUTOHSCROLL
-    LTEXT           "Selfish Routing Ratio:",IDC_Lable_SelfishRatio,20,140,95,8
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,214,171,13
+    EDITTEXT        IDC_EDIT_SELFISH,127,149,63,14,ES_AUTOHSCROLL
+    LTEXT           "Selfish Routing Ratio:",IDC_Lable_SelfishRatio,20,152,95,8
+    LTEXT           "CARMA Sort Direction:",IDC_STATIC_CarmaSort,20,80,102,8
+    COMBOBOX        IDC_COMBO_CarmaSort,127,78,63,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 
@@ -154,7 +156,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 396
         TOPMARGIN, 7
-        BOTTOMMARGIN, 243
+        BOTTOMMARGIN, 245
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -183,8 +185,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
