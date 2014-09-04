@@ -278,7 +278,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // RouteEdges layer
 
   // Get the EdgeStat NAClass/FeatureClass
-  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_EDGES_NAME), &ipUnknown))) return hr;
+  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipRouteEdgesFC(ipUnknown);
   if (!ipRouteEdgesFC) return E_UNEXPECTED;
@@ -312,7 +312,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   ((IFeatureSelectionPtr)ipRouteEdgesFeatureLayer)->putref_SelectionColor(ipSelectionColor);
 
-  // Add the new routes layer as a sub-layer in the new NALayer
+  // Add the new RouteEdges layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipRouteEdgesFeatureLayer);
 
   /////////////////////////////////////////////////////////////////////////////////////////////
@@ -457,6 +457,16 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     ipGeoFeatureLayer = ipSubLayer;
     if (FAILED(hr = CreateLineRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // RouteEdges
+  pNALayer->get_LayerByNAClassName(CComBSTR(CS_ROUTEEDGES_NAME), &ipSubLayer);
+  if (ipSubLayer)
+  {
+	  ipGeoFeatureLayer = ipSubLayer;
+	  if (FAILED(hr = CreateLineRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
+	  if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
   return S_OK;  
