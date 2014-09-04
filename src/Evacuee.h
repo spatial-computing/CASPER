@@ -19,6 +19,9 @@ class NAEdgeCache;
 typedef NAVertex * NAVertexPtr;
 enum EvcSolverMethod : unsigned char;
 
+// enum for carma sort setting
+[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char { FWSingle = 0x0, FMCont = 0x1, BWSingle = 0x2, BWCont = 0x3 };
+
 class PathSegment
 {
 private:
@@ -37,6 +40,9 @@ public:
 	    fromRatio = FromRatio;
 	    if (fromRatio == toRatio) fromRatio = toRatio - 0.001;
     }
+
+	double GetFromRatio() const { return fromRatio; }
+	double GetToRatio()   const { return toRatio;   }
 
     PathSegment(NAEdge * edge, double FromRatio = 0.0, double ToRatio = 1.0)
     {
@@ -78,9 +84,8 @@ public:
 	}
 
 	void AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment);
-	HRESULT AddPathToFeatureBuffer(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, 
-		IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
-		long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex, double & predictedCost);
+	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
+		IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , double & );
 
 	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
 	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
@@ -147,7 +152,7 @@ class NAEvacueeVertexTable : public stdext::hash_map<long, std::vector<EvacueePt
 public:
 	~NAEvacueeVertexTable();
 
-	void InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees);
+	void InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees, CARMASort sortDir);
 	std::vector<EvacueePtr> * Find(long junctionEID);
 	void Erase(long junctionEID);
 };

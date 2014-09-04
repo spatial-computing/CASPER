@@ -46,6 +46,16 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hCmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Bike")));
 		::SendMessage(m_hCmbFlockProfile, CB_SETCURSEL, (WPARAM)profile, 0);
 
+		// set the flocking profile names
+		CARMASort sort;
+		m_ipEvcSolver->get_CARMASortSetting(&sort);
+		::SendMessage(m_hCmbCarmaSort, CB_RESETCONTENT, NULL, NULL);
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("FW Once")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("FW Cont")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("BW Once")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("BW Cont")));
+		::SendMessage(m_hCmbCarmaSort, CB_SETCURSEL, (WPARAM)sort, 0);
+
 		// set flags
 		VARIANT_BOOL val;
 		m_ipEvcSolver->get_SeparableEvacuee(&val);
@@ -305,6 +315,8 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex > -1) ipSolver->put_TrafficModel((EvcTrafficModel)selectedIndex);
 		selectedIndex = ::SendMessage(m_hCmbFlockProfile, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_FlockingProfile((FLOCK_PROFILE)selectedIndex);
+		selectedIndex = ::SendMessage(m_hCmbCarmaSort, CB_GETCURSEL, 0, 0);
+		if (selectedIndex > -1) ipSolver->put_CARMASortSetting((CARMASort)selectedIndex);
 
 		// flags
 		selectedIndex = ::SendMessage(m_hSeparable, BM_GETCHECK, 0, 0);
@@ -444,6 +456,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_heditCARMA = GetDlgItem(IDC_EDIT_CARMA);
 	m_hThreeGenCARMA = GetDlgItem(IDL_CHECK_CARMAGEN);
 	m_heditSelfish = GetDlgItem(IDC_EDIT_SELFISH);
+	m_hCmbCarmaSort = GetDlgItem(IDC_COMBO_CarmaSort);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
@@ -633,6 +646,14 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /
 }
 
 LRESULT EvcSolverPropPage::OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnCbnSelchangeComboCARMASort(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

@@ -23,6 +23,7 @@
 #define CS_ZONES_NAME						        L"Zones"
 #define CS_ROUTES_NAME						        L"Routes"
 #define CS_EDGES_NAME						        L"EdgeStat"
+#define CS_ROUTEEDGES_NAME  				        L"RouteEdges"
 #define CS_FLOCKS_NAME						        L"Flocks"
 
 // Generic Class Definition Field Names
@@ -63,6 +64,14 @@
 #define CS_FIELD_OrgCost                            L"OrgCost"
 #define CS_FIELD_DIR                                L"Direction"
 #define CS_FIELD_EID                                L"EdgeID"
+
+// 
+
+#define CS_FIELD_RID                                L"RouteID"
+#define CS_FIELD_SEQ                                L"Sequence"
+#define CS_FIELD_FromP                              L"FromPos"
+#define CS_FIELD_ToP                                L"ToPos"
+
 
 // Coded Value Domain Names
 

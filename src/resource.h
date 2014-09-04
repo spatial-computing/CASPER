@@ -49,6 +49,9 @@
 #define IDC_Lable_SelfishRatio          246
 #define IDC_RELEASE                     247
 #define IDC_EDIT_SELFISH                248
+#define IDC_STATIC_CarmaSort            249
+#define IDC_COMBO_METHOD2               250
+#define IDC_COMBO_CarmaSort             250
 
 // Next default values for new objects
 // 

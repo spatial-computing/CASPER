@@ -67,6 +67,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Clear the GP messages
 	if (FAILED(hr = pMessages->Clear())) return hr;
 
+	// check version lock: if the evclayer is too old to be solved then just return a warning
+	if (OldVersionLock)
+	{
+		pMessages->AddAbort(CComBSTR(_T("This evacuation routing layer is old and cannot be solved with this version of ArcCASPER. Please create a new layer and copy your data over.")));
+		return E_ABORT;
+	}
+
 	// Validate the context (i.e., make sure that it is bound to a network dataset)
 	INetworkDatasetPtr ipNetworkDataset;
 	if (FAILED(hr = pNAContext->get_NetworkDataset(&ipNetworkDataset))) return hr;
@@ -121,6 +128,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_EDGES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
+
+	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
+	INAClassPtr ipRouteEdgesNAClass(ipUnk);
+	if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr;
+
 #if defined(_FLOCK)
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
 	INAClassPtr ipFlocksNAClass(ipUnk);
@@ -600,29 +612,41 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	
 	// Get the "Routes" NAClass feature class
 	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
+	IFeatureClassPtr ipRouteEdgesFC(ipRouteEdgesNAClass);
+	
 
 	// Create an insert cursor and feature buffer from the "Routes" feature class to be used to write routes
-	IFeatureCursorPtr ipFeatureCursor;
-	if (FAILED(hr = ipRoutesFC->Insert(VARIANT_TRUE, &ipFeatureCursor))) return hr;
+	IFeatureCursorPtr ipFeatureCursorR, ipFeatureCursorE;
+	if (FAILED(hr = ipRoutesFC->Insert(VARIANT_TRUE, &ipFeatureCursorR))) return hr;
+	if (FAILED(hr = ipRouteEdgesFC->Insert(VARIANT_TRUE, &ipFeatureCursorE))) return hr;
 
-	IFeatureBufferPtr ipFeatureBuffer;
-	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBuffer))) return hr;
+	IFeatureBufferPtr ipFeatureBufferR, ipFeatureBufferE;
+	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBufferR))) return hr;
+	if (FAILED(hr = ipRouteEdgesFC->CreateFeatureBuffer(&ipFeatureBufferE))) return hr;
 
 	// Query for the appropriate field index values in the "routes" feature class
-	long evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex;
+	long evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, ERSeqFieldIndex, ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_ORG), &orgTimeFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr;
+	if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_RID), &ERRouteFieldIndex))) return hr;
+	if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_EID), &EREdgeFieldIndex))) return hr;
+	if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_SEQ), &ERSeqFieldIndex))) return hr;
+	if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_FromP), &ERFromPosFieldIndex))) return hr;
+	if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_ToP), &ERToPosFieldIndex))) return hr;
+	if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_COST), &ERCostFieldIndex))) return hr;
 
 	for (pit = tempPathList->begin(); pit != tempPathList->end(); pit++)
 	{
-		(*pit)->AddPathToFeatureBuffer(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBuffer, ipFeatureCursor,
-			evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, predictedCost);
+		(*pit)->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
+			ipFeatureBufferE, ipFeatureCursorR, ipFeatureCursorE, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, ERSeqFieldIndex,
+			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex, predictedCost);
 	}
 		
 	// flush the insert buffer
-	ipFeatureCursor->Flush();
+	ipFeatureCursorR->Flush();
+	ipFeatureCursorE->Flush();
 
 	////////////////////////////////////////////////////////////////////////////////
 	///// Exporting EdgeStat data to output featureClass
@@ -631,6 +655,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		// Get the "Routes" NAClass feature class
 		IFeatureClassPtr ipEdgesFC(ipEdgesNAClass);
+		IFeatureCursorPtr ipFeatureCursor;
+		IFeatureBufferPtr ipFeatureBuffer;
 		NAEdgePtr edge;
 		long sourceIDFieldIndex, sourceOIDFieldIndex, resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, dirFieldIndex, eidFieldIndex, congestionFieldIndex;
 
@@ -712,6 +738,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (this->flockingEnabled)
 	{
 		// Get the "Flocks" NAClass feature class
+		IFeatureCursorPtr ipFeatureCursor;
+		IFeatureBufferPtr ipFeatureBuffer;
 		PathSegment * pathSegment;
 		EvcPath::const_iterator psit;
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
