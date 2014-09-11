@@ -20,7 +20,7 @@ typedef NAVertex * NAVertexPtr;
 enum EvcSolverMethod : unsigned char;
 
 // enum for carma sort setting
-[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char { FWSingle = 0x0, FMCont = 0x1, BWSingle = 0x2, BWCont = 0x3 };
+[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char { None = 0x0, FWSingle = 0x1, FMCont = 0x2, BWSingle = 0x3, BWCont = 0x4 };
 
 class PathSegment
 {
@@ -114,9 +114,11 @@ public:
 	double Population;
 	double PredictedCost;
 	bool Reachable;
+	UINT32 ObjectID;
 
-	Evacuee(VARIANT name, double pop)
+	Evacuee(VARIANT name, double pop, UINT32 objectID)
 	{
+		ObjectID = objectID;
 		Name = name;
 		vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 		paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
@@ -138,6 +140,11 @@ public:
 	{
 		if (e1->PredictedCost == e2->PredictedCost) return e1->Population < e2->Population;
 		else return e1->PredictedCost < e2->PredictedCost;
+	}
+
+	static bool LessThanObjectID(Evacuee * e1, Evacuee * e2)
+	{
+		return e1->ObjectID < e2->ObjectID;
 	}
 };
 

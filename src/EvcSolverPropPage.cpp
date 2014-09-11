@@ -50,10 +50,11 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		CARMASort sort;
 		m_ipEvcSolver->get_CARMASortSetting(&sort);
 		::SendMessage(m_hCmbCarmaSort, CB_RESETCONTENT, NULL, NULL);
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("None")));
 		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("FW Once")));
-		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("FW Cont")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("FW Continuous")));
 		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("BW Once")));
-		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("BW Cont")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("BW Continuous")));
 		::SendMessage(m_hCmbCarmaSort, CB_SETCURSEL, (WPARAM)sort, 0);
 
 		// set flags

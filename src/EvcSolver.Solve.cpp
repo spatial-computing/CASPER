@@ -235,7 +235,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	SafeZoneTableInsertReturn insertRet;
 	INetworkEdgePtr ipEdge(ipElement);
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
-	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l;
+	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID;
 	VARIANT evName, pop, cap;
 
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting input point(s)")); // add more specific information here if appropriate
@@ -362,6 +362,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
 	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_EVC_POP), &popFieldIndex))) return hr;
 
+
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
 		ipNALocationObject = ipRow;
@@ -407,7 +408,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Get the OID of the evacuee NALocation
 			if (FAILED(hr = ipRow->get_Value(nameFieldIndex, &evName))) return hr;
 			if (FAILED(hr = ipRow->get_Value(popFieldIndex, &pop))) return hr;
-			currentEvacuee = new DEBUG_NEW_PLACEMENT Evacuee(evName, pop.dblVal);
+			if (FAILED(hr = ipRow->get_OID(&objectID))) return hr;
+			currentEvacuee = new DEBUG_NEW_PLACEMENT Evacuee(evName, pop.dblVal, objectID);
 
 			while (ipEnumNetworkElement->Next(&ipElement) == S_OK)
 			{

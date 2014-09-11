@@ -245,6 +245,9 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	return S_OK;
 }
 
+#pragma warning(push)
+#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
+
 STDMETHODIMP EvcSolver::UpdateContext(INAContext* pNAContext, IDENetworkDataset* pNetwork, IGPMessages* pMessages)
 {
 	// UpdateContext() is a method used to update the context based on any changes that may have been made to the
@@ -252,6 +255,8 @@ STDMETHODIMP EvcSolver::UpdateContext(INAContext* pNAContext, IDENetworkDataset*
 	// be set as fields in the context's NAClass schemas
 	return S_OK;
 }
+
+#pragma warning(pop)
 
 /////////////////////////////////////////////////////////////////////
 // IPersistStream

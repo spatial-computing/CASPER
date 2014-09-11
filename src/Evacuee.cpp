@@ -148,7 +148,7 @@ void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * lis
 	{
 		if ((*i)->Reachable && (*i)->Population > 0.0)
 		{
-			if (sortDir % 2 == 1) (*i)->PredictedCost = FLT_MAX; // reset evacuation prediction for continues carma sort
+			if (sortDir % 2 == 0) (*i)->PredictedCost = FLT_MAX; // reset evacuation prediction for continues carma sort
 
 			for (v = (*i)->vertices->begin(); v != (*i)->vertices->end(); v++)
 			{
