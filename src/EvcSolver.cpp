@@ -335,7 +335,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	else
 	{
 		carmaSortDirection = BWCont;
-		OldVersionLock = true;
+		DoNotExportRouteEdges = true;
 	}
 	
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
