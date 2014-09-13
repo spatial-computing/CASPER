@@ -713,7 +713,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// flush the insert buffer
 		ipFeatureCursor->Flush();
 	
-		if (!sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));	
+		if (sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));	
 	}
 
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
