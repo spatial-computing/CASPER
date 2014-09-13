@@ -20,7 +20,6 @@
 #define IDC_LableZoneDensity            224
 #define IDC_STATIC_Capacity             225
 #define IDC_CHECK_SEPARABLE             226
-#define IDC_CHECK_SEPARABLE2            227
 #define IDC_CHECK_EDGESTAT              227
 #define IDC_EDIT_ZoneDensity            228
 #define IDC_ZoneOptions                 229
@@ -45,13 +44,15 @@
 #define IDC_STATIC_LINE                 245
 #define RMAGEN                          245
 #define IDL_CHECK_CARMAGEN              245
-#define IDC_LableCARMA2                 246
 #define IDC_Lable_SelfishRatio          246
 #define IDC_RELEASE                     247
 #define IDC_EDIT_SELFISH                248
 #define IDC_STATIC_CarmaSort            249
-#define IDC_COMBO_METHOD2               250
 #define IDC_COMBO_CarmaSort             250
+#define IDC_RoutingOptions              251
+#define IDC_STATIC_UTurn                252
+#define IDC_COMBO_UTurn                 253
+#define IDC_GeneralOptions              254
 
 // Next default values for new objects
 // 

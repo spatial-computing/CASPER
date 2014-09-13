@@ -2,35 +2,49 @@
 #include "NameConstants.h"
 #include "EvcSolver.h"
 
-#pragma warning(push)
-#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
-
-// EvcSolver
-
-/////////////////////////////////////////////////////////////////////
-// INASolverOutputGeneralization
-STDMETHODIMP EvcSolver::put_OutputGeometryPrecision(VARIANT value)
-{
-	return S_OK;
-}
-
-STDMETHODIMP EvcSolver::get_OutputGeometryPrecision(VARIANT * value)
-{
-	return S_OK;
-}
-
-STDMETHODIMP EvcSolver::put_OutputGeometryPrecisionUnits(esriUnits value)
-{
-	return S_OK;
-}
-
-STDMETHODIMP EvcSolver::get_OutputGeometryPrecisionUnits(esriUnits * value)
-{
-	return S_OK;
-}
-
 /////////////////////////////////////////////////////////////////////
 // INARouteSolver2
+
+STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
+{
+	// This name is locale/language independent and should not be translated. 
+	if (!pName) return E_POINTER;
+	*pName = ::SysAllocString(CS_NAME);
+
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_DisplayName(BSTR * pName)
+{
+	// This name should be translated and would typically come from
+	// a string resource. 
+	if (!pName) return E_POINTER;
+	*pName = ::SysAllocString(CS_DISPLAY_NAME);
+
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_ClassDefinitions(INamedSet ** ppDefinitions)
+{
+	if (!ppDefinitions) return E_POINTER;
+
+	*ppDefinitions = 0;
+
+	// get_ClassDefinitions() will return the default NAClasses that this solver uses.
+	// We will define a NAClass for "Evacuee Points", "Barriers", and "Lines".
+	// Barriers are just like the other NA Solvers' Barriers.
+	// Lines are the sets of connected/disconnected lines that this solver discovers.
+	// Lines are akin to the Routes output from a Route Solver.
+	// Evacuee Points are the origins of traversal for this solver.
+
+	ISpatialReferencePtr ipUnkSR(CLSID_UnknownCoordinateSystem);
+
+	HRESULT hr;
+	if (FAILED(hr = BuildClassDefinitions(ipUnkSR, ppDefinitions, 0)))
+		return AtlReportError(GetObjectCLSID(), _T("Failed to create class definitions."), IID_INASolver, hr);
+
+	return S_OK;
+}
 
 STDMETHODIMP EvcSolver::get_StartTime(DATE * Value)
 {
@@ -39,20 +53,25 @@ STDMETHODIMP EvcSolver::get_StartTime(DATE * Value)
 	return S_OK;
 }
 
+#pragma warning(push)
+#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
+
 STDMETHODIMP EvcSolver::put_StartTime(DATE Value)
 {
 	return S_OK;
 }
 
+STDMETHODIMP EvcSolver::put_UseStartTime(VARIANT_BOOL Value)
+{
+	return S_OK;
+}
+
+#pragma warning(pop)
+
 STDMETHODIMP EvcSolver::get_UseStartTime(VARIANT_BOOL * Value)
 {
 	if (!Value) return E_POINTER;
 	*Value = VARIANT_FALSE;
-	return S_OK;
-}
-
-STDMETHODIMP EvcSolver::put_UseStartTime(VARIANT_BOOL Value)
-{
 	return S_OK;
 }
 
@@ -139,48 +158,6 @@ STDMETHODIMP EvcSolver::put_FindBestSequence(VARIANT_BOOL Value)
 	m_bPersistDirty = true;
 	return S_OK;
 }
-
-STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
-{
-	// This name is locale/language independent and should not be translated. 
-	if (!pName) return E_POINTER;
-	*pName = ::SysAllocString(CS_NAME);
-
-	return S_OK;
-}
-
-STDMETHODIMP EvcSolver::get_DisplayName(BSTR * pName)
-{
-	// This name should be translated and would typically come from
-	// a string resource. 
-	if (!pName) return E_POINTER;
-	*pName = ::SysAllocString(CS_DISPLAY_NAME);
-
-	return S_OK;
-}
-
-STDMETHODIMP EvcSolver::get_ClassDefinitions(INamedSet ** ppDefinitions)
-{
-	if (!ppDefinitions) return E_POINTER;
-
-	*ppDefinitions = 0;
-
-	// get_ClassDefinitions() will return the default NAClasses that this solver uses.
-	// We will define a NAClass for "Evacuee Points", "Barriers", and "Lines".
-	// Barriers are just like the other NA Solvers' Barriers.
-	// Lines are the sets of connected/disconnected lines that this solver discovers.
-	// Lines are akin to the Routes output from a Route Solver.
-	// Evacuee Points are the origins of traversal for this solver.
-
-	ISpatialReferencePtr ipUnkSR(CLSID_UnknownCoordinateSystem);
-
-	HRESULT hr;
-	if (FAILED(hr = BuildClassDefinitions(ipUnkSR, ppDefinitions, 0)))
-		return AtlReportError(GetObjectCLSID(), _T("Failed to create class definitions."), IID_INASolver, hr);
-
-	return S_OK;
-}
-
 STDMETHODIMP EvcSolver::get_CanUseHierarchy(VARIANT_BOOL * pCanUseHierarchy)
 {
 	// This solver does not make use of hierarchies
@@ -656,16 +633,6 @@ STDMETHODIMP EvcSolver::get_AttributeParameterValue(BSTR AttributeName, BSTR par
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_ResetHierarchyRangesOnBind(VARIANT_BOOL value)
-{
-	return E_NOTIMPL; // This solver does not support hierarchy
-}
-
-STDMETHODIMP EvcSolver::get_ResetHierarchyRangesOnBind(VARIANT_BOOL * value)
-{
-	return E_NOTIMPL; // This solver does not support hierarchy
-}
-
 STDMETHODIMP EvcSolver::put_ImpedanceAttributeName(BSTR attributeName)
 {
 	size_t count = costAttribs.size(), i;
@@ -746,6 +713,42 @@ STDMETHODIMP EvcSolver::get_RestrictUTurns(esriNetworkForwardStarBacktrack * pBa
 	return S_OK;
 }
 
+STDMETHODIMP EvcSolver::get_UseHierarchy(VARIANT_BOOL* pUseHierarchy)
+{
+	if (!pUseHierarchy) return E_POINTER;
+
+	// This solver does not support hierarchy attributes
+
+	*pUseHierarchy = VARIANT_FALSE;
+
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_IgnoreInvalidLocations(VARIANT_BOOL * pIgnoreInvalidLocations)
+{
+	*pIgnoreInvalidLocations = VARIANT_TRUE;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_HierarchyLevelCount(long * pCount)
+{
+	*pCount = 0;
+	return S_OK; // This solver does not support hierarchy attributes
+}
+
+#pragma warning(push)
+#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
+
+STDMETHODIMP EvcSolver::put_ResetHierarchyRangesOnBind(VARIANT_BOOL value)
+{
+	return E_NOTIMPL; // This solver does not support hierarchy
+}
+
+STDMETHODIMP EvcSolver::get_ResetHierarchyRangesOnBind(VARIANT_BOOL * value)
+{
+	return E_NOTIMPL; // This solver does not support hierarchy
+}
+
 STDMETHODIMP EvcSolver::get_AccumulateAttributeNames(IStringArray ** ppAttributeNames)
 {
 	return E_NOTIMPL; // This solver does not support attribute accumulation
@@ -761,26 +764,9 @@ STDMETHODIMP EvcSolver::put_IgnoreInvalidLocations(VARIANT_BOOL ignoreInvalidLoc
 	return S_OK; // This solver does not support ignoring invalid locations
 }
 
-STDMETHODIMP EvcSolver::get_IgnoreInvalidLocations(VARIANT_BOOL * pIgnoreInvalidLocations)
-{
-	*pIgnoreInvalidLocations = VARIANT_TRUE;
-	return S_OK;
-}
-
 STDMETHODIMP EvcSolver::put_UseHierarchy(VARIANT_BOOL useHierarchy)
 {
 	return S_OK; // This solver does not support hierarchy attributes
-}
-
-STDMETHODIMP EvcSolver::get_UseHierarchy(VARIANT_BOOL* pUseHierarchy)
-{
-	if (!pUseHierarchy) return E_POINTER;
-
-	// This solver does not support hierarchy attributes
-
-	*pUseHierarchy = VARIANT_FALSE;
-
-	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_HierarchyAttributeName(BSTR attributeName)
@@ -795,12 +781,6 @@ STDMETHODIMP EvcSolver::get_HierarchyAttributeName(BSTR* pattributeName)
 
 STDMETHODIMP EvcSolver::put_HierarchyLevelCount(long Count)
 {
-	return S_OK; // This solver does not support hierarchy attributes
-}
-
-STDMETHODIMP EvcSolver::get_HierarchyLevelCount(long * pCount)
-{
-	*pCount = 0;
 	return S_OK; // This solver does not support hierarchy attributes
 }
 
@@ -822,6 +802,28 @@ STDMETHODIMP EvcSolver::put_NumTransitionToHierarchy(long toLevel, long value)
 STDMETHODIMP EvcSolver::get_NumTransitionToHierarchy(long toLevel, long * pValue)
 {
 	return E_NOTIMPL; // This solver does not support hierarchy attributes
+}
+
+/////////////////////////////////////////////////////////////////////
+// INASolverOutputGeneralization
+STDMETHODIMP EvcSolver::put_OutputGeometryPrecision(VARIANT value)
+{
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_OutputGeometryPrecision(VARIANT * value)
+{
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_OutputGeometryPrecisionUnits(esriUnits value)
+{
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_OutputGeometryPrecisionUnits(esriUnits * value)
+{
+	return S_OK;
 }
 
 #pragma warning(pop)

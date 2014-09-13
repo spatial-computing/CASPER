@@ -105,6 +105,5 @@
     <None Include="EvcSolver.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="TODO List.txt" />
   </ItemGroup>
 </Project>

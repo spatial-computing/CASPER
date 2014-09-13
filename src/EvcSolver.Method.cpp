@@ -522,12 +522,20 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		}
 	}
 	if (!redundentSortedEvacuees->empty())
-	{		
-		std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);		
-		if (carmaSortDirection >= 0x2) // backward sort
-			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
-		else // forward sort
+	{	
+		if (carmaSortDirection)
+		{
+			std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThan);
+			// backward sort
+			if (carmaSortDirection > 0x2) SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
+			// forward sort
+			else                          SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->begin(), redundentSortedEvacuees->end());
+		}
+		else // sort by original order (objectID)
+		{
+			std::sort(redundentSortedEvacuees->begin(), redundentSortedEvacuees->end(), Evacuee::LessThanObjectID);
 			SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->begin(), redundentSortedEvacuees->end());
+		}
 	}
 
 	UpdatePeakMemoryUsage();

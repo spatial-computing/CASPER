@@ -43,7 +43,7 @@ namespace ArcCASPERLog
                 var CarmaRex = new Regex(@"algorithm performed (\d+) CARMA", RegexOptions.None);
                 var CarmaRex2 = new Regex(@"algorithm performed (\d+) CARMA loop\(s\) in (\d+\.\d+) seconds.", RegexOptions.None);
                 var EvcTimeRex = new Regex(@"Global evacuation cost is (\-?\d+\.\d+)", RegexOptions.None);
-                var MemRex = new Regex(@"Peak memory usage is (\d+) MB", RegexOptions.None);
+                var MemRex = new Regex(@"Peak memory usage (exluding flocking) is (\d+) MB", RegexOptions.None);
                 Match m = null;
 
                 csvStrings.Add("Name,CalcTime (min),CarmaLoops,CarmaTime (sec),EvcTime,MemUsage (MB)");

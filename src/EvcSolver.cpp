@@ -238,12 +238,15 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	CARMAPerformanceRatio = 0.1f;
 	selfishRatio = 0.0f;
 
-	backtrack = esriNFSBAtDeadEndsOnly;
+	backtrack = esriNFSBAllowBacktrack;
 	carmaSortDirection = BWCont;
 	savedVersion = c_version;
 
 	return S_OK;
 }
+
+#pragma warning(push)
+#pragma warning(disable : 4100) /* Ignore warnings for unreferenced function parameters */
 
 STDMETHODIMP EvcSolver::UpdateContext(INAContext* pNAContext, IDENetworkDataset* pNetwork, IGPMessages* pMessages)
 {
@@ -252,6 +255,8 @@ STDMETHODIMP EvcSolver::UpdateContext(INAContext* pNAContext, IDENetworkDataset*
 	// be set as fields in the context's NAClass schemas
 	return S_OK;
 }
+
+#pragma warning(pop)
 
 /////////////////////////////////////////////////////////////////////
 // IPersistStream
@@ -330,7 +335,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	else
 	{
 		carmaSortDirection = BWCont;
-		OldVersionLock = true;
+		DoNotExportRouteEdges = true;
 	}
 	
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
