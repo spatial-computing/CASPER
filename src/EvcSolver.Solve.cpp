@@ -1002,7 +1002,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
 
 	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
-	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage is %d MB."), globalEvcCost, max(0, mem));
+	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage (exluding flocking) is %d MB."), globalEvcCost, max(0, mem));
 	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
 	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
