@@ -57,6 +57,19 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("BW Continuous")));
 		::SendMessage(m_hCmbCarmaSort, CB_SETCURSEL, (WPARAM)sort, 0);
 
+		// set the uturn combo box
+		esriNetworkForwardStarBacktrack uturn;
+		if ((INASolverSettingsPtr)m_ipEvcSolver)
+		{
+			((INASolverSettingsPtr)(m_ipEvcSolver))->get_RestrictUTurns(&uturn);
+			::SendMessage(m_hUTurnCombo, CB_RESETCONTENT, NULL, NULL);
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Not Allowed")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Allowed")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Allowed at dead ends")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Allowed at dead ends and intersections")));
+			::SendMessage(m_hUTurnCombo, CB_SETCURSEL, (WPARAM)uturn, 0);
+		}
+
 		// set flags
 		VARIANT_BOOL val;
 		m_ipEvcSolver->get_SeparableEvacuee(&val);
@@ -319,6 +332,12 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		selectedIndex = ::SendMessage(m_hCmbCarmaSort, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_CARMASortSetting((CARMASort)selectedIndex);
 
+		if ((INASolverSettingsPtr)m_ipEvcSolver)
+		{
+			selectedIndex = ::SendMessage(m_hUTurnCombo, CB_GETCURSEL, 0, 0);
+			if (selectedIndex > -1) ((INASolverSettingsPtr)(m_ipEvcSolver))->put_RestrictUTurns((esriNetworkForwardStarBacktrack)selectedIndex);
+		}
+
 		// flags
 		selectedIndex = ::SendMessage(m_hSeparable, BM_GETCHECK, 0, 0);
 		if (selectedIndex == BST_CHECKED) ipSolver->put_SeparableEvacuee(VARIANT_TRUE);
@@ -458,6 +477,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hThreeGenCARMA = GetDlgItem(IDL_CHECK_CARMAGEN);
 	m_heditSelfish = GetDlgItem(IDC_EDIT_SELFISH);
 	m_hCmbCarmaSort = GetDlgItem(IDC_COMBO_CarmaSort);
+	m_hUTurnCombo = GetDlgItem(IDC_COMBO_UTurn);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
@@ -637,7 +657,6 @@ LRESULT EvcSolverPropPage::OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL
 	return 0;
 }
 
-
 LRESULT EvcSolverPropPage::OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
@@ -655,6 +674,14 @@ LRESULT EvcSolverPropPage::OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wI
 }
 
 LRESULT EvcSolverPropPage::OnCbnSelchangeComboCARMASort(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnCbnSelchangeComboUTurn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

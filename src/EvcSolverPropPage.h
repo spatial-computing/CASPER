@@ -73,7 +73,8 @@ public:
 	MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)	
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
 	COMMAND_HANDLER(IDC_EDIT_Critical, EN_CHANGE, OnEnChangeEditCritical)
-  	COMMAND_HANDLER(IDC_COMBO_METHOD, CBN_SELCHANGE, OnCbnSelchangeComboMethod)
+	COMMAND_HANDLER(IDC_COMBO_METHOD, CBN_SELCHANGE, OnCbnSelchangeComboMethod)
+	COMMAND_HANDLER(IDC_COMBO_UTurn, CBN_SELCHANGE, OnCbnSelchangeComboUTurn)
   	COMMAND_HANDLER(IDC_COMBO_TRAFFICMODEL, CBN_SELCHANGE, OnCbnSelchangeComboCostmethod)
   	COMMAND_HANDLER(IDC_COMBO_CAPACITY, CBN_SELCHANGE, OnCbnSelchangeComboCapacity)
 	COMMAND_HANDLER(IDC_COMBO_COST, CBN_SELCHANGE, OnCbnSelchangeCostCapacity)
@@ -119,6 +120,7 @@ private:
   IDENetworkDatasetPtr    m_ipDENet;  
 
   HWND                    m_hCapCombo;
+  HWND                    m_hUTurnCombo;
   HWND                    m_hCostCombo;
   HWND                    m_hComboMethod;
   HWND                    m_hComboTrafficModel;
@@ -159,8 +161,9 @@ public:
 	LRESULT OnEnChangeEditFlocksnapinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditInitDelay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-	LRESULT OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/); 
+	LRESULT OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnCbnSelchangeComboCARMASort(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCbnSelchangeComboUTurn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 protected:
 	int pppp;
 public:

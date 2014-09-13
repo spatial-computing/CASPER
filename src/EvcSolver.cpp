@@ -238,7 +238,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	CARMAPerformanceRatio = 0.1f;
 	selfishRatio = 0.0f;
 
-	backtrack = esriNFSBAtDeadEndsOnly;
+	backtrack = esriNFSBAllowBacktrack;
 	carmaSortDirection = BWCont;
 	savedVersion = c_version;
 

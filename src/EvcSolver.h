@@ -116,6 +116,12 @@ __interface IEvcSolver : IUnknown
 		HRESULT CostAttributes([out, retval] BSTR ** names);
 	[propget, helpstring("Counts impedance attributes from the network dataset")]
 		HRESULT CostAttributesCount([out, retval] unsigned __int3264 * count);
+	/*
+	[propput, helpstring("Sets the uturn policy")]
+		HRESULT RestrictUTurns([in] esriNetworkForwardStarBacktrack backtrack);
+	[propget, helpstring("Gets the uturn policy")]
+		HRESULT RestrictUTurns([out, retval] esriNetworkForwardStarBacktrack * backtrack);
+	*/
 };
 
 // EvcSolver
@@ -131,9 +137,9 @@ __interface IEvcSolver : IUnknown
 ]
 class ATL_NO_VTABLE EvcSolver :
 	public IEvcSolver,
-	// public INARouteSolver2,
+	// public INARouteSolver,
 	public INASolver,
-	public INASolverSettings2,
+	public INASolverSettings,
 	public IPersistStream,
 	public INASolverOutputGeneralization
 {
@@ -262,7 +268,7 @@ public:
 	STDMETHOD(get_RestrictionAttributeNames)(IStringArray** ppAttributeName);
 	STDMETHOD(putref_RestrictionAttributeNames)(IStringArray* pAttributeName);
 	STDMETHOD(put_RestrictUTurns)(esriNetworkForwardStarBacktrack backtrack);
-	STDMETHOD(get_RestrictUTurns)(esriNetworkForwardStarBacktrack* pBacktrack);
+	STDMETHOD(get_RestrictUTurns)(esriNetworkForwardStarBacktrack * pBacktrack);
 	STDMETHOD(put_UseHierarchy)(VARIANT_BOOL useHierarchy);
 	STDMETHOD(get_UseHierarchy)(VARIANT_BOOL* pUseHierarchy);
 	STDMETHOD(put_HierarchyAttributeName)(BSTR attributeName);
