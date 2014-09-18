@@ -1010,7 +1010,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
 	pMessages->AddMessage(CComBSTR(CARMAExtractsMsg));
 	pMessages->AddMessage(CComBSTR(ExtraInfoMsg));
-	// pMessages->AddMessage(CComBSTR(CacheHitMsg));
 
 	if (EvacueesWithRestrictedSafezone > 0)
 	{
@@ -1023,7 +1022,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	if (!(collisionMsg.IsEmpty()))
 	{
-		pMessages->AddWarning(CComBSTR(_T("Some collisions have been reported at the following intervals:")));
+		collisionMsg.Insert(0, _T("Some collisions have been reported at the following intervals: "));
 		pMessages->AddWarning(CComBSTR(collisionMsg));
 	}
 	

@@ -128,7 +128,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 
 	// create a little bit of randomness within initial location and velocity while avoiding collision
 	for (double radius = 0.0; possibleCollision; radius += step)
-	{	
+	{
 		dx = radius + DoubleRangedRand(0.0, step);
 		// if (rand() < RAND_MAX / 2) dx *= -1.0;
 		dy = DoubleRangedRand(0.0, max(step, radius));
