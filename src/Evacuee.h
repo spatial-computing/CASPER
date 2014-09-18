@@ -67,8 +67,10 @@ private:
 	Evacuee * myEvc;
 
 public:
-	typedef std::list<PathSegmentPtr>::const_iterator const_iterator;
+	typedef std::list<PathSegmentPtr>::const_iterator  const_iterator;
+	typedef std::list<PathSegmentPtr>::const_reference const_reference;
 
+	const_reference Front()           const { return this->front();  }
 	const_iterator Begin()            const { return this->begin();  }
 	const_iterator End()              const { return this->end();    }
 	inline double GetRoutedPop()      const { return RoutedPop;      }

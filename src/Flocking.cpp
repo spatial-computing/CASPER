@@ -55,7 +55,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	// init location
 	double x, y, dx, dy;
 	MyLocation->QueryCoords(&x, &y);
-	GetMyInitLocation(neighbors, x, y, dx, dy);
+	GetMyInitLocation(neighbors, x, y, dx, dy); /// good stuff about init location happens here	
 	MyLocation->PutCoords(x + dx, y + dy);
 	Velocity = OpenSteer::Vec3(-dx, -dy, 0.0);
 
@@ -119,8 +119,11 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 
 	for (FlockingObjectItr it = neighbors->begin(); it != neighbors->end(); it++)
 	{
-		// same group check
-		if (wcscmp((*it)->GroupName.bstrVal, GroupName.bstrVal) == 0) myNeighborVehicles.push_back((*it)->myVehicle);
+		/// TODO same group check or share same start edge and near each other
+		if ((wcscmp((*it)->GroupName.bstrVal, GroupName.bstrVal) == 0) ||
+			(myPath->Front()->Edge->EID == (*it)->myPath->Front()->Edge->EID &&
+			OpenSteer::Vec3::distance(loc, (*it)->myVehicle->position()) <= myProfile->CloseNeighborDistance))
+			myNeighborVehicles.push_back((*it)->myVehicle);
 	}
 
 	// create a little bit of randomness within initial location and velocity while avoiding collision
@@ -207,7 +210,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 	{
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
 		{
-			// self avoid check
+			// avoid self check
 			if ((*it)->ID != ID) myNeighborVehicles.push_back((*it)->myVehicle);
 		}
 	}
@@ -222,7 +225,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
 		{
-			// self avoid check
+			// avoid self check
 			if ((*it)->ID == ID) continue;
 
 			// moving object check
@@ -351,7 +354,7 @@ bool FlockingObject::DetectMyCollision()
 	return collided;
 }
 
-bool FlockingObject::DetectCollision(std::vector<FlockingObjectPtr> * objects)
+bool FlockingObject::DetectCollisions(std::vector<FlockingObjectPtr> * objects)
 {	
 	bool collided = false;
 
@@ -494,7 +497,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 
 			// Check if we have to take a snapshot of this object
 			if ((oldStat == FLOCK_OBJ_STAT_INIT && newStat != FLOCK_OBJ_STAT_INIT) || // pre-movement snapshot
-				(oldStat != FLOCK_OBJ_STAT_END && newStat == FLOCK_OBJ_STAT_END)) // post-movement snapshot
+				(oldStat != FLOCK_OBJ_STAT_END  && newStat == FLOCK_OBJ_STAT_END)) // post-movement snapshot
 			{
 				snapshotTempList->push_back(fo);
 			}
@@ -508,7 +511,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 		}
 
 		// see if any collisions happened and update status if necessary
-		if (FlockingObject::DetectCollision(objects)) collisions->push_back(thetime);
+		if (FlockingObject::DetectCollisions(objects)) collisions->push_back(thetime);
 
 		// flush the snapshot objects into history
 		for (FlockingObjectItr it = snapshotTempList->begin(); it != snapshotTempList->end(); it++)

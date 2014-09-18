@@ -150,7 +150,7 @@ public:
 	
 	FlockingObject(int id, EvcPathPtr, double startTime, VARIANT groupName, INetworkQueryPtr, FlockProfile *, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
-	static bool DetectCollision(std::vector<FlockingObject *> * objects);
+	static bool DetectCollisions(std::vector<FlockingObject *> * objects);
 
 	virtual ~FlockingObject(void)
 	{
