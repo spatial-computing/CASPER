@@ -67,9 +67,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Clear the GP messages
 	if (FAILED(hr = pMessages->Clear())) return hr;
 
-	// check version lock: if the evclayer is too old to be solved then add a warning
-	if (DoNotExportRouteEdges) pMessages->AddWarning(CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
-
 	// Validate the context (i.e., make sure that it is bound to a network dataset)
 	INetworkDatasetPtr ipNetworkDataset;
 	if (FAILED(hr = pNAContext->get_NetworkDataset(&ipNetworkDataset))) return hr;
@@ -125,10 +122,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
 
-	if (!DoNotExportRouteEdges) if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
-	else ipUnk = NULL;
+	ipUnk = NULL;
+	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
+	bool DoNotExportRouteEdges = ipUnk == NULL;
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
 	if (!DoNotExportRouteEdges) if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr;
+
+	// check version lock: if the evclayer is too old to be solved then add a warning
+	if (DoNotExportRouteEdges) pMessages->AddWarning(CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
 
 #if defined(_FLOCK)
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;

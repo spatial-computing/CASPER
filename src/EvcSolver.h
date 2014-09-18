@@ -148,8 +148,7 @@ public:
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
 		  c_version(5),
-		  c_featureRetrievalInterval(500),
-		  DoNotExportRouteEdges(false)
+		  c_featureRetrievalInterval(500)
 	  {
 	  }
 
@@ -336,7 +335,6 @@ private:
 	SIZE_T					peakMemoryUsage;	
 	HANDLE					hProcessPeakMemoryUsage;
 	CARMASort               carmaSortDirection;
-	bool                    DoNotExportRouteEdges;
 
 	VARIANT_BOOL twoWayShareCapacity;
 	VARIANT_BOOL ThreeGenCARMA;	

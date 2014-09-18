@@ -335,7 +335,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	else
 	{
 		carmaSortDirection = BWCont;
-		DoNotExportRouteEdges = true;
+		savedVersion = 5;
 	}
 	
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
@@ -353,7 +353,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	HRESULT   hr;
 
 	// We need to persist the c_version number
-	if (FAILED(hr = pStm->Write(&savedVersion, sizeof(savedVersion), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&c_version, sizeof(c_version), &numBytes))) return hr;
 
 	// We need to persist our solver settings
 	if (FAILED(hr = pStm->Write(&m_outputLineType, sizeof(m_outputLineType), &numBytes))) return hr;
