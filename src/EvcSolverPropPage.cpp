@@ -64,9 +64,9 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 			((INASolverSettingsPtr)(m_ipEvcSolver))->get_RestrictUTurns(&uturn);
 			::SendMessage(m_hUTurnCombo, CB_RESETCONTENT, NULL, NULL);
 			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Not Allowed")));
-			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Allowed")));
-			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Allowed at dead ends")));
-			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Allowed at dead ends and intersections")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Always Allowed")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Only at dead ends")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("At dead ends and intersections")));
 			::SendMessage(m_hUTurnCombo, CB_SETCURSEL, (WPARAM)uturn, 0);
 		}
 
@@ -452,12 +452,6 @@ STDMETHODIMP EvcSolverPropPage::GetHelpId(LONG controlID, LONG* pHelpID)
 
 LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	int cmdShow = 0;
-#ifdef _FLOCK
-	cmdShow = SW_SHOW;
-#else
-	cmdShow = SW_HIDE;	
-#endif
 	m_hCapCombo = GetDlgItem(IDC_COMBO_CAPACITY);
 	m_hCostCombo = GetDlgItem(IDC_COMBO_COST);
 	m_hComboMethod = GetDlgItem(IDC_COMBO_METHOD);
@@ -484,14 +478,14 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	HWND m_hlblSnapFlock = GetDlgItem(IDC_STATIC_FlockSnapInterval);
 	HWND m_hlblFlockProfile = GetDlgItem(IDC_STATIC_FlockProfile);
 
-	::ShowWindow(m_hGroupFlock, cmdShow);
-	::ShowWindow(m_hEditSnapFlock, cmdShow);
-	::ShowWindow(m_hEditSimulationFlock, cmdShow);
-	::ShowWindow(m_hCheckFlock, cmdShow);
-	::ShowWindow(m_hlblSimulationFlock, cmdShow);
-	::ShowWindow(m_hlblSnapFlock, cmdShow);
-	::ShowWindow(m_hlblFlockProfile, cmdShow);
-	::ShowWindow(m_hCmbFlockProfile, cmdShow);
+	::ShowWindow(m_hGroupFlock, SW_SHOW);
+	::ShowWindow(m_hEditSnapFlock, SW_SHOW);
+	::ShowWindow(m_hEditSimulationFlock, SW_SHOW);
+	::ShowWindow(m_hCheckFlock, SW_SHOW);
+	::ShowWindow(m_hlblSimulationFlock, SW_SHOW);
+	::ShowWindow(m_hlblSnapFlock, SW_SHOW);
+	::ShowWindow(m_hlblFlockProfile, SW_SHOW);
+	::ShowWindow(m_hCmbFlockProfile, SW_SHOW);
 
 	// release date label
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);

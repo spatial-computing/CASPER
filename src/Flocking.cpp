@@ -229,7 +229,8 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 			if ((*it)->ID == ID) continue;
 
 			// moving object check
-			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT || (*it)->MyStatus == FLOCK_OBJ_STAT_END) continue;
+			if ((*it)->MyStatus == FLOCK_OBJ_STAT_END) continue;
+			// if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT) continue; // should we add init flocks also as a neighbor?
 
 			// check if they share an edge or if they are both crossing an intersection
 			/*
@@ -296,10 +297,6 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 				myVehicle->setForward(forward.normalize());
 				myVehicle->setSpeed(speedLimit / 2.0);
 			}
-
-			// generate a steer based on current situation
-			// this would be replaced by steerToAvoidNeighbors
-			// steer = myVehicle->steerToAvoidCloseNeighbors(myProfile->CloseNeighborDistance, myNeighborVehicles);
 
 			// separates you form boids in front
 			steer += myVehicle->steerForSeparation(myProfile->NeighborDistance, 60.0, myNeighborVehicles);

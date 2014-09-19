@@ -164,10 +164,10 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	ipNAClassDefinitions->get_ItemByName(CComBSTR(CS_EDGES_NAME), &ipUnknown);
 	ipEdgeStatClassDef = ipUnknown;
-#if defined(_FLOCK)
+
 	ipNAClassDefinitions->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnknown);
 	ipFlocksClassDef = ipUnknown;
-#endif
+
 	ipNAClassDefinitions->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnknown);
 	ipRouteEdgesClassDef = ipUnknown;
 	// Create a context and initialize it
@@ -180,21 +180,19 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	INamedSetPtr ipNAClasses;
 	INAClassPtr  ipNAClass;
 
-	ipNAContext->get_NAClasses(&ipNAClasses);
+	if (FAILED(hr = ipNAContext->get_NAClasses(&ipNAClasses))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipZonesClassDef, &ipNAClass))) return hr;
-	ipNAClasses->Add(CComBSTR(CS_ZONES_NAME), (IUnknownPtr)ipNAClass);
+	if (FAILED(hr = ipNAClasses->Add(CComBSTR(CS_ZONES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipEvacueePointsClassDef, &ipNAClass))) return hr;
-	ipNAClasses->Add(CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipNAClass);
+	if (FAILED(hr = ipNAClasses->Add(CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipBarriersClassDef, &ipNAClass))) return hr;
-	ipNAClasses->Add(CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipNAClass);
+	if (FAILED(hr = ipNAClasses->Add(CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipRoutesClassDef, &ipNAClass))) return hr;
-	ipNAClasses->Add(CComBSTR(CS_ROUTES_NAME), (IUnknownPtr)ipNAClass);
+	if (FAILED(hr = ipNAClasses->Add(CComBSTR(CS_ROUTES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipEdgeStatClassDef, &ipNAClass))) return hr;
-	ipNAClasses->Add(CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipNAClass);
-#if defined(_FLOCK)
+	if (FAILED(hr = ipNAClasses->Add(CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipFlocksClassDef, &ipNAClass))) return hr;
-	ipNAClasses->Add(CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipNAClass);
-#endif
+	if (FAILED(hr = ipNAClasses->Add(CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipRouteEdgesClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(CComBSTR(CS_ROUTEEDGES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 
@@ -803,9 +801,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_IsOutput(VARIANT_TRUE);
 
 	ipClassDefEdit->put_Name(CComBSTR(CS_FLOCKS_NAME));
-#if defined(_FLOCK)
 	ipClassDefinitions->Add(CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipClassDef);
-#endif
 
 	//////////////////////////////////////////////////////////
 	// Routes class definition 

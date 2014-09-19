@@ -128,16 +128,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
 	if (!DoNotExportRouteEdges) if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr;
 
-	// check version lock: if the evclayer is too old to be solved then add a warning
-	if (DoNotExportRouteEdges) pMessages->AddWarning(CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
-
-#if defined(_FLOCK)
+	ipUnk = NULL;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
 	INAClassPtr ipFlocksNAClass(ipUnk);
-	if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr;
-#else
-	INAClassPtr ipFlocksNAClass;
-#endif
+	if (flockingEnabled == VARIANT_TRUE && ipUnk == NULL) flockingEnabled = VARIANT_FALSE;
+	if (ipFlocksNAClass != NULL) { if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr; }
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Setup the Network Forward Star for traversal
@@ -734,11 +729,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::vector<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
 
-#ifndef _FLOCK
-	this->flockingEnabled = false;
-#endif
-
-	if (this->flockingEnabled)
+	if (flockingEnabled == VARIANT_TRUE)
 	{
 		// Get the "Flocks" NAClass feature class
 		IFeatureCursorPtr ipFeatureCursor;
@@ -981,15 +972,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
 	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg;
-#ifdef _FLOCK
+
 	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
-#else
-	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Total = %.2f"),
-		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu,
-		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
-#endif
+
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds."), countCARMALoops, carmaSec);
 
 	std::stringstream ss;
@@ -1011,6 +998,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
 	pMessages->AddMessage(CComBSTR(CARMAExtractsMsg));
 	pMessages->AddMessage(CComBSTR(ExtraInfoMsg));
+
+	// check version lock: if the evclayer is too old to be solved then add a warning
+	if (DoNotExportRouteEdges) pMessages->AddWarning(CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
 
 	if (EvacueesWithRestrictedSafezone > 0)
 	{
