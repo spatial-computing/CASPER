@@ -15,13 +15,6 @@
 #define STRICT
 #endif
 
-/// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
-#ifdef _DEBUG
-#define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)
-#else
-#define DEBUG_NEW_PLACEMENT
-#endif
-
 // ref: http://msdn.microsoft.com/en-us/library/windows/desktop/ms683219%28v=vs.85%29.aspx
 #define PSAPI_VERSION 1
 
@@ -64,15 +57,39 @@
 using namespace ATL;
 
 // Be sure to set these paths to the version of the software against which you want to run
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriSystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriSystemUI.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI")
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriNetworkAnalyst.olb" named_guids no_namespace raw_interfaces_only no_implementation
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDisplay.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDataSourcesRaster.olb" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids
-#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI")
+#ifdef __INTELLISENSE__
+	#ifdef _WIN64
+		#import "obj\Debug\x64\esrisystem.tlh"
+		#import "obj\Debug\x64\esrisystemui.tlh"
+		#import "obj\Debug\x64\esriFramework.tlh"
+		#import "obj\Debug\x64\esriGeometry.tlh"
+		#import "obj\Debug\x64\esriGeoDatabase.tlh"
+		#import "obj\Debug\x64\esriNetworkAnalyst.tlh"
+		#import "obj\Debug\x64\esriDisplay.tlh"
+		#import "obj\Debug\x64\esriDataSourcesRaster.tlh"
+		#import "obj\Debug\x64\esriCarto.tlh"
+	#else
+		#import "obj\Debug\Win32\esrisystem.tlh"
+		#import "obj\Debug\Win32\esrisystemui.tlh"
+		#import "obj\Debug\Win32\esriFramework.tlh"
+		#import "obj\Debug\Win32\esriGeometry.tlh"
+		#import "obj\Debug\Win32\esriGeoDatabase.tlh"
+		#import "obj\Debug\Win32\esriNetworkAnalyst.tlh"
+		#import "obj\Debug\Win32\esriDisplay.tlh"
+		#import "obj\Debug\Win32\esriDataSourcesRaster.tlh"
+		#import "obj\Debug\Win32\esriCarto.tlh"
+	#endif
+#else
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystemui.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriNetworkAnalyst.olb" named_guids no_namespace raw_interfaces_only no_implementation
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDisplay.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDataSourcesRaster.olb" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI")
+#endif
 
 /*
 #import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer") // System
@@ -99,5 +116,26 @@ using namespace ATL;
 #include <windows.h>
 #include <Windowsx.h>
 #include <psapi.h>
+#include <vector>
+#include <stack>
+#include <hash_map>
+#include <fstream>
+
+// memory leak detection in DEBUG mode
+// ref: http://msdn.microsoft.com/en-us/library/e5ewb1h3%28v=vs.80%29.aspx
+#define _CRTDBG_MAP_ALLOC // defined in project file
+#include <stdlib.h>
+#include <crtdbg.h>
+
+// new memory leak detection library
+// ref: http://vld.codeplex.com/wikipage?title=Using%20Visual%20Leak%20Detector&referringTitle=Documentation
+/// #include <vld.h>
+
+/// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
+#ifdef _DEBUG
+#define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)
+#else
+#define DEBUG_NEW_PLACEMENT
+#endif
 
 #pragma warning(pop)

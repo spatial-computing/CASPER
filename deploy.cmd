@@ -5,6 +5,7 @@ set OLDDIR=%CD%
 SET dir=d:\Archive\arccasperdeploy
 SET cydir=d:/Archive/arccasperdeploy
 SET url=git@github.com:kaveh096/ArcCASPER.git
+set PATH=%PATH%;D:\cygwin64\bin
 
 :: clean enviroment
 IF NOT EXIST %dir% ( git clone %url% %cydir% )

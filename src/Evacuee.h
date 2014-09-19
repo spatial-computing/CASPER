@@ -11,62 +11,91 @@
 
 #pragma once
 
-#include <vector>
-#include <stack>
-#include <hash_map>
+#include "StdAfx.h"
 
 class NAVertex;
 class NAEdge;
+class NAEdgeCache;
 typedef NAVertex * NAVertexPtr;
 enum EvcSolverMethod : unsigned char;
 
+// enum for carma sort setting
+[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char { None = 0x0, FWSingle = 0x1, FMCont = 0x2, BWSingle = 0x3, BWCont = 0x4 };
+
 class PathSegment
 {
-public:
-  double fromPosition;
-  double toPosition;
-  long SourceOID;
-  long SourceID;
-  NAEdge * Edge;
-  double EdgePortion;
-  IPolylinePtr pline;
+private:
+	double fromRatio;
+	double toRatio;
 
-  PathSegment(double from, double to, long sourceOID, long sourceID, NAEdge * edge, double edgePortion)
-  {
-	  fromPosition = from;
-	  toPosition = to;
-	  SourceOID = sourceOID;
-	  SourceID = sourceID;
-	  Edge = edge;
-	  EdgePortion = edgePortion;
-	  pline = 0;
-  }
+public:
+    NAEdge * Edge;
+    IPolylinePtr pline;
+
+    double GetEdgePortion() const { return toRatio - fromRatio; }
+	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
+
+    void SetFromRatio(double FromRatio)
+    {
+	    fromRatio = FromRatio;
+	    if (fromRatio == toRatio) fromRatio = toRatio - 0.001;
+    }
+
+	double GetFromRatio() const { return fromRatio; }
+	double GetToRatio()   const { return toRatio;   }
+
+    PathSegment(NAEdge * edge, double FromRatio = 0.0, double ToRatio = 1.0)
+    {
+	    fromRatio = FromRatio;
+	    toRatio = ToRatio;
+		_ASSERT(FromRatio < ToRatio);
+	    Edge = edge;
+	    pline = 0;
+    }
 };
 
 typedef PathSegment * PathSegmentPtr;
 class Evacuee;
 
-class EvcPath : public std::list<PathSegmentPtr>
+class EvcPath : private std::list<PathSegmentPtr>
 {
-public:
-	double RoutedPop;
-	double EvacuationCost;
-	double OrginalCost;
-	int    Order;
+private:
+	double  RoutedPop;
+	double  EvacuationCost;
+	double  OrginalCost;
+	int     Order;
 	Evacuee * myEvc;
+
+public:
+	typedef std::list<PathSegmentPtr>::const_iterator  const_iterator;
+	typedef std::list<PathSegmentPtr>::const_reference const_reference;
+
+	const_reference Front()           const { return this->front();  }
+	const_iterator Begin()            const { return this->begin();  }
+	const_iterator End()              const { return this->end();    }
+	inline double GetRoutedPop()      const { return RoutedPop;      }
+	inline double GetEvacuationCost() const { return EvacuationCost; }
 
 	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
 	{
 		RoutedPop = routedPop; 
-		EvacuationCost = -1.0;
-		OrginalCost = -1.0;
+		EvacuationCost = 0.0;
+		OrginalCost = 0.0;
 		Order = order;
 		myEvc = evc;
 	}
 
+	void AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment);
+	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
+									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , double &, bool);
+
+	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
+	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
+	PathSegmentPtr Back()        { return std::list<PathSegmentPtr>::back();  }
+
 	~EvcPath(void)
 	{
-		for(iterator it = begin(); it != end(); it++) delete (*it);
+		for(const_iterator it = begin(); it != end(); it++) delete (*it);
 		clear();
 	}
 
@@ -87,9 +116,11 @@ public:
 	double Population;
 	double PredictedCost;
 	bool Reachable;
+	UINT32 ObjectID;
 
-	Evacuee(VARIANT name, double pop)
+	Evacuee(VARIANT name, double pop, UINT32 objectID)
 	{
+		ObjectID = objectID;
 		Name = name;
 		vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 		paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
@@ -112,6 +143,11 @@ public:
 		if (e1->PredictedCost == e2->PredictedCost) return e1->Population < e2->Population;
 		else return e1->PredictedCost < e2->PredictedCost;
 	}
+
+	static bool LessThanObjectID(Evacuee * e1, Evacuee * e2)
+	{
+		return e1->ObjectID < e2->ObjectID;
+	}
 };
 
 typedef Evacuee * EvacueePtr;
@@ -125,7 +161,7 @@ class NAEvacueeVertexTable : public stdext::hash_map<long, std::vector<EvacueePt
 public:
 	~NAEvacueeVertexTable();
 
-	void InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees);
+	void InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees, CARMASort sortDir);
 	std::vector<EvacueePtr> * Find(long junctionEID);
 	void Erase(long junctionEID);
 };
@@ -148,8 +184,8 @@ public:
 	
 	~SafeZone();
 	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap);
-	HRESULT IsRestricted(INetworkForwardStarExPtr ipForwardStar, INetworkForwardStarAdjacenciesPtr ipForwardAdj, INetworkEdgePtr ipTurnCheckEdge, NAEdge * leadingEdge, bool & restricted);
-	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity);
+	HRESULT IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity);
+	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity, double * globalDeltaCost = NULL);
 };
 
 typedef SafeZone * SafeZonePtr;

@@ -51,6 +51,12 @@
     <ClCompile Include="NAVertex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TrafficModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EvcSolver.GetSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Evacuee.h">
@@ -86,6 +92,9 @@
     <ClInclude Include="NAVertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TrafficModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="EvcSolver.rc">
@@ -96,6 +105,5 @@
     <None Include="EvcSolver.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="TODO List.txt" />
   </ItemGroup>
 </Project>

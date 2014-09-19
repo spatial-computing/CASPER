@@ -1,15 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">
-    <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'">
-    <LocalDebuggerCommandArguments>
-    </LocalDebuggerCommandArguments>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerAttach>false</LocalDebuggerAttach>
-    <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
   </PropertyGroup>
@@ -17,20 +7,10 @@
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerAttach>false</LocalDebuggerAttach>
-    <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerAttach>true</LocalDebuggerAttach>
+    <LocalDebuggerWorkingDirectory>C:\Users\kshahabi\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
     <LocalDebuggerDebuggerType>Auto</LocalDebuggerDebuggerType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
-    <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|Win32'">
-    <LocalDebuggerCommandArguments>
-    </LocalDebuggerCommandArguments>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerAttach>false</LocalDebuggerAttach>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
   </PropertyGroup>
@@ -38,29 +18,21 @@
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
-    <LocalDebuggerAttach>false</LocalDebuggerAttach>
+    <LocalDebuggerWorkingDirectory>C:\Users\kshahabi\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerAttach>true</LocalDebuggerAttach>
     <ShowAllFiles>false</ShowAllFiles>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseNoFlock|x64'">
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|x64'">
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>C:\Users\kshahabi\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerAttach>true</LocalDebuggerAttach>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>$(AGSDESKTOPJAVA)bin\ArcMap.exe</LocalDebuggerCommand>
-    <LocalDebuggerWorkingDirectory>$(USERPROFILE)\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>C:\Users\kshahabi\Documents\My Data\ArcCASPER</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerAttach>true</LocalDebuggerAttach>
   </PropertyGroup>
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>

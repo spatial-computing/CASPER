@@ -73,14 +73,17 @@ public:
 	MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)	
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
 	COMMAND_HANDLER(IDC_EDIT_Critical, EN_CHANGE, OnEnChangeEditCritical)
-  	COMMAND_HANDLER(IDC_COMBO_METHOD, CBN_SELCHANGE, OnCbnSelchangeComboMethod)
+	COMMAND_HANDLER(IDC_COMBO_METHOD, CBN_SELCHANGE, OnCbnSelchangeComboMethod)
+	COMMAND_HANDLER(IDC_COMBO_UTurn, CBN_SELCHANGE, OnCbnSelchangeComboUTurn)
   	COMMAND_HANDLER(IDC_COMBO_TRAFFICMODEL, CBN_SELCHANGE, OnCbnSelchangeComboCostmethod)
   	COMMAND_HANDLER(IDC_COMBO_CAPACITY, CBN_SELCHANGE, OnCbnSelchangeComboCapacity)
 	COMMAND_HANDLER(IDC_COMBO_COST, CBN_SELCHANGE, OnCbnSelchangeCostCapacity)
+	COMMAND_HANDLER(IDC_COMBO_CarmaSort, CBN_SELCHANGE, OnCbnSelchangeComboCARMASort)
 	COMMAND_HANDLER(IDC_CHECK_SEPARABLE, BN_CLICKED, OnBnClickedCheckSeparable)
 	COMMAND_HANDLER(IDC_CHECK_EDGESTAT, BN_CLICKED, OnBnClickedCheckEdgestat)
 	NOTIFY_HANDLER(IDC_RELEASE, NM_CLICK, OnNMClickRelease)
 	COMMAND_HANDLER(IDL_CHECK_CARMAGEN, BN_CLICKED, OnBnClickedCheckCarmagen)
+	COMMAND_HANDLER(IDC_EDIT_SELFISH, EN_CHANGE, OnEnChangeEditSelfish)
   END_MSG_MAP()
 
   // Handler prototypes:
@@ -117,6 +120,7 @@ private:
   IDENetworkDatasetPtr    m_ipDENet;  
 
   HWND                    m_hCapCombo;
+  HWND                    m_hUTurnCombo;
   HWND                    m_hCostCombo;
   HWND                    m_hComboMethod;
   HWND                    m_hComboTrafficModel;
@@ -131,8 +135,10 @@ private:
   HWND                    m_hCheckShareCap;
   HWND                    m_hEditInitCost;
   HWND					  m_hCmbFlockProfile;
+  HWND					  m_hCmbCarmaSort;
   HWND					  m_heditCARMA;
   HWND					  m_hThreeGenCARMA;
+  HWND					  m_heditSelfish;
 
   void SetFlockingEnabled();
 
@@ -156,6 +162,8 @@ public:
 	LRESULT OnEnChangeEditFlocksimulationinterval(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditInitDelay(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCbnSelchangeComboCARMASort(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCbnSelchangeComboUTurn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 protected:
 	int pppp;
 public:
@@ -163,4 +171,6 @@ public:
 	LRESULT OnEnChangeEditCARMA(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);
 	LRESULT OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnStnClickedLablecarma2(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };

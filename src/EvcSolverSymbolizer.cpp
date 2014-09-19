@@ -214,18 +214,18 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
 
-  IUIDPtr ipSingleSymbolPropertyPageUID(CLSID_UID);
+  IUIDPtr ipSingleSymbolPropertyPageUIDR(CLSID_UID);
 
-  if (FAILED(ipSingleSymbolPropertyPageUID->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
+  if (FAILED(ipSingleSymbolPropertyPageUIDR->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
-    ipSingleSymbolPropertyPageUID = 0; 
+    ipSingleSymbolPropertyPageUIDR = 0; 
   }
 
-  if (ipSingleSymbolPropertyPageUID)
+  if (ipSingleSymbolPropertyPageUIDR)
   {
-    if (FAILED(hr = ipGeoFeatureLayer->put_RendererPropertyPageClassID(ipSingleSymbolPropertyPageUID))) return hr;
+    if (FAILED(hr = ipGeoFeatureLayer->put_RendererPropertyPageClassID(ipSingleSymbolPropertyPageUIDR))) return hr;
   }
 
   ((IFeatureSelectionPtr)ipRoutesFeatureLayer)->putref_SelectionColor(ipSelectionColor);
@@ -255,18 +255,18 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
 
-  IUIDPtr ipSingleSymbolPropertyPageUID2(CLSID_UID);
+  IUIDPtr ipSingleSymbolPropertyPageUIDE(CLSID_UID);
 
-  if (FAILED(ipSingleSymbolPropertyPageUID2->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
+  if (FAILED(ipSingleSymbolPropertyPageUIDE->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
-    ipSingleSymbolPropertyPageUID2 = 0; 
+    ipSingleSymbolPropertyPageUIDE = 0; 
   }
 
-  if (ipSingleSymbolPropertyPageUID2)
+  if (ipSingleSymbolPropertyPageUIDE)
   {
-    if (FAILED(hr = ipGeoFeatureLayer->put_RendererPropertyPageClassID(ipSingleSymbolPropertyPageUID2))) return hr;
+    if (FAILED(hr = ipGeoFeatureLayer->put_RendererPropertyPageClassID(ipSingleSymbolPropertyPageUIDE))) return hr;
   }
 
   ((IFeatureSelectionPtr)ipEdgesFeatureLayer)->putref_SelectionColor(ipSelectionColor);
@@ -275,8 +275,48 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   ipNALayer->Add(ipEdgesFeatureLayer);
 
   /////////////////////////////////////////////////////////////////////////////////////////////
+  // RouteEdges layer
+
+  // Get the EdgeStat NAClass/FeatureClass
+  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnknown))) return hr;
+
+  IFeatureClassPtr ipRouteEdgesFC(ipUnknown);
+  if (!ipRouteEdgesFC) return E_UNEXPECTED;
+
+  // Create a new feature layer for the EdgeStat feature class
+  IFeatureLayerPtr ipRouteEdgesFeatureLayer(CLSID_FeatureLayer);
+  ipRouteEdgesFeatureLayer->putref_FeatureClass(ipRouteEdgesFC);
+  ipRouteEdgesFeatureLayer->put_Name(CComBSTR(CS_ROUTEEDGES_NAME));
+
+  // Give the EdgeStat layer a simple renderer and a single symbol property page
+  CreateLineRenderer(ipSolverColor, &ipFeatureRenderer);
+
+  ipGeoFeatureLayer = ipRouteEdgesFeatureLayer;
+  if (!ipGeoFeatureLayer) return S_OK;
+
+  if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
+
+  IUIDPtr ipSingleSymbolPropertyPageUIDRE(CLSID_UID);
+
+  if (FAILED(ipSingleSymbolPropertyPageUIDRE->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
+  {
+	  // Renderer Property Pages are not installed with Engine. In this
+	  // case getting the property page by PROGID is an expected failure.
+	  ipSingleSymbolPropertyPageUIDRE = 0;
+  }
+
+  if (ipSingleSymbolPropertyPageUIDRE)
+  {
+	  if (FAILED(hr = ipGeoFeatureLayer->put_RendererPropertyPageClassID(ipSingleSymbolPropertyPageUIDRE))) return hr;
+  }
+
+  ((IFeatureSelectionPtr)ipRouteEdgesFeatureLayer)->putref_SelectionColor(ipSelectionColor);
+
+  // Add the new RouteEdges layer as a sub-layer in the new NALayer
+  ipNALayer->Add(ipRouteEdgesFeatureLayer);
+
+  /////////////////////////////////////////////////////////////////////////////////////////////
   // flocks layer
-#if defined(_FLOCK)
   // Get the flocks NAClass/FeatureClass
   if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnknown))) return hr;
 
@@ -314,7 +354,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   // Add the new flocks layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipFlocksFeatureLayer);
-#endif
+
   // Return the newly created NALayer
   (*ppNALayer) = ipNALayer;
 
@@ -359,7 +399,6 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Flocks
-#if defined(_FLOCK)
   pNALayer->get_LayerByNAClassName(CComBSTR(CS_FLOCKS_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
@@ -367,7 +406,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = CreateSimplePointRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
-#endif  
+
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Zones
   pNALayer->get_LayerByNAClassName(CComBSTR(CS_ZONES_NAME), &ipSubLayer);
@@ -416,6 +455,16 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     ipGeoFeatureLayer = ipSubLayer;
     if (FAILED(hr = CreateLineRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  // RouteEdges
+  pNALayer->get_LayerByNAClassName(CComBSTR(CS_ROUTEEDGES_NAME), &ipSubLayer);
+  if (ipSubLayer)
+  {
+	  ipGeoFeatureLayer = ipSubLayer;
+	  if (FAILED(hr = CreateLineRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
+	  if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
   return S_OK;  

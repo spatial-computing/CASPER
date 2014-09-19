@@ -11,23 +11,11 @@
 
 #pragma once
 
-static int isDebugLeakLoaded = false;
-
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 #include "Evacuee.h"
 #include "NAEdge.h"
 #include "NAVertex.h"
 #include "Flocking.h"
-
-// memory leak detection in DEBUG mode
-// ref: http://msdn.microsoft.com/en-us/library/e5ewb1h3%28v=vs.80%29.aspx
-// #define _CRTDBG_MAP_ALLOC // defined in project file
-#include <stdlib.h>
-#include <crtdbg.h>
-
-// new memory leak detection library
-// ref: http://vld.codeplex.com/wikipage?title=Using%20Visual%20Leak%20Detector&referringTitle=Documentation
-/// #include <vld.h>
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -74,6 +62,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT SolverMethod([in] EvcSolverMethod value);
 	[propget, helpstring("Gets the selected solver method")]
 		HRESULT SolverMethod([out, retval] EvcSolverMethod * value);
+	[propput, helpstring("Sets the carma sort setting")]
+		HRESULT CARMASortSetting([in] CARMASort value);
+	[propget, helpstring("Gets the carma sort setting")]
+		HRESULT CARMASortSetting([out, retval] CARMASort * value);
 	[propput, helpstring("Sets the cost method")]
 		HRESULT TrafficModel([in] EvcTrafficModel value);
 	[propget, helpstring("Gets the selected cost method")]
@@ -110,6 +102,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT CARMAPerformanceRatio([in] BSTR value);
 	[propget, helpstring("Gets the ratio of CARMA algorithm")]
 		HRESULT CARMAPerformanceRatio([out, retval] BSTR * value);
+	[propput, helpstring("Sets the ratio of selfish routing")]
+		HRESULT SelfishRatio([in] BSTR value);
+	[propget, helpstring("Gets the ratio of selfish routing")]
+		HRESULT SelfishRatio([out, retval] BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
@@ -120,6 +116,12 @@ __interface IEvcSolver : IUnknown
 		HRESULT CostAttributes([out, retval] BSTR ** names);
 	[propget, helpstring("Counts impedance attributes from the network dataset")]
 		HRESULT CostAttributesCount([out, retval] unsigned __int3264 * count);
+	/*
+	[propput, helpstring("Sets the uturn policy")]
+		HRESULT RestrictUTurns([in] esriNetworkForwardStarBacktrack backtrack);
+	[propget, helpstring("Gets the uturn policy")]
+		HRESULT RestrictUTurns([out, retval] esriNetworkForwardStarBacktrack * backtrack);
+	*/
 };
 
 // EvcSolver
@@ -135,9 +137,9 @@ __interface IEvcSolver : IUnknown
 ]
 class ATL_NO_VTABLE EvcSolver :
 	public IEvcSolver,
-	// public INARouteSolver2,
+	// public INARouteSolver,
 	public INASolver,
-	public INASolverSettings2,
+	public INASolverSettings,
 	public IPersistStream,
 	public INASolverOutputGeneralization
 {
@@ -145,15 +147,9 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(3),
+		  c_version(5),
 		  c_featureRetrievalInterval(500)
 	  {
-		  // set program start for memory leak detection (DEBUG Mode)
-		  if (!isDebugLeakLoaded)
-		  {
-			 _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-			 isDebugLeakLoaded = true;
-		  }
 	  }
 
 	  DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -173,7 +169,6 @@ public:
 	  {
 	  }
 
-public:
 	// INASolverOutputGeneralization
 	STDMETHOD(put_OutputGeometryPrecision)(VARIANT value);
 	STDMETHOD(get_OutputGeometryPrecision)(VARIANT * value);
@@ -190,6 +185,8 @@ public:
 	STDMETHOD(get_SeparableEvacuee)(VARIANT_BOOL * value);
 	STDMETHOD(put_SolverMethod)(EvcSolverMethod   value);
 	STDMETHOD(get_SolverMethod)(EvcSolverMethod * value);
+	STDMETHOD(put_CARMASortSetting)(CARMASort   value);
+	STDMETHOD(get_CARMASortSetting)(CARMASort * value);
 	STDMETHOD(put_TrafficModel)(EvcTrafficModel   value);
 	STDMETHOD(get_TrafficModel)(EvcTrafficModel * value);
 	STDMETHOD(put_SaturationPerCap)(BSTR   value);
@@ -216,6 +213,8 @@ public:
 	STDMETHOD(get_FlockingProfile)(FLOCK_PROFILE * value);
 	STDMETHOD(put_CARMAPerformanceRatio)(BSTR   value);
 	STDMETHOD(get_CARMAPerformanceRatio)(BSTR * value);
+	STDMETHOD(put_SelfishRatio)(BSTR   value);
+	STDMETHOD(get_SelfishRatio)(BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	STDMETHOD(put_CostAttribute)(unsigned __int3264 index);
@@ -268,7 +267,7 @@ public:
 	STDMETHOD(get_RestrictionAttributeNames)(IStringArray** ppAttributeName);
 	STDMETHOD(putref_RestrictionAttributeNames)(IStringArray* pAttributeName);
 	STDMETHOD(put_RestrictUTurns)(esriNetworkForwardStarBacktrack backtrack);
-	STDMETHOD(get_RestrictUTurns)(esriNetworkForwardStarBacktrack* pBacktrack);
+	STDMETHOD(get_RestrictUTurns)(esriNetworkForwardStarBacktrack * pBacktrack);
 	STDMETHOD(put_UseHierarchy)(VARIANT_BOOL useHierarchy);
 	STDMETHOD(get_UseHierarchy)(VARIANT_BOOL* pUseHierarchy);
 	STDMETHOD(put_HierarchyAttributeName)(BSTR attributeName);
@@ -295,9 +294,9 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-		                INetworkForwardStarExPtr, INetworkForwardStarExPtr, VARIANT_BOOL*, double &, std::vector<unsigned int> &, INetworkDatasetPtr);
-	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *, INetworkForwardStarExPtr,
-		              INetworkForwardStarExPtr, size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, bool);
+		                VARIANT_BOOL*, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &);
+	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
+		              size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, bool);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -306,13 +305,13 @@ private:
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);	
-	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr, NAEdgePtr, double, NAVertexPtr, NAEdgeCache *, NAEdgeMapTwoGen *, NAVertexCache *, INetworkForwardStarExPtr,
-		                                  INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, INetworkEdgePtr, bool checkOldClosedlist = true) const;
-	HRESULT GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
+	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
+										  NAVertexCache * vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
 	HRESULT DeterminMinimumPop2Route(EvacueeList *, INetworkDatasetPtr, double &, bool &) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, NAEdgeContainer *, double, EvcSolverMethod) const;
 	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
 	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *) const;
+	void    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	void    UpdatePeakMemoryUsage();
 	
 	esriNAOutputLineType	m_outputLineType;
@@ -331,9 +330,11 @@ private:
 	float					initDelayCostPerPop;
 	FLOCK_PROFILE			flockingProfile;
 	float                   CARMAPerformanceRatio;
+	float                   selfishRatio;
 	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;	
 	HANDLE					hProcessPeakMemoryUsage;
+	CARMASort               carmaSortDirection;
 
 	VARIANT_BOOL twoWayShareCapacity;
 	VARIANT_BOOL ThreeGenCARMA;	
@@ -353,21 +354,12 @@ private:
 	std::vector<INetworkAttribute2Ptr>	discriptiveAttribs;
 	IArray								* allAttribs;
 	const long			c_version;
+	long                savedVersion;
 	const long			c_featureRetrievalInterval;
 };
 
 // Smart Pointer for IEvcSolver (for use within this project)
 _COM_SMARTPTR_TYPEDEF(IEvcSolver, __uuidof(IEvcSolver));
-
-// incomplete type def for the heap... I'm really out of options
-class FibonacciHeap;
-
-HRESULT PrepareVerticesForHeap(NAVertexPtr, NAVertexCache *, NAEdgeCache *, NAEdgeMap *, std::vector<NAEdgePtr> *, double, INetworkForwardStarExPtr, INetworkForwardStarAdjacenciesPtr, INetworkQueryPtr, EvcSolverMethod);
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
-								#ifdef DEBUG
-								, double minPop2Route, EvcSolverMethod solverMethod
-								#endif
-								);
 
 // Simple helper class for managing the cancel tracker object during Solve
 class CancelTrackerHelper
@@ -399,3 +391,14 @@ private:
 
 // Utility functions
 double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);
+
+// incomplete type def for the heap... I'm really out of options
+class FibonacciHeap;
+
+HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop, 
+							   EvcSolverMethod solverMethod, double selfishRatio, double MaxEvacueeCostSoFar, QueryDirection dir);
+HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+								#ifdef DEBUG
+								, double minPop2Route, EvcSolverMethod solverMethod
+								#endif
+								);

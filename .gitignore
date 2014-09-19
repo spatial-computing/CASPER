@@ -31,3 +31,5 @@ bin/
 *.pdb
 ipch/
 *.aps
+*.vsp
+*.vsps

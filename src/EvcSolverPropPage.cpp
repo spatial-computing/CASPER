@@ -46,6 +46,30 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hCmbFlockProfile, CB_ADDSTRING, NULL, (LPARAM)(_T("Bike")));
 		::SendMessage(m_hCmbFlockProfile, CB_SETCURSEL, (WPARAM)profile, 0);
 
+		// set the flocking profile names
+		CARMASort sort;
+		m_ipEvcSolver->get_CARMASortSetting(&sort);
+		::SendMessage(m_hCmbCarmaSort, CB_RESETCONTENT, NULL, NULL);
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("None")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("FW Once")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("FW Continuous")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("BW Once")));
+		::SendMessage(m_hCmbCarmaSort, CB_ADDSTRING, NULL, (LPARAM)(_T("BW Continuous")));
+		::SendMessage(m_hCmbCarmaSort, CB_SETCURSEL, (WPARAM)sort, 0);
+
+		// set the uturn combo box
+		esriNetworkForwardStarBacktrack uturn;
+		if ((INASolverSettingsPtr)m_ipEvcSolver)
+		{
+			((INASolverSettingsPtr)(m_ipEvcSolver))->get_RestrictUTurns(&uturn);
+			::SendMessage(m_hUTurnCombo, CB_RESETCONTENT, NULL, NULL);
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Not Allowed")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Always Allowed")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("Only at dead ends")));
+			::SendMessage(m_hUTurnCombo, CB_ADDSTRING, NULL, (LPARAM)(_T("At dead ends and intersections")));
+			::SendMessage(m_hUTurnCombo, CB_SETCURSEL, (WPARAM)uturn, 0);
+		}
+
 		// set flags
 		VARIANT_BOOL val;
 		m_ipEvcSolver->get_SeparableEvacuee(&val);
@@ -134,6 +158,12 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_CARMAPerformanceRatio(&carma);
 		::SendMessage(m_heditCARMA, WM_SETTEXT, NULL, (LPARAM)carma);
 		delete [] carma;
+
+		// set CARMA ratio
+		BSTR selfish;
+		m_ipEvcSolver->get_SelfishRatio(&selfish);
+		::SendMessage(m_heditSelfish, WM_SETTEXT, NULL, (LPARAM)selfish);
+		delete [] selfish;
 
 		SetFlockingEnabled();
 		SetDirty(FALSE);
@@ -299,6 +329,14 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex > -1) ipSolver->put_TrafficModel((EvcTrafficModel)selectedIndex);
 		selectedIndex = ::SendMessage(m_hCmbFlockProfile, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_FlockingProfile((FLOCK_PROFILE)selectedIndex);
+		selectedIndex = ::SendMessage(m_hCmbCarmaSort, CB_GETCURSEL, 0, 0);
+		if (selectedIndex > -1) ipSolver->put_CARMASortSetting((CARMASort)selectedIndex);
+
+		if ((INASolverSettingsPtr)m_ipEvcSolver)
+		{
+			selectedIndex = ::SendMessage(m_hUTurnCombo, CB_GETCURSEL, 0, 0);
+			if (selectedIndex > -1) ((INASolverSettingsPtr)(m_ipEvcSolver))->put_RestrictUTurns((esriNetworkForwardStarBacktrack)selectedIndex);
+		}
 
 		// flags
 		selectedIndex = ::SendMessage(m_hSeparable, BM_GETCHECK, 0, 0);
@@ -344,6 +382,14 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_heditCARMA, WM_GETTEXT, size + 1, (LPARAM)carma);
 		ipSolver->put_CARMAPerformanceRatio(carma);
 		delete [] carma;
+		
+		// CARMA ratio
+		BSTR selfish;
+		size = ::SendMessage(m_heditSelfish, WM_GETTEXTLENGTH, 0, 0);
+		selfish = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
+		::SendMessage(m_heditSelfish, WM_GETTEXT, size + 1, (LPARAM)selfish);
+		ipSolver->put_SelfishRatio(selfish);
+		delete [] selfish;
 
 		// saturation density per capacity
 		BSTR sat;
@@ -406,12 +452,6 @@ STDMETHODIMP EvcSolverPropPage::GetHelpId(LONG controlID, LONG* pHelpID)
 
 LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
-	int cmdShow = 0;
-#ifdef _FLOCK
-	cmdShow = SW_SHOW;
-#else
-	cmdShow = SW_HIDE;	
-#endif
 	m_hCapCombo = GetDlgItem(IDC_COMBO_CAPACITY);
 	m_hCostCombo = GetDlgItem(IDC_COMBO_COST);
 	m_hComboMethod = GetDlgItem(IDC_COMBO_METHOD);
@@ -429,20 +469,23 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCmbFlockProfile = GetDlgItem(IDC_COMBO_PROFILE);
 	m_heditCARMA = GetDlgItem(IDC_EDIT_CARMA);
 	m_hThreeGenCARMA = GetDlgItem(IDL_CHECK_CARMAGEN);
+	m_heditSelfish = GetDlgItem(IDC_EDIT_SELFISH);
+	m_hCmbCarmaSort = GetDlgItem(IDC_COMBO_CarmaSort);
+	m_hUTurnCombo = GetDlgItem(IDC_COMBO_UTurn);
 
 	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
 	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
 	HWND m_hlblSnapFlock = GetDlgItem(IDC_STATIC_FlockSnapInterval);
 	HWND m_hlblFlockProfile = GetDlgItem(IDC_STATIC_FlockProfile);
 
-	::ShowWindow(m_hGroupFlock, cmdShow);
-	::ShowWindow(m_hEditSnapFlock, cmdShow);
-	::ShowWindow(m_hEditSimulationFlock, cmdShow);
-	::ShowWindow(m_hCheckFlock, cmdShow);
-	::ShowWindow(m_hlblSimulationFlock, cmdShow);
-	::ShowWindow(m_hlblSnapFlock, cmdShow);
-	::ShowWindow(m_hlblFlockProfile, cmdShow);
-	::ShowWindow(m_hCmbFlockProfile, cmdShow);
+	::ShowWindow(m_hGroupFlock, SW_SHOW);
+	::ShowWindow(m_hEditSnapFlock, SW_SHOW);
+	::ShowWindow(m_hEditSimulationFlock, SW_SHOW);
+	::ShowWindow(m_hCheckFlock, SW_SHOW);
+	::ShowWindow(m_hlblSimulationFlock, SW_SHOW);
+	::ShowWindow(m_hlblSnapFlock, SW_SHOW);
+	::ShowWindow(m_hlblFlockProfile, SW_SHOW);
+	::ShowWindow(m_hCmbFlockProfile, SW_SHOW);
 
 	// release date label
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
@@ -608,8 +651,31 @@ LRESULT EvcSolverPropPage::OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL
 	return 0;
 }
 
-
 LRESULT EvcSolverPropPage::OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnCbnSelchangeComboCARMASort(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnCbnSelchangeComboUTurn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet
