@@ -839,6 +839,12 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_RID));
+	ipFieldEdit->put_Type(esriFieldTypeInteger);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_EVC_NAME));
 	ipFieldEdit->put_Type(esriFieldTypeString);
 	ipFieldsEdit->AddField(ipFieldEdit);
@@ -1021,6 +1027,12 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_EID));
 	ipFieldEdit->put_Type(esriFieldTypeInteger);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_DIR));
+	ipFieldEdit->put_Type(esriFieldTypeString);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipField.CreateInstance(CLSID_Field);
