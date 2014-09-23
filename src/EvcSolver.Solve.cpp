@@ -610,7 +610,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	IFeatureClassPtr ipRouteEdgesFC(ipRouteEdgesNAClass);	
 
 	// Create an insert cursor and feature buffer from the "Routes" feature class to be used to write routes
-	IFeatureCursorPtr ipFeatureCursorR, ipFeatureCursorE;
+	IFeatureCursorPtr ipFeatureCursorR, ipFeatureCursorE, ipFeatureCursorU;
 	if (FAILED(hr = ipRoutesFC->Insert(VARIANT_TRUE, &ipFeatureCursorR))) return hr;
 	if (!DoNotExportRouteEdges) if (FAILED(hr = ipRouteEdgesFC->Insert(VARIANT_TRUE, &ipFeatureCursorE))) return hr;
 
@@ -619,12 +619,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (!DoNotExportRouteEdges) if (FAILED(hr = ipRouteEdgesFC->CreateFeatureBuffer(&ipFeatureBufferE))) return hr;
 
 	// Query for the appropriate field index values in the "routes" feature class
-	long evNameFieldIndex = -1, evacTimeFieldIndex = -1, orgTimeFieldIndex = -1,
-		ERRouteFieldIndex = -1, EREdgeFieldIndex = -1, ERSeqFieldIndex = -1, ERFromPosFieldIndex = -1, ERToPosFieldIndex = -1, ERCostFieldIndex = -1;
+	long evNameFieldIndex = -1, evacTimeFieldIndex = -1, orgTimeFieldIndex = -1, RIDFieldIndex = -1, ERRouteFieldIndex = -1, EREdgeFieldIndex = -1,
+		ERSeqFieldIndex = -1, ERFromPosFieldIndex = -1, ERToPosFieldIndex = -1, ERCostFieldIndex = -1, EREdgeDirFieldIndex = -1;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_ORG), &orgTimeFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_RID), &RIDFieldIndex))) return hr;
 	if (!DoNotExportRouteEdges)
 	{
 		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_RID), &ERRouteFieldIndex))) return hr;
@@ -633,18 +634,35 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_FromP), &ERFromPosFieldIndex))) return hr;
 		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_ToP), &ERToPosFieldIndex))) return hr;
 		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_COST), &ERCostFieldIndex))) return hr;
+		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_DIR), &EREdgeDirFieldIndex))) return hr;
 	}
 
 	for (pit = tempPathList->begin(); pit != tempPathList->end(); pit++)
 	{
 		if (FAILED(hr = (*pit)->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
-			ipFeatureBufferE, ipFeatureCursorR, ipFeatureCursorE, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, ERSeqFieldIndex,
+			ipFeatureBufferE, ipFeatureCursorR, ipFeatureCursorE, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, EREdgeDirFieldIndex, ERSeqFieldIndex,
 			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex, predictedCost, DoNotExportRouteEdges))) return hr;
 	}
 
 	// flush the insert buffer
 	ipFeatureCursorR->Flush();
 	if (!DoNotExportRouteEdges) ipFeatureCursorE->Flush();
+
+	// copy all route OIDs to RouteID field
+	if (RIDFieldIndex > -1)
+	{
+		IFeaturePtr routeFeature = NULL;
+		long routeID = -1;
+		if (FAILED(hr = ipRoutesFC->Update(NULL, VARIANT_TRUE, &ipFeatureCursorU))) return hr;
+		if (FAILED(hr = ipFeatureCursorU->NextFeature(&routeFeature))) return hr;
+		while (routeFeature)
+		{
+			if (FAILED(hr = routeFeature->get_OID(&routeID))) return hr;     // get OID
+			if (FAILED(hr = routeFeature->put_Value(RIDFieldIndex, CComVariant(routeID)))) return hr;    // put OID as routeID
+			if (FAILED(hr = ipFeatureCursorU->UpdateFeature(routeFeature))) return hr;    // put update back in table
+			if (FAILED(hr = ipFeatureCursorU->NextFeature(&routeFeature))) return hr;     // for loop next feature
+		}
+	}
 
 	////////////////////////////////////////////////////////////////////////////////
 	///// Exporting EdgeStat data to output featureClass
