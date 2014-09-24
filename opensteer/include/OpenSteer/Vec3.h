@@ -69,35 +69,35 @@ namespace OpenSteer {
         double x, y, z;
 
         // constructors
-        Vec3 (void) {x = y = z = 0;}
-        Vec3 (double X, double Y, double Z) {x = X; y = Y; z = Z;}
+		OPENSTEER_API Vec3(void) { x = y = z = 0; }
+		OPENSTEER_API Vec3(double X, double Y, double Z) { x = X; y = Y; z = Z; }
 
         // vector addition
-        Vec3 operator+ (const Vec3& v) const {return Vec3 (x+v.x, y+v.y, z+v.z);}
+		OPENSTEER_API Vec3 operator+ (const Vec3& v) const { return Vec3(x + v.x, y + v.y, z + v.z); }
 
         // vector subtraction
-        Vec3 operator- (const Vec3& v) const {return Vec3 (x-v.x, y-v.y, z-v.z);}
+		OPENSTEER_API Vec3 operator- (const Vec3& v) const { return Vec3(x - v.x, y - v.y, z - v.z); }
 
         // unary minus
-        Vec3 operator- (void) const {return Vec3 (-x, -y, -z);}
+		OPENSTEER_API Vec3 operator- (void) const { return Vec3(-x, -y, -z); }
 
         // vector times scalar product (scale length of vector times argument)
-        Vec3 operator* (const double s) const {return Vec3 (x * s, y * s, z * s);}
+		OPENSTEER_API Vec3 operator* (const double s) const { return Vec3(x * s, y * s, z * s); }
 
         // vector divided by a scalar (divide length of vector by argument)
-        Vec3 operator/ (const double s) const {return Vec3 (x / s, y / s, z / s);}
+		OPENSTEER_API Vec3 operator/ (const double s) const { return Vec3(x / s, y / s, z / s); }
 
         // dot product
-        double dot (const Vec3& v) const {return (x * v.x) + (y * v.y) + (z * v.z);}
+		OPENSTEER_API double dot(const Vec3& v) const { return (x * v.x) + (y * v.y) + (z * v.z); }
 
         // length
-        double length (void) const {return sqrtXXX (lengthSquared ());}
+		OPENSTEER_API double length(void) const { return sqrtXXX(lengthSquared()); }
 
         // length squared
-        double lengthSquared (void) const {return this->dot (*this);}
+		OPENSTEER_API double lengthSquared(void) const { return this->dot(*this); }
 
         // normalize: returns normalized version (parallel to this, length = 1)
-        Vec3 normalize (void) const
+		OPENSTEER_API Vec3 normalize(void) const
         {
             // skip divide if length is zero
             const double len = length ();
@@ -106,7 +106,7 @@ namespace OpenSteer {
 
         // cross product (modify "*this" to be A x B)
         // [XXX  side effecting -- deprecate this function?  XXX]
-        void cross(const Vec3& a, const Vec3& b)
+		OPENSTEER_API void cross(const Vec3& a, const Vec3& b)
         {
             *this = Vec3 ((a.y * b.z) - (a.z * b.y),
                           (a.z * b.x) - (a.x * b.z),
@@ -114,35 +114,35 @@ namespace OpenSteer {
         }
 
         // assignment
-        Vec3 operator= (const Vec3& v) {x=v.x; y=v.y; z=v.z; return *this;}
+		OPENSTEER_API Vec3 operator= (const Vec3& v) { x = v.x; y = v.y; z = v.z; return *this; }
 
         // set XYZ coordinates to given three doubles
-        Vec3 set (const double _x, const double _y, const double _z)
+		OPENSTEER_API Vec3 set(const double _x, const double _y, const double _z)
         {x = _x; y = _y; z = _z; return *this;}
 
         // +=
-        Vec3 operator+= (const Vec3& v) {return *this = (*this + v);}
+		OPENSTEER_API Vec3 operator+= (const Vec3& v) { return *this = (*this + v); }
 
         // -=
-        Vec3 operator-= (const Vec3& v) {return *this = (*this - v);}
+		OPENSTEER_API Vec3 operator-= (const Vec3& v) { return *this = (*this - v); }
 
         // *=
-        Vec3 operator*= (const double& s) {return *this = (*this * s);}
+		OPENSTEER_API Vec3 operator*= (const double& s) { return *this = (*this * s); }
 
         // equality/inequality
-        bool operator== (const Vec3& v) const {return x==v.x && y==v.y && z==v.z;}
-        bool operator!= (const Vec3& v) const {return !(*this == v);}
+		OPENSTEER_API bool operator== (const Vec3& v) const { return x == v.x && y == v.y && z == v.z; }
+		OPENSTEER_API bool operator!= (const Vec3& v) const { return !(*this == v); }
 
         // XXX experimental (4-1-03 cwr): is this the right approach?  defining
         // XXX "Vec3 distance (vec3, Vec3)" collided with STL's distance template.
-        static double distance (const Vec3& a, const Vec3& b){return(a-b).length();}
+		static OPENSTEER_API double distance(const Vec3& a, const Vec3& b){ return(a - b).length(); }
 
         // --------------------------- utility member functions used in OpenSteer
 
         // return component of vector parallel to a unit basis vector
         // (IMPORTANT NOTE: assumes "basis" has unit magnitude (length==1))
 
-        inline Vec3 parallelComponent (const Vec3& unitBasis) const
+		OPENSTEER_API inline Vec3 parallelComponent(const Vec3& unitBasis) const
         {
             const double projection = this->dot (unitBasis);
             return unitBasis * projection;
@@ -151,7 +151,7 @@ namespace OpenSteer {
         // return component of vector perpendicular to a unit basis vector
         // (IMPORTANT NOTE: assumes "basis" has unit magnitude (length==1))
 
-        inline Vec3 perpendicularComponent (const Vec3& unitBasis) const
+		OPENSTEER_API inline Vec3 perpendicularComponent(const Vec3& unitBasis) const
         {
             return (*this) - parallelComponent (unitBasis);
         }
@@ -161,7 +161,7 @@ namespace OpenSteer {
         // the value returned has length of maxLength and is paralle to the
         // original input.
 
-        Vec3 truncateLength (const double maxLength) const
+		OPENSTEER_API Vec3 truncateLength(const double maxLength) const
         {
             const double maxLengthSquared = maxLength * maxLength;
             const double vecLengthSquared = this->lengthSquared ();
@@ -173,11 +173,11 @@ namespace OpenSteer {
 
         // forces a 3d position onto the XZ (aka y=0) plane
 
-        Vec3 setYtoZero (void) const {return Vec3 (this->x, 0, this->z);}
+		OPENSTEER_API Vec3 setYtoZero(void) const { return Vec3(this->x, 0, this->z); }
 
         // rotate this vector about the global Y (up) axis by the given angle
 
-        Vec3 rotateAboutGlobalY (double angle) const 
+		OPENSTEER_API Vec3 rotateAboutGlobalY(double angle) const
         {
             const double s = sinXXX (angle);
             const double c = cosXXX (angle);
@@ -187,7 +187,7 @@ namespace OpenSteer {
         }
 
         // version for caching sin/cos computation
-        Vec3 rotateAboutGlobalY (double angle, double& sin, double& cos) const 
+		OPENSTEER_API Vec3 rotateAboutGlobalY(double angle, double& sin, double& cos) const
         {
             // is both are zero, they have not be initialized yet
             if (sin==0 && cos==0)
@@ -202,7 +202,7 @@ namespace OpenSteer {
 
         // if this position is outside sphere, push it back in by one diameter
 
-        Vec3 sphericalWrapAround (const Vec3& center, double radius)
+		OPENSTEER_API Vec3 sphericalWrapAround(const Vec3& center, double radius)
         {
             const Vec3 offset = *this - center;
             const double r = offset.length();
@@ -213,10 +213,10 @@ namespace OpenSteer {
         }
 
         // names for frequently used vector constants
-        static const Vec3 zero;
-        static const Vec3 side;
-        static const Vec3 up;
-        static const Vec3 forward;
+		static OPENSTEER_API const Vec3 zero;
+		static OPENSTEER_API const Vec3 side;
+		static OPENSTEER_API const Vec3 up;
+		static OPENSTEER_API const Vec3 forward;
     };
 
 
@@ -224,14 +224,14 @@ namespace OpenSteer {
     // scalar times vector product ("double * Vec3")
 
 
-    inline Vec3 operator* (double s, const Vec3& v) {return v*s;}
+	OPENSTEER_API inline Vec3 operator* (double s, const Vec3& v) { return v*s; }
 
 
     // ----------------------------------------------------------------------------
     // default character stream output method
 
 
-    inline std::ostream& operator<< (std::ostream& o, const Vec3& v)
+	OPENSTEER_API inline std::ostream& operator<< (std::ostream& o, const Vec3& v)
     {
         return o << "(" << v.x << "," << v.y << "," << v.z << ")";
     }
@@ -243,7 +243,7 @@ namespace OpenSteer {
     // between 0 and 1
 
 
-    Vec3 RandomVectorInUnitRadiusSphere (void);
+	OPENSTEER_API Vec3 RandomVectorInUnitRadiusSphere(void);
 
 
     // ----------------------------------------------------------------------------
@@ -252,7 +252,7 @@ namespace OpenSteer {
     // random and length will range between 0 and 1
 
 
-    Vec3 randomVectorOnUnitRadiusXZDisk (void);
+	OPENSTEER_API Vec3 randomVectorOnUnitRadiusXZDisk(void);
 
 
     // ----------------------------------------------------------------------------
@@ -261,7 +261,7 @@ namespace OpenSteer {
     // and length will be 1
 
 
-    inline Vec3 RandomUnitVector (void)
+	OPENSTEER_API inline Vec3 RandomUnitVector(void)
     {
         return RandomVectorInUnitRadiusSphere().normalize();
     }
@@ -273,7 +273,7 @@ namespace OpenSteer {
     // random and length will be 1
 
 
-    inline Vec3 RandomUnitVectorOnXZPlane (void)
+	OPENSTEER_API inline Vec3 RandomUnitVectorOnXZPlane(void)
     {
         return RandomVectorInUnitRadiusSphere().setYtoZero().normalize();
     }
@@ -283,7 +283,7 @@ namespace OpenSteer {
     // used by limitMaxDeviationAngle / limitMinDeviationAngle below
 
 
-    Vec3 vecLimitDeviationAngleUtility (const bool insideOrOutside,
+	OPENSTEER_API Vec3 vecLimitDeviationAngleUtility(const bool insideOrOutside,
                                         const Vec3& source,
                                         const double cosineOfConeAngle,
                                         const Vec3& basis);
@@ -296,7 +296,7 @@ namespace OpenSteer {
     // defined by the basis and an angle.
 
 
-    inline Vec3 limitMaxDeviationAngle (const Vec3& source,
+	OPENSTEER_API inline Vec3 limitMaxDeviationAngle(const Vec3& source,
                                         const double cosineOfConeAngle,
                                         const Vec3& basis)
     {
@@ -314,7 +314,7 @@ namespace OpenSteer {
     // defined by the basis and an angle.
 
 
-    inline Vec3 limitMinDeviationAngle (const Vec3& source,
+	OPENSTEER_API inline Vec3 limitMinDeviationAngle(const Vec3& source,
                                         const double cosineOfConeAngle,
                                         const Vec3& basis)
     {    
@@ -331,7 +331,7 @@ namespace OpenSteer {
     // the line ("lineUnitTangent")
 
 
-    inline double distanceFromLine (const Vec3& point,
+	OPENSTEER_API inline double distanceFromLine(const Vec3& point,
                                    const Vec3& lineOrigin,
                                    const Vec3& lineUnitTangent)
     {
@@ -346,7 +346,7 @@ namespace OpenSteer {
     // arbitrarily selects one of the infinitude of perpendicular vectors)
 
 
-    Vec3 findPerpendicularIn3d (const Vec3& direction);
+	OPENSTEER_API Vec3 findPerpendicularIn3d(const Vec3& direction);
 
 
     // ----------------------------------------------------------------------------

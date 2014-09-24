@@ -1,5 +1,7 @@
 EvcSolver32.dll
 EvcSolver64.dll
+opensteer32.dll
+opensteer64.dll
 glut32.dll
 glut64.dll
 Manual.pdf

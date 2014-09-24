@@ -58,18 +58,18 @@ namespace OpenSteer {
         // this path.  Also returns, via output arguments, the path tangent at
         // P and a measure of how far A is outside the Pathway's "tube".  Note
         // that a negative distance indicates A is inside the Pathway.
-        virtual Vec3 mapPointToPath (const Vec3& point,
+		OPENSTEER_API virtual Vec3 mapPointToPath(const Vec3& point,
                                      Vec3& tangent,
                                      double& outside) = 0;
 
         // given a distance along the path, convert it to a point on the path
-        virtual Vec3 mapPathDistanceToPoint (double pathDistance) = 0;
+		OPENSTEER_API virtual Vec3 mapPathDistanceToPoint(double pathDistance) = 0;
 
         // Given an arbitrary point, convert it to a distance along the path.
-        virtual double mapPointToPathDistance (const Vec3& point) = 0;
+		OPENSTEER_API virtual double mapPointToPathDistance(const Vec3& point) = 0;
 
         // is the given point inside the path tube?
-        bool isInsidePath (const Vec3& point)
+		OPENSTEER_API bool isInsidePath(const Vec3& point)
         {
             double outside; Vec3 tangent;
             mapPointToPath (point, tangent, outside);
@@ -77,7 +77,7 @@ namespace OpenSteer {
         }
 
         // how far outside path tube is the given point?  (negative is inside)
-        double howFarOutsidePath (const Vec3& point)
+		OPENSTEER_API double howFarOutsidePath(const Vec3& point)
         {
             double outside; Vec3 tangent;
             mapPointToPath (point, tangent, outside);
@@ -97,7 +97,7 @@ namespace OpenSteer {
     {
 	private:
 		bool isInit;
-		void Destruct(void);
+		OPENSTEER_API void Destruct(void);
 
     public:
 
@@ -106,18 +106,18 @@ namespace OpenSteer {
         double radius;
         bool cyclic;
 
-		PolylinePathway (void) { isInit = false; }
-		virtual ~PolylinePathway (void) { Destruct(); }
+		OPENSTEER_API PolylinePathway(void) { isInit = false; }
+		OPENSTEER_API virtual ~PolylinePathway(void) { Destruct(); }
 
         // construct a PolylinePathway given the number of points (vertices),
         // an array of points, and a path radius.
-        PolylinePathway (const int _pointCount,
+		OPENSTEER_API PolylinePathway(const int _pointCount,
                          const Vec3 _points[],
                          const double _radius,
                          const bool _cyclic);
 
         // utility for constructors in derived classes
-        void initialize (const int _pointCount,
+		OPENSTEER_API void initialize(const int _pointCount,
                          const Vec3 _points[],
                          const double _radius,
                          const bool _cyclic);
@@ -126,24 +126,24 @@ namespace OpenSteer {
         // this path.  Also returns, via output arguments, the path tangent at
         // P and a measure of how far A is outside the Pathway's "tube".  Note
         // that a negative distance indicates A is inside the Pathway.
-        Vec3 mapPointToPath (const Vec3& point, Vec3& tangent, double& outside);
+		OPENSTEER_API Vec3 mapPointToPath(const Vec3& point, Vec3& tangent, double& outside);
 
 
         // given an arbitrary point, convert it to a distance along the path
-        double mapPointToPathDistance (const Vec3& point);
+		OPENSTEER_API double mapPointToPathDistance(const Vec3& point);
 
         // given a distance along the path, convert it to a point on the path
-        Vec3 mapPathDistanceToPoint (double pathDistance);
+		OPENSTEER_API Vec3 mapPathDistanceToPoint(double pathDistance);
 
         // utility methods
 
         // compute minimum distance from a point to a line segment
-        double pointToSegmentDistance (const Vec3& point,
+		OPENSTEER_API double pointToSegmentDistance(const Vec3& point,
                                       const Vec3& ep0,
                                       const Vec3& ep1);
 
         // assessor for total path length;
-        double getTotalPathLength (void) {return totalPathLength;};
+		OPENSTEER_API double getTotalPathLength(void) { return totalPathLength; };
 
     // XXX removed the "private" because it interfered with derived
     // XXX classes later this should all be rewritten and cleaned up

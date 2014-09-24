@@ -93,13 +93,13 @@ namespace OpenSteer {
     public:
 
         // constructor
-        SimpleVehicle ();
+		OPENSTEER_API SimpleVehicle();
 
         // destructor
-        ~SimpleVehicle ();
+		OPENSTEER_API ~SimpleVehicle();
 
         // reset vehicle state
-        void reset (void)
+		OPENSTEER_API void reset(void)
         {
             // reset LocalSpace state
             resetLocalSpace ();
@@ -123,77 +123,77 @@ namespace OpenSteer {
         }
 
         // get/set mass
-        double mass (void) const {return _mass;}
-        double setMass (double m) {return _mass = m;}
+		OPENSTEER_API double mass(void) const { return _mass; }
+		OPENSTEER_API double setMass(double m) { return _mass = m; }
 
         // get velocity of vehicle
-        Vec3 velocity (void) const {return forward() * _speed;}
+		OPENSTEER_API Vec3 velocity(void) const { return forward() * _speed; }
 
         // get/set speed of vehicle  (may be faster than taking mag of velocity)
-        double speed (void) const {return _speed;}
-        double setSpeed (double s) {return _speed = s;}
+		OPENSTEER_API double speed(void) const { return _speed; }
+		OPENSTEER_API double setSpeed(double s) { return _speed = s; }
 
         // size of bounding sphere, for obstacle avoidance, etc.
-        double radius (void) const {return _radius;}
-        double setRadius (double m) {return _radius = m;}
+		OPENSTEER_API double radius(void) const { return _radius; }
+		OPENSTEER_API double setRadius(double m) { return _radius = m; }
 
         // get/set maxForce
-        double maxForce (void) const {return _maxForce;}
-        double setMaxForce (double mf) {return _maxForce = mf;}
+		OPENSTEER_API double maxForce(void) const { return _maxForce; }
+		OPENSTEER_API double setMaxForce(double mf) { return _maxForce = mf; }
 
         // get/set maxSpeed
-        double maxSpeed (void) const {return _maxSpeed;}
-        double setMaxSpeed (double ms) {return _maxSpeed = ms;}
+		OPENSTEER_API double maxSpeed(void) const { return _maxSpeed; }
+		OPENSTEER_API double setMaxSpeed(double ms) { return _maxSpeed = ms; }
 
 
         // apply a given steering force to our momentum,
         // adjusting our orientation to maintain velocity-alignment.
-        void applySteeringForce (const Vec3& force, const double deltaTime);
+		OPENSTEER_API void applySteeringForce(const Vec3& force, const double deltaTime);
 
         // the default version: keep FORWARD parallel to velocity, change
         // UP as little as possible.
-        virtual void regenerateLocalSpace (const Vec3& newVelocity,
+		OPENSTEER_API virtual void regenerateLocalSpace(const Vec3& newVelocity,
                                            const double elapsedTime);
 
         // alternate version: keep FORWARD parallel to velocity, adjust UP
         // according to a no-basis-in-reality "banking" behavior, something
         // like what birds and airplanes do.  (XXX experimental cwr 6-5-03)
-        void regenerateLocalSpaceForBanking (const Vec3& newVelocity,
+		OPENSTEER_API void regenerateLocalSpaceForBanking(const Vec3& newVelocity,
                                              const double elapsedTime);
 
         // adjust the steering force passed to applySteeringForce.
         // allows a specific vehicle class to redefine this adjustment.
         // default is to disallow backward-facing steering at low speed.
         // xxx experimental 8-20-02
-        virtual Vec3 adjustRawSteeringForce (const Vec3& force,
+		OPENSTEER_API virtual Vec3 adjustRawSteeringForce(const Vec3& force,
                                              const double deltaTime);
 
         // apply a given braking force (for a given dt) to our momentum.
         // xxx experimental 9-6-02
-        void applyBrakingForce (const double rate, const double deltaTime);
+		OPENSTEER_API void applyBrakingForce(const double rate, const double deltaTime);
 
         // predict position of this vehicle at some time in the future
         // (assumes velocity remains constant)
-        Vec3 predictFuturePosition (const double predictionTime) const;
+		OPENSTEER_API Vec3 predictFuturePosition(const double predictionTime) const;
 
         // get instantaneous curvature (since last update)
-        double curvature (void) {return _curvature;}
+		OPENSTEER_API double curvature(void) { return _curvature; }
 
         // get/reset smoothedCurvature, smoothedAcceleration and smoothedPosition
-        double smoothedCurvature (void) {return _smoothedCurvature;}
-        double resetSmoothedCurvature (double value = 0)
+		OPENSTEER_API double smoothedCurvature(void) { return _smoothedCurvature; }
+		OPENSTEER_API double resetSmoothedCurvature(double value = 0)
         {
             _lastForward = Vec3::zero;
             _lastPosition = Vec3::zero;
             return _smoothedCurvature = _curvature = value;
         }
-        Vec3 smoothedAcceleration (void) {return _smoothedAcceleration;}
-        Vec3 resetSmoothedAcceleration (const Vec3& value = Vec3::zero)
+		OPENSTEER_API Vec3 smoothedAcceleration(void) { return _smoothedAcceleration; }
+		OPENSTEER_API Vec3 resetSmoothedAcceleration(const Vec3& value = Vec3::zero)
         {
             return _smoothedAcceleration = value;
         }
-        Vec3 smoothedPosition (void) {return _smoothedPosition;}
-        Vec3 resetSmoothedPosition (const Vec3& value = Vec3::zero)
+		OPENSTEER_API Vec3 smoothedPosition(void) { return _smoothedPosition; }
+		OPENSTEER_API Vec3 resetSmoothedPosition(const Vec3& value = Vec3::zero)
         {
             return _smoothedPosition = value;
         }
@@ -203,15 +203,15 @@ namespace OpenSteer {
         static int serialNumberCounter;
 
         // draw lines from vehicle's position showing its velocity and acceleration
-        void annotationVelocityAcceleration (double maxLengthA, double maxLengthV);
-        void annotationVelocityAcceleration (double maxLength)
+		OPENSTEER_API void annotationVelocityAcceleration(double maxLengthA, double maxLengthV);
+		OPENSTEER_API void annotationVelocityAcceleration(double maxLength)
             {annotationVelocityAcceleration (maxLength, maxLength);}
-        void annotationVelocityAcceleration (void)
+		OPENSTEER_API void annotationVelocityAcceleration(void)
             {annotationVelocityAcceleration (3, 3);}
 
         // set a random "2D" heading: set local Up to global Y, then effectively
         // rotate about it by a random angle (pick random forward, derive side).
-        void randomizeHeadingOnXZPlane (void)
+		OPENSTEER_API void randomizeHeadingOnXZPlane(void)
         {
             setUp (Vec3::up);
             setForward (RandomUnitVectorOnXZPlane ());
@@ -241,7 +241,7 @@ namespace OpenSteer {
         Vec3 _smoothedAcceleration;
 
         // measure path curvature (1/turning-radius), maintain smoothed version
-        void measurePathCurvature (const double elapsedTime);
+		OPENSTEER_API void measurePathCurvature(const double elapsedTime);
     };
 
 

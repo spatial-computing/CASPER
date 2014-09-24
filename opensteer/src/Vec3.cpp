@@ -56,16 +56,16 @@
 // names for frequently used vector constants
 
 
-const OpenSteer::Vec3 OpenSteer::Vec3::zero    (0, 0, 0);
-const OpenSteer::Vec3 OpenSteer::Vec3::up      (0, 1, 0);
-const OpenSteer::Vec3 OpenSteer::Vec3::forward (0, 0, 1);
+OPENSTEER_API const OpenSteer::Vec3 OpenSteer::Vec3::zero(0, 0, 0);
+OPENSTEER_API const OpenSteer::Vec3 OpenSteer::Vec3::up(0, 1, 0);
+OPENSTEER_API const OpenSteer::Vec3 OpenSteer::Vec3::forward(0, 0, 1);
 
 // XXX  This should be unified with LocalSpace::rightHanded, but I don't want
 // XXX  Vec3 to be based on LocalSpace which is based on Vec3.  Perhaps there
 // XXX  should be a tiny chirality.h header to define a const?  That could
 // XXX  then be included by both Vec3.h and LocalSpace.h
 
-const OpenSteer::Vec3 OpenSteer::Vec3::side    (-1, 0, 0);
+OPENSTEER_API const OpenSteer::Vec3 OpenSteer::Vec3::side(-1, 0, 0);
 
 // ----------------------------------------------------------------------------
 // Returns a position randomly distributed inside a sphere of unit radius

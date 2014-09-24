@@ -109,7 +109,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;_DEBUG;_CONSOLE;_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OPENSTEER_EXPORT;_CRTDBG_MAP_ALLOC;WIN32;_DEBUG;_CONSOLE;_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -131,8 +131,9 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Lib>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
+copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"</Command>
+      <Message>Post build script to copy files</Message>
     </PostBuildEvent>
     <Bscmake>
       <PreserveSbr>true</PreserveSbr>
@@ -156,7 +157,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;_DEBUG;_CONSOLE;_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OPENSTEER_EXPORT;_CRTDBG_MAP_ALLOC;WIN32;_DEBUG;_CONSOLE;_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -176,8 +177,9 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Lib>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
+copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"</Command>
+      <Message>Post build script to copy files</Message>
     </PostBuildEvent>
     <Link>
       <OptimizeReferences>false</OptimizeReferences>
@@ -202,7 +204,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;NDEBUG;_CONSOLE;_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OPENSTEER_EXPORT;_CRTDBG_MAP_ALLOC;WIN32;NDEBUG;_CONSOLE;_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -226,8 +228,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Lib>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"</Command>
+      <Message>Post build script to copy files</Message>
     </PostBuildEvent>
     <Link>
       <OptimizeReferences>true</OptimizeReferences>
@@ -245,7 +247,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRTDBG_MAP_ALLOC;WIN32;NDEBUG;_CONSOLE;_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>OPENSTEER_EXPORT;_CRTDBG_MAP_ALLOC;WIN32;NDEBUG;_CONSOLE;_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -269,8 +271,8 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Lib>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"</Command>
+      <Message>Post build script to copy files</Message>
     </PostBuildEvent>
     <Link>
       <OptimizeReferences>true</OptimizeReferences>

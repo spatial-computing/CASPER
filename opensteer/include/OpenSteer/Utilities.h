@@ -59,6 +59,12 @@
 // ----------------------------------------------------------------------------
 // For the sake of Windows, apparently this is a "Linux/Unix thing"
 
+// API export
+#ifdef OPENSTEER_EXPORT
+#define OPENSTEER_API __declspec(dllexport)
+#else 
+#define OPENSTEER_API __declspec(dllimport)
+#endif
 
 #ifndef OPENSTEER_M_PI
 #define OPENSTEER_M_PI 3.14159265358979323846

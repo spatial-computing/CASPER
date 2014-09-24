@@ -343,7 +343,6 @@ exit 0</Command>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
-copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
 IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
@@ -419,7 +418,6 @@ exit 0</Command>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
       <Command>copy /Y "$(TargetDir)$(TargetName).dll" "$(SolutionDir)Package\*.*"
-copy /Y "$(TargetDir)$(TargetName).pdb" "$(SolutionDir)Package\*.*"
 IF "$(NOREG)"=="" (
   IF exist "$(SolutionDir)Package\$(TargetFileName)" (
     IF "$(PlatformTarget)"=="x86" (
