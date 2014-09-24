@@ -128,15 +128,19 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
@@ -153,10 +157,8 @@
 exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>
-      </Message>
-      <Command>
-      </Command>
+      <Message>clean the package</Message>
+      <Command>del $(SolutionDir)Package\$(TargetName).*</Command>
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -227,10 +229,8 @@ exit 0</Command>
 exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>
-      </Message>
-      <Command>
-      </Command>
+      <Message>clean the package</Message>
+      <Command>del $(SolutionDir)Package\$(TargetName).*</Command>
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -295,10 +295,8 @@ exit 0</Command>
 exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>
-      </Message>
-      <Command>
-      </Command>
+      <Message>clean the package</Message>
+      <Command>del $(SolutionDir)Package\$(TargetName).*</Command>
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Full</Optimization>
@@ -370,10 +368,8 @@ exit 0</Command>
 exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>
-      </Message>
-      <Command>
-      </Command>
+      <Message>clean the package</Message>
+      <Command>del $(SolutionDir)Package\$(TargetName).*</Command>
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Full</Optimization>
