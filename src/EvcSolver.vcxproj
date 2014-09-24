@@ -128,37 +128,54 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CustomBuildAfterTargets>Clean</CustomBuildAfterTargets>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF "$(NOREG)"=="" (
-  IF exist "$(SolutionDir)Package\$(TargetFileName)" (
+      <Command>IF exist "$(SolutionDir)Package\$(TargetFileName)" (
+  IF "$(NOREG)"=="" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
     ) else (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
+  del /Q $(SolutionDir)Package\$(TargetName).*
 )
 exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>clean the package</Message>
-      <Command>del $(SolutionDir)Package\$(TargetName).*</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -217,20 +234,25 @@ exit 0</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF "$(NOREG)"=="" (
-  IF exist "$(SolutionDir)Package\$(TargetFileName)" (
+      <Command>IF exist "$(SolutionDir)Package\$(TargetFileName)" (
+  IF "$(NOREG)"=="" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
     ) else (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
+  del /Q $(SolutionDir)Package\$(TargetName).*
 )
 exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>clean the package</Message>
-      <Command>del $(SolutionDir)Package\$(TargetName).*</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -283,20 +305,25 @@ exit 0</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF "$(NOREG)"=="" (
-  IF exist "$(SolutionDir)Package\$(TargetFileName)" (
+      <Command>IF exist "$(SolutionDir)Package\$(TargetFileName)" (
+  IF "$(NOREG)"=="" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
     ) else (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
+  del /Q $(SolutionDir)Package\$(TargetName).*
 )
 exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>clean the package</Message>
-      <Command>del $(SolutionDir)Package\$(TargetName).*</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Full</Optimization>
@@ -356,20 +383,25 @@ exit 0</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PreBuildEvent>
       <Message>Performing Custom Pre-Build Step</Message>
-      <Command>IF "$(NOREG)"=="" (
-  IF exist "$(SolutionDir)Package\$(TargetFileName)" (
+      <Command>IF exist "$(SolutionDir)Package\$(TargetFileName)" (
+  IF "$(NOREG)"=="" (
     IF "$(PlatformTarget)"=="x86" (
       "$(CommonProgramFiles)\ArcGIS\bin\esriregasm.exe" /p:desktop  "$(SolutionDir)Package\$(TargetFileName)" /s /u
     ) else (
       regsvr32.exe /u /s "$(SolutionDir)Package\$(TargetFileName)" 
     )
   )
+  del /Q $(SolutionDir)Package\$(TargetName).*
 )
 exit 0</Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Message>clean the package</Message>
-      <Command>del $(SolutionDir)Package\$(TargetName).*</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
     <ClCompile>
       <Optimization>Full</Optimization>
