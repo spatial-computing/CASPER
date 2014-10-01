@@ -21,6 +21,19 @@ ArcCASPER (Capacity-Aware Shortest Path Evacuation Routing) is a custom Network 
  - Network Analyst Extension
  - (Optional) Background Geoprocessing (64-bit)
 
+####Using the Code
+The project can be compiled with VS2013 or later. You need a post-commit and a post-checkout git hook to generate an extra header file. Use the following sample:
+
+```bash
+#!/bin/bash
+echo "post-commit script: Writing version to gitdescribe.h"
+
+echo "#ifndef GIT_DESCRIBE" > src/gitdescribe.h
+echo "#define GIT_DESCRIBE `git describe`" >> src/gitdescribe.h
+echo "#endif" >> src/gitdescribe.h
+unix2dos src/gitdescribe.h
+```
+
 ####Installation
 In order to install, first unzip the downloaded file.  Next, execute the "install.cmd" script.  This script needs to be run as an administrator in Windows Visa and later operating systems.  Make sure any previous ArcCASPER installation is completely uninstalled.  You may find detailed instructions in the user manual.
 
