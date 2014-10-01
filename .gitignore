@@ -18,6 +18,7 @@ src/_EvcSolver*
 src/_CustomSolver_p.c
 Package/ArcCASPER-*.zip
 src/dlldata.c
+src/gitdescribe.h
 
 # Visual Studio
 *.exe
