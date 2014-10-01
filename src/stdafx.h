@@ -11,9 +11,6 @@
 
 #pragma once
 
-// includes variable for commit hash / git describe string
-#include "gitdescribe.h"
-
 #ifndef STRICT
 #define STRICT
 #endif

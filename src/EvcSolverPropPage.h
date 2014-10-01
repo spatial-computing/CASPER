@@ -33,7 +33,6 @@ class ATL_NO_VTABLE EvcSolverPropPage :
 {
 public:
   EvcSolverPropPage()
-	  : pppp(0)
   {
     m_dwTitleID = IDS_TITLEEvcSolverPROPPAGE;
     m_dwHelpFileID = IDS_HELPFILEEvcSolverPROPPAGE;
@@ -164,9 +163,6 @@ public:
 	LRESULT OnBnClickedCheckSharecap(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnCbnSelchangeComboCARMASort(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnCbnSelchangeComboUTurn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-protected:
-	int pppp;
-public:
 	LRESULT OnCbnSelchangeComboProfile(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditCARMA(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnNMClickRelease(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);

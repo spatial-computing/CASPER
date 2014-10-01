@@ -26,10 +26,10 @@ The project can be compiled with VS2013 or later. You need a post-commit and a p
 
 ```bash
 #!/bin/bash
-echo "post-commit script: Writing version to gitdescribe.h"
+echo "post-checkout script: Writing git describe to gitdescribe.h"
 
 echo "#ifndef GIT_DESCRIBE" > src/gitdescribe.h
-echo "#define GIT_DESCRIBE `git describe`" >> src/gitdescribe.h
+echo "#define GIT_DESCRIBE \"`git describe`\"" >> src/gitdescribe.h
 echo "#endif" >> src/gitdescribe.h
 unix2dos src/gitdescribe.h
 ```

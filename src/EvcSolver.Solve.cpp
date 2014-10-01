@@ -15,6 +15,9 @@
 #include "FibonacciHeap.h"
 #include "Flocking.h"
 
+// includes variable for commit hash / git describe string
+#include "gitdescribe.h"
+
 STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, ITrackCancel* pTrackCancel, VARIANT_BOOL* pIsPartialSolution)
 {
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
