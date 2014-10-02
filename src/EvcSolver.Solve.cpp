@@ -129,7 +129,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
 	bool DoNotExportRouteEdges = ipUnk == NULL;
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
-	if (!DoNotExportRouteEdges) if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr;
+	if (!DoNotExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
 
 	ipUnk = NULL;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;

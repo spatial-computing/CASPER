@@ -49,6 +49,13 @@ do
   else
     echo "The $branch branch has new commits"
 
+
+    # update the gitdescribe.h header file before build
+    echo "post-commit script: Writing version to gitdescribe.h"
+    echo "#ifndef GIT_DESCRIBE" > src/gitdescribe.h
+    echo "#define GIT_DESCRIBE \"`git describe`\"" >> src/gitdescribe.h
+    echo "#endif" >> src/gitdescribe.h
+
     # cleanup then rebuild
     rm -f Package/EvcSolver32.* Package/EvcSolver64.* Package/opensteer32.* Package/opensteer64.* Package/README.md
     "/cygdrive/c/Program Files (x86)/MSBuild/12.0/Bin/MSBuild.exe" /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 /p:NOREG=1 ArcCASPER.sln
