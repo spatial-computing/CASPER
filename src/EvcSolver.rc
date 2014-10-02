@@ -35,11 +35,17 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""winres.h""\r\n"
+    "#include ""gitdescribe.h""\r\n"
     "\0"
 END
 
 3 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+4 TEXTINCLUDE 
 BEGIN
     "\r\0"
 END
