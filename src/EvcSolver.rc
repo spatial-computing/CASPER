@@ -2,6 +2,9 @@
 //
 #include "resource.h"
 
+// includes variable for commit hash / git describe string
+#include "gitdescribe.h"
+
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -68,12 +71,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "USC SSI"
             VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
-            VALUE "FileVersion", "1.4.0.0"
+            VALUE "FileVersion", GIT_DESCRIBE
             VALUE "InternalName", "EvcSolver32.dll"
             VALUE "LegalCopyright", "Copyright (C) 2014"
             VALUE "OriginalFilename", "EvcSolver32.dll"
             VALUE "ProductName", "EvcSolver"
-            VALUE "ProductVersion", "1.4.0.0"
+            VALUE "ProductVersion", GIT_DESCRIBE
         END
     END
     BLOCK "VarFileInfo"
@@ -189,7 +192,8 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
+
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 
