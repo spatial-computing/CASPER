@@ -49,7 +49,6 @@ do
   else
     echo "The $branch branch has new commits"
 
-
     # update the gitdescribe.h header file before build
     echo "post-commit script: Writing version to gitdescribe.h"
     echo "#ifndef GIT_DESCRIBE" > src/gitdescribe.h
