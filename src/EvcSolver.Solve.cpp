@@ -553,7 +553,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing output features")); 
 
 	// looping through processed evacuees and generate routes in output feature class
-	CComVariant featureID(0);
 	EvcPathPtr path;
 	std::list<EvcPathPtr>::iterator tpit;
 	std::vector<EvcPathPtr>::iterator pit;
@@ -704,11 +703,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 
 			edge = it->second;
-			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex, 
+			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, ipFeatureCursor, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex,
 				                                            resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, congestionFieldIndex, sourceNotFoundFlag))) return hr;
-
-			// Insert the feature buffer in the insert cursor
-			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 		}
 		
 		for (NAEdgeTableItr it = ecache->AgainstBegin(); it != ecache->AgainstEnd(); it++)
@@ -722,18 +718,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 
 			edge = it->second;
-			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex, 
+			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, ipFeatureCursor, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex,
 				                                            resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, congestionFieldIndex, sourceNotFoundFlag))) return hr;
-
-			// Insert the feature buffer in the insert cursor
-			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 		}
 
 		// flush the insert buffer
 		ipFeatureCursor->Flush();
-	
-		if (sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));	
 	}
+
+	if (sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));
 
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
 	tenNanoSec64 = (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
@@ -767,6 +760,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		bool movingObjectLeft;
 		wchar_t * thisTimeBuf = new DEBUG_NEW_PLACEMENT wchar_t[25];
 		tm local;
+		CComVariant featureID(0);
 
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;

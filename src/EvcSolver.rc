@@ -2,18 +2,25 @@
 //
 #include "resource.h"
 
-// includes variable for commit hash / git describe string
-#include "gitdescribe.h"
-
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "winres.h"
+#include "gitdescribe.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
 
 /////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
@@ -76,13 +83,13 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "USC SSI"
-            VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
+            VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
             VALUE "FileVersion", GIT_DESCRIBE
             VALUE "InternalName", "EvcSolver32.dll"
             VALUE "LegalCopyright", "Copyright (C) 2014"
             VALUE "OriginalFilename", "EvcSolver32.dll"
             VALUE "ProductName", "EvcSolver"
-            VALUE "ProductVersion", GIT_DESCRIBE
+			VALUE "ProductVersion", GIT_DESCRIBE
         END
     END
     BLOCK "VarFileInfo"
@@ -104,7 +111,7 @@ IDR_CUSTOMSOLVER        REGISTRY                "EvcSolver.rgs"
 // Dialog
 //
 
-IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 269
+IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 264
 STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
@@ -169,7 +176,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 396
         TOPMARGIN, 7
-        BOTTOMMARGIN, 263
+        BOTTOMMARGIN, 258
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -190,16 +197,3 @@ END
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-
