@@ -7,10 +7,20 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "winres.h"
+#include "gitdescribe.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
 
 /////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
@@ -32,11 +42,17 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""winres.h""\r\n"
+    "#include ""gitdescribe.h""\r\n"
     "\0"
 END
 
 3 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+4 TEXTINCLUDE 
 BEGIN
     "\r\0"
 END
@@ -67,13 +83,13 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "USC SSI"
-            VALUE "FileDescription", "Evacuation Routing Network Analyst tool"
-            VALUE "FileVersion", "1.4.0.0"
+            VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
+            VALUE "FileVersion", GIT_DESCRIBE
             VALUE "InternalName", "EvcSolver32.dll"
             VALUE "LegalCopyright", "Copyright (C) 2014"
             VALUE "OriginalFilename", "EvcSolver32.dll"
             VALUE "ProductName", "EvcSolver"
-            VALUE "ProductVersion", "1.4.0.0"
+			VALUE "ProductVersion", GIT_DESCRIBE
         END
     END
     BLOCK "VarFileInfo"
@@ -95,7 +111,7 @@ IDR_CUSTOMSOLVER        REGISTRY                "EvcSolver.rgs"
 // Dialog
 //
 
-IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 261
+IDD_EvcSolverPROPPAGE DIALOGEX 0, 0, 403, 264
 STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
@@ -133,7 +149,7 @@ BEGIN
     COMBOBOX        IDC_COMBO_PROFILE,298,185,91,47,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,118,95,8
     EDITTEXT        IDC_EDIT_CARMA,123,115,66,14,ES_AUTOHSCROLL
-    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",WS_TABSTOP,20,242,83,13
+    CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",LWS_USEVISUALSTYLE | WS_TABSTOP,12,243,366,13
     CONTROL         "Run CARMA with DSPT (experimental)",IDL_CHECK_CARMAGEN,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,217,171,13
     EDITTEXT        IDC_EDIT_SELFISH,123,132,66,14,ES_AUTOHSCROLL
@@ -160,7 +176,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 396
         TOPMARGIN, 7
-        BOTTOMMARGIN, 255
+        BOTTOMMARGIN, 258
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -181,15 +197,3 @@ END
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
-
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
-

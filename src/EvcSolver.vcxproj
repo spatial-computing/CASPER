@@ -484,6 +484,7 @@ exit 0</Command>
     <ClInclude Include="EvcSolverSymbolizer.h" />
     <ClInclude Include="FibonacciHeap.h" />
     <ClInclude Include="Flocking.h" />
+    <ClInclude Include="gitdescribe.h" />
     <ClInclude Include="NAEdge.h" />
     <ClInclude Include="NameConstants.h" />
     <ClInclude Include="NAVertex.h" />

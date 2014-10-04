@@ -1,5 +1,6 @@
 #!/bin/bash
-echo "This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox"
+echo -e "\n\n\nThis scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox"
+echo "Time: `date`"
 
 if [ $# -ne 3 ]; then
   # usage:
@@ -20,15 +21,15 @@ for branch in $branches
 do
   cd $tempdir
 
-  # update / clone ther repo and switch to the right branch
+  # update / clone the repo and then switch to the right branch
   if [ -d "$repo-$branch" ]; then
-    echo "repo already cloned. going to pull."
+    echo -e "\n\nrepo already cloned. going to pull."
   else
-    echo "repo will be cloned."
+    echo -e "\n\nrepo will be cloned."
     git clone git@github.com:kaveh096/$repo.git "$repo-$branch"
   fi
 
-  # makeing sure repo is up-to-date
+  # making sure repo is up-to-date
   cd "$repo-$branch"
   git checkout $branch
   git pull
@@ -38,16 +39,22 @@ do
 
   revi=`git describe`
   # out=$repo-$revi.zip
-  if [ "$branch" = "master" ]; then
+  if [ "$branch" == "master" ]; then
     out=$repo-$revi-stable.zip
   else
     out=$repo-$revi-nightly.zip
   fi
 
-  if [ `$curdir/dropbox_uploader.sh list | grep $out | wc -l` -eq 1 ]; then
+  if [ `$curdir/dropbox_uploader.sh list | grep $out | wc -l` -ge 1 ]; then
     echo "There are no new changes to be built"
   else
     echo "The $branch branch has new commits"
+
+    # update the gitdescribe.h header file before build
+    echo "post-commit script: Writing version to gitdescribe.h"
+    echo "#ifndef GIT_DESCRIBE" > src/gitdescribe.h
+    echo "#define GIT_DESCRIBE \"`git describe`\"" >> src/gitdescribe.h
+    echo "#endif" >> src/gitdescribe.h
 
     # cleanup then rebuild
     rm -f Package/EvcSolver32.* Package/EvcSolver64.* Package/opensteer32.* Package/opensteer64.* Package/README.md

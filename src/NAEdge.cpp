@@ -149,11 +149,12 @@ HRESULT NAEdge::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassCo
 	return hr;
 }
 
-HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer,
+HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 										   long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
 										   long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag)
 {
 	HRESULT hr = S_OK;
+	CComVariant featureID(0);
 	long sourceOID, sourceID;
 	double fromPosition, toPosition;
 	IGeometryPtr ipGeometry;
@@ -176,6 +177,9 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 	if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(GetCurrentCost())))) return hr;
 	if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(OriginalCost)))) return hr;
 	if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, CComVariant(GetCurrentCost() / OriginalCost)))) return hr;
+
+	// Insert the feature buffer in the insert cursor
+	if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 	return hr;
 }
 

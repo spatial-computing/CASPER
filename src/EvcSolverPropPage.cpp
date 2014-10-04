@@ -13,6 +13,9 @@
 #include "EvcSolverPropPage.h"
 #include "NameConstants.h"
 
+// includes variable for commit hash / git describe string
+#include "gitdescribe.h"
+
 // EvcSolverPropPage
 
 /////////////////////////////////////////////////////////////////////////////
@@ -489,8 +492,8 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 	// release date label
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
-	wchar_t compileDateBuff[100];
-	swprintf_s(compileDateBuff, 100, L"<a href=\"http://facebook.com/arccasper\">Release: %s</a>", _T(__DATE__));
+	wchar_t compileDateBuff[500];
+	swprintf_s(compileDateBuff, 500, L"Release: %s  |  %s  |  <a href=\"http://facebook.com/arccasper\">Like</a>  |  <a href=\"http://esri.com/arccasper\">Info</a>  |  <a href=\"https://www.dropbox.com/sh/b01zkyb6ka56xiv/oOjJBINPIr\">Download</a>", _T(__DATE__), _T(GIT_DESCRIBE));
 	::SendMessage(m_hlblRelease, WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
 
 	return 0;

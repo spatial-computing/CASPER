@@ -15,6 +15,9 @@
 #include "FibonacciHeap.h"
 #include "Flocking.h"
 
+// includes variable for commit hash / git describe string
+#include "gitdescribe.h"
+
 STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, ITrackCancel* pTrackCancel, VARIANT_BOOL* pIsPartialSolution)
 {
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +129,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
 	bool DoNotExportRouteEdges = ipUnk == NULL;
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
-	if (!DoNotExportRouteEdges) if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr;
+	if (!DoNotExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
 
 	ipUnk = NULL;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
@@ -350,11 +353,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	EvacueeList * Evacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	Evacuee * currentEvacuee;
 	NAVertexPtr myVertex;
-
+	
 	// pre-process evacuee NALayer primary field index
 	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
-	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_EVC_POP), &popFieldIndex))) return hr;
-
+	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
+	if (popFieldIndex < 1) { if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_EVC_POP1), &popFieldIndex))) return hr; }
 
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
@@ -550,7 +553,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing output features")); 
 
 	// looping through processed evacuees and generate routes in output feature class
-	CComVariant featureID(0);
 	EvcPathPtr path;
 	std::list<EvcPathPtr>::iterator tpit;
 	std::vector<EvcPathPtr>::iterator pit;
@@ -621,11 +623,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Query for the appropriate field index values in the "routes" feature class
 	long evNameFieldIndex = -1, evacTimeFieldIndex = -1, orgTimeFieldIndex = -1, RIDFieldIndex = -1, ERRouteFieldIndex = -1, EREdgeFieldIndex = -1,
 		ERSeqFieldIndex = -1, ERFromPosFieldIndex = -1, ERToPosFieldIndex = -1, ERCostFieldIndex = -1, EREdgeDirFieldIndex = -1;
+	
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_ORG), &orgTimeFieldIndex))) return hr;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_RID), &RIDFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
+	if (popFieldIndex < 0) { if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr; }
 	if (!DoNotExportRouteEdges)
 	{
 		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_RID), &ERRouteFieldIndex))) return hr;
@@ -684,11 +688,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_SOURCE_ID), &sourceIDFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_SOURCE_OID), &sourceOIDFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_DIR), &dirFieldIndex))) return hr;
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_ReservPop), &resPopFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_Congestion), &congestionFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_TravCost), &travCostFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_OrgCost), &orgCostFieldIndex))) return hr;
 		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_EID), &eidFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_ReservPop2), &resPopFieldIndex))) return hr;
+		if (resPopFieldIndex < 1) { if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_ReservPop1), &resPopFieldIndex))) return hr; }
 		
 		for (NAEdgeTableItr it = ecache->AlongBegin(); it != ecache->AlongEnd(); it++)
 		{
@@ -701,11 +706,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 
 			edge = it->second;
-			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex, 
+			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, ipFeatureCursor, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex,
 				                                            resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, congestionFieldIndex, sourceNotFoundFlag))) return hr;
-
-			// Insert the feature buffer in the insert cursor
-			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 		}
 		
 		for (NAEdgeTableItr it = ecache->AgainstBegin(); it != ecache->AgainstEnd(); it++)
@@ -719,18 +721,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			}
 
 			edge = it->second;
-			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex, 
+			if (FAILED(hr = edge->InsertEdgeToFeatureCursor(ipNetworkDataset, ipFeatureClassContainer, ipFeatureBuffer, ipFeatureCursor, eidFieldIndex, sourceIDFieldIndex, sourceOIDFieldIndex, dirFieldIndex,
 				                                            resPopFieldIndex, travCostFieldIndex, orgCostFieldIndex, congestionFieldIndex, sourceNotFoundFlag))) return hr;
-
-			// Insert the feature buffer in the insert cursor
-			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 		}
 
 		// flush the insert buffer
 		ipFeatureCursor->Flush();
-	
-		if (sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));	
 	}
+
+	if (sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));
 
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
 	tenNanoSec64 = (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
@@ -764,6 +763,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		bool movingObjectLeft;
 		wchar_t * thisTimeBuf = new DEBUG_NEW_PLACEMENT wchar_t[25];
 		tm local;
+		CComVariant featureID(0);
 
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
@@ -989,7 +989,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg;
+	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg;
+
+	initMsg.Format(_T("%d routes are generated from the evacuee point(s) with ArcCASPER version %s."), tempPathList->size(), _T(GIT_DESCRIBE));
 
 	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
@@ -1008,14 +1010,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
 
 	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
-	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage (exluding flocking) is %d MB."), globalEvcCost, max(0, mem));
+	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage (exclude flocking) is %d MB."), globalEvcCost, max(0, mem));
 	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
-	pMessages->AddMessage(CComBSTR(_T("The routes are generated from the evacuee point(s).")));
+	pMessages->AddMessage(CComBSTR(initMsg));
 	pMessages->AddMessage(CComBSTR(performanceMsg));
 	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
 	pMessages->AddMessage(CComBSTR(CARMAExtractsMsg));
 	pMessages->AddMessage(CComBSTR(ExtraInfoMsg));
+	if (ecache->GetCacheHitPercentage() < 80.0) pMessages->AddMessage(CComBSTR(CacheHitMsg));
 
 	// check version lock: if the evclayer is too old to be solved then add a warning
 	if (DoNotExportRouteEdges) pMessages->AddWarning(CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
