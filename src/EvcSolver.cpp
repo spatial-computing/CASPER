@@ -569,7 +569,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// Create and add an population field
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_EVC_POP));
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_EVC_POP2));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldEdit->put_DefaultValue(CComVariant(1.0));
 	ipFieldEdit->put_IsNullable(VARIANT_FALSE);
@@ -863,7 +863,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_E_POP));
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_EVC_POP2));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
@@ -873,7 +873,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_EVC_NAME), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_E_TIME), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_E_POP), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_EVC_POP2), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_E_ORG), esriNAFieldTypeOutput);
 
 	ipClassDefEdit->put_IsInput(VARIANT_FALSE);
@@ -942,7 +942,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_ReservPop));
+	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_ReservPop2));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
@@ -970,7 +970,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SOURCE_ID), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_SOURCE_OID), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_ReservPop), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_ReservPop2), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_TravCost), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_OrgCost), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(CComBSTR(CS_FIELD_Congestion), esriNAFieldTypeOutput);

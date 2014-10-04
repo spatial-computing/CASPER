@@ -42,7 +42,8 @@
 #define CS_FIELD_SOURCE_ID                          L"SourceID"
 #define CS_FIELD_SOURCE_OID                         L"SourceOID"
 #define CS_FIELD_EVC_NAME						    L"EvcName"
-#define CS_FIELD_EVC_POP						    L"Population"
+#define CS_FIELD_EVC_POP1						    L"Population"
+#define CS_FIELD_EVC_POP2						    L"VehicleCount"
 #define CS_FIELD_POSITION                           L"PosAlong"
 #define CS_FIELD_SIDE_OF_EDGE                       L"SideOfEdge"
 #define CS_FIELD_CURBAPPROACH                       L"CurbApproach"
@@ -58,14 +59,17 @@
 #define CS_FIELD_SPEED                              L"Speed"
 #define CS_FIELD_COST                               L"Cost"
 
-#define CS_FIELD_ReservPop                          L"ReservPop"
+// EdgeStat
+
+#define CS_FIELD_ReservPop1                         L"ReservPop"
+#define CS_FIELD_ReservPop2                         L"ReservVehicle"
 #define CS_FIELD_Congestion                         L"Congestion"
 #define CS_FIELD_TravCost                           L"TravCost"
 #define CS_FIELD_OrgCost                            L"OrgCost"
 #define CS_FIELD_DIR                                L"Direction"
 #define CS_FIELD_EID                                L"EdgeID"
 
-// 
+// RouteSegments
 
 #define CS_FIELD_RID                                L"RouteID"
 #define CS_FIELD_SEQ                                L"Sequence"
@@ -79,7 +83,8 @@
 #define CS_LOCATIONSTATUS_DOMAINNAME                L"LocationStatus"
 #define CS_SIDEOFEDGE_DOMAINNAME                    L"SideOfEdge"
 
-// Special name for algorithms and traffic models
+// Special constants for algorithms and traffic models
+
 #define OPTIMIZATION_CASPER                         L"CASPER"
 #define OPTIMIZATION_CCRP                           L"CCRP"
 #define OPTIMIZATION_SP                             L"SP"
