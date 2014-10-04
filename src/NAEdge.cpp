@@ -244,7 +244,7 @@ double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow,
 // this function has to cache the answer and it has to be consistent.
 bool NAEdge::IsDirty(double minPop2Route, EvcSolverMethod method)
 {
-	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) * 0.95;
+	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) * 0.98;
 	return reservations->isDirty;
 }
 
