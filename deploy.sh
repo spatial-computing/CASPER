@@ -10,7 +10,8 @@ if [ $# -ne 3 ]; then
 fi
 
 # define some vars
-curdir="`pwd`"
+curDir="`pwd`"
+scriptDir="`dirname $0`"
 tempdir="`cygpath $2`"
 repo=$1
 branches=$3
@@ -45,7 +46,7 @@ do
     out=$repo-$revi-nightly.zip
   fi
 
-  if [ `$curdir/dropbox_uploader.sh list | grep $out | wc -l` -ge 1 ]; then
+  if [ `$scriptDir/dropbox_uploader.sh list | grep $out | wc -l` -ge 1 ]; then
     echo "There are no new changes to be built"
   else
     echo "The $branch branch has new commits"
@@ -70,10 +71,10 @@ do
     cd Package
     "/cygdrive/c/Program Files/7-Zip/7z.exe" a $out -i@file.list
     if [ $? -eq 0 ]; then
-      $curdir/dropbox_uploader.sh upload $out $out
+      $scriptDir/dropbox_uploader.sh upload $out $out
     else
       echo "Some files are missing so we do not upload the zip file"
     fi
   fi
 done
-cd $curdir
+cd $curDir
