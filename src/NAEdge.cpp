@@ -11,7 +11,7 @@ EdgeReservations::EdgeReservations(float capacity, TrafficModel * trafficModel)
 	ReservedPop = 0.0;
 	Capacity = capacity;
 	myTrafficModel = trafficModel;
-	isDirty = true;
+	dirtyState = EdgeDirtyState::CostIncreased;
 }
 
 EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
@@ -19,7 +19,7 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 	ReservedPop = cpy.ReservedPop;
 	Capacity = cpy.Capacity;
 	myTrafficModel = cpy.myTrafficModel;
-	isDirty = cpy.isDirty;
+	dirtyState = cpy.dirtyState;
 }
 
 void EdgeReservations::AddReservation(double newFlow, EvcPathPtr path)
@@ -241,22 +241,22 @@ double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow,
 	return selfishRatio * min(AddedGlobalCost, deltaCostOfNewFlow);
 }
 
-double NAEdge::HowDirtyPercentageDifference(EvcSolverMethod method, double minPop2Route) const
-{
-	return (GetCost(minPop2Route, method) / CleanCost) - 1.0;
-}
-
 // this function has to cache the answer and it has to be consistent.
-bool NAEdge::IsDirty(EvcSolverMethod method, double minPop2Route)
+EdgeDirtyState NAEdge::HowDirty(EvcSolverMethod method, double minPop2Route, bool exhaustive)
 {	
-	reservations->isDirty |= abs(HowDirtyPercentageDifference(method, minPop2Route)) > 0.02;
-	return reservations->isDirty;
+	if (exhaustive || reservations->dirtyState == EdgeDirtyState::CleanState)
+	{
+		double costchange = (GetCost(minPop2Route, method) / CleanCost) - 1.0;
+		if (costchange >  0.02) reservations->dirtyState = EdgeDirtyState::CostIncreased;
+		if (costchange < -0.02) reservations->dirtyState = EdgeDirtyState::CostDecreased;
+	}
+	return reservations->dirtyState;
 }
 
 void NAEdge::SetClean(EvcSolverMethod method, double minPop2Route)
 {
 	CleanCost = this->GetCost(minPop2Route, method);
-	reservations->isDirty = false;
+	reservations->dirtyState = EdgeDirtyState::CleanState;
 }
 
 // this function adds the reservation also determines if the new added population makes the edge dirty.
@@ -268,7 +268,7 @@ void NAEdge::AddReservation(EvcPath * path, double population, EvcSolverMethod m
 	reservations->AddReservation(population, path);
 
 	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
-	IsDirty(method);
+	HowDirty(method);
 }
 
 void NAEdge::TreeNextEraseFirst(NAEdge * child)
@@ -444,8 +444,8 @@ void NAEdgeMap::GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Rout
 	NAEdgeTableItr i;
 	if(dirty)
 	{
-		for (i = cacheAlong->begin(); i != cacheAlong->end(); i++) if (i->second->IsDirty(method, minPop2Route)) dirty->push_back(i->second);
-		for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->IsDirty(method, minPop2Route)) dirty->push_back(i->second);
+		for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) dirty->push_back(i->second);
+		for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) dirty->push_back(i->second);
 	}
 }
 

@@ -4,6 +4,8 @@
 #include "Evacuee.h"
 #include "TrafficModel.h"
 
+enum class EdgeDirtyState : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
+
 struct EdgeReservation
 {
 public:
@@ -24,10 +26,10 @@ public:
 class EdgeReservations : std::vector<EvcPathPtr>
 {
 private:
-	float  ReservedPop;
-	float  Capacity;
-	bool   isDirty;
-	TrafficModel * myTrafficModel;
+	float          ReservedPop;
+	float          Capacity;
+	EdgeDirtyState dirtyState;
+	TrafficModel   * myTrafficModel;
 
 public:
 	EdgeReservations(float capacity, TrafficModel * trafficModel);
@@ -55,7 +57,6 @@ private:
 	EdgeReservations * reservations;
 	double CleanCost;
 	double GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const;
-	inline double HowDirtyPercentageDifference(EvcSolverMethod method, double minPop2Route) const;
 
 public:
 	double OriginalCost;
@@ -80,9 +81,8 @@ public:
 	void AddReservation(EvcPath * path, double population, EvcSolverMethod method);
 	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
 	NAEdge(const NAEdge& cpy);
-	
-	inline void SetDirty() { reservations->isDirty = true; }
-	inline bool IsDirty(EvcSolverMethod method, double minPop2Route = 1.0);
+
+	inline EdgeDirtyState HowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
 	inline void SetClean(EvcSolverMethod method, double minPop2Route);
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }

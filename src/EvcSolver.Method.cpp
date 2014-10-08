@@ -160,7 +160,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						goto END_OF_FUNC;
 					}
 
-					if (myEdge->IsDirty(solverMethod)) sumVisitedDirtyEdge++;
+					if (myEdge->HowDirty(solverMethod) != EdgeDirtyState::CleanState) sumVisitedDirtyEdge++;
 
 					// Check for destinations. If a new destination has been found then we should
 					// first flag this so later we can use to generate route. Also we should
@@ -412,12 +412,15 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				goto END_OF_FUNC;
 			}
 
+			// check if this edge decreased its cost
+			myVertex->ParentCostIsDecreased |= myEdge->HowDirty(solverMethod, minPop2Route) == EdgeDirtyState::CostDecreased;
+
 			// this value is being recorded and will be used as the default heuristic value for any future vertex
 			lastCost = myVertex->GVal;
 			CARMAExtractCount++;
 
 			// Code to build the CARMA Tree
-			if (myVertex->Previous) 
+			if (myVertex->Previous)
 			{
 				if(myEdge->TreePrevious) myEdge->TreePrevious->TreeNextEraseFirst(myEdge);				
 				myEdge->TreePrevious = myVertex->Previous->GetBehindEdge();
@@ -547,7 +550,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// backward sort
 			if (carmaSortDirection > 0x2) SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->rbegin(), redundentSortedEvacuees->rend());
 			// forward sort
-			else                          SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->begin(), redundentSortedEvacuees->end());
+			else                          SortedEvacuees->insert(SortedEvacuees->begin(), redundentSortedEvacuees->begin(),  redundentSortedEvacuees->end());
 		}
 		else // sort by original order (objectID)
 		{
@@ -591,7 +594,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 		if (closedList->Exist(*i))
 		{
 			NAEdgePtr leaf = *i;
-			while (leaf->TreePrevious && leaf->IsDirty(method, minPop2Route)) leaf = leaf->TreePrevious;
+			while (leaf->TreePrevious && leaf->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) leaf = leaf->TreePrevious;
 			NonRecursiveMarkAndRemove(leaf, closedList);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
@@ -666,7 +669,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 	{
 		// leaf by definition has to be a clean edge with a positive clean cost
 		_ASSERT(leaf->GetCleanCost() > 0.0);
-		_ASSERT(!leaf->IsDirty(solverMethod, minPop2Route));
+		_ASSERT(leaf->HowDirty(solverMethod, minPop2Route) == EdgeDirtyState::CleanState);
 
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &fe))) return hr;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &te))) return hr;
