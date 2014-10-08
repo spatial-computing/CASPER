@@ -161,8 +161,8 @@ public:
 
 typedef FlockingObject * FlockingObjectPtr;
 typedef FlockingLocation * FlockingLocationPtr;
-typedef std::vector<FlockingObjectPtr>::iterator FlockingObjectItr;
-typedef std::vector<FlockingLocationPtr>::iterator FlockingLocationItr;
+typedef std::vector<FlockingObjectPtr>::const_iterator FlockingObjectItr;
+typedef std::vector<FlockingLocationPtr>::const_iterator FlockingLocationItr;
 
 class FlockingEnviroment
 {

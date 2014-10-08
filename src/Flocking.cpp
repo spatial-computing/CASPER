@@ -334,7 +334,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 bool FlockingObject::DetectMyCollision()
 {
 	OpenSteer::AbstractVehicle * n;
-	OpenSteer::AVGroup::iterator git;
+	OpenSteer::AVGroup::const_iterator git;
 	OpenSteer::Vec3 offset;
 	bool collided = false;
 
@@ -404,7 +404,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	EvacueeListItr evcItr;
 	int i = 0, size = 0, id = 0;
 	double pathLen = 0.0;
-	std::list<EvcPathPtr>::iterator pathItr;
+	std::list<EvcPathPtr>::const_iterator pathItr;
 	maxPathLen = 0.0;
 	minPathLen = FLT_MAX;
 	srand((unsigned int)time(NULL));
@@ -418,9 +418,9 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 
 	for(evcItr = evcList->begin(); evcItr != evcList->end(); evcItr++)
 	{
-		if (!((*evcItr)->paths->empty()))
+		if (!((*evcItr)->Paths->empty()))
 		{
-			for (pathItr = (*evcItr)->paths->begin(); pathItr != (*evcItr)->paths->end(); pathItr++)
+			for (pathItr = (*evcItr)->Paths->begin(); pathItr != (*evcItr)->Paths->end(); pathItr++)
 			{
 				pathLen = PathLength(*pathItr);
 				maxPathLen = max(maxPathLen, pathLen);

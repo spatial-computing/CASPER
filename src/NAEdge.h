@@ -42,7 +42,7 @@ public:
 // EdgeReservations hash map
 typedef EdgeReservations * EdgeReservationsPtr;
 typedef public stdext::hash_map<long, EdgeReservationsPtr> NAResTable;
-typedef stdext::hash_map<long, EdgeReservationsPtr>::iterator NAResTableItr;
+typedef stdext::hash_map<long, EdgeReservationsPtr>::const_iterator NAResTableItr;
 typedef std::pair<long, EdgeReservationsPtr> NAResTablePair;
 
 // The NAEdge class is what sits on top of the INetworkEdge interface and holds extra
@@ -100,7 +100,7 @@ bool   IsEqual         (const NAEdge * n1, const NAEdge * n2);
 
 typedef NAEdge * NAEdgePtr;
 typedef public stdext::hash_map<long, NAEdgePtr> NAEdgeTable;
-typedef stdext::hash_map<long, NAEdgePtr>::iterator NAEdgeTableItr;
+typedef stdext::hash_map<long, NAEdgePtr>::const_iterator NAEdgeTableItr;
 typedef std::pair<long, NAEdgePtr> _NAEdgeTablePair;
 #define NAEdgeTablePair(a) _NAEdgeTablePair(a->EID, a)
 
@@ -175,7 +175,7 @@ public:
 };
 
 typedef std::pair<long, unsigned char> NAEdgeContainerPair;
-typedef stdext::hash_map<long, unsigned char>::iterator NAEdgeIterator;
+typedef stdext::hash_map<long, unsigned char>::const_iterator NAEdgeIterator;
 
 class NAEdgeContainer
 {

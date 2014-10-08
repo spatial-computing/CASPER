@@ -300,7 +300,7 @@ HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache  = cacheAgainst;
 
-	stdext::hash_map<long, HeapNodePtr>::iterator it = cache->find(edge->EID);
+	stdext::hash_map<long, HeapNodePtr>::const_iterator it = cache->find(edge->EID);
 	HeapNodePtr o = 0;
 	if (it != cache->end()) o = it->second;
 	return o;
@@ -312,7 +312,7 @@ HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 double HeapNodeTable::GetMaxValue(void) const
 {
 	double ret = 0.0;
-	stdext::hash_map<long, HeapNodePtr>::iterator i;
+	stdext::hash_map<long, HeapNodePtr>::const_iterator i;
 
 	for(i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->data->ToVertex->GVal > ret) ret = i->second->data->ToVertex->GVal;
 	for(i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->data->ToVertex->GVal > ret) ret = i->second->data->ToVertex->GVal;

@@ -174,7 +174,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	VARIANT_BOOL useRestriction;
 
 	// loading restriction attributes into the forward star. this will enforce all available restrictions.
-	for (std::vector<INetworkAttribute2Ptr>::iterator Iter = turnAttribs.begin(); Iter != turnAttribs.end(); Iter++)
+	for (std::vector<INetworkAttribute2Ptr>::const_iterator Iter = turnAttribs.begin(); Iter != turnAttribs.end(); Iter++)
 	{
 		networkAttrib = *Iter;
 		if (FAILED(hr = networkAttrib->get_UseByDefault(&useRestriction))) return hr;
@@ -420,7 +420,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (!isRestricted)
 					{
 						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
-						currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);
+						currentEvacuee->Vertices->insert(currentEvacuee->Vertices->end(), myVertex);
 					}
 				}
 
@@ -447,7 +447,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge, true));
 							myVertex->GVal = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
-							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);
+							currentEvacuee->Vertices->insert(currentEvacuee->Vertices->end(), myVertex);
 						}
 					}
 
@@ -465,12 +465,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge, true));
 							myVertex->GVal = posAlong * myVertex->GetBehindEdge()->OriginalCost;
-							currentEvacuee->vertices->insert(currentEvacuee->vertices->end(), myVertex);							
+							currentEvacuee->Vertices->insert(currentEvacuee->Vertices->end(), myVertex);							
 						}
 					}
 				}
 			}
-			if (currentEvacuee->vertices->size() > 0) Evacuees->insert(Evacuees->end(), currentEvacuee);
+			if (currentEvacuee->Vertices->size() > 0) Evacuees->insert(Evacuees->end(), currentEvacuee);
 			else delete currentEvacuee;
 		}
 	}
@@ -492,7 +492,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, pIsPartialSolution, carmaSec, CARMAExtractCounts, ipNetworkDataset, EvacueesWithRestrictedSafezone);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts, ipNetworkDataset, EvacueesWithRestrictedSafezone);
 	}
 	catch (std::exception & ex)
 	{
@@ -554,12 +554,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// looping through processed evacuees and generate routes in output feature class
 	EvcPathPtr path;
-	std::list<EvcPathPtr>::iterator tpit;
-	std::vector<EvcPathPtr>::iterator pit;
+	std::list<EvcPathPtr>::const_iterator tpit;
+	std::vector<EvcPathPtr>::const_iterator pit;
 	double predictedCost = 0.0;
 	bool sourceNotFoundFlag = false;
 	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);	
-	std::vector<EvacueePtr>::iterator eit;
+	std::vector<EvacueePtr>::const_iterator eit;
 	
 	// load the Mercator projection and analysis projection
 	ISpatialReferencePtr ipNAContextSR;
@@ -577,13 +577,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// get all points from the stack and make one polyline from them. this will be the path.
 		currentEvacuee = *eit;
 
-		if (currentEvacuee->paths->empty())
+		if (currentEvacuee->Paths->empty())
 		{
-			*pIsPartialSolution = VARIANT_TRUE;
+			if (currentEvacuee->Population > 0.0) *pIsPartialSolution = VARIANT_TRUE;
 		}
 		else
 		{
-			for (tpit = currentEvacuee->paths->begin(); tpit != currentEvacuee->paths->end(); tpit++) tempPathList->push_back(*tpit);			
+			for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++) tempPathList->push_back(*tpit);			
 		}
 	}
 
@@ -776,9 +776,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		{
 			// get all points from the stack and make one polyline from them. this will be the path.
 			currentEvacuee = *eit;
-			if (!currentEvacuee->paths->empty())
+			if (!currentEvacuee->Paths->empty())
 			{
-				for (tpit = currentEvacuee->paths->begin(); tpit != currentEvacuee->paths->end(); tpit++)			
+				for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++)			
 				{
 					path = *tpit;
 					for (psit = path->Begin(); psit != path->End(); psit++)
@@ -836,7 +836,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
 		{
 			currentEvacuee = *eit;
-			for (tpit = currentEvacuee->paths->begin(); tpit != currentEvacuee->paths->end(); tpit++)			
+			for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++)			
 			{
 				path = *tpit;
 				for (psit = path->Begin(); psit != path->End(); psit++)
@@ -967,7 +967,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		collisionMsg.Empty();
 		if (collisionTimes && collisionTimes->size() > 0)
 		{
-			for (std::list<double>::iterator ct = collisionTimes->begin(); ct != collisionTimes->end(); ct++)
+			for (std::list<double>::const_iterator ct = collisionTimes->begin(); ct != collisionTimes->end(); ct++)
 			{
 				if (collisionMsg.IsEmpty()) collisionMsg.AppendFormat(_T("%.3f"), *ct);
 				else collisionMsg.AppendFormat(_T(", %.3f"), *ct);

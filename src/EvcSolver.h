@@ -294,7 +294,7 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-		                VARIANT_BOOL*, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &);
+		                double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &);
 	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
 		              size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, bool);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);

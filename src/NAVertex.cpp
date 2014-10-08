@@ -211,7 +211,7 @@ void NAVertexCache::CollectAndRelease()
 	int count = 0;
 	NAVertexPtr temp = NULL;
 	size_t j = 0;
-	for(std::vector<NAVertexPtr>::iterator i = bucketCache->begin(); i != bucketCache->end(); i++)
+	for(std::vector<NAVertexPtr>::const_iterator i = bucketCache->begin(); i != bucketCache->end(); i++)
 	{
 		temp = (*i);
 		for(j = 0; j < NAVertexCache_BucketSize; ++j) temp[j].SetBehindEdge(0);
@@ -231,6 +231,6 @@ NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)
 
 void NAVertexCollector::Clear()
 {
-	for(std::vector<NAVertexPtr>::iterator cit = cache->begin(); cit != cache->end(); cit++) delete (*cit);
+	for(std::vector<NAVertexPtr>::const_iterator cit = cache->begin(); cit != cache->end(); cit++) delete (*cit);
 	cache->clear();
 }

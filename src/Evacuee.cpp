@@ -144,19 +144,40 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	return hr;
 }
 
-void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees, CARMASort sortDir)
+Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
+{
+	ObjectID = objectID;
+	Name = name;
+	Vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
+	Paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
+	Population = pop;
+	PredictedCost = FLT_MAX;
+	Status = EvacueeStatus::Unprocessed;
+}
+
+Evacuee::~Evacuee(void)
+{
+	for (std::list<EvcPathPtr>::const_iterator it = Paths->begin(); it != Paths->end(); it++) delete (*it);
+	for (std::vector<NAVertexPtr>::const_iterator it = Vertices->begin(); it != Vertices->end(); it++) delete (*it);
+	Paths->clear();
+	Vertices->clear();
+	delete Vertices;
+	delete Paths;
+}
+
+void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir)
 {
 	std::vector<EvacueePtr> * p = 0;
-	std::vector<EvacueePtr>::iterator i;
-	std::vector<NAVertexPtr>::iterator v;
+	std::vector<EvacueePtr>::const_iterator i;
+	std::vector<NAVertexPtr>::const_iterator v;
 
 	for(i = list->begin(); i != list->end(); i++)
 	{
-		if ((*i)->Reachable && (*i)->Population > 0.0)
+		if ((*i)->Status == EvacueeStatus::Unprocessed && (*i)->Population > 0.0)
 		{
 			if (sortDir % 2 == 0) (*i)->PredictedCost = FLT_MAX; // reset evacuation prediction for continues carma sort
 
-			for (v = (*i)->vertices->begin(); v != (*i)->vertices->end(); v++)
+			for (v = (*i)->Vertices->begin(); v != (*i)->Vertices->end(); v++)
 			{
 				p = Find((*v)->EID);
 				if (!p)
@@ -166,10 +187,6 @@ void NAEvacueeVertexTable::InsertReachable_KeepOtherWithVertex(EvacueeList * lis
 				}
 				p->push_back(*i);
 			}
-		}
-		else if (!(*i)->vertices->empty())
-		{
-			redundentSortedEvacuees->push_back(*i);
 		}
 	}
 }
@@ -190,7 +207,7 @@ NAEvacueeVertexTable::~NAEvacueeVertexTable()
 
 void NAEvacueeVertexTable::Erase(long junctionEID)
 {
-	std::vector<NAVertexPtr>::iterator vi;
+	std::vector<NAVertexPtr>::const_iterator vi;
 	NAEvacueeVertexTableItr evcItr1, evcItr2 = this->find(junctionEID);
 	delete evcItr2->second;
 	erase(junctionEID); 

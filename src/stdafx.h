@@ -120,6 +120,7 @@ using namespace ATL;
 #include <stack>
 #include <hash_map>
 #include <fstream>
+#include <functional>
 
 // memory leak detection in DEBUG mode
 // ref: http://msdn.microsoft.com/en-us/library/e5ewb1h3%28v=vs.80%29.aspx

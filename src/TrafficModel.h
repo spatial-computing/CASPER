@@ -7,12 +7,12 @@
 
 // Hash map for cached calculated congestions
 typedef public stdext::hash_map<double, double> FlowCongestionMap;
-typedef stdext::hash_map<double, double>::iterator FlowCongestionMapItr;
+typedef stdext::hash_map<double, double>::const_iterator FlowCongestionMapItr;
 typedef std::pair<double, double> FlowCongestionMapPair;
 
 typedef FlowCongestionMap * FlowCongestionMapPtr;
 typedef public stdext::hash_map<double, FlowCongestionMapPtr> CapacityFlowsMap;
-typedef stdext::hash_map<double, FlowCongestionMapPtr>::iterator CapacityFlowsMapItr;
+typedef stdext::hash_map<double, FlowCongestionMapPtr>::const_iterator CapacityFlowsMapItr;
 typedef std::pair<double, FlowCongestionMapPtr> CapacityFlowsMapPair;
 
 class TrafficModel

@@ -21,6 +21,7 @@ enum EvcSolverMethod : unsigned char;
 
 // enum for carma sort setting
 [export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char { None = 0x0, FWSingle = 0x1, FMCont = 0x2, BWSingle = 0x3, BWCont = 0x4 };
+enum class EvacueeStatus : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
 
 class PathSegment
 {
@@ -110,38 +111,27 @@ typedef EvcPath * EvcPathPtr;
 class Evacuee
 {
 public:
-	std::vector<NAVertexPtr> * vertices;
-	std::list<EvcPathPtr> * paths;
+	std::vector<NAVertexPtr> * Vertices;
+	std::list<EvcPathPtr> * Paths;
 	VARIANT Name;
 	double Population;
 	double PredictedCost;
-	bool Reachable;
 	UINT32 ObjectID;
+	EvacueeStatus Status;
 
-	Evacuee(VARIANT name, double pop, UINT32 objectID)
-	{
-		ObjectID = objectID;
-		Name = name;
-		vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
-		paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
-		Population = pop;
-		PredictedCost = FLT_MAX;
-		Reachable = true;
-	}
-
-	~Evacuee(void)
-	{
-		for(std::list<EvcPathPtr>::iterator it = paths->begin(); it != paths->end(); it++) delete (*it);
-		paths->clear();
-		vertices->clear();
-		delete vertices;
-		delete paths;
-	}
+	Evacuee(VARIANT name, double pop, UINT32 objectID);
+	~Evacuee(void);
 
 	static bool LessThan(Evacuee * e1, Evacuee * e2)
 	{
 		if (e1->PredictedCost == e2->PredictedCost) return e1->Population < e2->Population;
 		else return e1->PredictedCost < e2->PredictedCost;
+	}
+	
+	static bool MoreThan(Evacuee * e1, Evacuee * e2)
+	{
+		if (e1->PredictedCost == e2->PredictedCost) return e1->Population > e2->Population;
+		else return e1->PredictedCost > e2->PredictedCost;
 	}
 
 	static bool LessThanObjectID(Evacuee * e1, Evacuee * e2)
@@ -152,16 +142,16 @@ public:
 
 typedef Evacuee * EvacueePtr;
 typedef std::vector<EvacueePtr> EvacueeList;
-typedef std::vector<EvacueePtr>::iterator EvacueeListItr;
+typedef std::vector<EvacueePtr>::const_iterator EvacueeListItr;
 typedef std::pair<long, std::vector<EvacueePtr> *> _NAEvacueeVertexTablePair;
-typedef stdext::hash_map<long, std::vector<EvacueePtr> *>::iterator NAEvacueeVertexTableItr;
+typedef stdext::hash_map<long, std::vector<EvacueePtr> *>::const_iterator NAEvacueeVertexTableItr;
 
 class NAEvacueeVertexTable : public stdext::hash_map<long, std::vector<EvacueePtr> *>
 {
 public:
 	~NAEvacueeVertexTable();
 
-	void InsertReachable_KeepOtherWithVertex(EvacueeList * list, EvacueeList * redundentSortedEvacuees, CARMASort sortDir);
+	void InsertReachable(EvacueeList * list, CARMASort sortDir);
 	std::vector<EvacueePtr> * Find(long junctionEID);
 	void Erase(long junctionEID);
 };
@@ -191,6 +181,6 @@ public:
 typedef SafeZone * SafeZonePtr;
 typedef stdext::hash_map<long, SafeZonePtr> SafeZoneTable;
 typedef stdext::hash_map<long, SafeZonePtr>::_Pairib SafeZoneTableInsertReturn;
-typedef stdext::hash_map<long, SafeZonePtr>::iterator SafeZoneTableItr;
+typedef stdext::hash_map<long, SafeZonePtr>::const_iterator SafeZoneTableItr;
 typedef std::pair<long, SafeZonePtr> _SafeZoneTablePair;
 #define SafeZoneTablePair(a) _SafeZoneTablePair(a->Vertex->EID, a)

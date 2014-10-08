@@ -50,7 +50,7 @@ public:
 
 	double GetH(long eid) const
 	{
-		for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++) if (i->EdgeID == eid) return i->Value;
+		for(std::vector<HValue>::const_iterator i = h->begin(); i != h->end(); i++) if (i->EdgeID == eid) return i->Value;
 		return FLT_MAX;
 	}
 
@@ -76,13 +76,13 @@ public:
 typedef NAVertex * NAVertexPtr;
 typedef stdext::hash_map<long, NAVertexPtr> NAVertexTable;
 typedef stdext::hash_map<long, NAVertexPtr>::_Pairib NAVertexTableInsertReturn;
-typedef stdext::hash_map<long, NAVertexPtr>::iterator NAVertexTableItr;
+typedef stdext::hash_map<long, NAVertexPtr>::const_iterator NAVertexTableItr;
 typedef std::pair<long, NAVertexPtr> _NAVertexTablePair;
 #define NAVertexTablePair(a) _NAVertexTablePair(a->EID, a)
 
 typedef stdext::hash_map<int, std::list<long> *> NAVertexLoopCountList;
 typedef NAVertexLoopCountList::_Pairib NAVertexLoopCountListReturn;
-typedef NAVertexLoopCountList::iterator NAVertexLoopCountListItr;
+typedef NAVertexLoopCountList::const_iterator NAVertexLoopCountListItr;
 typedef std::pair<int, std::list<long> *> NAVertexLoopCountListPair;
 
 // This collection object has two jobs:
