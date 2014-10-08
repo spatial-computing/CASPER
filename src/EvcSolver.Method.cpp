@@ -160,7 +160,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						goto END_OF_FUNC;
 					}
 
-					if (myEdge->IsDirty(1.0, this->solverMethod)) sumVisitedDirtyEdge++;
+					if (myEdge->IsDirty(solverMethod)) sumVisitedDirtyEdge++;
 
 					// Check for destinations. If a new destination has been found then we should
 					// first flag this so later we can use to generate route. Also we should
@@ -464,35 +464,53 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				currentEdge = *e;				
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, 0))) goto END_OF_FUNC;
 
-				// if node has already been discovered then no need to heap it
-				if (closedList->Exist(currentEdge, NAEdgeMap_OLDGEN)) continue;
-				
-				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, this->solverMethod);
-				if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
-				{					
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) goto END_OF_FUNC;
-					EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
-					if(EdgeCostToBeat <= currentEdge->ToVertex->GVal) continue;
-					closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
-					heap->Insert(currentEdge);
-				}
-
-				if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrease key.
+				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, solverMethod);
+				if (closedList->Exist(currentEdge, NAEdgeMap_OLDGEN))
 				{
-					neighbor = currentEdge->ToVertex;
-					if (neighbor->GVal > newCost)
+					if (myVertex->ParentCostIsDecreased)
 					{
-						neighbor->SetBehindEdge(currentEdge);
-						neighbor->GVal = newCost;
-						neighbor->Previous = myVertex;
-						if (FAILED(hr = heap->DecreaseKey(currentEdge))) goto END_OF_FUNC;
+						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) goto END_OF_FUNC;
+						EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
+						if (currentEdge->ToVertex->GVal < EdgeCostToBeat)
+						{
+							closedList->Erase(currentEdge, NAEdgeMap_OLDGEN);
+							heap->Insert(currentEdge);
+						}
 					}
 				}
-				else // unvisited vertex. create new and insert into heap
+				else
 				{
-					// termination condition and evacuee discovery
-					if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, true))) goto END_OF_FUNC;
-					if (!EvacueePairs->empty() || currentEdge->ToVertex->GVal < SearchRadius) heap->Insert(currentEdge);
+					if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
+					{
+						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) goto END_OF_FUNC;
+						EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
+						if (currentEdge->ToVertex->GVal < EdgeCostToBeat)
+						{
+							closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
+							heap->Insert(currentEdge);
+						}
+					}
+					else
+					{
+						if (heap->IsVisited(currentEdge)) // vertex has been visited before. update vertex and decrease key.
+						{
+							neighbor = currentEdge->ToVertex;
+							if (neighbor->GVal > newCost)
+							{
+								neighbor->SetBehindEdge(currentEdge);
+								neighbor->GVal = newCost;
+								neighbor->Previous = myVertex;
+								neighbor->ParentCostIsDecreased = myVertex->ParentCostIsDecreased;
+								if (FAILED(hr = heap->DecreaseKey(currentEdge))) goto END_OF_FUNC;
+							}
+						}
+						else // unvisited vertex. create new and insert into heap
+						{
+							// termination condition and evacuee discovery
+							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, true))) goto END_OF_FUNC;
+							if (!EvacueePairs->empty() || currentEdge->ToVertex->GVal < SearchRadius) heap->Insert(currentEdge);
+						}
+					}
 				}
 			}
 		}
@@ -573,7 +591,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 		if (closedList->Exist(*i))
 		{
 			NAEdgePtr leaf = *i;
-			while (leaf->TreePrevious && leaf->IsDirty(minPop2Route, method)) leaf = leaf->TreePrevious;
+			while (leaf->TreePrevious && leaf->IsDirty(method, minPop2Route)) leaf = leaf->TreePrevious;
 			NonRecursiveMarkAndRemove(leaf, closedList);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
@@ -648,7 +666,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 	{
 		// leaf by definition has to be a clean edge with a positive clean cost
 		_ASSERT(leaf->GetCleanCost() > 0.0);
-		_ASSERT(!leaf->IsDirty(minPop2Route, solverMethod));
+		_ASSERT(!leaf->IsDirty(solverMethod, minPop2Route));
 
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &fe))) return hr;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &te))) return hr;
@@ -657,6 +675,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 		NAVertexPtr fPtr = vcache->New(f);
 		NAVertexPtr tPtr = vcache->Get(t);
 
+		/// TODO check if Edge new cost is less than clean cost and in this case we have to set the ParentCostDecreased flag for the vertex
 		fPtr->SetBehindEdge(leaf);
 		fPtr->GVal = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCleanCost();    // tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCost(minPop2Route, solverMethod);
 		fPtr->Previous = NULL;
@@ -713,9 +732,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
 	betterH = myVertex->GVal;
 
-	#ifndef DEBUG
 	if (checkOldClosedlist && closedList->Size(NAEdgeMap_OLDGEN) > 0)
-	#endif
 	{		
 		if (FAILED(hr = ecache->QueryAdjacencies(myVertex, edge, QueryDirection::Forward, adj))) return hr;
 
@@ -753,6 +770,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	neighbor->SetBehindEdge(edge);
 	neighbor->GVal = edgeCost + betterMyVertex->GVal;
 	neighbor->Previous = betterMyVertex;
+	neighbor->ParentCostIsDecreased = betterMyVertex->ParentCostIsDecreased;
 	
 	return hr;
 }
@@ -777,6 +795,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 		edge = temp->GetBehindEdge();
 
 		// check to see if the edge you're about to insert is not in the closedList
+		/// TODO check if Edge new cost is less than clean cost and in this case we have to set the ParentCostDecreased flag for the vertex
 		if (edge) 
 		{
 			if (!closedList->Exist(edge))

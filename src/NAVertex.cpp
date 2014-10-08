@@ -16,6 +16,7 @@ NAVertex::NAVertex(const NAVertex& cpy)
 	Previous = cpy.Previous;
 	EID = cpy.EID;
 	isShadowCopy = true;
+	ParentCostIsDecreased = cpy.ParentCostIsDecreased;
 }
 
 void NAVertex::Clone(NAVertex * cpy)
@@ -28,6 +29,7 @@ void NAVertex::Clone(NAVertex * cpy)
 	Previous = cpy->Previous;
 	EID = cpy->EID;
 	isShadowCopy = true;
+	ParentCostIsDecreased = cpy->ParentCostIsDecreased;
 }
 
 NAVertex::NAVertex(void)
@@ -40,11 +42,13 @@ NAVertex::NAVertex(void)
 	GlobalPenaltyCost = 0.0;
 	h = NULL;
 	isShadowCopy = true;
+	ParentCostIsDecreased = false;
 }
 
 NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 {
 	Previous = 0;
+	ParentCostIsDecreased = false;
 	isShadowCopy = false;
 	GVal = 0.0;
 	GlobalPenaltyCost = 0.0;

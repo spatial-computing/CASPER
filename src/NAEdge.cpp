@@ -241,14 +241,19 @@ double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow,
 	return selfishRatio * min(AddedGlobalCost, deltaCostOfNewFlow);
 }
 
-// this function has to cache the answer and it has to be consistent.
-bool NAEdge::IsDirty(double minPop2Route, EvcSolverMethod method)
+double NAEdge::HowDirtyPercentageDifference(EvcSolverMethod method, double minPop2Route) const
 {
-	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) * 0.98;
+	return (GetCost(minPop2Route, method) / CleanCost) - 1.0;
+}
+
+// this function has to cache the answer and it has to be consistent.
+bool NAEdge::IsDirty(EvcSolverMethod method, double minPop2Route)
+{	
+	reservations->isDirty |= abs(HowDirtyPercentageDifference(method, minPop2Route)) > 0.02;
 	return reservations->isDirty;
 }
 
-void NAEdge::SetClean(double minPop2Route, EvcSolverMethod method)
+void NAEdge::SetClean(EvcSolverMethod method, double minPop2Route)
 {
 	CleanCost = this->GetCost(minPop2Route, method);
 	reservations->isDirty = false;
@@ -263,7 +268,7 @@ void NAEdge::AddReservation(EvcPath * path, double population, EvcSolverMethod m
 	reservations->AddReservation(population, path);
 
 	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
-	IsDirty(1.0, method);
+	IsDirty(method);
 }
 
 void NAEdge::TreeNextEraseFirst(NAEdge * child)
@@ -339,8 +344,8 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 	
 void NAEdgeCache::CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver)
 {
-	for(NAEdgeTableItr cit = cacheAlong->begin();   cit != cacheAlong->end();   cit++) cit->second->SetClean(minPop2Route, solver);
-	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean(minPop2Route, solver);
+	for (NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) cit->second->SetClean(solver, minPop2Route);
+	for (NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean(solver, minPop2Route);
 }
 
 void NAEdgeCache::Clear()
@@ -439,8 +444,8 @@ void NAEdgeMap::GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Rout
 	NAEdgeTableItr i;
 	if(dirty)
 	{
-		for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->IsDirty(minPop2Route, method)) dirty->push_back(i->second);
-		for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->IsDirty(minPop2Route, method)) dirty->push_back(i->second);
+		for (i = cacheAlong->begin(); i != cacheAlong->end(); i++) if (i->second->IsDirty(method, minPop2Route)) dirty->push_back(i->second);
+		for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->IsDirty(method, minPop2Route)) dirty->push_back(i->second);
 	}
 }
 

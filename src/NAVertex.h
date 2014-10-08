@@ -46,6 +46,7 @@ public:
 	NAVertex * Previous;
 	long EID;
 	size_t HCount() const { return h->size(); }
+	bool ParentCostIsDecreased;
 
 	double GetH(long eid) const
 	{

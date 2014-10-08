@@ -55,6 +55,7 @@ private:
 	EdgeReservations * reservations;
 	double CleanCost;
 	double GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const;
+	inline double HowDirtyPercentageDifference(EvcSolverMethod method, double minPop2Route) const;
 
 public:
 	double OriginalCost;
@@ -81,8 +82,8 @@ public:
 	NAEdge(const NAEdge& cpy);
 	
 	inline void SetDirty() { reservations->isDirty = true; }
-	inline bool IsDirty (double minPop2Route, EvcSolverMethod method);
-	inline void SetClean(double minPop2Route, EvcSolverMethod method);
+	inline bool IsDirty(EvcSolverMethod method, double minPop2Route = 1.0);
+	inline void SetClean(EvcSolverMethod method, double minPop2Route);
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	void TreeNextEraseFirst(NAEdge * child);
