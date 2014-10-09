@@ -258,13 +258,13 @@ STDMETHODIMP EvcSolver::put_SeparableEvacuee(VARIANT_BOOL value)
 
 STDMETHODIMP EvcSolver::get_CARMASortSetting(CARMASort * value)
 {
-	*value = carmaSortDirection;
+	*value = CarmaSortDirection;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_CARMASortSetting(CARMASort value)
 {
-	carmaSortDirection = value;
+	CarmaSortDirection = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }

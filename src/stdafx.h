@@ -112,6 +112,7 @@ using namespace ATL;
 #include <cmath>   // for HUGE_VAL
 #include <algorithm>
 #include <ctime>
+#include <string>
 #include <sstream>
 #include <windows.h>
 #include <Windowsx.h>

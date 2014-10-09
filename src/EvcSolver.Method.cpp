@@ -3,7 +3,7 @@
 #include "EvcSolver.h"
 #include "FibonacciHeap.h"							
 
-HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, EvacueeList * Evacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
+HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, EvacueeList * AllEvacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
 	                           SafeZoneTable * safeZoneList, double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone)
 {	
 	// creating the heap for the Dijkstra search
@@ -26,9 +26,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	bool restricted = false, separationRequired, foundRestrictedSafezone;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	EvacueeListItr eit;
-	sortedEvacuees->reserve(Evacuees->size());
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
-	int pathGenerationCount = -1;
+	int pathGenerationCount = -1, EvacueeProcessOrder = -1, NumberOfEvacueesInIteration = 0;
 	size_t CARMAClosedSize = 0, sumVisitedEdge = 0;
 	countCARMALoops = 0;
 	NAEdgeContainer * leafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
@@ -37,45 +36,61 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	BOOL dummy;
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	vector_NAEdgePtr_Ptr adj;
-	
-	EvacueesWithRestrictedSafezone = 0;
-    if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
-	ipCurrentJunction = ipJunctionElement;
-	
+	CString statusMsg;
+	std::string AlgName;
+	CARMASort carmaSortDirection = this->CarmaSortDirection;
+
+	switch (solverMethod)
+	{
+	case CASPERSolver:
+		AlgName = "CASPER";
+		break;
+	case SPSolver:
+		AlgName = "SP";
+		break;
+	case CCRPSolver:
+		AlgName = "CCRP";
+		break;
+	default:
+		AlgName = "Unknown";
+		break;
+	}
+
 	///////////////////////////////////////
 	// Setup a message on our step progress bar indicating that we are traversing the network
 	if (ipStepProgressor)
 	{
 		// Setup our progress bar based on the number of Evacuee points
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) goto END_OF_FUNC;
-		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(Evacuees->size())))) goto END_OF_FUNC;
+		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(AllEvacuees->size())))) goto END_OF_FUNC;
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) goto END_OF_FUNC;
-		if (FAILED(hr = ipStepProgressor->put_Position(0))) goto END_OF_FUNC;
-
-		if (this->solverMethod == CASPERSolver)
-		{
-			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CASPER search")))) goto END_OF_FUNC;
-		}
-		else if (this->solverMethod == SPSolver)
-		{
-			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing SP search")))) goto END_OF_FUNC;
-		}
-		else
-		{
-			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(L"Performing CCRP search")))) goto END_OF_FUNC;
-		}		
 	}
 
-	if (FAILED(hr = DeterminMinimumPop2Route(Evacuees, ipNetworkDataset, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;	
+	sortedEvacuees->reserve(AllEvacuees->size());	
+	EvacueesWithRestrictedSafezone = 0;
+    if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
+	ipCurrentJunction = ipJunctionElement;
 
+	if (FAILED(hr = DeterminMinimumPop2Route(AllEvacuees, ipNetworkDataset, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
+
+	/// TODO somewhere here we have to decide about which evacuees need to be processed. Or if it's an iteration then which ones to be re-processed
+	// change carmaSortDirection
+	// observe MaxEvacueeCostSoFar
+	NumberOfEvacueesInIteration = AllEvacuees->size();
+
+	if (ipStepProgressor)
+	{
+		if (FAILED(hr = ipStepProgressor->put_Position((long)(AllEvacuees->size() - NumberOfEvacueesInIteration)))) goto END_OF_FUNC;
+		statusMsg.Format(_T("Performing %s search (pass %d)"), AlgName, 1);
+		if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(statusMsg)))) goto END_OF_FUNC;
+	}
 	do
 	{
-		// Indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone.
-		// Also time the carma loop and add up.
+		// Indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone. Also time the carma loops.
 
 		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeS, &cpuTimeS);
-		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, Evacuees, sortedEvacuees, vcache, ecache, safeZoneList, CARMAClosedSize,
-			                      carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
+		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, AllEvacuees, sortedEvacuees, vcache, ecache, safeZoneList, CARMAClosedSize,
+			carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, separationRequired, carmaSortDirection))) goto END_OF_FUNC;
 		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeE, &cpuTimeE);		
 		carmaSec += (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS)) + (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
 
@@ -102,6 +117,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 			// Step the progress bar before continuing to the next Evacuee point
 			if (ipStepProgressor) ipStepProgressor->Step();
+			currentEvacuee->ProcessOrder = ++EvacueeProcessOrder;
 			MaxEvacueeCostSoFar = max (MaxEvacueeCostSoFar, currentEvacuee->PredictedCost);
 			countEvacueesInOneBucket++;
 			countCASPERLoops++;
@@ -253,16 +269,14 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 #ifdef DEBUG
 				std::wostringstream os_;
 				os_.precision(3);
-				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ','
-					<< sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
+				os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ',' << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 				OutputDebugStringW( os_.str().c_str() );
 #endif
 #ifdef TRACE
 				std::ofstream f;
 				f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 				f.precision(3);
-				f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ','
-					<< sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
+				f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ',' << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 				f.close();
 #endif
 				// cleanup search heap and closed-list
@@ -297,8 +311,8 @@ END_OF_FUNC:
 }
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
-							 NAEdgeCache * ecache, SafeZoneTable * safeZoneList, size_t & closedSize,
-							 NAEdgeMapTwoGen * closedList, NAEdgeContainer * leafs, std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, bool separationRequired)
+	                         NAEdgeCache * ecache, SafeZoneTable * safeZoneList, size_t & closedSize, NAEdgeMapTwoGen * closedList, NAEdgeContainer * leafs,
+							 std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, bool separationRequired, CARMASort carmaSortDirection)
 {
 	HRESULT hr = S_OK;
 
@@ -326,12 +340,13 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	readyEdges->reserve(safeZoneList->size());
 	unsigned int CARMAExtractCount = 0;
 	vector_NAEdgePtr_Ptr adj;
-	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[5] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan };
+	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseProcessOrder, Evacuee::ReversePredictedCost };
 
 	// keeping reachable evacuees in a new hashtable for better access
 	// also keep unreachable ones in the redundant list
 	NAEvacueeVertexTable * EvacueePairs = new DEBUG_NEW_PLACEMENT NAEvacueeVertexTable();
 	EvacueePairs->InsertReachable(Evacuees, carmaSortDirection);
+	SortedEvacuees->clear();
 	
     if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
 	ipCurrentJunction = ipJunctionElement;
@@ -414,10 +429,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				myEdge->TreePrevious->TreeNext.push_back(myEdge);
 			}
 
-			// part to check if this branch of DJ tree needs expanding to update heuristics
-			// This update should know if this is the first time this vertex is coming out
-			// in this 'CARMALoop' round. Only then we can be sure whether to update to min
-			// or update absolutely to this new value.
+			// part to check if this branch of DJ tree needs expanding to update heuristics. This update should know if this is the first time this vertex is coming out
+			// in this 'CARMALoop' round. Only then we can be sure whether to update to min or update absolutely to this new value.
 			myVertex->UpdateHeuristic(myEdge->EID, myVertex->GVal, countCARMALoops);
 			
 			pairs = EvacueePairs->Find(myVertex->EID);
@@ -927,10 +940,10 @@ HRESULT EvcSolver::DeterminMinimumPop2Route(EvacueeList * Evacuees, INetworkData
 		else
 		{
 			separationRequired = true;
-			globalMinPop2Route = SaturationPerCap / 2.0;
+			globalMinPop2Route = SaturationPerCap / 3.0;
 
-			// We don't want the minimum routable population to be less than one third of the minimum population of any evacuee point. That just makes CASPER too slow.
-			if (globalMinPop2Route * 3.0 < minPop) globalMinPop2Route = minPop / 3.0;
+			// We don't want the minimum routable population to be less than one-forth of the minimum population of any evacuee point. That just makes CASPER too slow.
+			if (globalMinPop2Route * 4.0 < minPop) globalMinPop2Route = minPop / 4.0;
 			if (globalMinPop2Route < 1.0) globalMinPop2Route = 1.0;
 		}
 	}

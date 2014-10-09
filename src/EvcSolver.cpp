@@ -237,7 +237,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	selfishRatio = 0.0f;
 
 	backtrack = esriNFSBAllowBacktrack;
-	carmaSortDirection = BWCont;
+	CarmaSortDirection = BWCont;
 	savedVersion = c_version;
 
 	return S_OK;
@@ -328,11 +328,11 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	//version 5
 	if (savedVersion >= 5)
 	{
-		if (FAILED(hr = pStm->Read(&carmaSortDirection, sizeof(carmaSortDirection), &numBytes))) return hr;
+		if (FAILED(hr = pStm->Read(&CarmaSortDirection, sizeof(CarmaSortDirection), &numBytes))) return hr;
 	}
 	else
 	{
-		carmaSortDirection = BWCont;
+		CarmaSortDirection = BWCont;
 		savedVersion = 5;
 	}
 	
@@ -379,7 +379,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&CARMAPerformanceRatio, sizeof(CARMAPerformanceRatio), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&selfishRatio, sizeof(selfishRatio), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&carmaSortDirection, sizeof(carmaSortDirection), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&CarmaSortDirection, sizeof(CarmaSortDirection), &numBytes))) return hr;
 	
 	return S_OK;
 }

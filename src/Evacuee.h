@@ -20,7 +20,8 @@ typedef NAVertex * NAVertexPtr;
 enum EvcSolverMethod : unsigned char;
 
 // enum for carma sort setting
-[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char { None = 0x0, FWSingle = 0x1, FMCont = 0x2, BWSingle = 0x3, BWCont = 0x4 };
+[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char 
+     { None = 0x0, FWSingle = 0x1, FWCont = 0x2, BWSingle = 0x3, BWCont = 0x4, ReverseProcessOrder = 0x5, ReversePredictedCost = 0x6 };
 enum class EvacueeStatus : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
 
 class PathSegment
@@ -100,7 +101,7 @@ public:
 		clear();
 	}
 
-	static bool LessThan(EvcPath * p1, EvcPath * p2)
+	static bool LessThan(const EvcPath * p1, const EvcPath * p2)
 	{
 		return p1->Order < p2->Order;
 	}
@@ -112,31 +113,42 @@ class Evacuee
 {
 public:
 	std::vector<NAVertexPtr> * Vertices;
-	std::list<EvcPathPtr> * Paths;
-	VARIANT Name;
-	double Population;
-	double PredictedCost;
-	UINT32 ObjectID;
-	EvacueeStatus Status;
+	std::list<EvcPathPtr>    * Paths;
+	VARIANT                  Name;
+	double                   Population;
+	double                   PredictedCost;
+	UINT32                   ObjectID;
+	EvacueeStatus            Status;
+	int                      ProcessOrder;
 
 	Evacuee(VARIANT name, double pop, UINT32 objectID);
 	~Evacuee(void);
 
-	static bool LessThan(Evacuee * e1, Evacuee * e2)
+	static bool LessThan(const Evacuee * e1, const Evacuee * e2)
 	{
 		if (e1->PredictedCost == e2->PredictedCost) return e1->Population < e2->Population;
 		else return e1->PredictedCost < e2->PredictedCost;
 	}
 	
-	static bool MoreThan(Evacuee * e1, Evacuee * e2)
+	static bool MoreThan(const Evacuee * e1, const Evacuee * e2)
 	{
 		if (e1->PredictedCost == e2->PredictedCost) return e1->Population > e2->Population;
 		else return e1->PredictedCost > e2->PredictedCost;
 	}
 
-	static bool LessThanObjectID(Evacuee * e1, Evacuee * e2)
+	static bool LessThanObjectID(const Evacuee * e1, const Evacuee * e2)
 	{
 		return e1->ObjectID < e2->ObjectID;
+	}
+
+	static bool ReverseProcessOrder(const Evacuee * e1, const Evacuee * e2)
+	{
+		return e1->ProcessOrder > e2->ProcessOrder;
+	}
+
+	static bool ReversePredictedCost(const Evacuee * e1, const Evacuee * e2)
+	{
+		return e1->PredictedCost > e2->PredictedCost;
 	}
 };
 

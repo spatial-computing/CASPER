@@ -153,6 +153,7 @@ Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
 	Population = pop;
 	PredictedCost = FLT_MAX;
 	Status = EvacueeStatus::Unprocessed;
+	ProcessOrder = -1;
 }
 
 Evacuee::~Evacuee(void)
@@ -175,7 +176,7 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 	{
 		if ((*i)->Status == EvacueeStatus::Unprocessed && (*i)->Population > 0.0)
 		{
-			if (sortDir % 2 == 0) (*i)->PredictedCost = FLT_MAX; // reset evacuation prediction for continues carma sort
+			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) (*i)->PredictedCost = FLT_MAX; // reset evacuation prediction for continues carma sort
 
 			for (v = (*i)->Vertices->begin(); v != (*i)->Vertices->end(); v++)
 			{

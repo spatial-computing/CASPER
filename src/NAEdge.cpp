@@ -248,8 +248,8 @@ EdgeDirtyState NAEdge::HowDirty(EvcSolverMethod method, double minPop2Route, boo
 	{
 		reservations->dirtyState = EdgeDirtyState::CleanState;
 		double costchange = (GetCost(minPop2Route, method) / CleanCost) - 1.0;
-		if (costchange >  0.02) reservations->dirtyState = EdgeDirtyState::CostIncreased;
-		if (costchange < -0.02) reservations->dirtyState = EdgeDirtyState::CostDecreased;
+		if (costchange > 0.02) reservations->dirtyState = EdgeDirtyState::CostIncreased;
+		if (costchange < 0.0 ) reservations->dirtyState = EdgeDirtyState::CostDecreased;
 	}
 	return reservations->dirtyState;
 }
