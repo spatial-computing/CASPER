@@ -243,13 +243,17 @@ double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow,
 
 // this function has to cache the answer and it has to be consistent.
 EdgeDirtyState NAEdge::HowDirty(EvcSolverMethod method, double minPop2Route, bool exhaustive)
-{	
-	if (exhaustive || reservations->dirtyState == EdgeDirtyState::CleanState)
+{
+	if (CleanCost <= 0.0) reservations->dirtyState = EdgeDirtyState::CostIncreased;
+	else
 	{
-		reservations->dirtyState = EdgeDirtyState::CleanState;
-		double costchange = (GetCost(minPop2Route, method) / CleanCost) - 1.0;
-		if (costchange > 0.02) reservations->dirtyState = EdgeDirtyState::CostIncreased;
-		if (costchange < 0.0 ) reservations->dirtyState = EdgeDirtyState::CostDecreased;
+		if (exhaustive || reservations->dirtyState == EdgeDirtyState::CleanState)
+		{
+			reservations->dirtyState = EdgeDirtyState::CleanState;
+			double costchange = (GetCost(minPop2Route, method) / CleanCost) - 1.0;
+			if (costchange > 0.02) reservations->dirtyState = EdgeDirtyState::CostIncreased;
+			if (costchange < 0.0) reservations->dirtyState = EdgeDirtyState::CostDecreased;
+		}
 	}
 	return reservations->dirtyState;
 }

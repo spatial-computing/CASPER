@@ -89,7 +89,7 @@ public:
 
 	void AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
-									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , double &, bool);
+									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
 
 	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
 	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
@@ -146,9 +146,9 @@ public:
 		return e1->ProcessOrder > e2->ProcessOrder;
 	}
 
-	static bool ReversePredictedCost(const Evacuee * e1, const Evacuee * e2)
+	static bool ReverseEvacuationCost(const Evacuee * e1, const Evacuee * e2)
 	{
-		return e1->PredictedCost > e2->PredictedCost;
+		return e1->Paths->back()->GetEvacuationCost() > e2->Paths->back()->GetEvacuationCost();
 	}
 };
 

@@ -30,10 +30,11 @@ void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSe
 HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, 
 	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBufferR, IFeatureBufferPtr ipFeatureBufferE, IFeatureCursorPtr ipFeatureCursorR,
 	IFeatureCursorPtr ipFeatureCursorE, long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex,
-	long ERRouteFieldIndex, long EREdgeFieldIndex, long EREdgeDirFieldIndex, long ERSeqFieldIndex, long ERFromPosFieldIndex, long ERToPosFieldIndex, long ERCostFieldIndex, double & predictedCost, bool DoNotExportRouteEdges)
+	long ERRouteFieldIndex, long EREdgeFieldIndex, long EREdgeDirFieldIndex, long ERSeqFieldIndex, long ERFromPosFieldIndex, long ERToPosFieldIndex, long ERCostFieldIndex, bool DoNotExportRouteEdges)
 {			
 	HRESULT hr = S_OK;
 	OrginalCost = 0.0;
+	double OrgEvcCost = EvacuationCost;
 	EvacuationCost = 0.0;
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
@@ -106,8 +107,13 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	// Insert the feature buffer in the insert cursor
 	if (FAILED(hr = ipFeatureCursorR->InsertFeature(ipFeatureBufferR, &RouteOID))) return hr;
 
-	predictedCost = max(predictedCost, EvacuationCost);
-
+#ifdef DEBUG
+	std::wostringstream os_;
+	os_.precision(3);
+	os_ << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << OrgEvcCost << ',' << EvacuationCost << std::endl;
+	OutputDebugStringW(os_.str().c_str());
+#endif
+	
 	// now export each path segment into ReouteEdges table
 	long seq = 0;
 	double segmentCost = RoutedPop * initDelayCostPerPop;

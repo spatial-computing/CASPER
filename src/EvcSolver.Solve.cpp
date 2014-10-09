@@ -553,10 +553,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing output features")); 
 
 	// looping through processed evacuees and generate routes in output feature class
-	EvcPathPtr path;
 	std::list<EvcPathPtr>::const_iterator tpit;
 	std::vector<EvcPathPtr>::const_iterator pit;
-	double predictedCost = 0.0;
 	bool sourceNotFoundFlag = false;
 	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);	
 	std::vector<EvacueePtr>::const_iterator eit;
@@ -641,11 +639,18 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_DIR), &EREdgeDirFieldIndex))) return hr;
 	}
 
+#ifdef DEBUG
+	std::wostringstream os_;
+	os_.precision(3);
+	os_ << "Path stat output as CSV" << std::endl;
+	os_ << "PathID,PredictedCost,EvacuationCost,FinalCost" << std::endl;
+	OutputDebugStringW(os_.str().c_str());
+#endif
 	for (pit = tempPathList->begin(); pit != tempPathList->end(); pit++)
 	{
 		if (FAILED(hr = (*pit)->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
 			ipFeatureBufferE, ipFeatureCursorR, ipFeatureCursorE, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, EREdgeDirFieldIndex, ERSeqFieldIndex,
-			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex, predictedCost, DoNotExportRouteEdges))) return hr;
+			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex, DoNotExportRouteEdges))) return hr;
 	}
 
 	// flush the insert buffer
@@ -764,6 +769,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		wchar_t * thisTimeBuf = new DEBUG_NEW_PLACEMENT wchar_t[25];
 		tm local;
 		CComVariant featureID(0);
+		EvcPathPtr path;
 
 		// read cost attribute unit
 		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
@@ -800,7 +806,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		{
 			flock->Init(Evacuees, ipNetworkQuery, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
 			if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
-			hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, predictedCost);
+			hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, globalEvcCost);
 		}
 		catch(std::exception& e)
 		{
