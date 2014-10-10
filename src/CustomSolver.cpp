@@ -7,7 +7,7 @@
 // without modification, provided you include the original copyright
 // notice and use restrictions.
 // 
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 // CustomSolver.cpp : Implementation of DLL Exports.
 
