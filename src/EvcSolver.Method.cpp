@@ -462,6 +462,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// basically i stop inserting new edges if they are above search radius.
 			/// I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
 			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
+			
+			/// TODO consider your termination condition here instead of at the heap->insert.
+			/// this way you get to add it to the leafs if GVal is larger than search radius and
+			/// not expand it anymore.
 
 			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, adj))) goto END_OF_FUNC;
 
