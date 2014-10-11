@@ -200,6 +200,7 @@ public:
 	inline void Clear() { cache->clear(); }
 	HRESULT Insert(INetworkEdgePtr edge);
 	HRESULT Insert(long eid, esriNetworkEdgeDirection dir);
+	HRESULT Insert(long eid, unsigned char dir);
 	void    Insert(NAEdgeContainer * clone);
 	bool Exist(INetworkEdgePtr edge);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);

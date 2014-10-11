@@ -568,6 +568,14 @@ bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
 	return ret;
 }
 
+HRESULT NAEdgeContainer::Insert(long eid, unsigned char dir)
+{
+	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
+	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, dir));
+	else i->second = dir;
+	return S_OK;
+}
+
 HRESULT NAEdgeContainer::Insert(long eid, esriNetworkEdgeDirection dir)
 {
 	unsigned char d = (unsigned char)dir;

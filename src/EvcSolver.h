@@ -296,7 +296,7 @@ private:
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
 		                double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &);
 	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-		size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, bool, CARMASort);
+		size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, double &, bool, CARMASort);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -397,7 +397,7 @@ class FibonacciHeap;
 
 HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop, 
 							   EvcSolverMethod solverMethod, double selfishRatio, double MaxEvacueeCostSoFar, QueryDirection dir);
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+HRESULT InsertLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod
 								#endif

@@ -18,7 +18,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing;
-	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, globalDeltaCost = 0.0, addedCostAsPenalty = 0.0, MaxPathCostSoFar = 0.0;
+	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, addedCostAsPenalty = 0.0, MaxPathCostSoFar = 0.0;
 	std::vector<NAVertexPtr>::const_iterator vit;
 	SafeZoneTableItr iterator;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -91,7 +91,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, AllEvacuees, sortedEvacuees, vcache, ecache, safeZoneList, CARMAClosedSize,
-			carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, separationRequired, carmaSortDirection))) goto END_OF_FUNC;
+			carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, minPop2Route, separationRequired, carmaSortDirection))) goto END_OF_FUNC;
 		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeE, &cpuTimeE);		
 		carmaSec += (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS)) + (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
 
@@ -167,7 +167,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						goto END_OF_FUNC;
 					}
 
-					if (myEdge->HowDirty(solverMethod, globalMinPop2Route) != EdgeDirtyState::CleanState) sumVisitedDirtyEdge++;
+					if (myEdge->HowDirty(solverMethod, minPop2Route) != EdgeDirtyState::CleanState) sumVisitedDirtyEdge++;
 
 					// Check for destinations. If a new destination has been found then we should
 					// first flag this so later we can use to generate route. Also we should
@@ -313,7 +313,7 @@ END_OF_FUNC:
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
 	                         NAEdgeCache * ecache, SafeZoneTable * safeZoneList, size_t & closedSize, NAEdgeMapTwoGen * closedList, NAEdgeContainer * leafs,
-							 std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, bool separationRequired, CARMASort carmaSortDirection)
+							 std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired, CARMASort carmaSortDirection)
 {
 	HRESULT hr = S_OK;
 
@@ -334,7 +334,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipJunctionElement;
-	double minPop2Route = 1.0, newCost, lastCost = 0.0, EdgeCostToBeat, SearchRadius = 0.0;
+	double newCost, lastCost = 0.0, EdgeCostToBeat, SearchRadius = 0.0;
 	VARIANT_BOOL keepGoing;
 	INetworkJunctionPtr ipCurrentJunction;
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
@@ -389,11 +389,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			if (FAILED(hr = PrepareVerticesForHeap(sz->second->Vertex, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, solverMethod, 0.0, 0.0, QueryDirection::Forward))) goto END_OF_FUNC;	
 		for(std::vector<NAEdgePtr>::const_iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
-		// Now insert leaf edges in heap like the destination edges	
+		// Now insert leaf edges in heap like the destination edges
+		/// TODO do I have to insert leafs even if DSPT is off?
 		#ifdef DEBUG
-		if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;
+		if (FAILED(hr = InsertLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;
 		#else
-		if (FAILED(hr = PrepareLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs))) goto END_OF_FUNC;
+		if (FAILED(hr = InsertLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs))) goto END_OF_FUNC;
 		#endif
 
 		// we're done with all these leafs. let's clean up and collect new ones for the next round.
@@ -459,6 +460,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			// this is my new termination condition. let's hope it works.
 			// basically i stop inserting new edges if they are above search radius.
+			/// I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
 			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
 
 			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, adj))) goto END_OF_FUNC;
@@ -511,8 +513,18 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 						else // unvisited vertex. create new and insert into heap
 						{
 							// termination condition and evacuee discovery
+							// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
+							// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
+							// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/ArcCASPER/issues/8
 							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, true))) goto END_OF_FUNC;
 							if (!EvacueePairs->empty() || currentEdge->ToVertex->GVal < SearchRadius) heap->Insert(currentEdge);
+							else
+							{
+								if (currentEdge->TreePrevious) currentEdge->TreePrevious->TreeNextEraseFirst(currentEdge);
+								currentEdge->TreePrevious = myEdge;
+								currentEdge->TreePrevious->TreeNext.push_back(currentEdge);								
+								leafs->Insert(currentEdge);
+							}
 						}
 					}
 				}
@@ -589,16 +601,9 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 	// removing previously identified leafs from closedList
 	for (j = oldLeafs->begin(); j != oldLeafs->end(); j++)
 	{
-		if ((j->second & 1) && closedList->Exist(j->first, esriNEDAlongDigitized))
-		{
-			closedList->Erase(j->first, esriNEDAlongDigitized);
-			tempLeafs->Insert(j->first, esriNEDAlongDigitized);
-		}
-		if ((j->second & 2) && closedList->Exist(j->first, esriNEDAgainstDigitized))
-		{
-			closedList->Erase(j->first, esriNEDAgainstDigitized);
-			tempLeafs->Insert(j->first, esriNEDAgainstDigitized);
-		}
+		if ((j->second & 1) && closedList->Exist(j->first, esriNEDAlongDigitized))   closedList->Erase(j->first, esriNEDAlongDigitized);
+		if ((j->second & 2) && closedList->Exist(j->first, esriNEDAgainstDigitized)) closedList->Erase(j->first, esriNEDAgainstDigitized);
+		tempLeafs->Insert(j->first, j->second);
 	}
 	oldLeafs->Clear();
 	oldLeafs->Insert(tempLeafs);
@@ -672,7 +677,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 	return hr;
 }
 
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+HRESULT InsertLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod
 								#endif
