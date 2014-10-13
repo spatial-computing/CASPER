@@ -334,7 +334,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipJunctionElement;
-	double newCost, lastCost = 0.0, EdgeCostToBeat, SearchRadius = 0.0;
+	double newCost, EdgeCostToBeat, SearchRadius = 0.0;
 	VARIANT_BOOL keepGoing;
 	INetworkJunctionPtr ipCurrentJunction;
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
@@ -418,9 +418,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			// check if this edge decreased its cost
 			myVertex->ParentCostIsDecreased |= myEdge->HowDirty(solverMethod, minPop2Route) == EdgeDirtyState::CostDecreased;
-
-			// this value is being recorded and will be used as the default heuristic value for any future vertex
-			lastCost = myVertex->GVal;
 			CARMAExtractCount++;
 
 			// Code to build the CARMA Tree
@@ -463,9 +460,14 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			/// I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
 			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
 			
-			/// TODO consider your termination condition here instead of at the heap->insert.
+			/// Consider your termination condition here instead of at the heap->insert.
 			/// this way you get to add it to the leafs if GVal is larger than search radius and
 			/// not expand it anymore.
+			if (EvacueePairs->empty() && myVertex->GVal > SearchRadius)
+			{
+				leafs->Insert(myEdge);
+				continue;
+			}
 
 			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, adj))) goto END_OF_FUNC;
 
@@ -521,14 +523,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 							// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
 							// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/ArcCASPER/issues/8
 							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, true))) goto END_OF_FUNC;
-							if (!EvacueePairs->empty() || currentEdge->ToVertex->GVal < SearchRadius) heap->Insert(currentEdge);
-							else
-							{
-								if (currentEdge->TreePrevious) currentEdge->TreePrevious->TreeNextEraseFirst(currentEdge);
-								currentEdge->TreePrevious = myEdge;
-								currentEdge->TreePrevious->TreeNext.push_back(currentEdge);								
-								leafs->Insert(currentEdge);
-							}
+							heap->Insert(currentEdge);
 						}
 					}
 				}
@@ -537,7 +532,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	}
 
 	// set new default heuristic value
-	vcache->UpdateHeuristicForOutsideVertices(lastCost, this->countCARMALoops);
+	vcache->UpdateHeuristicForOutsideVertices(SearchRadius, countCARMALoops);
 	CARMAExtractCounts.push_back(CARMAExtractCount);
 
 	// load discovered evacuees into sorted list
@@ -605,9 +600,16 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 	// removing previously identified leafs from closedList
 	for (j = oldLeafs->begin(); j != oldLeafs->end(); j++)
 	{
-		if ((j->second & 1) && closedList->Exist(j->first, esriNEDAlongDigitized))   closedList->Erase(j->first, esriNEDAlongDigitized);
-		if ((j->second & 2) && closedList->Exist(j->first, esriNEDAgainstDigitized)) closedList->Erase(j->first, esriNEDAgainstDigitized);
-		tempLeafs->Insert(j->first, j->second);
+		if ((j->second & 1) && closedList->Exist(j->first, esriNEDAlongDigitized))
+		{
+			closedList->Erase(j->first, esriNEDAlongDigitized);
+			tempLeafs->Insert(j->first, esriNEDAlongDigitized);
+		}
+		if ((j->second & 2) && closedList->Exist(j->first, esriNEDAgainstDigitized))
+		{
+			closedList->Erase(j->first, esriNEDAgainstDigitized);
+			tempLeafs->Insert(j->first, esriNEDAgainstDigitized);
+		}
 	}
 	oldLeafs->Clear();
 	oldLeafs->Insert(tempLeafs);
