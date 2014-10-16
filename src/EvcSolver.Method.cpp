@@ -339,7 +339,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	INetworkJunctionPtr ipCurrentJunction;
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	readyEdges->reserve(safeZoneList->size());
-	unsigned int CARMAExtractCount = 0;
+	unsigned int CARMAExtractCount = 0, CARMAHeapDecreaseCount = 0;
 	vector_NAEdgePtr_Ptr adj;
 	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseProcessOrder, Evacuee::ReverseEvacuationCost };
 
@@ -458,11 +458,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// this is my new termination condition. let's hope it works.
 			// basically i stop inserting new edges if they are above search radius.
 			/// I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
-			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
-			
-			/// Consider your termination condition here instead of at the heap->insert.
-			/// this way you get to add it to the leafs if GVal is larger than search radius and
-			/// not expand it anymore.
+			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();			
+
+			// termination condition and evacuee discovery
+			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
+			// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
+			// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/ArcCASPER/issues/8
 			if (EvacueePairs->empty() && myVertex->GVal > SearchRadius)
 			{
 				leafs->Insert(myEdge);
@@ -494,6 +495,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				{
 					if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
 					{
+						/// TODO The sima khanum bug (issue #8) is from here ... don't change the edge parent until you're sure it's the better parent
+						/// you f***ing stupid &*%^(*&%
 						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) goto END_OF_FUNC;
 						EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
 						if (currentEdge->ToVertex->GVal < EdgeCostToBeat)
@@ -515,13 +518,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 								neighbor->ParentCostIsDecreased = myVertex->ParentCostIsDecreased;
 								if (FAILED(hr = heap->DecreaseKey(currentEdge))) goto END_OF_FUNC;
 							}
+							else CARMAHeapDecreaseCount++;
 						}
 						else // unvisited vertex. create new and insert into heap
 						{
-							// termination condition and evacuee discovery
-							// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
-							// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
-							// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/ArcCASPER/issues/8
 							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, true))) goto END_OF_FUNC;
 							heap->Insert(currentEdge);
 						}
@@ -529,6 +529,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				}
 			}
 		}
+		#ifdef DEBUG
+		std::wostringstream os2;
+		os2 << "CARMA Heap Decrease Count = " << CARMAHeapDecreaseCount << ",\tCARMA Extract Count = " << CARMAExtractCount << std::endl;
+		OutputDebugStringW(os2.str().c_str());
+		#endif
 	}
 
 	// set new default heuristic value
