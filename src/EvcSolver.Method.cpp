@@ -339,7 +339,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	INetworkJunctionPtr ipCurrentJunction;
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	readyEdges->reserve(safeZoneList->size());
-	unsigned int CARMAExtractCount = 0, CARMAHeapDecreaseCount = 0;
+	unsigned int CARMAExtractCount = 0;
 	vector_NAEdgePtr_Ptr adj;
 	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseProcessOrder, Evacuee::ReverseEvacuationCost };
 
@@ -382,7 +382,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 		// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
 		// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
-		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, minPop2Route, this->solverMethod);
+		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, minPop2Route, solverMethod);
 
 		// prepare and insert safe zone vertices into the heap
 		for (SafeZoneTableItr sz = safeZoneList->begin(); sz != safeZoneList->end(); sz++)
@@ -495,15 +495,16 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				{
 					if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
 					{
-						/// TODO The sima khanum bug (issue #8) is from here ... don't change the edge parent until you're sure it's the better parent
-						/// you f***ing stupid &*%^(*&%
+						// Maybe sima khanum bug (issue #8) is from here ... don't change the edge parent until you're sure it's the better parent
+						neighbor = currentEdge->ToVertex;
 						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) goto END_OF_FUNC;
-						EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
-						if (currentEdge->ToVertex->GVal < EdgeCostToBeat)
+						// EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID); // == neighbor->GVal ??
+						if (currentEdge->ToVertex->GVal < neighbor->GVal)
 						{
 							closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
 							heap->Insert(currentEdge);
 						}
+						else neighbor->SetBehindEdge(currentEdge);						// undo whatever PrepareUnvisitedVertexForHeap did to currentEdge
 					}
 					else
 					{
@@ -518,11 +519,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 								neighbor->ParentCostIsDecreased = myVertex->ParentCostIsDecreased;
 								if (FAILED(hr = heap->DecreaseKey(currentEdge))) goto END_OF_FUNC;
 							}
-							else CARMAHeapDecreaseCount++;
 						}
 						else // unvisited vertex. create new and insert into heap
 						{
-							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, true))) goto END_OF_FUNC;
+							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery))) goto END_OF_FUNC;
 							heap->Insert(currentEdge);
 						}
 					}
@@ -531,7 +531,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		}
 		#ifdef DEBUG
 		std::wostringstream os2;
-		os2 << "CARMA Heap Decrease Count = " << CARMAHeapDecreaseCount << ",\tCARMA Extract Count = " << CARMAExtractCount << std::endl;
+		os2 << "CARMA Extract Count = " << CARMAExtractCount << std::endl;
 		OutputDebugStringW(os2.str().c_str());
 		#endif
 	}
@@ -561,7 +561,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 	std::sort(SortedEvacuees->begin(), SortedEvacuees->end(), SortFunctions[carmaSortDirection]);
 	UpdatePeakMemoryUsage();
-	closedSize = closedList->Size();	
+	closedSize = closedList->Size();
+
+	/// TODO my next idea is to check if marking all edges as clean is ok or should I just mark thoes that I truely cleaned (in closedLists)
 	ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod); // set graph as having all clean edges
 
 #ifdef TRACE
@@ -599,7 +601,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
 			// So the usual for loop is going to insert destination dirty edges and the rest are in the leafs list.
-			tempLeafs->Insert(leaf->EID, leaf->Direction);
+			tempLeafs->Insert(leaf);
 		}		
 
 	// removing previously identified leafs from closedList
@@ -807,6 +809,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 				temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
 				readyEdges->push_back(edge);
 			}
+			else _ASSERT(1);
 		}
 		else
 		{
