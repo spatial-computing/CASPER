@@ -57,7 +57,7 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 	BehindEdge = behindEdge;
 
 	if (!FAILED(junction->get_EID(&EID)))
-	{		
+	{
 		Junction = junction;
 	}
 	else
@@ -67,7 +67,7 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 	}
 }
 
-inline void NAVertex::SetBehindEdge(NAEdge * behindEdge) 
+inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 {
 	if (behindEdge == NULL && BehindEdge != NULL) BehindEdge->ToVertex = NULL;
 	BehindEdge = behindEdge;
@@ -104,7 +104,7 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 	h->push_back(HValue(edgeid, hur, carmaLoop));
 	std::sort(h->begin(), h->end(), HValue::LessThan);
 	_ASSERT(!unnesecery);
-	return unnesecery;	
+	return unnesecery;
 }
 
 // return true if update was unnecessary
@@ -120,7 +120,7 @@ void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, unsigned short
 	if (heuristicForOutsideVertices < hur)
 	{
 		heuristicForOutsideVertices = hur;
-		if (goDeep) for(NAVertexTableItr it = cache->begin(); it != cache->end(); it++) it->second->UpdateHeuristic(-1, hur, carmaLoop);			
+		if (goDeep) for(NAVertexTableItr it = cache->begin(); it != cache->end(); it++) it->second->UpdateHeuristic(-1, hur, carmaLoop);
 	}
 }
 
@@ -166,14 +166,14 @@ NAVertexPtr NAVertexCache::NewFromBucket(NAVertexPtr clone)
 		currentBucketIndex = 0;
 		bucketCache->push_back(currentBucket);
 	}
-	
+
 	n = &(currentBucket[currentBucketIndex]);
 	++currentBucketIndex;
 	n->Clone(clone);
 
 	return n;
 }
-	
+
 NAVertexPtr NAVertexCache::Get(INetworkJunctionPtr junction)
 {
 	long JunctionEID;
@@ -200,15 +200,15 @@ void NAVertexCache::PrintVertexHeuristicFeq()
 {
 	std::wostringstream os_;
 	size_t freq[20] = {0};
-	
+
 	for(NAVertexTableItr cit = cache->begin(); cit != cache->end(); cit++) freq[cit->second->HCount()]++;
 	os_ << "PrintVertexHeuristicFeq:" << std::endl;
-	for(size_t i = 0; i < 20; i++)	if (freq[i] > 0) os_ << i << '=' << freq[i] << std::endl;	
+	for(size_t i = 0; i < 20; i++)	if (freq[i] > 0) os_ << i << '=' << freq[i] << std::endl;
 	OutputDebugStringW( os_.str().c_str() );
 }
 
 void NAVertexCache::CollectAndRelease()
-{	
+{
 	int count = 0;
 	NAVertexPtr temp = NULL;
 	size_t j = 0;
@@ -217,7 +217,7 @@ void NAVertexCache::CollectAndRelease()
 		temp = (*i);
 		for(j = 0; j < NAVertexCache_BucketSize; ++j) temp[j].SetBehindEdge(0);
 		delete [] temp;
-		count++; 
+		count++;
 	}
 	currentBucket = NULL;
 	bucketCache->clear();

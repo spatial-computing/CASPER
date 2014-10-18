@@ -183,7 +183,7 @@ void lqInitDatabase (lqInternalDB* lq,
    to the bin contents list.  */
 
 
-lqClientProxy** lqBinForLocation (lqInternalDB* lq, 
+lqClientProxy** lqBinForLocation (lqInternalDB* lq,
 				  double x, double y, double z)
 {
     int i, ix, iy, iz;
@@ -212,7 +212,7 @@ lqClientProxy** lqBinForLocation (lqInternalDB* lq,
 /* ------------------------------------------------------------------ */
 /* The application needs to call this once on each lqClientProxy at
    setup time to initialize its list pointers and associate the proxy
-   with its client object. */ 
+   with its client object. */
 
 
 void lqInitClientProxy (lqClientProxy* proxy, void* clientObject)
@@ -231,7 +231,7 @@ void lqInitClientProxy (lqClientProxy* proxy, void* clientObject)
 
 void lqAddToBin (lqClientProxy* object, lqClientProxy** bin)
 {
-    /* if bin is currently empty */    
+    /* if bin is currently empty */
     if (*bin == NULL)
     {
 	object->prev = NULL;
@@ -287,8 +287,8 @@ void lqRemoveFromBin (lqClientProxy* object)
    frame for every moving object.  */
 
 
-void lqUpdateForNewLocation  (lqInternalDB* lq, 
-			      lqClientProxy* object, 
+void lqUpdateForNewLocation  (lqInternalDB* lq,
+			      lqClientProxy* object,
 			      double x, double y, double z)
 {
     /* find bin for new location */
@@ -339,13 +339,13 @@ void lqUpdateForNewLocation  (lqInternalDB* lq,
    coordinates. */
 
 
-void lqMapOverAllObjectsInLocalityClipped (lqInternalDB* lq, 
+void lqMapOverAllObjectsInLocalityClipped (lqInternalDB* lq,
 					   double x, double y, double z,
 					   double radius,
 					   lqCallBackFunction func,
 					   void* clientQueryState,
 					   int minBinX,
-					   int minBinY, 
+					   int minBinY,
 					   int minBinZ,
 					   int maxBinX,
 					   int maxBinY,
@@ -405,7 +405,7 @@ void lqMapOverAllObjectsInLocalityClipped (lqInternalDB* lq,
    holds any object which are not inside the regular sub-bricks  */
 
 
-void lqMapOverAllOutsideObjects (lqInternalDB* lq, 
+void lqMapOverAllOutsideObjects (lqInternalDB* lq,
 				 double x, double y, double z,
 				 double radius,
 				 lqCallBackFunction func,
@@ -442,14 +442,14 @@ void lqMapOverAllOutsideObjects (lqInternalDB* lq,
    bins of interest. */
 
 
-void lqMapOverAllObjectsInLocality (lqInternalDB* lq, 
+void lqMapOverAllObjectsInLocality (lqInternalDB* lq,
 				    double x, double y, double z,
 				    double radius,
 				    lqCallBackFunction func,
 				    void* clientQueryState)
 {
     int partlyOut = 0;
-    int completelyOutside = 
+    int completelyOutside =
 	(((x + radius) < lq->originx) ||
 	 ((y + radius) < lq->originy) ||
 	 ((z + radius) < lq->originz) ||
@@ -483,10 +483,10 @@ void lqMapOverAllObjectsInLocality (lqInternalDB* lq,
     if (maxBinZ >= lq->divz) {partlyOut = 1; maxBinZ = lq->divz - 1;}
 
     /* map function over outside objects if necessary (if clipped) */
-    if (partlyOut) 
+    if (partlyOut)
 	lqMapOverAllOutsideObjects (lq, x, y, z, radius, func,
 				    clientQueryState);
-    
+
     /* map function over objects in bins */
     lqMapOverAllObjectsInLocalityClipped (lq,
 					  x, y, z,
@@ -542,7 +542,7 @@ void lqFindNearestHelper (void* clientObject,
    NULL if none is found.  */
 
 
-void* lqFindNearestNeighborWithinRadius (lqInternalDB* lq, 
+void* lqFindNearestNeighborWithinRadius (lqInternalDB* lq,
 					 double x, double y, double z,
 					 double radius,
 					 void* ignoreObject)
@@ -554,7 +554,7 @@ void* lqFindNearestNeighborWithinRadius (lqInternalDB* lq,
     lqFNS.minDistanceSquared = FLT_MAX;
 
     /* map search helper function over all objects within radius */
-    lqMapOverAllObjectsInLocality (lq, 
+    lqMapOverAllObjectsInLocality (lq,
 				   x, y, z,
 				   radius,
 				   lqFindNearestHelper,
@@ -569,7 +569,7 @@ void* lqFindNearestNeighborWithinRadius (lqInternalDB* lq,
 /* internal helper function */
 
 
-void lqMapOverAllObjectsInBin (lqClientProxy* binProxyList, 
+void lqMapOverAllObjectsInBin (lqClientProxy* binProxyList,
 			       lqCallBackFunction func,
 			       void* clientQueryState)
 {
@@ -586,7 +586,7 @@ void lqMapOverAllObjectsInBin (lqClientProxy* binProxyList,
 /* Apply a user-supplied function to all objects in the database,
    regardless of locality (cf lqMapOverAllObjectsInLocality) */
 
-void lqMapOverAllObjects (lqInternalDB* lq, 
+void lqMapOverAllObjects (lqInternalDB* lq,
 			  lqCallBackFunction func,
 			  void* clientQueryState)
 {

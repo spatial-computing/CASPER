@@ -1,12 +1,12 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
+//
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #include "stdafx.h"
@@ -106,7 +106,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_DiscriptiveAttributesCount(&c);
 		m_ipEvcSolver->get_DiscriptiveAttributes(&names);
 		::SendMessage(m_hCapCombo, CB_RESETCONTENT, NULL, NULL);
-		for (i = 0; i < c; i++) ::SendMessage(m_hCapCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));		
+		for (i = 0; i < c; i++) ::SendMessage(m_hCapCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));
 		m_ipEvcSolver->get_CapacityAttribute(&selectedIndex);
 		::SendMessage(m_hCapCombo, CB_SETCURSEL, selectedIndex, 0);
 		delete [] names;
@@ -115,7 +115,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_CostAttributesCount(&c);
 		m_ipEvcSolver->get_CostAttributes(&names);
 		::SendMessage(m_hCostCombo, CB_RESETCONTENT, NULL, NULL);
-		for (i = 0; i < c; i++) ::SendMessage(m_hCostCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));		
+		for (i = 0; i < c; i++) ::SendMessage(m_hCostCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));
 		m_ipEvcSolver->get_CostAttribute(&selectedIndex);
 		::SendMessage(m_hCostCombo, CB_SETCURSEL, selectedIndex, 0);
 		delete [] names;
@@ -361,7 +361,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		selectedIndex = ::SendMessage(m_hCheckShareCap, BM_GETCHECK, 0, 0);
 		if (selectedIndex == BST_CHECKED) ipSolver->put_TwoWayShareCapacity(VARIANT_TRUE);
 		else ipSolver->put_TwoWayShareCapacity(VARIANT_FALSE);
-		
+
 		// critical density per capacity
 		BSTR critical;
 		size = ::SendMessage(m_hEditCritical, WM_GETTEXTLENGTH, 0, 0);
@@ -369,7 +369,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditCritical, WM_GETTEXT, size + 1, (LPARAM)critical);
 		ipSolver->put_CriticalDensPerCap(critical);
 		delete [] critical;
-		
+
 		// init delay cost per population
 		BSTR delay;
 		size = ::SendMessage(m_hEditInitCost, WM_GETTEXTLENGTH, 0, 0);
@@ -377,7 +377,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditInitCost, WM_GETTEXT, size + 1, (LPARAM)delay);
 		ipSolver->put_InitDelayCostPerPop(delay);
 		delete [] delay;
-		
+
 		// CARMA ratio
 		BSTR carma;
 		size = ::SendMessage(m_heditCARMA, WM_GETTEXTLENGTH, 0, 0);
@@ -385,7 +385,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_heditCARMA, WM_GETTEXT, size + 1, (LPARAM)carma);
 		ipSolver->put_CARMAPerformanceRatio(carma);
 		delete [] carma;
-		
+
 		// CARMA ratio
 		BSTR selfish;
 		size = ::SendMessage(m_heditSelfish, WM_GETTEXTLENGTH, 0, 0);
@@ -401,7 +401,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditSat, WM_GETTEXT, size + 1, (LPARAM)sat);
 		ipSolver->put_SaturationPerCap(sat);
 		delete [] sat;
-		
+
 		// cost per zone density
 		BSTR density;
 		size = ::SendMessage(m_hEditDensity, WM_GETTEXTLENGTH, 0, 0);
@@ -409,7 +409,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditDensity, WM_GETTEXT, size + 1, (LPARAM)density);
 		ipSolver->put_CostPerZoneDensity(density);
 		delete [] density;
-		
+
 		// flock snap interval
 		BSTR flock;
 		size = ::SendMessage(m_hEditSnapFlock, WM_GETTEXTLENGTH, 0, 0);
@@ -417,7 +417,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		::SendMessage(m_hEditSnapFlock, WM_GETTEXT, size + 1, (LPARAM)flock);
 		ipSolver->put_FlockingSnapInterval(flock);
 		delete [] flock;
-		
+
 		// flock simulation interval
 		BSTR simul;
 		size = ::SendMessage(m_hEditSimulationFlock, WM_GETTEXTLENGTH, 0, 0);
@@ -502,11 +502,11 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 #pragma warning(pop)
 
 void EvcSolverPropPage::SetFlockingEnabled()
-{	
+{
 	LRESULT flag = ::SendMessage(m_hCheckFlock, BM_GETCHECK, 0, 0);
 	BOOL bFlag;
 	if (flag == BST_CHECKED) bFlag = TRUE; else bFlag = FALSE;
-	
+
 	CWindow cwEditSnapFlock, cwEditSimulationFlock, cwCmbFlockProfile;
 	cwEditSnapFlock.Attach(m_hEditSnapFlock);
 	cwEditSimulationFlock.Attach(m_hEditSimulationFlock);

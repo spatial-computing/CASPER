@@ -72,11 +72,11 @@ bool HeapNode::remove()
 		if(leftSibling) parent->children = leftSibling;
 		else if(rightSibling) parent->children = rightSibling;
 		else parent->children = NULL;
-	}	
-	
+	}
+
 	if(leftSibling) leftSibling->rightSibling = rightSibling;
 	if(rightSibling) rightSibling->leftSibling = leftSibling;
-	
+
 	leftSibling = NULL;
 	rightSibling = NULL;
 	parent = NULL;
@@ -145,7 +145,7 @@ bool FibonacciHeap::Insert(HeapDataType * node)
 			minRoot->addSibling(n);
 			if(n->key < minRoot->key) minRoot = n;
 		}
-		
+
 		nodeTable->Insert(n);
 		return true;
 	}
@@ -194,19 +194,19 @@ HeapDataType * FibonacciHeap::DeleteMin()
 	nodeTable->Erase(out);
 	minRoot = temp;
 
-	// Initialize list of roots	
+	// Initialize list of roots
 	for(int i = 0; i < 100; i++) rootListByRank[i] = NULL;
-	
+
 	while(temp)
 	{
 		// Check if key of current vertex is smaller than the key of minRoot
 		if(temp->key < minRoot->key) minRoot = temp;
 
-		nextTemp = temp->rightSibling;		
+		nextTemp = temp->rightSibling;
 		link(temp);
 		temp = nextTemp;
 	}
-	return out;	
+	return out;
 }
 
 bool FibonacciHeap::IsVisited(HeapDataType * vertex)
@@ -223,7 +223,7 @@ HRESULT FibonacciHeap::DecreaseKey(HeapDataType * edge)
 		Insert(edge);
 		return S_OK;
 	}
-	else 
+	else
 	{
 		node->data = edge;
 		node->key = GetHeapKey(edge);
@@ -231,7 +231,7 @@ HRESULT FibonacciHeap::DecreaseKey(HeapDataType * edge)
 		{
 			// Remove vertex and add to root list
 			node->remove();
-			minRoot->addSibling(node);		
+			minRoot->addSibling(node);
 		}
 		// Check if key is smaller than the key of minRoot
 		if(node->key < minRoot->key) minRoot = node;
@@ -241,7 +241,7 @@ HRESULT FibonacciHeap::DecreaseKey(HeapDataType * edge)
 
 void FibonacciHeap::Clear()
 {
-	while (!IsEmpty()) DeleteMin();	
+	while (!IsEmpty()) DeleteMin();
 	nodeTable->Clear();
 	// visitTable->clear();
 }
@@ -259,7 +259,7 @@ bool FibonacciHeap::link(HeapNode * root)
 		// Link the two roots
 		HeapNode * linkVertex = rootListByRank[root->rank];
 		rootListByRank[root->rank] = NULL;
-		
+
 		if((root->key < linkVertex->key) || root == minRoot)
 		{
 			linkVertex->remove();
@@ -272,7 +272,7 @@ bool FibonacciHeap::link(HeapNode * root)
 			root->remove();
 			linkVertex->addChild(root);
 			if(rootListByRank[linkVertex->rank] != NULL) link(linkVertex);
-			else rootListByRank[linkVertex->rank] = linkVertex;			
+			else rootListByRank[linkVertex->rank] = linkVertex;
 		}
 		return true;
 	}
@@ -307,7 +307,7 @@ HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 }
 
 // This function is very stupid. I should make it better and faster
-// It looks at all inserted heap nodes (vertices) right after last evacuee is 
+// It looks at all inserted heap nodes (vertices) right after last evacuee is
 // discovered during carma loop. the value will be used as carma termination condition.
 double HeapNodeTable::GetMaxValue(void) const
 {

@@ -42,7 +42,7 @@
 // from this module only.
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 06-25-02 cwr: created 
+// 06-25-02 cwr: created
 //
 //
 // ----------------------------------------------------------------------------

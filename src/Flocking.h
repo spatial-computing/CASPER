@@ -147,7 +147,7 @@ public:
 	double          PathLen;
 
 	// methods
-	
+
 	FlockingObject(int id, EvcPathPtr, double startTime, VARIANT groupName, INetworkQueryPtr, FlockProfile *, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
 	static bool DetectCollisions(std::vector<FlockingObject *> * objects);

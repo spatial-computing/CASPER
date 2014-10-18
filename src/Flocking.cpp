@@ -9,7 +9,7 @@
 FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
 							   FlockProfile * flockProfile, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen) throw(...)
 {
-	// construct FlockingLocation	
+	// construct FlockingLocation
 	HRESULT hr = S_OK;
 	MyTime = startTime;
 	GTime = 0.0;
@@ -37,7 +37,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	// network element to keep intersection vertex
 	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &element)))
 	{
-		OutputDebugString(L"FlockingObject - CreateNetworkElement: failed to create a junction element.");		
+		OutputDebugString(L"FlockingObject - CreateNetworkElement: failed to create a junction element.");
 	}
 	nextVertex = element;
 	initPathIterator = true;
@@ -47,7 +47,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	myVehicle = new DEBUG_NEW_PLACEMENT OpenSteer::SimpleVehicle();
 	myVehicle->reset();
 	myVehicle->setRadius(myProfile->Radius * 4.0);
-	
+
 	myVehicle->setForward(Velocity.normalize());
 	myVehicle->setSpeed(Velocity.length());
 	myVehicle->setMass(myProfile->Mass);
@@ -55,7 +55,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	// init location
 	double x, y, dx, dy;
 	MyLocation->QueryCoords(&x, &y);
-	GetMyInitLocation(neighbors, x, y, dx, dy); /// good stuff about init location happens here	
+	GetMyInitLocation(neighbors, x, y, dx, dy); /// good stuff about init location happens here
 	MyLocation->PutCoords(x + dx, y + dy);
 	Velocity = OpenSteer::Vec3(-dx, -dy, 0.0);
 
@@ -73,7 +73,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	// #pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] it's a good idea to throw a logic error after each of these FAILED statements.")
 
 	if (FAILED(hr = pcollect->get_PointCount(&pointCount)))
-	{		
+	{
 		_ASSERT(0);
 		OutputDebugString(L"FlockingObject - get_PointCount: failed to get number of path points.");
 		throw std::exception("FlockingObject - get_PointCount: failed to get number of path points.");
@@ -165,20 +165,20 @@ HRESULT FlockingObject::loadNewEdge(void)
 			MyStatus = FLOCK_OBJ_STAT_END;
 			return S_OK;
 		}
-		
+
 		pcollect = (*pathSegIt)->pline;
 		if (FAILED(hr = pcollect->get_PointCount(&pointCount))) return hr;
 		delete [] libpoints;
 		pointCount++;
 		libpoints = new DEBUG_NEW_PLACEMENT OpenSteer::Vec3[pointCount];
-		
+
 		for(i = 1; i < pointCount; i++)
 		{
 			if (FAILED(hr = pcollect->get_Point(i - 1, &p))) return hr;
 			if (FAILED(hr = p->QueryCoords(&x, &y))) return hr;
 			libpoints[i].set(x, y, 0.0);
 		}
-		
+
 		// push self location first. this will help the steer library since we're swapping the edge during process.
 		// we'll use the current location shadow on road segment as the start point.
 		if (pointCount > 2)
@@ -251,7 +251,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 }
 
 HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt)
-{	
+{
 	// check destination arrival
 	HRESULT hr = S_OK;
 	OpenSteer::Vec3 steer = OpenSteer::Vec3::zero, pos = OpenSteer::Vec3::zero, dir = OpenSteer::Vec3::zero;
@@ -269,7 +269,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 		steer += myVehicle->steerToAvoidCloseNeighbors (myProfile->CloseNeighborDistance, myNeighborVehicles);
 		if (dist < myProfile->ZoneRadius) steer += myVehicle->steerForWander(dt, 20);
 		else steer += myVehicle->steerForSeek(myVehiclePath.points[myVehiclePath.pointCount - 1], dt);
-			
+
 		// backup the position in case we needed to back off from a collision
 		pos = myVehicle->position();
 		myVehicle->applySteeringForce(steer / dt, dt);
@@ -290,7 +290,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 
 			myVehicle->setMaxSpeed(speedLimit);
 			if (MyStatus != FLOCK_OBJ_STAT_STOP) myVehicle->setSpeed(speedLimit);
-			else 
+			else
 			{
 				OpenSteer::Vec3 forward = OpenSteer::RandomVectorInUnitRadiusSphere();
 				forward.z = 0.0;
@@ -304,7 +304,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 
 			// to stay inside the path. if last round we had to stop to avoid collision, this round we only focus on avoid neighbors.
 			if (MyStatus != FLOCK_OBJ_STAT_STOP) steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
-			
+
 			// backup the position in case we needed to back off from a collision
 			pos = myVehicle->position();
 			dir = myVehicle->forward();
@@ -352,13 +352,13 @@ bool FlockingObject::DetectMyCollision()
 }
 
 bool FlockingObject::DetectCollisions(std::vector<FlockingObjectPtr> * objects)
-{	
+{
 	bool collided = false;
 
 	// collision detection
 	FlockingObjectPtr n;
 	size_t i, k = objects->size();
-	
+
 	for (i = 0; i < k; i++)
 	{
 		n = objects->at(i);
@@ -394,7 +394,7 @@ FlockingEnviroment::~FlockingEnviroment(void)
 	objects->clear();
 	history->clear();
 	collisions->clear();
-	delete objects;	
+	delete objects;
 	delete history;
 	delete collisions;
 }
@@ -480,7 +480,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			if (pTrackCancel)
 			{
 				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
-				if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+				if (keepGoing == VARIANT_FALSE) return E_ABORT;
 			}
 			fo = objects->at(size_t(objPos));
 
@@ -565,7 +565,7 @@ double PointToLineDistance(OpenSteer::Vec3 point, OpenSteer::Vec3 line[2], bool 
 	lineVector = lineVector.normalize();
 	dist = lineVector.dot(line[1] - point);
 	distV = (line[1] - dist * lineVector) - point;
-	dist = distV.length();	
+	dist = distV.length();
 
 	if (DirAsSign && dist > 0.0)
 	{

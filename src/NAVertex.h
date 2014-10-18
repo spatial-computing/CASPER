@@ -18,7 +18,7 @@ public:
 	double   Value;
 	long     EdgeID;
 	unsigned short CarmaLoop;
-	
+
 	HValue(long edgeID, double value, unsigned short carmaLoop)
 	{
 		EdgeID = edgeID;
@@ -55,7 +55,7 @@ public:
 	}
 
 	double GetMinHOrZero() const
-	{		
+	{
 		if (h->empty()) return 0.0;
 		else return h->front().Value;
 	}
@@ -65,7 +65,7 @@ public:
 	void ResetHValues(void)  { h->clear(); }
 	inline bool IsHEmpty()   const { return h->empty(); }
 	bool UpdateHeuristic     (long edgeid, double hur, unsigned short carmaLoop);
-	
+
 	inline void Clone (NAVertex * cpy);
 	NAVertex   (void);
 	NAVertex   (const NAVertex& cpy);
@@ -113,14 +113,14 @@ public:
 		currentBucketIndex = 0;
 	}
 
-	~NAVertexCache(void) 
+	~NAVertexCache(void)
 	{
 		Clear();
 		delete cache;
 		delete bucketCache;
 	}
 
-	void PrintVertexHeuristicFeq();	
+	void PrintVertexHeuristicFeq();
 	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = 0);
 	void UpdateHeuristicForOutsideVertices(double hur, unsigned short carmaLoop);
 	bool UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop);
@@ -142,12 +142,12 @@ public:
 		cache = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 	}
 
-	~NAVertexCollector(void) 
+	~NAVertexCollector(void)
 	{
 		Clear();
 		delete cache;
 	}
-	
+
 	NAVertexPtr New(INetworkJunctionPtr junction);
 	size_t Size() { return cache->size(); }
 	void Clear();

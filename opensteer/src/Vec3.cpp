@@ -72,7 +72,7 @@ const OpenSteer::Vec3 OpenSteer::Vec3::side(-1, 0, 0);
 // between 0 and 1
 
 
-OpenSteer::Vec3 
+OpenSteer::Vec3
 OpenSteer::RandomVectorInUnitRadiusSphere (void)
 {
     Vec3 v;
@@ -95,7 +95,7 @@ OpenSteer::RandomVectorInUnitRadiusSphere (void)
 // random and length will range between 0 and 1
 
 
-OpenSteer::Vec3 
+OpenSteer::Vec3
 OpenSteer::randomVectorOnUnitRadiusXZDisk (void)
 {
     Vec3 v;
@@ -120,7 +120,7 @@ OpenSteer::randomVectorOnUnitRadiusXZDisk (void)
 // cone.  Called by vecLimitMaxDeviationAngle and vecLimitMinDeviationAngle.
 
 
-OpenSteer::Vec3 
+OpenSteer::Vec3
 OpenSteer::vecLimitDeviationAngleUtility (const bool insideOrOutside,
                                           const Vec3& source,
                                           const double cosineOfConeAngle,
@@ -172,7 +172,7 @@ OpenSteer::vecLimitDeviationAngleUtility (const bool insideOrOutside,
 // remain within 20% of input length).
 
 
-OpenSteer::Vec3 
+OpenSteer::Vec3
 OpenSteer::findPerpendicularIn3d (const Vec3& direction)
 {
     // to be filled in:

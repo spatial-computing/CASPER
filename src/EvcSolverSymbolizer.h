@@ -1,12 +1,12 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
+//
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #pragma once
@@ -53,7 +53,7 @@ public:
     return S_OK;
   }
 
-  void FinalRelease() 
+  void FinalRelease()
   {
   }
 
@@ -65,7 +65,7 @@ public:
   STDMETHOD(get_Priority)(long* pPriority);
   STDMETHOD(CreateLayer)(INAContext* pNAContext, INALayer** ppNALayer);
   STDMETHOD(UpdateLayer)(INALayer* pNALayer, VARIANT_BOOL* pUpdated);
-  
+
   // INASymbolizer2 methods
 
   STDMETHOD(ResetRenderers)(IColor* pSolverColor, INALayer* pNALayer);

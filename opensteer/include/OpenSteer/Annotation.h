@@ -36,7 +36,7 @@
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
 // 04-01-03 cwr: made into a mixin
-// 07-01-02 cwr: created (as Annotation.h) 
+// 07-01-02 cwr: created (as Annotation.h)
 //
 //
 // ----------------------------------------------------------------------------
@@ -243,8 +243,8 @@ OpenSteer::AnnotationMixin<Super>::~AnnotationMixin (void)
 
 
 template<class Super>
-void 
-OpenSteer::AnnotationMixin<Super>::setTrailParameters (const double duration, 
+void
+OpenSteer::AnnotationMixin<Super>::setTrailParameters (const double duration,
                                                        const int vertexCount)
 {
     // record new parameters
@@ -278,7 +278,7 @@ OpenSteer::AnnotationMixin<Super>::setTrailParameters (const double duration,
 
 
 template<class Super>
-void 
+void
 OpenSteer::AnnotationMixin<Super>::clearTrailHistory (void)
 {
     // brute force implementation, reset everything
@@ -291,7 +291,7 @@ OpenSteer::AnnotationMixin<Super>::clearTrailHistory (void)
 
 
 template<class Super>
-void 
+void
 OpenSteer::AnnotationMixin<Super>::recordTrailVertex (const double currentTime,
                                                       const Vec3 position)
 {
@@ -315,7 +315,7 @@ OpenSteer::AnnotationMixin<Super>::recordTrailVertex (const double currentTime,
 
 
 template<class Super>
-void 
+void
 OpenSteer::AnnotationMixin<Super>::drawTrail (const Vec3& trailColor,
                                               const Vec3& tickColor)
 {
@@ -370,7 +370,7 @@ OpenSteer::AnnotationMixin<Super>::drawTrail (const Vec3& trailColor,
 
 
 template<class Super>
-void 
+void
 OpenSteer::AnnotationMixin<Super>::annotationLine (const Vec3& startPoint,
                                                    const Vec3& endPoint,
                                                    const Vec3& color)
@@ -398,7 +398,7 @@ OpenSteer::AnnotationMixin<Super>::annotationLine (const Vec3& startPoint,
 
 
 template<class Super>
-void 
+void
 OpenSteer::AnnotationMixin<Super>::annotationCircleOrDisk (const double radius,
                                                            const Vec3& axis,
                                                            const Vec3& center,

@@ -1,12 +1,12 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
+//
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #include "stdafx.h"
@@ -112,7 +112,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   IUIDPtr ipUniqueValuePropertyPageUID(CLSID_UID);
 
   if (FAILED(ipUniqueValuePropertyPageUID->put_Value(CComVariant(L"esriCartoUI.UniqueValuePropertyPage"))))
-  {  
+  {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
     ipUniqueValuePropertyPageUID = 0;
@@ -220,7 +220,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
-    ipSingleSymbolPropertyPageUIDR = 0; 
+    ipSingleSymbolPropertyPageUIDR = 0;
   }
 
   if (ipSingleSymbolPropertyPageUIDR)
@@ -261,7 +261,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
-    ipSingleSymbolPropertyPageUIDE = 0; 
+    ipSingleSymbolPropertyPageUIDE = 0;
   }
 
   if (ipSingleSymbolPropertyPageUIDE)
@@ -342,7 +342,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
-    ipSingleSymbolPropertyPageUID3 = 0; 
+    ipSingleSymbolPropertyPageUID3 = 0;
   }
 
   if (ipSingleSymbolPropertyPageUID3)
@@ -378,7 +378,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   HRESULT hr;
 
   // ResetRenderers() provides a method for updating the entire NALayer color scheme
-  // based on the color passed in to this method. We must get each feature layer in the 
+  // based on the color passed in to this method. We must get each feature layer in the
   // composite NALayer and update its renderer's colors appropriately.
 
   // Get the NALayer's context and make sure that this symbolizer applies
@@ -396,7 +396,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   IFeatureRendererPtr ipFeatureRenderer;
   ILayerPtr ipSubLayer;
   IGeoFeatureLayerPtr ipGeoFeatureLayer;
-  
+
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Flocks
   pNALayer->get_LayerByNAClassName(CComBSTR(CS_FLOCKS_NAME), &ipSubLayer);
@@ -416,7 +416,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = CreatePointRenderer(pSolverColor, &ipFeatureRenderer))) return hr;
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
-  
+
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Evacuee Points
   pNALayer->get_LayerByNAClassName(CComBSTR(CS_EVACUEES_NAME), &ipSubLayer);
@@ -467,7 +467,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 	  if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
-  return S_OK;  
+  return S_OK;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -518,11 +518,11 @@ HRESULT EvcSolverSymbolizer::CreateBarrierRenderer(IColor* pBarrierColor, IFeatu
   long s;
   ipHsvColor->get_Saturation(&s);
   if (s > c_maxFadedColorHSVSaturation)
-  {    
+  {
     ipHsvColor->put_Saturation(c_maxFadedColorHSVSaturation);
     ipHsvColor->get_RGB(&colorRef);
   }
-  ipUnlocatedColor->put_RGB(colorRef); 
+  ipUnlocatedColor->put_RGB(colorRef);
 
   if (FAILED(hr = CreateCharacterMarkerSymbol(CString(_T("ESRI Default Marker")), pBarrierColor, ipBackgroundColor, 67, 33, 18, 10, 45.0, &ipBarrierSymbol))) return hr;
   if (FAILED(hr = CreateUnlocatedSymbol(ipBarrierSymbol, &ipUnlocatedBarrierSymbol))) return hr;
@@ -550,8 +550,8 @@ HRESULT EvcSolverSymbolizer::CreateBarrierRenderer(IColor* pBarrierColor, IFeatu
 HRESULT EvcSolverSymbolizer::CreateCharacterMarkerSymbol(CString   fontName,
                                                             IColor*   pMarkerColor,
                                                             IColor*   pMarkerBackgroundColor,
-                                                            long      characterIndex, 
-                                                            long      backgoundCharacterIndex, 
+                                                            long      characterIndex,
+                                                            long      backgoundCharacterIndex,
                                                             double    markerSize,
                                                             double    makerBackgroundSize,
                                                             double    markerAngle,
@@ -650,12 +650,12 @@ HRESULT EvcSolverSymbolizer::CreateUnlocatedSymbol(ISymbol* pLocatedMarkerSymbol
   long s;
   ipHsvColor->get_Saturation(&s);
   if (s > c_maxFadedColorHSVSaturation)
-  {    
+  {
     ipHsvColor->put_Saturation(c_maxFadedColorHSVSaturation);
     ipHsvColor->get_RGB(&colorRef);
   }
 
-  ipUnlocatedColor->put_RGB(colorRef); 
+  ipUnlocatedColor->put_RGB(colorRef);
 
   ((IMarkerSymbolPtr)ipMultiLayerSymbol)->put_Color(ipUnlocatedColor);
 
@@ -707,7 +707,7 @@ HRESULT EvcSolverSymbolizer::CreateSimplePointRenderer(IColor* pPointColor, IFea
 
   *ppFRenderer = (IFeatureRendererPtr)ipRenderer;
   if (*ppFRenderer) (*ppFRenderer)->AddRef();
-  
+
   return S_OK;
 }
 
@@ -752,7 +752,7 @@ HRESULT EvcSolverSymbolizer::CreatePointRenderer(IColor* pPointColor, IFeatureRe
 
   *ppFRenderer = (IFeatureRendererPtr)ipRenderer;
   if (*ppFRenderer) (*ppFRenderer)->AddRef();
-  
+
   return S_OK;
 }
 

@@ -46,7 +46,7 @@
 //     specifying a subclass while leaving its superclass as a parameter to be
 //     determined later. The benefit is that a single class can be used to
 //     express an incremental extension, valid for a variety of classes...
-// 
+//
 // In OpenSteer, vehicles are defined by an interface: an abstract base class
 // called AbstractVehicle.  Implementations of that interface, and related
 // functionality (like steering behaviors and vehicle physics) are provided as
@@ -107,7 +107,7 @@ OpenSteer::SimpleVehicle::~SimpleVehicle (void)
 // parameter names commented out to prevent compiler warning from "-W"
 
 
-OpenSteer::Vec3 
+OpenSteer::Vec3
 OpenSteer::SimpleVehicle::adjustRawSteeringForce (const Vec3& force,
                                                   const double /* deltaTime */)
 {
@@ -146,7 +146,7 @@ OpenSteer::SimpleVehicle::adjustRawSteeringForce (const Vec3& force,
 // used by both applySteeringForce and applyBrakingForce?
 
 
-void 
+void
 OpenSteer::SimpleVehicle::applyBrakingForce (const double rate, const double deltaTime)
 {
     const double rawBraking = speed () * rate;
@@ -163,7 +163,7 @@ OpenSteer::SimpleVehicle::applyBrakingForce (const double rate, const double del
 // adjusting our orientation to maintain velocity-alignment.
 
 
-void 
+void
 OpenSteer::SimpleVehicle::applySteeringForce (const Vec3& force,
                                               const double elapsedTime)
 {
@@ -220,7 +220,7 @@ OpenSteer::SimpleVehicle::applySteeringForce (const Vec3& force,
 // parameter names commented out to prevent compiler warning from "-W"
 
 
-void 
+void
 OpenSteer::SimpleVehicle::regenerateLocalSpace (const Vec3& newVelocity,
                                                 const double /* elapsedTime */)
 {
@@ -237,7 +237,7 @@ OpenSteer::SimpleVehicle::regenerateLocalSpace (const Vec3& newVelocity,
 // XXX experimental cwr 6-5-03
 
 
-void 
+void
 OpenSteer::SimpleVehicle::regenerateLocalSpaceForBanking (const Vec3& newVelocity,
                                                           const double elapsedTime)
 {
@@ -272,7 +272,7 @@ OpenSteer::SimpleVehicle::regenerateLocalSpaceForBanking (const Vec3& newVelocit
 // measure path curvature (1/turning-radius), maintain smoothed version
 
 
-void 
+void
 OpenSteer::SimpleVehicle::measurePathCurvature (const double elapsedTime)
 {
     if (elapsedTime > 0)
@@ -295,8 +295,8 @@ OpenSteer::SimpleVehicle::measurePathCurvature (const double elapsedTime)
 // draw lines from vehicle's position showing its velocity and acceleration
 
 
-void 
-OpenSteer::SimpleVehicle::annotationVelocityAcceleration (double maxLengthA, 
+void
+OpenSteer::SimpleVehicle::annotationVelocityAcceleration (double maxLengthA,
                                                           double maxLengthV)
 {
     const double desat = 0.4;
@@ -321,7 +321,7 @@ OpenSteer::SimpleVehicle::annotationVelocityAcceleration (double maxLengthA,
 // XXX move to a vehicle utility mixin?
 
 
-OpenSteer::Vec3 
+OpenSteer::Vec3
 OpenSteer::SimpleVehicle::predictFuturePosition (const double predictionTime) const
 {
     return position() + (velocity() * predictionTime);

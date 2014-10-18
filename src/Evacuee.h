@@ -9,7 +9,7 @@ typedef NAVertex * NAVertexPtr;
 enum EvcSolverMethod : unsigned char;
 
 // enum for carma sort setting
-[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char 
+[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char
      { None = 0x0, FWSingle = 0x1, FWCont = 0x2, BWSingle = 0x3, BWCont = 0x4, ReverseProcessOrder = 0x5, ReversePredictedCost = 0x6 };
 enum class EvacueeStatus : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
 
@@ -69,7 +69,7 @@ public:
 
 	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
 	{
-		RoutedPop = routedPop; 
+		RoutedPop = routedPop;
 		EvacuationCost = 0.0;
 		OrginalCost = 0.0;
 		Order = order;
@@ -118,7 +118,7 @@ public:
 		if (e1->PredictedCost == e2->PredictedCost) return e1->Population < e2->Population;
 		else return e1->PredictedCost < e2->PredictedCost;
 	}
-	
+
 	static bool MoreThan(const Evacuee * e1, const Evacuee * e2)
 	{
 		if (e1->PredictedCost == e2->PredictedCost) return e1->Population > e2->Population;
@@ -172,7 +172,7 @@ public:
 	inline void   Reserve(double pop)      { reservedPop += pop;   }
 	inline double getPositionAlong() const { return positionAlong; }
 	inline NAEdge * getBehindEdge()        { return behindEdge;    }
-	
+
 	~SafeZone();
 	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap);
 	HRESULT IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity);

@@ -1,12 +1,12 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
+//
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #pragma once
@@ -69,7 +69,7 @@ public:
 	COMMAND_HANDLER(IDC_COMBO_PROFILE, CBN_SELCHANGE, OnCbnSelchangeComboProfile)
 	COMMAND_HANDLER(IDC_EDIT_CARMA, EN_CHANGE, OnEnChangeEditCARMA)
 	CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
-	MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)	
+	MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
 	COMMAND_HANDLER(IDC_EDIT_Critical, EN_CHANGE, OnEnChangeEditCritical)
 	COMMAND_HANDLER(IDC_COMBO_METHOD, CBN_SELCHANGE, OnCbnSelchangeComboMethod)
@@ -116,7 +116,7 @@ public:
 private:
   INALayerPtr             m_ipNALayer;
   IEvcSolverPtr			  m_ipEvcSolver;
-  IDENetworkDatasetPtr    m_ipDENet;  
+  IDENetworkDatasetPtr    m_ipDENet;
 
   HWND                    m_hCapCombo;
   HWND                    m_hUTurnCombo;

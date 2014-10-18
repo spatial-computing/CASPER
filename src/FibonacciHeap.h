@@ -13,7 +13,7 @@
 #include "NAVertex.h"
 
 #define HeapDataType NAEdge
- 
+
 class HeapNode
 {
 public:
@@ -26,10 +26,10 @@ public:
 
 	HeapNode(HeapDataType * data, double key);
 	HeapNode();
-	
+
 	bool addChild(HeapNode * node);
 	bool addSibling(HeapNode * node);
-	bool remove();	
+	bool remove();
 	HeapNode * leftMostSibling();
 	HeapNode * rightMostSibling();
 };
@@ -50,7 +50,7 @@ public:
 		Clear();
 		delete cache;
 	}
-	
+
 	int Size() { return cache->size(); }
 	void Clear() { cache->clear(); }
 
@@ -79,7 +79,7 @@ public:
 		delete cacheAlong;
 		delete cacheAgainst;
 	}
-	
+
 	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
 	void Clear()        { cacheAlong->clear(); cacheAgainst->clear(); }
 
@@ -107,7 +107,7 @@ public:
 
 	bool IsEmpty();
 	void Clear();
-	bool Insert(HeapDataType * node);	
+	bool Insert(HeapDataType * node);
 	HRESULT DecreaseKey(HeapDataType * node);
 	size_t Size() const { return nodeTable->Size(); }
 

@@ -42,7 +42,7 @@
 // To include EXIT_SUCCESS
 #include <cstdlib>
 
-int main (int argc, char **argv) 
+int main (int argc, char **argv)
 {
     // initialize OpenSteerDemo application
     OpenSteer::OpenSteerDemo::initialize ();
@@ -51,7 +51,7 @@ int main (int argc, char **argv)
     OpenSteer::initializeGraphics (argc, argv);
 
     // run the main event processing loop
-    OpenSteer::runGraphics ();  
+    OpenSteer::runGraphics ();
     return EXIT_SUCCESS;
 }
 

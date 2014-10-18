@@ -29,9 +29,9 @@
 //
 //
 // OpenSteerDemo PlugIn class
-// 
+//
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 11-13-02 cwr: created 
+// 11-13-02 cwr: created
 //
 //
 // ----------------------------------------------------------------------------
@@ -73,7 +73,7 @@ OpenSteer::PlugIn::~PlugIn() {}
 // returns pointer to the next PlugIn in "selection order"
 
 
-OpenSteer::PlugIn* 
+OpenSteer::PlugIn*
 OpenSteer::PlugIn::next (void)
 {
     for (int i = 0; i < itemsInRegistry; i++)
@@ -93,7 +93,7 @@ OpenSteer::PlugIn::next (void)
 // returns NULL if none is found
 
 
-OpenSteer::PlugIn* 
+OpenSteer::PlugIn*
 OpenSteer::PlugIn::findByName (const char* string)
 {
     if (string)
@@ -113,7 +113,7 @@ OpenSteer::PlugIn::findByName (const char* string)
 // apply a given function to all PlugIns in the registry
 
 
-void 
+void
 OpenSteer::PlugIn::applyToAll (plugInCallBackFunction f)
 {
     for (int i = 0; i < itemsInRegistry; i++)
@@ -129,7 +129,7 @@ OpenSteer::PlugIn::applyToAll (plugInCallBackFunction f)
 // XXX replace with STL utilities
 
 
-void 
+void
 OpenSteer::PlugIn::sortBySelectionOrder (void)
 {
     // I know, I know, just what the world needs:
@@ -159,7 +159,7 @@ OpenSteer::PlugIn::sortBySelectionOrder (void)
 // returns pointer to default PlugIn (currently, first in registry)
 
 
-OpenSteer::PlugIn* 
+OpenSteer::PlugIn*
 OpenSteer::PlugIn::findDefault (void)
 {
     // return NULL if no PlugIns exist
@@ -181,7 +181,7 @@ OpenSteer::PlugIn::findDefault (void)
 // (for use by contractors)
 
 
-void 
+void
 OpenSteer::PlugIn::addToRegistry (void)
 {
     // save this instance in the registry

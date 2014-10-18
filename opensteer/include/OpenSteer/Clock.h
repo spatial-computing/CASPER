@@ -164,7 +164,7 @@ namespace OpenSteer {
         // (xxx does this need to be stored in the instance? xxx)
         double elapsedSimulationTime;
 
-        // interval since last clock update time 
+        // interval since last clock update time
         // (xxx does this need to be stored in the instance? xxx)
         double elapsedRealTime;
 

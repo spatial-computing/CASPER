@@ -62,7 +62,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <sys/time.h> 
+#include <sys/time.h>
 #endif
 
 
@@ -90,10 +90,10 @@ OpenSteer::Clock::Clock (void)
     // sum of (non-realtime driven) advances to simulation time
     totalAdvanceTime = 0;
 
-    // interval since last simulation time 
+    // interval since last simulation time
     elapsedSimulationTime = 0;
 
-    // interval since last clock update time 
+    // interval since last clock update time
     elapsedRealTime = 0;
 
     // interval since last clock update,
@@ -129,7 +129,7 @@ OpenSteer::Clock::Clock (void)
 //     optionally: "wait" for next realtime frame boundary
 
 
-void 
+void
 OpenSteer::Clock::update (void)
 {
     // keep track of average frame rate and average usage percentage
@@ -192,7 +192,7 @@ OpenSteer::Clock::update (void)
 // thread waits (eg usleep)) but they are likely to be unportable. xxx)
 
 
-void 
+void
 OpenSteer::Clock::frameRateSync (void)
 {
     // when in real time fixed frame rate mode
@@ -209,7 +209,7 @@ OpenSteer::Clock::frameRateSync (void)
         elapsedNonWaitRealTime = now - totalRealTime;
 
         // wait until next frame time
-        do {} while (realTimeSinceFirstClockUpdate () < nextFrameTime); 
+        do {} while (realTimeSinceFirstClockUpdate () < nextFrameTime);
     }
 }
 
@@ -219,7 +219,7 @@ OpenSteer::Clock::frameRateSync (void)
 // Used for OpenSteerDemo's "single step forward" and animation mode
 
 
-double 
+double
 OpenSteer::Clock::advanceSimulationTimeOneFrame (void)
 {
     // decide on what frame time is (use fixed rate, average for variable rate)
@@ -232,11 +232,11 @@ OpenSteer::Clock::advanceSimulationTimeOneFrame (void)
     advanceSimulationTime (frameTime);
 
     // return the time value used (for OpenSteerDemo)
-    return frameTime; 
+    return frameTime;
 }
 
 
-void 
+void
 OpenSteer::Clock::advanceSimulationTime (const double seconds)
 {
     if (seconds < 0)
@@ -256,7 +256,7 @@ namespace {
 
 
 
-    double 
+    double
     clockErrorExit (void)
     {
         OpenSteer::OpenSteerDemo::errorExit ("Problem reading system clock.\n");
@@ -265,7 +265,7 @@ namespace {
 
 } // anonymous namespace
 
-double 
+double
 OpenSteer::Clock::realTimeSinceFirstClockUpdate (void)
 #ifdef _WIN32
 {

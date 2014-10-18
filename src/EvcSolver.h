@@ -1,12 +1,12 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
+//
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #pragma once
@@ -29,7 +29,7 @@
 	pointer_default(unique)
 ]
 __interface IEvcSolver : IUnknown
-{	
+{
 	[propput, helpstring("Sets the saturation constant per capacity")]
 		HRESULT SaturationPerCap([in] BSTR value);
 	[propget, helpstring("Gets the selected saturation constant per capacity")]
@@ -165,7 +165,7 @@ public:
 		  return S_OK;
 	  }
 
-	  void FinalRelease() 
+	  void FinalRelease()
 	  {
 	  }
 
@@ -175,8 +175,8 @@ public:
 	STDMETHOD(put_OutputGeometryPrecisionUnits)(esriUnits value);
 	STDMETHOD(get_OutputGeometryPrecisionUnits)(esriUnits * value);
 
-	// IEvcSolver	
-	
+	// IEvcSolver
+
 	STDMETHOD(put_ThreeGenCARMA)(VARIANT_BOOL threeGenCARMA);
 	STDMETHOD(get_ThreeGenCARMA)(VARIANT_BOOL* threeGenCARMA);
 	STDMETHOD(put_ExportEdgeStat)(VARIANT_BOOL   value);
@@ -241,7 +241,7 @@ public:
 	STDMETHOD(get_UseStartTime)(VARIANT_BOOL * Value);
 	STDMETHOD(put_UseStartTime)(VARIANT_BOOL Value);
 
-	// INASolver 
+	// INASolver
 
 	STDMETHOD(get_Name)(BSTR* pName);
 	STDMETHOD(get_DisplayName)(BSTR* pName);
@@ -283,7 +283,7 @@ public:
 	STDMETHOD(put_ResetHierarchyRangesOnBind)(VARIANT_BOOL value);
 	STDMETHOD(get_ResetHierarchyRangesOnBind)(VARIANT_BOOL * value);
 
-	// IPersistStream 
+	// IPersistStream
 
 	STDMETHOD(IsDirty)();
 	STDMETHOD(Load)(IStream* pStm);
@@ -304,7 +304,7 @@ private:
 	HRESULT AddLocationFields(IFieldsEdit* pFieldsEdit, IDENetworkDataset* pDENDS);
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
-	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);	
+	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
 	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
 										  NAVertexCache * vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
 	HRESULT DeterminMinimumPop2Route(EvacueeList *, INetworkDatasetPtr, double &, bool &) const;
@@ -313,12 +313,12 @@ private:
 	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *) const;
 	void    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	void    UpdatePeakMemoryUsage();
-	
+
 	esriNAOutputLineType	m_outputLineType;
 	bool					m_bPersistDirty;
 	long					costAttributeID;
 	long					capAttributeID;
-	INAStreetDirectionsAgentPtr pStreetAgent;	
+	INAStreetDirectionsAgentPtr pStreetAgent;
 	float					SaturationPerCap;
 	float					CriticalDensPerCap;
 	EvcSolverMethod		    solverMethod;
@@ -332,12 +332,12 @@ private:
 	float                   CARMAPerformanceRatio;
 	float                   selfishRatio;
 	unsigned short			countCARMALoops;
-	SIZE_T					peakMemoryUsage;	
+	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
 	CARMASort               CarmaSortDirection;
 
 	VARIANT_BOOL twoWayShareCapacity;
-	VARIANT_BOOL ThreeGenCARMA;	
+	VARIANT_BOOL ThreeGenCARMA;
 	VARIANT_BOOL separable;
 	VARIANT_BOOL exportEdgeStat;
 	VARIANT_BOOL m_CreateTraversalResult;
@@ -395,7 +395,7 @@ double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);
 // incomplete type def for the heap... I'm really out of options
 class FibonacciHeap;
 
-HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop, 
+HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop,
 							   EvcSolverMethod solverMethod, double selfishRatio, double MaxEvacueeCostSoFar, QueryDirection dir);
 HRESULT InsertLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
 								#ifdef DEBUG

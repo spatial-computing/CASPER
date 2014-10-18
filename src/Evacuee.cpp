@@ -27,11 +27,11 @@ void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSe
 	OrginalCost    += segment->Edge->OriginalCost     * p;
 }
 
-HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, 
+HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag,
 	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBufferR, IFeatureBufferPtr ipFeatureBufferE, IFeatureCursorPtr ipFeatureCursorR,
 	IFeatureCursorPtr ipFeatureCursorE, long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex,
 	long ERRouteFieldIndex, long EREdgeFieldIndex, long EREdgeDirFieldIndex, long ERSeqFieldIndex, long ERFromPosFieldIndex, long ERToPosFieldIndex, long ERCostFieldIndex, bool DoNotExportRouteEdges)
-{			
+{
 	HRESULT hr = S_OK;
 	OrginalCost = 0.0;
 	double OrgEvcCost = EvacuationCost;
@@ -52,7 +52,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 		if (pTrackCancel)
 		{
 			if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
-			if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+			if (keepGoing == VARIANT_FALSE) return E_ABORT;
 		}
 
 		// take a path segment from the stack
@@ -60,8 +60,8 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 		pointCount = -1;
 		_ASSERT(pathSegment->GetEdgePortion() > 0.0);
 		if (FAILED(hr = pathSegment->GetGeometry(ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipGeometry))) return hr;
-		
-		ipGeometry->get_GeometryType(&type);			
+
+		ipGeometry->get_GeometryType(&type);
 
 		// get all the points from this polyline and store it in the point stack
 		_ASSERT(type == esriGeometryPolyline);
@@ -73,13 +73,13 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 			if (FAILED(hr = pcollect->get_PointCount(&pointCount))) return hr;
 
 			// if this is not the last path segment then the last point is redundant.
-			pointCount--;						
+			pointCount--;
 			for (long i = 0; i < pointCount; i++)
 			{
 				if (FAILED(hr = pcollect->get_Point(i, &p))) return hr;
 				if (FAILED(hr = pline->AddPoint(p))) return hr;
 			}
-		}			
+		}
 		// Final cost calculations
 		double p = abs(pathSegment->GetEdgePortion());
 		EvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
@@ -113,7 +113,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	os_ << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << OrgEvcCost << ',' << EvacuationCost << std::endl;
 	OutputDebugStringW(os_.str().c_str());
 #endif
-	
+
 	// now export each path segment into ReouteEdges table
 	long seq = 0;
 	double segmentCost = RoutedPop * initDelayCostPerPop;
@@ -140,12 +140,12 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	}
 	// Step the progress bar before continuing to the next Evacuee point
 	if (ipStepProgressor) ipStepProgressor->Step();
-		
+
 	// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
 	if (pTrackCancel)
 	{
 		if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) return hr;
-		if (keepGoing == VARIANT_FALSE) return E_ABORT;			
+		if (keepGoing == VARIANT_FALSE) return E_ABORT;
 	}
 	return hr;
 }
@@ -217,7 +217,7 @@ void NAEvacueeVertexTable::Erase(long junctionEID)
 	std::vector<NAVertexPtr>::const_iterator vi;
 	NAEvacueeVertexTableItr evcItr1, evcItr2 = this->find(junctionEID);
 	delete evcItr2->second;
-	erase(junctionEID); 
+	erase(junctionEID);
 }
 
 SafeZone::~SafeZone() { delete Vertex; }
@@ -241,7 +241,7 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 }
 
 HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity)
-{	
+{
 	HRESULT hr = S_OK;
 	restricted = capacity == 0.0 && costPerDensity > 0.0;
 	NAEdgePtr currentEdge = NULL;

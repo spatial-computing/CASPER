@@ -35,7 +35,7 @@
 // its members are static (belong to the class as a whole.)
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 11-14-02 cwr: created 
+// 11-14-02 cwr: created
 //
 //
 // ----------------------------------------------------------------------------
@@ -109,7 +109,7 @@ namespace {
 
 } // anonymous namespace
 
-void 
+void
 OpenSteer::OpenSteerDemo::initialize (void)
 {
     // select the default PlugIn
@@ -142,7 +142,7 @@ OpenSteer::OpenSteerDemo::initialize (void)
 // main update function: step simulation forward and redraw scene
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::updateSimulationAndRedraw (void)
 {
     // update global simulation clock
@@ -167,7 +167,7 @@ OpenSteer::OpenSteerDemo::updateSimulationAndRedraw (void)
 // exit OpenSteerDemo with a given text message or error code
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::errorExit (const char* message)
 {
     printMessage (message);
@@ -178,7 +178,7 @@ OpenSteer::OpenSteerDemo::errorExit (const char* message)
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::exit (int exitCode)
 {
     ::exit (exitCode);
@@ -189,7 +189,7 @@ OpenSteer::OpenSteerDemo::exit (int exitCode)
 // select the default PlugIn
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::selectDefaultPlugIn (void)
 {
     PlugIn::sortBySelectionOrder ();
@@ -201,7 +201,7 @@ OpenSteer::OpenSteerDemo::selectDefaultPlugIn (void)
 // select the "next" plug-in, cycling through "plug-in selection order"
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::selectNextPlugIn (void)
 {
     closeSelectedPlugIn ();
@@ -214,7 +214,7 @@ OpenSteer::OpenSteerDemo::selectNextPlugIn (void)
 // handle function keys an a per-plug-in basis
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::functionKeyForPlugIn (int keyNumber)
 {
     selectedPlugIn->handleFunctionKeys (keyNumber);
@@ -225,7 +225,7 @@ OpenSteer::OpenSteerDemo::functionKeyForPlugIn (int keyNumber)
 // return name of currently selected plug-in
 
 
-const char* 
+const char*
 OpenSteer::OpenSteerDemo::nameOfSelectedPlugIn (void)
 {
     return (selectedPlugIn ? selectedPlugIn->name() : "no PlugIn");
@@ -236,7 +236,7 @@ OpenSteer::OpenSteerDemo::nameOfSelectedPlugIn (void)
 // open the currently selected plug-in
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::openSelectedPlugIn (void)
 {
     camera.reset ();
@@ -249,7 +249,7 @@ OpenSteer::OpenSteerDemo::openSelectedPlugIn (void)
 // do a simulation update for the currently selected plug-in
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::updateSelectedPlugIn (const double currentTime,
                                                 const double elapsedTime)
 {
@@ -278,7 +278,7 @@ OpenSteer::OpenSteerDemo::updateSelectedPlugIn (const double currentTime,
 // redraw graphics for the currently selected plug-in
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::redrawSelectedPlugIn (const double currentTime,
                                                 const double elapsedTime)
 {
@@ -301,7 +301,7 @@ OpenSteer::OpenSteerDemo::redrawSelectedPlugIn (const double currentTime,
 // close the currently selected plug-in
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::closeSelectedPlugIn (void)
 {
     selectedPlugIn->close ();
@@ -313,7 +313,7 @@ OpenSteer::OpenSteerDemo::closeSelectedPlugIn (void)
 // reset the currently selected plug-in
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::resetSelectedPlugIn (void)
 {
     selectedPlugIn->reset ();
@@ -332,16 +332,16 @@ namespace {
     bool gDelayedResetPlugInXXX = false;
 
 } // anonymous namespace
-    
-    
-void 
+
+
+void
 OpenSteer::OpenSteerDemo::queueDelayedResetPlugInXXX (void)
 {
     gDelayedResetPlugInXXX = true;
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::doDelayedResetPlugInXXX (void)
 {
     if (gDelayedResetPlugInXXX)
@@ -357,7 +357,7 @@ OpenSteer::OpenSteerDemo::doDelayedResetPlugInXXX (void)
 // vehicles(/agents/characters) defined by the currently selected PlugIn
 
 
-const OpenSteer::AVGroup& 
+const OpenSteer::AVGroup&
 OpenSteer::OpenSteerDemo::allVehiclesOfSelectedPlugIn (void)
 {
     return selectedPlugIn->allVehicles ();
@@ -369,7 +369,7 @@ OpenSteer::OpenSteerDemo::allVehiclesOfSelectedPlugIn (void)
 // in allVehiclesOfSelectedPlugIn
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::selectNextVehicle (void)
 {
     if (selectedVehicle != NULL)
@@ -398,7 +398,7 @@ OpenSteer::OpenSteerDemo::selectNextVehicle (void)
 // select vehicle nearest the given screen position (e.g.: of the mouse)
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::selectVehicleNearestScreenPosition (int x, int y)
 {
     selectedVehicle = findVehicleNearestScreenPosition (x, y);
@@ -411,10 +411,10 @@ OpenSteer::OpenSteerDemo::selectVehicleNearestScreenPosition (int x, int y)
 // there are no AbstractVehicle.
 
 
-OpenSteer::AbstractVehicle* 
+OpenSteer::AbstractVehicle*
 OpenSteer::OpenSteerDemo::vehicleNearestToMouse (void)
 {
-    return (mouseInWindow ? 
+    return (mouseInWindow ?
             findVehicleNearestScreenPosition (mouseX, mouseY) :
             NULL);
 }
@@ -435,7 +435,7 @@ OpenSteer::OpenSteerDemo::vehicleNearestToMouse (void)
 // xxx vehicle BEHIND the camera location.
 
 
-OpenSteer::AbstractVehicle* 
+OpenSteer::AbstractVehicle*
 OpenSteer::OpenSteerDemo::findVehicleNearestScreenPosition (int x, int y)
 {
     // find the direction from the camera position to the given pixel
@@ -479,13 +479,13 @@ bool OpenSteer::OpenSteerDemo::mouseInWindow = false;
 // set a certain initial camera state used by several plug-ins
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::init3dCamera (AbstractVehicle& selected)
 {
     init3dCamera (selected, cameraTargetDistance, camera2dElevation);
 }
 
-void 
+void
 OpenSteer::OpenSteerDemo::init3dCamera (AbstractVehicle& selected,
                                   double distance,
                                   double elevation)
@@ -497,13 +497,13 @@ OpenSteer::OpenSteerDemo::init3dCamera (AbstractVehicle& selected,
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::init2dCamera (AbstractVehicle& selected)
 {
     init2dCamera (selected, cameraTargetDistance, camera2dElevation);
 }
 
-void 
+void
 OpenSteer::OpenSteerDemo::init2dCamera (AbstractVehicle& selected,
                                   double distance,
                                   double elevation)
@@ -515,13 +515,13 @@ OpenSteer::OpenSteerDemo::init2dCamera (AbstractVehicle& selected,
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::position3dCamera (AbstractVehicle& selected)
 {
     position3dCamera (selected, cameraTargetDistance, camera2dElevation);
 }
 
-void 
+void
 OpenSteer::OpenSteerDemo::position3dCamera (AbstractVehicle& selected,
                                             double distance,
                                             double /*elevation*/)
@@ -536,13 +536,13 @@ OpenSteer::OpenSteerDemo::position3dCamera (AbstractVehicle& selected,
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::position2dCamera (AbstractVehicle& selected)
 {
     position2dCamera (selected, cameraTargetDistance, camera2dElevation);
 }
 
-void 
+void
 OpenSteer::OpenSteerDemo::position2dCamera (AbstractVehicle& selected,
                                             double distance,
                                             double elevation)
@@ -561,7 +561,7 @@ OpenSteer::OpenSteerDemo::position2dCamera (AbstractVehicle& selected,
 // camera updating utility used by several plug-ins
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::updateCamera (const double currentTime,
                                         const double elapsedTime,
                                         const AbstractVehicle& selected)
@@ -577,7 +577,7 @@ OpenSteer::OpenSteerDemo::updateCamera (const double currentTime,
 
 const double OpenSteer::OpenSteerDemo::camera2dElevation = 8;
 const double OpenSteer::OpenSteerDemo::cameraTargetDistance = 13;
-const OpenSteer::Vec3 OpenSteer::OpenSteerDemo::cameraTargetOffset (0, OpenSteer::OpenSteerDemo::camera2dElevation, 
+const OpenSteer::Vec3 OpenSteer::OpenSteerDemo::cameraTargetOffset (0, OpenSteer::OpenSteerDemo::camera2dElevation,
                                                                     0);
 
 
@@ -585,7 +585,7 @@ const OpenSteer::Vec3 OpenSteer::OpenSteerDemo::cameraTargetOffset (0, OpenSteer
 // ground plane grid-drawing utility used by several plug-ins
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::gridUtility (const Vec3& gridTarget)
 {
     // round off target to the nearest multiple of 2 (because the
@@ -611,7 +611,7 @@ OpenSteer::OpenSteerDemo::gridUtility (const Vec3& gridTarget)
 // draws a gray disk on the XZ plane under a given vehicle
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::highlightVehicleUtility (const AbstractVehicle& vehicle)
 {
     if (&vehicle != NULL)
@@ -623,7 +623,7 @@ OpenSteer::OpenSteerDemo::highlightVehicleUtility (const AbstractVehicle& vehicl
 // draws a gray circle on the XZ plane under a given vehicle
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::circleHighlightVehicleUtility (const AbstractVehicle& vehicle)
 {
     if (&vehicle != NULL) drawXZCircle (vehicle.radius () * 1.1,
@@ -638,7 +638,7 @@ OpenSteer::OpenSteerDemo::circleHighlightVehicleUtility (const AbstractVehicle& 
 // xxx not used as of 11-20-02
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::drawBoxHighlightOnVehicle (const AbstractVehicle& v,
                                                const Vec3 color)
 {
@@ -657,7 +657,7 @@ OpenSteer::OpenSteerDemo::drawBoxHighlightOnVehicle (const AbstractVehicle& v,
 // radiusMultiplier.
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::drawCircleHighlightOnVehicle (const AbstractVehicle& v,
                                                   const double radiusMultiplier,
                                                   const Vec3 color)
@@ -677,28 +677,28 @@ OpenSteer::OpenSteerDemo::drawCircleHighlightOnVehicle (const AbstractVehicle& v
 // ----------------------------------------------------------------------------
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::printMessage (const char* message)
 {
     std::cout << "OpenSteerDemo: " <<  message << std::endl << std::flush;
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::printMessage (const std::ostringstream& message)
 {
     printMessage (message.str().c_str());
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::printWarning (const char* message)
 {
     std::cout << "OpenSteerDemo: Warning: " <<  message << std::endl << std::flush;
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::printWarning (const std::ostringstream& message)
 {
     printWarning (message.str().c_str());
@@ -712,7 +712,7 @@ OpenSteer::OpenSteerDemo::printWarning (const std::ostringstream& message)
 // XXX perhaps from a list of "command" objects created at initialization
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::keyboardMiniHelp (void)
 {
     printMessage ("");
@@ -742,7 +742,7 @@ const int OpenSteer::OpenSteerDemo::phaseStackSize = 5;
 int OpenSteer::OpenSteerDemo::phaseStack [OpenSteer::OpenSteerDemo::phaseStackSize];
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::pushPhase (const int newPhase)
 {
     // update timer for current (old) phase: add in time since last switch
@@ -759,7 +759,7 @@ OpenSteer::OpenSteerDemo::pushPhase (const int newPhase)
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::popPhase (void)
 {
     // update timer for current (old) phase: add in time since last switch
@@ -777,7 +777,7 @@ double OpenSteer::OpenSteerDemo::phaseTimerBase = 0;
 double OpenSteer::OpenSteerDemo::phaseTimers [drawPhase+1];
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::initPhaseTimers (void)
 {
     phaseTimers[drawPhase] = 0;
@@ -787,7 +787,7 @@ OpenSteer::OpenSteerDemo::initPhaseTimers (void)
 }
 
 
-void 
+void
 OpenSteer::OpenSteerDemo::updatePhaseTimers (void)
 {
     const double currentRealTime = clock.realTimeSinceFirstClockUpdate();

@@ -34,8 +34,8 @@
 // the services it provides to its plug-ins
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 11-14-02 cwr: recast App class as OpenSteerDemo 
-// 06-26-02 cwr: App class created 
+// 11-14-02 cwr: recast App class as OpenSteerDemo
+// 06-26-02 cwr: App class created
 //
 //
 // ----------------------------------------------------------------------------
@@ -94,7 +94,7 @@ namespace OpenSteer {
 
         // select the default PlugIn
         static void selectDefaultPlugIn (void);
-        
+
         // select the "next" plug-in, cycling through "plug-in selection order"
         static void selectNextPlugIn (void);
 
@@ -276,8 +276,8 @@ namespace OpenSteer {
     };
 
 } // namespace OpenSteer
-    
-    
+
+
 // ----------------------------------------------------------------------------
 
 

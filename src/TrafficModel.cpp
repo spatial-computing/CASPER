@@ -29,7 +29,7 @@ double TrafficModel::LeftCapacityOnEdge(double capacity, double reservedFlow, do
 double TrafficModel::GetCongestionPercentage(double capacity, double flow)
 {
 	double percentage = 1.0;
-	if (flow > CriticalDensPerCap * capacity) 
+	if (flow > CriticalDensPerCap * capacity)
 	{
 		bool found = false;
 
@@ -63,12 +63,12 @@ double TrafficModel::GetCongestionPercentage(double capacity, double flow)
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
 double TrafficModel::internalGetCongestionPercentage(double capacity, double flow) const
-{	
+{
 	double a, b, modelRatio, expGamma, speedPercent = 1.0;
 
 	switch (model)
 	{
-	case EXPModel:		
+	case EXPModel:
 		/* Exp Model z = exp(-(((flow - 1) / beta) ^ gamma) * log(2))
 		a = flow of normal speed, 	b = flow where the speed is dropped to half
 		(modelRatio) beta  = b * lane - 1;
@@ -95,6 +95,6 @@ double TrafficModel::internalGetCongestionPercentage(double capacity, double flo
 		speedPercent = 0.0;
 		break;
 	}
-		
+
 	return speedPercent;
 }

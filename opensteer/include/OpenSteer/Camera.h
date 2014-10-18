@@ -34,7 +34,7 @@
 // moving vehicle
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 06-26-02 cwr: created 
+// 06-26-02 cwr: created
 //
 //
 // ----------------------------------------------------------------------------
@@ -116,11 +116,11 @@ namespace OpenSteer {
 
 
         // camera mode selection
-        enum cameraMode 
+        enum cameraMode
             {
                 // marks beginning of list
                 cmStartMode,
-            
+
                 // fixed global position and aimpoint
                 cmFixed,
 

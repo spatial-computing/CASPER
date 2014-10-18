@@ -7,7 +7,7 @@
 
 STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
 {
-	// This name is locale/language independent and should not be translated. 
+	// This name is locale/language independent and should not be translated.
 	if (!pName) return E_POINTER;
 	*pName = ::SysAllocString(CS_NAME);
 
@@ -17,7 +17,7 @@ STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
 STDMETHODIMP EvcSolver::get_DisplayName(BSTR * pName)
 {
 	// This name should be translated and would typically come from
-	// a string resource. 
+	// a string resource.
 	if (!pName) return E_POINTER;
 	*pName = ::SysAllocString(CS_DISPLAY_NAME);
 

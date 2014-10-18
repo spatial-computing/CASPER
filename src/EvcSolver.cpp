@@ -1,12 +1,12 @@
 // Copyright 2011 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
+//
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #include "stdafx.h"
@@ -21,16 +21,16 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 	// Bind() is a method used to re-associate the solver with a given network dataset and its schema. Calling Bind()
 	// on the solver re-attaches the solver to the NAContext based on the current network dataset settings.
 	// This is typically used to update the solver and its context based on changes in the network dataset's available
-	// restrictions, hierarchy attributes, cost attributes, etc.	
+	// restrictions, hierarchy attributes, cost attributes, etc.
 
 	// load network attributes for later configuration and usage
 	// this will be used to load restriction and also to load proper impedance (cost) value
-	
+
 	INetworkAttribute2Ptr networkAttrib = 0;
 	long count, i;
 	HRESULT hr = S_OK;
 	esriNetworkAttributeUsageType utype;
-	esriNetworkAttributeDataType dtype;	
+	esriNetworkAttributeDataType dtype;
 	IUnknownPtr unk;
 
 	if (pNetwork)
@@ -48,16 +48,16 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 			networkAttrib = unk;
 			if (FAILED(hr = networkAttrib->get_UsageType(&utype))) return hr;
 			if (FAILED(hr = networkAttrib->get_DataType(&dtype))) return hr;
-			if (utype == esriNAUTRestriction) turnAttribs.insert(turnAttribs.end(), networkAttrib);			
+			if (utype == esriNAUTRestriction) turnAttribs.insert(turnAttribs.end(), networkAttrib);
 			else if (utype == esriNAUTCost) costAttribs.insert(costAttribs.end(), networkAttrib);
 			else if (utype == esriNAUTDescriptor && (dtype == esriNADTDouble || dtype == esriNADTInteger))
 				discriptiveAttribs.insert(discriptiveAttribs.end(), networkAttrib);
 		}
 
 		if (costAttribs.size() < 1 && pMessages) pMessages->AddError(-1, L"There are no cost attributes in the network dataset.");
-		if (discriptiveAttribs.size() < 1 && pMessages) pMessages->AddError(-1, L"There are no descriptive attributes in the network dataset to be used as street capacity.");		
+		if (discriptiveAttribs.size() < 1 && pMessages) pMessages->AddError(-1, L"There are no descriptive attributes in the network dataset to be used as street capacity.");
 		if (costAttributeID == -1 && costAttribs.size() > 0) costAttribs[0]->get_ID(&costAttributeID);
-		if (capAttributeID  == -1 && discriptiveAttribs.size() > 0) discriptiveAttribs[0]->get_ID(&capAttributeID);		
+		if (capAttributeID  == -1 && discriptiveAttribs.size() > 0) discriptiveAttribs[0]->get_ID(&capAttributeID);
 
 		// Agents setup
 		// NOTE: this is an appropriate place to find and attach any agents used by this solver.
@@ -65,17 +65,17 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 		INamedSetPtr agents;
 		IUnknownPtr pStreet;
 		INAContextHelperPtr ipContextHelper(pContext);
-		if (FAILED(hr = pContext->get_Agents(&agents))) return hr;	
+		if (FAILED(hr = pContext->get_Agents(&agents))) return hr;
 		if (FAILED(hr = agents->get_ItemByName(L"StreetDirectionsAgent", &pStreet))) return hr;
 		if (!pStreet)
 		{
 			pStreetAgent = INAStreetDirectionsAgentPtr(CLSID_NAStreetDirectionsAgent);
-			((INAAgentPtr)pStreetAgent)->Initialize(pNetwork, ipContextHelper);	
+			((INAAgentPtr)pStreetAgent)->Initialize(pNetwork, ipContextHelper);
 			if (FAILED(hr = agents->Add(L"StreetDirectionsAgent", pStreetAgent))) return hr;
 		}
 		else pStreetAgent = pStreet;
 	}
-	return hr;  
+	return hr;
 }
 
 STDMETHODIMP EvcSolver::CreateLayer(INAContext * pContext, INALayer ** ppLayer)
@@ -217,7 +217,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	solverMethod = CASPERSolver;
 	trafficModel = POWERModel;
 	flockingProfile = FLOCK_PROFILE_CAR;
-	
+
 	m_CreateTraversalResult = VARIANT_TRUE;
 	m_FindBestSequence = VARIANT_FALSE;
 	m_PreserveFirstStop = VARIANT_FALSE;
@@ -229,7 +229,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	flockingEnabled = VARIANT_FALSE;
 	twoWayShareCapacity = VARIANT_TRUE;
 	ThreeGenCARMA = VARIANT_FALSE;
-	
+
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
 	initDelayCostPerPop = 0.01f;
@@ -276,21 +276,21 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 
 	// We only support versions less than or equal to the current c_version
 	if (savedVersion > c_version || savedVersion <= 0) return E_FAIL;
-	
+
 	// We need to read our persisted solver settings
 	// version 1
 	if (FAILED(hr = pStm->Read(&m_outputLineType, sizeof(m_outputLineType), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&costAttributeID, sizeof(costAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&capAttributeID, sizeof(capAttributeID), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&trafficModel, sizeof(trafficModel), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&solverMethod, sizeof(solverMethod), &numBytes))) return hr;	
+	if (FAILED(hr = pStm->Read(&solverMethod, sizeof(solverMethod), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&SaturationPerCap, sizeof(SaturationPerCap), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_CreateTraversalResult, sizeof(m_CreateTraversalResult), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_FindBestSequence, sizeof(m_FindBestSequence), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_PreserveFirstStop, sizeof(m_PreserveFirstStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_PreserveLastStop, sizeof(m_PreserveLastStop), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;	
+	if (FAILED(hr = pStm->Read(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&separable, sizeof(separable), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&backtrack, sizeof(backtrack), &numBytes))) return hr;
@@ -313,7 +313,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 		ThreeGenCARMA = VARIANT_FALSE;
 		savedVersion = 2;
 	}
-	
+
 	//version 4
 	if (savedVersion >= 4)
 	{
@@ -335,8 +335,8 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 		CarmaSortDirection = BWCont;
 		savedVersion = 5;
 	}
-	
-	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);	
+
+	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
 	selfishRatio = min(max(selfishRatio, 0.0f), 1.0f);
 	m_bPersistDirty = false;
 
@@ -360,7 +360,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&trafficModel, sizeof(trafficModel), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&solverMethod, sizeof(solverMethod), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&SaturationPerCap, sizeof(SaturationPerCap), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;	
+	if (FAILED(hr = pStm->Write(&CriticalDensPerCap, sizeof(CriticalDensPerCap), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_CreateTraversalResult, sizeof(m_CreateTraversalResult), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_FindBestSequence, sizeof(m_FindBestSequence), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_PreserveFirstStop, sizeof(m_PreserveFirstStop), &numBytes))) return hr;
@@ -380,7 +380,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&selfishRatio, sizeof(selfishRatio), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CarmaSortDirection, sizeof(CarmaSortDirection), &numBytes))) return hr;
-	
+
 	return S_OK;
 }
 
@@ -397,7 +397,7 @@ STDMETHODIMP EvcSolver::GetSizeMax(_ULARGE_INTEGER* pCbSize)
 STDMETHODIMP EvcSolver::GetClassID(CLSID *pClassID)
 {
 	if (!pClassID) return E_POINTER;
-	*pClassID = __uuidof(EvcSolver); 
+	*pClassID = __uuidof(EvcSolver);
 
 	return S_OK;
 }
@@ -416,13 +416,13 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// Zones (input)                  Safe zones determine the end locations
 	// - OID                          of the search
 	// - Shape
-	// - Name 
+	// - Name
 	// - (NALocation fields)
 
 	// Evacuee Points (input)         Evacuee points determine the start locations
 	// - OID                          of the search
 	// - Shape
-	// - Name 
+	// - Name
 	// - Population					  number of un-seperatable people/cars at this location
 	// - (NALocation fields)
 
@@ -433,7 +433,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// - (NALocation fields)
 
 	// Routes (output)                Evacuation routes
-	// - OID                          
+	// - OID
 	// - Shape                        evacuation route (polyline)
 	// - EvcOID						  Evacuee user ID
 	// - EvcTime					  Evacuation cost on this route
@@ -441,7 +441,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// - RoutedPop					  The population who would use this route
 
 	// Edges (output)                 Edge/street lines with their population reservations
-	// - OID                          
+	// - OID
 	// - Shape                        edge/street shape (polyline)
 	// - EdgeID						  Edge ID from NetworkDataset. there could be at most two edges (different directions) with one edgeID.
 	// - Direction					  Direction of travel on this edge
@@ -513,7 +513,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit->put_Name(CComBSTR(CS_FIELD_CAP));
 	ipFieldEdit->put_Type(esriFieldTypeDouble); // it use to be String. Have to be careful when I'm reading numbers from this field
 	ipFieldEdit->put_DefaultValue(CComVariant(-1.0));
-	ipFieldEdit->put_IsNullable(VARIANT_FALSE);	
+	ipFieldEdit->put_IsNullable(VARIANT_FALSE);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	// Add the NALocation fields
@@ -533,7 +533,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_IsInput(VARIANT_TRUE);
 	ipClassDefEdit->put_IsOutput(VARIANT_FALSE);
 
-	// Setup necessary cardinality for allowing a Solve to be run 
+	// Setup necessary cardinality for allowing a Solve to be run
 	// NOTE: the LowerBound property is used to define the minimum number of required NALocationObjects that are required by the solver
 	// to perform analysis. The UpperBound property is used to define the maximum number of NALocationObjects that are allowed by the solver
 	// to perform analysis.
@@ -617,7 +617,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_IsInput(VARIANT_TRUE);
 	ipClassDefEdit->put_IsOutput(VARIANT_FALSE);
 
-	// Setup necessary cardinality for allowing a Solve to be run 
+	// Setup necessary cardinality for allowing a Solve to be run
 	// NOTE: the LowerBound property is used to define the minimum number of required NALocationObjects that are required by the solver
 	// to perform analysis. The UpperBound property is used to define the maximum number of NALocationObjects that are allowed by the solver
 	// to perform analysis.
@@ -673,7 +673,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	AddLocationFields(ipFieldsEdit, pDENDS);
 
-	ipClassDefEdit->putref_Fields(ipFields);  
+	ipClassDefEdit->putref_Fields(ipFields);
 
 	AddLocationFieldTypes(ipClassDefEdit);
 
@@ -688,7 +688,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefinitions->Add(CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipClassDef);
 
 	//////////////////////////////////////////////////////////
-	// Flocks class definition 
+	// Flocks class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
 	ipClassDefEdit = ipClassDef;
@@ -804,7 +804,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefinitions->Add(CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipClassDef);
 
 	//////////////////////////////////////////////////////////
-	// Routes class definition 
+	// Routes class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
 	ipClassDefEdit = ipClassDef;
@@ -883,7 +883,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefinitions->Add(CComBSTR(CS_ROUTES_NAME), (IUnknownPtr)ipClassDef);
 
 	//////////////////////////////////////////////////////////
-	// EdgeStat class definition 
+	// EdgeStat class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
 	ipClassDefEdit = ipClassDef;
@@ -984,7 +984,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefinitions->Add(CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipClassDef);
 
 	//////////////////////////////////////////////////////////
-	// RouteEdges class definition 
+	// RouteEdges class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
 	ipClassDefEdit = ipClassDef;
@@ -1075,7 +1075,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipClassDefEdit->put_Name(CComBSTR(CS_ROUTEEDGES_NAME));
 	ipClassDefinitions->Add(CComBSTR(CS_ROUTEEDGES_NAME), (IUnknownPtr)ipClassDef);
-	
+
 	///////////////////////////////////////////////////////////
 	// Return the class definitions once we have finished
 	ipClassDefinitions->AddRef();
@@ -1133,13 +1133,13 @@ HRESULT EvcSolver::LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, IN
 	ipReverseEdge = ipElement;
 	esriNetworkElementType elementType;
 
-	// Loop through the cursor getting the NALocation of each NALocationObject,  
+	// Loop through the cursor getting the NALocation of each NALocationObject,
 	// then query the network elements associated with each NALocation,
 	// and set their traversability to false
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
 		ipNALocationObject = ipRow;
-		if (!ipNALocationObject) continue;// we only want valid NALocationObjects			
+		if (!ipNALocationObject) continue;// we only want valid NALocationObjects
 		if (FAILED(hr = ipNALocationObject->QueryNALocation(ipNALocation))) return hr;
 
 		// Once we have the NALocation, we need to check if it is actually located within the network dataset
@@ -1189,7 +1189,7 @@ HRESULT EvcSolver::LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, IN
 						if (fromPosition <= posAlong && posAlong <= toPosition)
 						{
 							// Our NALocation lies along this edge element
-							// Set it as non-traversable in both directions  
+							// Set it as non-traversable in both directions
 
 							// First, set this edge element as non-traversable in the AlongDigitized direction (this is the default direction of edge elements returned from the get_ElementsByOID method above)
 							INetworkEdgePtr ipEdge(ipElement);

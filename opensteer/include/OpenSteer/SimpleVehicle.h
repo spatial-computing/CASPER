@@ -46,7 +46,7 @@
 //     specifying a subclass while leaving its superclass as a parameter to be
 //     determined later. The benefit is that a single class can be used to
 //     express an incremental extension, valid for a variety of classes...
-// 
+//
 // In OpenSteer, vehicles are defined by an interface: an abstract base class
 // called AbstractVehicle.  Implementations of that interface, and related
 // functionality (like steering behaviors and vehicle physics) are provided as
@@ -246,7 +246,7 @@ namespace OpenSteer {
 
 
 } // namespace OpenSteer
-    
-    
+
+
 // ----------------------------------------------------------------------------
 #endif // OPENSTEER_SIMPLEVEHICLE_H
