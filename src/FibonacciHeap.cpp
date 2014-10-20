@@ -314,8 +314,8 @@ double HeapNodeTable::GetMaxValue(void) const
 	double ret = 0.0;
 	stdext::hash_map<long, HeapNodePtr>::const_iterator i;
 
-	for(i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->data->ToVertex->GVal > ret) ret = i->second->data->ToVertex->GVal;
-	for(i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->data->ToVertex->GVal > ret) ret = i->second->data->ToVertex->GVal;
+	for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) ret = max(i->second->key, ret);
+	for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) ret = max(i->second->key, ret);
 
 	return ret;
 }

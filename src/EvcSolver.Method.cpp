@@ -88,7 +88,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	do
 	{
 		// Indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone. Also time the carma loops.
-
 		dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 		if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, AllEvacuees, sortedEvacuees, vcache, ecache, safeZoneList, CARMAClosedSize,
 			carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, minPop2Route, separationRequired, carmaSortDirection))) goto END_OF_FUNC;
@@ -392,9 +391,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		// Now insert leaf edges in heap like the destination edges
 		/// TODO do I have to insert leafs even if DSPT is off?
 		#ifdef DEBUG
-		if (FAILED(hr = InsertLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;
+		if (FAILED(hr = InsertLeafEdgesToHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;
 		#else
-		if (FAILED(hr = InsertLeafEdgesForHeap(ipNetworkQuery, vcache, ecache, heap, leafs))) goto END_OF_FUNC;
+		if (FAILED(hr = InsertLeafEdgesToHeap(ipNetworkQuery, vcache, ecache, heap, leafs))) goto END_OF_FUNC;
 		#endif
 
 		// we're done with all these leafs. let's clean up and collect new ones for the next round.
@@ -432,6 +431,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min or update absolutely to this new value.
 			myVertex->UpdateHeuristic(myEdge->EID, myVertex->GVal, countCARMALoops);
 
+			/// TODO it's probably better if we upgrade this list to find edges for each evacuee not vertices
 			pairs = EvacueePairs->Find(myVertex->EID);
 			if (pairs)
 			{
@@ -457,7 +457,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			// this is my new termination condition. let's hope it works.
 			// basically i stop inserting new edges if they are above search radius.
-			/// I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
+			/// TODO I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
 			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
 
 			// termination condition and evacuee discovery
@@ -690,7 +690,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 	return hr;
 }
 
-HRESULT InsertLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod
 								#endif
