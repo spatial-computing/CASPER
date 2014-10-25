@@ -458,7 +458,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// this is my new termination condition. let's hope it works.
 			// basically i stop inserting new edges if they are above search radius.
 			/// TODO I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
-			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
+			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = FLT_MAX; // heap->GetMaxValue();
 
 			// termination condition and evacuee discovery
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
