@@ -455,7 +455,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			// this is my new termination condition. let's hope it works.
 			// basically i stop inserting new edges if they are above search radius.
-			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
+			
+			/// TODO for now we shotcut the bug #8 in master branch until a solution is found
+			// if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
+			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = FLT_MAX;
 
 			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, adj))) goto END_OF_FUNC;
 
