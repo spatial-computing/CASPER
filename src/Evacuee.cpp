@@ -206,19 +206,40 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 	}
 }
 
-void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, EvacueeList * SortedEvacuees, NAEdgeContainer * leafs)
+void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, EvacueeList * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method)
 {
-	/// TODO it's probably better if we upgrade this list to find edges for each evacuee not vertices
 	NAEvacueeVertexTableItr pair = find(myVertex->EID);
+	EvacueePtr e;
+	NAVertexPtr foundVertex;
+	bool AtLeastOneEvacueeFound = false;
+	double newPredictedCost = 0.0;
+
 	if (pair != end())
 	{
 		for (std::vector<EvacueePtr>::const_iterator eitr = pair->second->begin(); eitr != pair->second->end(); eitr++)
 		{
-			(*eitr)->PredictedCost = min((*eitr)->PredictedCost, myVertex->GVal);
-			SortedEvacuees->push_back(*eitr);
+			e = (*eitr);
+			foundVertex = NULL;
+			for (std::vector<NAVertexPtr>::const_iterator v = e->Vertices->begin(); v != e->Vertices->end(); v++)
+			{
+				if ((*v)->EID == myVertex->EID)
+				{
+					foundVertex = *v;
+					break;
+				}
+			}
+			if (foundVertex)
+			{
+				newPredictedCost = myVertex->GVal;
+				NAEdgePtr behindEdge = foundVertex->GetBehindEdge();
+				if (behindEdge) newPredictedCost += foundVertex->GVal * behindEdge->GetCost(pop, method) / behindEdge->OriginalCost;
+				e->PredictedCost = min(e->PredictedCost, newPredictedCost);
+				SortedEvacuees->push_back(e);
+				AtLeastOneEvacueeFound = true;
+			}
 		}
 		this->Erase(myVertex->EID);
-		leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
+		if (AtLeastOneEvacueeFound) leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
 	}
 }
 

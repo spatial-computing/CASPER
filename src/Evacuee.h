@@ -157,7 +157,7 @@ public:
 	~NAEvacueeVertexTable();
 
 	void InsertReachable(EvacueeList * list, CARMASort sortDir);
-	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, EvacueeList * SortedEvacuees, NAEdgeContainer * leafs);
+	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, EvacueeList * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method);
 	bool Empty() const { return empty(); }
 	void LoadSortedEvacuees(EvacueeList *) const;
 };

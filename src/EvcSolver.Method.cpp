@@ -437,7 +437,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min or update absolutely to this new value.
 			myVertex->UpdateHeuristic(myEdge->EID, myVertex->GVal, countCARMALoops);
 
-			EvacueePairs->RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs);
+			EvacueePairs->RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs, minPop2Route, solverMethod);
 
 			// check if all removed dirty edges have been discovered again
 			removedDirty->Remove(myEdge->EID, myEdge->Direction);
