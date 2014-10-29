@@ -30,7 +30,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	int pathGenerationCount = -1, EvacueeProcessOrder = -1, NumberOfEvacueesInIteration = 0;
 	size_t CARMAClosedSize = 0, sumVisitedEdge = 0;
 	countCARMALoops = 0;
-	NAEdgeContainer * leafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
+	NAEdgeContainer * leafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer(200);
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	HANDLE proc = GetCurrentProcess();
 	BOOL dummy;
@@ -321,15 +321,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyNonHur);	// creating the heap for the dijkstra search
 	NAEdge * currentEdge;
 	NAVertexPtr neighbor;
-	std::vector<EvacueePtr>::const_iterator eit;
-	std::vector<NAVertexPtr>::const_iterator vit;
-	NAVertexTableItr cit;
 	INetworkElementPtr ipElementEdge;
-	std::vector<EvacueePtr> * pairs;
-	std::vector<EvacueePtr>::const_iterator eitr;
 	VARIANT val;
 	val.vt = VT_R8; // double variant value
-	NAVertexTableItr iterator;
 	NAVertexPtr myVertex;
 	NAEdgePtr myEdge;
 	INetworkElementPtr ipJunctionElement;
@@ -340,6 +334,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	readyEdges->reserve(safeZoneList->size());
 	unsigned int CARMAExtractCount = 0;
 	vector_NAEdgePtr_Ptr adj;
+	NAEdgeContainer * removedDirty = new NAEdgeContainer(1000);
 	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseProcessOrder, Evacuee::ReverseEvacuationCost };
 
 	// keeping reachable evacuees in a new hashtable for better access
@@ -352,7 +347,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	ipCurrentJunction = ipJunctionElement;
 
 	// if this list is not empty, it means we are going to have another CARMA loop
-	if (!EvacueePairs->empty())
+	if (!EvacueePairs->Empty())
 	{
 		countCARMALoops++;
 		#ifdef DEBUG
@@ -381,7 +376,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 		// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
 		// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
-		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, minPop2Route, solverMethod);
+		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, removedDirty, minPop2Route, solverMethod);
 
 		// prepare and insert safe zone vertices into the heap
 		for (SafeZoneTableItr sz = safeZoneList->begin(); sz != safeZoneList->end(); sz++)
@@ -415,6 +410,17 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				goto END_OF_FUNC;
 			}
 
+			// Check to see if the user wishes to continue or cancel the solve
+			if (pTrackCancel)
+			{
+				if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) goto END_OF_FUNC;
+				if (keepGoing == VARIANT_FALSE)
+				{
+					hr = E_ABORT;
+					goto END_OF_FUNC;
+				}
+			}
+
 			// check if this edge decreased its cost
 			myVertex->ParentCostIsDecreased |= myEdge->HowDirty(solverMethod, minPop2Route) == EdgeDirtyState::CostDecreased;
 			CARMAExtractCount++;
@@ -431,40 +437,21 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min or update absolutely to this new value.
 			myVertex->UpdateHeuristic(myEdge->EID, myVertex->GVal, countCARMALoops);
 
-			/// TODO it's probably better if we upgrade this list to find edges for each evacuee not vertices
-			pairs = EvacueePairs->Find(myVertex->EID);
-			if (pairs)
-			{
-				for (eitr = pairs->begin(); eitr != pairs->end(); eitr++)
-				{
-					(*eitr)->PredictedCost = min((*eitr)->PredictedCost, myVertex->GVal);
-					SortedEvacuees->push_back(*eitr);
-				}
-				EvacueePairs->Erase(myVertex->EID);
+			EvacueePairs->RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs);
 
-				// Check to see if the user wishes to continue or cancel the solve
-				if (pTrackCancel)
-				{
-					if (FAILED(hr = pTrackCancel->Continue(&keepGoing))) goto END_OF_FUNC;
-					if (keepGoing == VARIANT_FALSE)
-					{
-						hr = E_ABORT;
-						goto END_OF_FUNC;
-					}
-				}
-				leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
-			}
+			// check if all removed dirty edges have been discovered again
+			removedDirty->Remove(myEdge->EID, myEdge->Direction);
 
 			// this is my new termination condition. let's hope it works.
 			// basically i stop inserting new edges if they are above search radius.
 			/// TODO I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
-			if (EvacueePairs->empty() && SearchRadius <= 0.0) SearchRadius = FLT_MAX; // heap->GetMaxValue();
+			if (EvacueePairs->Empty() && removedDirty->IsEmpty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
 
 			// termination condition and evacuee discovery
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
 			// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
 			// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/ArcCASPER/issues/8
-			if (EvacueePairs->empty() && myVertex->GVal > SearchRadius)
+			if (EvacueePairs->Empty() && removedDirty->IsEmpty() && myVertex->GVal > SearchRadius)
 			{
 				leafs->Insert(myEdge);
 				continue;
@@ -541,23 +528,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	CARMAExtractCounts.push_back(CARMAExtractCount);
 
 	// load discovered evacuees into sorted list
-	for (NAEvacueeVertexTableItr evcItr = EvacueePairs->begin(); evcItr != EvacueePairs->end(); evcItr++)
-	{
-		for(eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++)
-		{
-			if ((*eit)->PredictedCost >= FLT_MAX)
-			{
-				(*eit)->Status = EvacueeStatus::Unreachable;
-#ifdef TRACE
-				std::ofstream f;
-				f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-				f << "Evacuee " << (*eit)->Name.bstrVal << " is unreachable." << std::endl;
-				f.close();
-#endif
-			}
-			else SortedEvacuees->push_back(*eit);
-		}
-	}
+	EvacueePairs->LoadSortedEvacuees(SortedEvacuees);
 
 	std::sort(SortedEvacuees->begin(), SortedEvacuees->end(), SortFunctions[carmaSortDirection]);
 	UpdatePeakMemoryUsage();
@@ -576,19 +547,21 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	// variable cleanup
 END_OF_FUNC:
 
+	delete removedDirty;
 	delete readyEdges;
 	delete heap;
 	delete EvacueePairs;
 	return hr;
 }
 
-void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * oldLeafs, double minPop2Route, EvcSolverMethod method) const
+void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * oldLeafs, NAEdgeContainer * removedDirty, double minPop2Route, EvcSolverMethod method) const
 {
 	std::vector<NAEdgePtr> * dirtyVisited = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	std::vector<NAEdgePtr>::const_iterator i;
 	NAEdgeIterator j;
 	dirtyVisited->reserve(closedList->Size());
-	NAEdgeContainer * tempLeafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer();
+	NAEdgeContainer * tempLeafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer(100);
+	removedDirty->Clear();
 
 	closedList->GetDirtyEdges(dirtyVisited, minPop2Route, method);
 
@@ -597,7 +570,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 		{
 			NAEdgePtr leaf = *i;
 			while (leaf->TreePrevious && leaf->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) leaf = leaf->TreePrevious;
-			NonRecursiveMarkAndRemove(leaf, closedList);
+			NonRecursiveMarkAndRemove(leaf, closedList, removedDirty);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
 			// So the usual for loop is going to insert destination dirty edges and the rest are in the leafs list.
@@ -637,7 +610,7 @@ void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) cons
 	e->TreeNext.clear();
 }
 
-void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList) const
+void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList, NAEdgeContainer * removedDirty) const
 {
 	NAEdgePtr e = NULL;
 	std::stack<NAEdgePtr> subtree;
@@ -647,6 +620,7 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 		e = subtree.top();
 		subtree.pop();
 		closedList->Erase(e);
+		removedDirty->Insert(e);
 		for(std::vector<NAEdgePtr>::const_iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++)
 		{
 			(*i)->TreePrevious = NULL;

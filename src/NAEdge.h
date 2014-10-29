@@ -183,9 +183,10 @@ private:
 	stdext::hash_map<long, unsigned char> * cache;
 
 public:
-	NAEdgeContainer(void)
+	NAEdgeContainer(size_t capacity)
 	{
 		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, unsigned char>();
+		cache->reserve(capacity);
 	}
 
 	~NAEdgeContainer(void)
@@ -201,9 +202,13 @@ public:
 	HRESULT Insert(INetworkEdgePtr edge);
 	HRESULT Insert(long eid, esriNetworkEdgeDirection dir);
 	HRESULT Insert(long eid, unsigned char dir);
+	HRESULT Remove(INetworkEdgePtr edge);
+	HRESULT Remove(long eid, esriNetworkEdgeDirection dir);
+	HRESULT Remove(long eid, unsigned char dir);
 	void    Insert(NAEdgeContainer * clone);
 	bool Exist(INetworkEdgePtr edge);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
+	bool IsEmpty() const { return cache->empty(); }
 };
 
 enum QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };

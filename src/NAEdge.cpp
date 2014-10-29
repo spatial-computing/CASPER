@@ -544,6 +544,11 @@ bool NAEdgeContainer::Exist(INetworkEdgePtr edge)
 	return Exist(eid, dir);
 }
 
+void NAEdgeContainer::Insert(NAEdgeContainer * clone)
+{
+	for (NAEdgeIterator i = clone->cache->begin(); i != clone->cache->end(); i++) cache->insert(NAEdgeContainerPair(i->first, i->second));
+}
+
 HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 {
 	esriNetworkEdgeDirection dir;
@@ -554,9 +559,18 @@ HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 	return Insert(eid, dir);
 }
 
-void NAEdgeContainer::Insert(NAEdgeContainer * clone)
+HRESULT NAEdgeContainer::Insert(long eid, unsigned char dir)
 {
-	for(NAEdgeIterator i = clone->cache->begin(); i != clone->cache->end(); i++) cache->insert(NAEdgeContainerPair(i->first, i->second));
+	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
+	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, dir));
+	else i->second |= dir;
+	return S_OK;
+}
+
+HRESULT NAEdgeContainer::Insert(long eid, esriNetworkEdgeDirection dir)
+{
+	unsigned char d = (unsigned char)dir;
+	return Insert(eid, d);
 }
 
 bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
@@ -568,19 +582,29 @@ bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
 	return ret;
 }
 
-HRESULT NAEdgeContainer::Insert(long eid, unsigned char dir)
+HRESULT NAEdgeContainer::Remove(INetworkEdgePtr edge)
+{
+	esriNetworkEdgeDirection dir;
+	long eid;
+	HRESULT hr;
+	if (FAILED(hr = edge->get_EID(&eid))) return hr;
+	if (FAILED(hr = edge->get_Direction(&dir))) return hr;
+	return Remove(eid, dir);
+}
+
+HRESULT NAEdgeContainer::Remove(long eid, unsigned char dir)
 {
 	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
-	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, dir));
-	else i->second = dir;
+	if (i != cache->end())
+	{
+		i->second &= ~dir;
+		if (i->second == 0) cache->erase(i->first);
+	}
 	return S_OK;
 }
 
-HRESULT NAEdgeContainer::Insert(long eid, esriNetworkEdgeDirection dir)
+HRESULT NAEdgeContainer::Remove(long eid, esriNetworkEdgeDirection dir)
 {
 	unsigned char d = (unsigned char)dir;
-	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
-	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, d));
-	else i->second |= d;
-	return S_OK;
+	return Remove(eid, d);
 }

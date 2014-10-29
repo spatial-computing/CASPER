@@ -172,6 +172,14 @@ Evacuee::~Evacuee(void)
 	delete Paths;
 }
 
+std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
+{
+	std::vector<EvacueePtr> * p = 0;
+	NAEvacueeVertexTableItr i = find(junctionEID);
+	if (i != end()) p = i->second;
+	return p;
+}
+
 void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir)
 {
 	std::vector<EvacueePtr> * p = 0;
@@ -198,12 +206,32 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 	}
 }
 
-std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
+void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, EvacueeList * SortedEvacuees, NAEdgeContainer * leafs)
 {
-	std::vector<EvacueePtr> * p = 0;
-	NAEvacueeVertexTableItr i = find(junctionEID);
-	if (i != end()) p = i->second;
-	return p;
+	/// TODO it's probably better if we upgrade this list to find edges for each evacuee not vertices
+	NAEvacueeVertexTableItr pair = find(myVertex->EID);
+	if (pair != end())
+	{
+		for (std::vector<EvacueePtr>::const_iterator eitr = pair->second->begin(); eitr != pair->second->end(); eitr++)
+		{
+			(*eitr)->PredictedCost = min((*eitr)->PredictedCost, myVertex->GVal);
+			SortedEvacuees->push_back(*eitr);
+		}
+		this->Erase(myVertex->EID);
+		leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
+	}
+}
+
+void NAEvacueeVertexTable::LoadSortedEvacuees(EvacueeList * SortedEvacuees) const
+{
+	for (NAEvacueeVertexTableItr evcItr = begin(); evcItr != end(); evcItr++)
+	{
+		for (std::vector<EvacueePtr>::const_iterator eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++)
+		{
+			if ((*eit)->PredictedCost >= FLT_MAX) (*eit)->Status = EvacueeStatus::Unreachable;
+			else SortedEvacuees->push_back(*eit);
+		}
+	}
 }
 
 NAEvacueeVertexTable::~NAEvacueeVertexTable()

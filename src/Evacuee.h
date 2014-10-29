@@ -5,6 +5,7 @@
 class NAVertex;
 class NAEdge;
 class NAEdgeCache;
+class NAEdgeContainer;
 typedef NAVertex * NAVertexPtr;
 enum EvcSolverMethod : unsigned char;
 
@@ -147,14 +148,18 @@ typedef std::vector<EvacueePtr>::const_iterator EvacueeListItr;
 typedef std::pair<long, std::vector<EvacueePtr> *> _NAEvacueeVertexTablePair;
 typedef stdext::hash_map<long, std::vector<EvacueePtr> *>::const_iterator NAEvacueeVertexTableItr;
 
-class NAEvacueeVertexTable : public stdext::hash_map<long, std::vector<EvacueePtr> *>
+class NAEvacueeVertexTable : protected stdext::hash_map<long, std::vector<EvacueePtr> *>
 {
+private:
+	std::vector<EvacueePtr> * Find(long junctionEID);
+	void Erase(long junctionEID);
 public:
 	~NAEvacueeVertexTable();
 
 	void InsertReachable(EvacueeList * list, CARMASort sortDir);
-	std::vector<EvacueePtr> * Find(long junctionEID);
-	void Erase(long junctionEID);
+	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, EvacueeList * SortedEvacuees, NAEdgeContainer * leafs);
+	bool Empty() const { return empty(); }
+	void LoadSortedEvacuees(EvacueeList *) const;
 };
 
 class SafeZone
