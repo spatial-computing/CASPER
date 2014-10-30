@@ -70,8 +70,6 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	IPointCollectionPtr pcollect = myPath->Back()->pline;
 	long pointCount = 0;
 
-	// #pragma message (__FILE__ "(" STRING(__LINE__) "): warning : [TODO] it's a good idea to throw a logic error after each of these FAILED statements.")
-
 	if (FAILED(hr = pcollect->get_PointCount(&pointCount)))
 	{
 		_ASSERT(0);
@@ -119,7 +117,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 
 	for (FlockingObjectItr it = neighbors->begin(); it != neighbors->end(); it++)
 	{
-		/// TODO same group check or share same start edge and near each other
+		// Same group check or share same start edge and near each other
 		if ((wcscmp((*it)->GroupName.bstrVal, GroupName.bstrVal) == 0) ||
 			(myPath->Front()->Edge->EID == (*it)->myPath->Front()->Edge->EID &&
 			OpenSteer::Vec3::distance(loc, (*it)->myVehicle->position()) <= myProfile->CloseNeighborDistance))

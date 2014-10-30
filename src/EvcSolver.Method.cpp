@@ -82,8 +82,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	if (ipStepProgressor)
 	{
 		if (FAILED(hr = ipStepProgressor->put_Position((long)(AllEvacuees->size() - NumberOfEvacueesInIteration)))) goto END_OF_FUNC;
-		// statusMsg.Format(_T("Performing %s search (pass %d)"), AlgName, Iteration);
-		statusMsg.Format(_T("Performing %s search"), AlgName);
+		statusMsg.Format(_T("Performing %s search (pass %d)"), AlgName, Iteration);
 		if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(statusMsg)))) goto END_OF_FUNC;
 	}
 	do
@@ -385,7 +384,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		for(std::vector<NAEdgePtr>::const_iterator h = readyEdges->begin(); h != readyEdges->end(); h++) heap->Insert(*h);
 
 		// Now insert leaf edges in heap like the destination edges
-		/// TODO do I have to insert leafs even if DSPT is off?
+		// do I have to insert leafs even if DSPT is off? It does not matter cause closedList is cleaned and hence all leafs will be removed anyway.
 		#ifdef DEBUG
 		if (FAILED(hr = InsertLeafEdgesToHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) goto END_OF_FUNC;
 		#else
@@ -535,8 +534,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	UpdatePeakMemoryUsage();
 	closedSize = closedList->Size();
 
-	/// TODO my next idea is to check if marking all edges as clean is ok or should I just mark thoes that I truely cleaned (in closedLists)
-	ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod); // set graph as having all clean edges
+	// Set graph as having all clean edges. Here we set all edges as clean eventhough we only
+	// re-created parts of the tree. This is still OK since we check previous edges are re-discovered again.
+	ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod); 
 
 #ifdef TRACE
 	std::ofstream f;
