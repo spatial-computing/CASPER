@@ -150,7 +150,7 @@ BEGIN
     LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,118,95,8
     EDITTEXT        IDC_EDIT_CARMA,123,115,66,14,ES_AUTOHSCROLL
     CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",LWS_USEVISUALSTYLE | WS_TABSTOP,12,243,366,13
-    CONTROL         "Run CARMA with DSPT (experimental)",IDL_CHECK_CARMAGEN,
+    CONTROL         "Run CARMA with DSPT",IDL_CHECK_CARMAGEN,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,217,171,13
     EDITTEXT        IDC_EDIT_SELFISH,123,132,66,14,ES_AUTOHSCROLL
     LTEXT           "Selfish Routing Ratio:",IDC_Lable_SelfishRatio,20,135,78,8

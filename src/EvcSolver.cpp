@@ -228,7 +228,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
 	twoWayShareCapacity = VARIANT_TRUE;
-	ThreeGenCARMA = VARIANT_FALSE;
+	ThreeGenCARMA = VARIANT_TRUE;
 
 	flockingSnapInterval = 0.1f;
 	flockingSimulationInterval = 0.01f;
@@ -310,7 +310,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	}
 	else
 	{
-		ThreeGenCARMA = VARIANT_FALSE;
+		ThreeGenCARMA = VARIANT_TRUE;
 		savedVersion = 2;
 	}
 
