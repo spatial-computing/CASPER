@@ -209,7 +209,7 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, EvacueeList * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method)
 {
 	NAEvacueeVertexTableItr pair = find(myVertex->EID);
-	EvacueePtr e;
+	EvacueePtr evc;
 	NAVertexPtr foundVertex;
 	bool AtLeastOneEvacueeFound = false;
 	double newPredictedCost = 0.0;
@@ -218,9 +218,9 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 	{
 		for (std::vector<EvacueePtr>::const_iterator eitr = pair->second->begin(); eitr != pair->second->end(); eitr++)
 		{
-			e = (*eitr);
+			evc = (*eitr);
 			foundVertex = NULL;
-			for (std::vector<NAVertexPtr>::const_iterator v = e->Vertices->begin(); v != e->Vertices->end(); v++)
+			for (std::vector<NAVertexPtr>::const_iterator v = evc->Vertices->begin(); v != evc->Vertices->end(); v++)
 			{
 				if ((*v)->EID == myVertex->EID)
 				{
@@ -233,8 +233,8 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 				newPredictedCost = myVertex->GVal;
 				NAEdgePtr behindEdge = foundVertex->GetBehindEdge();
 				if (behindEdge) newPredictedCost += foundVertex->GVal * behindEdge->GetCost(pop, method) / behindEdge->OriginalCost;
-				e->PredictedCost = min(e->PredictedCost, newPredictedCost);
-				SortedEvacuees->push_back(e);
+				evc->PredictedCost = min(evc->PredictedCost, newPredictedCost);
+				SortedEvacuees->push_back(evc);
 				AtLeastOneEvacueeFound = true;
 			}
 		}

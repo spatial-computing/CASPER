@@ -393,6 +393,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 		// we're done with all these leafs. let's clean up and collect new ones for the next round.
 		leafs->Clear();
+		heap->ResetMaxHeapKey();
 
 		// Continue traversing the network while the heap has remaining junctions in it
 		// this is the actual Dijkstra code with backward network traversal. it will only update h value.
@@ -444,8 +445,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			// this is my new termination condition. let's hope it works.
 			// basically i stop inserting new edges if they are above search radius.
-			/// TODO I may be able to pick a smaller radius based on only loop-inserted edges and not all edges
-			if (EvacueePairs->Empty() && removedDirty->IsEmpty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxValue();
+			if (EvacueePairs->Empty() && removedDirty->IsEmpty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxHeapKey();
 
 			// termination condition and evacuee discovery
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma

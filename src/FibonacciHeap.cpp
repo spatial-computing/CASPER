@@ -112,6 +112,7 @@ FibonacciHeap::FibonacciHeap(double (*GetHeapKeyMethod)(const HeapDataType *))
 	minRoot = NULL;
 	nodeTable = new DEBUG_NEW_PLACEMENT HeapNodeTable();
 	rootListByRank = new DEBUG_NEW_PLACEMENT HeapNodePtr[100];
+	ResetMaxHeapKey();
 }
 
 FibonacciHeap::~FibonacciHeap()
@@ -138,6 +139,7 @@ bool FibonacciHeap::Insert(HeapDataType * node)
 	else
 	{
 		HeapNode * n = new DEBUG_NEW_PLACEMENT HeapNode(node, GetHeapKey(node));
+		maxHeakKeyValue = max(maxHeakKeyValue, n->key);
 
 		if(minRoot == NULL) minRoot = n;
 		else
@@ -304,18 +306,4 @@ HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 	HeapNodePtr o = 0;
 	if (it != cache->end()) o = it->second;
 	return o;
-}
-
-// This function is very stupid. I should make it better and faster
-// It looks at all inserted heap nodes (vertices) right after last evacuee is
-// discovered during carma loop. the value will be used as carma termination condition.
-double HeapNodeTable::GetMaxValue(void) const
-{
-	double ret = 0.0;
-	stdext::hash_map<long, HeapNodePtr>::const_iterator i;
-
-	for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) ret = max(i->second->key, ret);
-	for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) ret = max(i->second->key, ret);
-
-	return ret;
 }

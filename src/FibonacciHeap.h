@@ -83,7 +83,6 @@ public:
 	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
 	void Clear()        { cacheAlong->clear(); cacheAgainst->clear(); }
 
-	double GetMaxValue(void) const;
 	void Erase(HeapDataType * edge);
 	void Insert(HeapNode * node);
 	HeapNodePtr Find(HeapDataType * edge) const;
@@ -92,6 +91,7 @@ public:
 class FibonacciHeap
 {
 private:
+	double maxHeakKeyValue;
 	HeapNode ** rootListByRank;
 	HeapNode * minRoot;
 	HeapNodeTable * nodeTable;
@@ -101,7 +101,8 @@ private:
 public:
 	FibonacciHeap(double (*GetHeapKeyMethod)(const HeapDataType *));
 	bool IsVisited(HeapDataType * vertex);
-	inline double GetMaxValue(void) const { return nodeTable->GetMaxValue(); }
+	double GetMaxHeapKey(void) const { return maxHeakKeyValue; }
+	void ResetMaxHeapKey(void)       { maxHeakKeyValue = 0.0;  }
 
 	~FibonacciHeap();
 

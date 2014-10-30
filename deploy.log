@@ -21963,3 +21963,479 @@ Your branch is up-to-date with 'origin/dev'.
 Already up-to-date.
 repo is ready for build on branch dev
 There are no new changes to be built
+
+
+
+This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox
+Time: Wed, Oct 29, 2014  8:00:01 AM
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/master'.
+Already up-to-date.
+repo is ready for build on branch master
+There are no new changes to be built
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/dev'.
+Updating 6ed390a..04938aa
+Fast-forward
+ ArcCASPER.v12.suo        | Bin 136704 -> 134656 bytes
+ deploy.log               | 979 +++++++++++++++++++++++++++++++++++++++++++++++
+ src/Evacuee.cpp          |  59 ++-
+ src/Evacuee.h            |  11 +-
+ src/EvcSolver.Method.cpp |  82 ++--
+ src/EvcSolver.h          |   4 +-
+ src/NAEdge.cpp           |  44 ++-
+ src/NAEdge.h             |   7 +-
+ 8 files changed, 1111 insertions(+), 75 deletions(-)
+repo is ready for build on branch dev
+The dev branch has new commits
+post-commit script: Writing version to gitdescribe.h
+Microsoft (R) Build Engine version 12.0.30723.0
+[Microsoft .NET Framework, version 4.0.30319.34014]
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/29/2014 8:00:43 AM.
+     1>Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" on node 1 (rebuild target(s)).
+     1>ValidateSolutionConfiguration:
+         Building solution configuration "Release|Win32".
+       ValidateProjects:
+         The project "ArcCASPERLog" is not selected for building in solution configuration "Release|Win32".
+     1>Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" (1) is building "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (2) on node 1 (Rebuild target(s)).
+     2>Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj" (3) on node 1 (Rebuild target(s)).
+     3>_PrepareForClean:
+         Deleting file "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\opensteer.tlog\opensteer.lastbuildstate".
+       InitializeBuildStatus:
+         Creating "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\opensteer.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+       PreBuildEvent:
+         del /Q D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\opensteer32.*
+         :VCEnd
+         Could Not Find D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\opensteer32.*
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Oi /Ot /Oy /GL /D OPENSTEER_EXPORT /D _CRTDBG_MAP_ALLOC /D WIN32 /D NDEBUG /D _CONSOLE /D _DLL /D _VC80_UPGRADE=0x0710 /D _WINDLL /D _MBCS /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\\" /Fd"D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\vc12032.pdb" /Gd /TP /analyze- /errorReport:queue /Qpar /Qpar-report:1 /Qvec-report:1 ..\src\Camera.cpp ..\src\Clock.cpp ..\src\Draw.cpp ..\src\main.cpp ..\src\OpenSteerDemo.cpp ..\src\Pathway.cpp ..\src\PlugIn.cpp ..\src\SimpleVehicle.cpp ..\src\Vec3.cpp
+         Camera.cpp
+         Clock.cpp
+         Draw.cpp
+     3>D:\Archive\arccasperdeploy\ArcCASPER-dev\glut\glut.h(549): warning C4505: 'glutCreateMenu_ATEXIT_HACK' : unreferenced local function has been removed [D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj]
+         main.cpp
+         OpenSteerDemo.cpp
+         Pathway.cpp
+         PlugIn.cpp
+         SimpleVehicle.cpp
+         Vec3.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Oi /Ot /Oy /GL /D OPENSTEER_EXPORT /D _CRTDBG_MAP_ALLOC /D WIN32 /D NDEBUG /D _CONSOLE /D _DLL /D _VC80_UPGRADE=0x0710 /D _WINDLL /D _MBCS /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\\" /Fd"D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\vc12032.pdb" /Gd /TC /analyze- /errorReport:queue /Qpar /Qpar-report:1 /Qvec-report:1 ..\src\lq.c
+         lq.c
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:QUEUE /OUT:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer32.dll" /NOLOGO glut32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer32.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer32.lib" /MACHINE:X86 /SAFESEH /DLL "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\Camera.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\Clock.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\Draw.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\lq.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\main.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\OpenSteerDemo.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\Pathway.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\PlugIn.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\SimpleVehicle.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\Vec3.obj"
+            Creating library D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer32.lib and object D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer32.exp
+         Generating code
+         Finished generating code
+         opensteer.vcxproj -> D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer32.dll
+       PostBuildEvent:
+         Description: Post build script to copy files
+         copy /Y "D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer32.dll" "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\*.*"
+         :VCEnd
+                 1 file(s) copied.
+       FinalizeBuildStatus:
+         Deleting file "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\opensteer.tlog\unsuccessfulbuild".
+         Touching "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\Win32\opensteer.tlog\opensteer.lastbuildstate".
+     3>Done Building Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj" (Rebuild target(s)).
+     2>Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj" (4) on node 1 (Rebuild target(s)).
+     4>_PrepareForClean:
+         Deleting file "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.tlog\EvcSolver.lastbuildstate".
+       InitializeBuildStatus:
+         Creating "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+       PreBuildEvent:
+         Description: Performing Custom Pre-Build Step
+         IF exist "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver32.dll" (
+           IF "1"=="" (
+             IF "x86"=="x86" (
+               "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop  "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver32.dll" /s /u
+             ) else (
+               regsvr32.exe /u /s "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver32.dll" 
+             )
+           )
+           del /Q D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver32.*
+         )
+         exit 0
+         :VCEnd
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Ob2 /Oi /Ot /Oy /GL /D WIN32 /D _WINDOWS /D NDEBUG /D _USRDLL /D _ATL_ATTRIBUTES /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /fp:except- /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\\" /Fd"D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\vc120.pdb" /Gd /TP /analyze- /errorReport:queue /Qpar /Qpar-report:1 /Qvec-report:1 CustomSolver.cpp Evacuee.cpp EvcSolver.cpp EvcSolver.GetSet.cpp EvcSolver.Method.cpp EvcSolver.Solve.cpp EvcSolverPropPage.cpp EvcSolverSymbolizer.cpp FibonacciHeap.cpp Flocking.cpp NAEdge.cpp NAVertex.cpp stdafx.cpp TrafficModel.cpp
+         CustomSolver.cpp
+         Evacuee.cpp
+     4>Evacuee.cpp(37): warning C4189: 'OrgEvcCost' : local variable is initialized but not referenced [D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj]
+         EvcSolver.cpp
+         EvcSolver.GetSet.cpp
+         EvcSolver.Method.cpp
+         EvcSolver.Solve.cpp
+         EvcSolverPropPage.cpp
+         EvcSolverSymbolizer.cpp
+         FibonacciHeap.cpp
+         Flocking.cpp
+         NAEdge.cpp
+         NAVertex.cpp
+         stdafx.cpp
+         TrafficModel.cpp
+       ResourceCompile:
+         C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe /D _UNICODE /D UNICODE /D NDEBUG /D _UNICODE /D UNICODE /l"0x0409" /I"D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\\" /nologo /fo"D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.res" EvcSolver.rc 
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:QUEUE /OUT:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver32.dll" /NOLOGO Psapi.lib opensteer32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver32.pdb" /ASSEMBLYDEBUG:DISABLE /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /IDLOUT:"_EvcSolver32.idl" /TLBID:1 /NXCOMPAT /IMPLIB:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver32.lib" /MACHINE:X86 /SAFESEH /DLL "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.res"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\CustomSolver.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\Evacuee.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.GetSet.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.Method.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.Solve.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolverPropPage.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolverSymbolizer.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\FibonacciHeap.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\Flocking.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\NAEdge.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\NAVertex.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\stdafx.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\TrafficModel.obj"
+            Creating library D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver32.lib and object D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver32.exp
+         Generating code
+         Finished generating code
+         Microsoft (R) 32b/64b MIDL Compiler Version 8.00.0603 
+         Copyright (c) Microsoft Corporation. All rights reserved.
+         Processing .\_EvcSolver32.idl
+         _EvcSolver32.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\prsht.idl
+         prsht.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\wtypes.idl
+         wtypes.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\wtypesbase.idl
+         wtypesbase.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\basetsd.h
+         basetsd.h
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\guiddef.h
+         guiddef.h
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\mshtml.idl
+         mshtml.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\ocidl.idl
+         ocidl.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\oleidl.idl
+         oleidl.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\objidl.idl
+         objidl.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\unknwn.idl
+         unknwn.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\oaidl.idl
+         oaidl.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\servprov.idl
+         servprov.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\urlmon.idl
+         urlmon.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\msxml.idl
+         msxml.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\dimm.idl
+         dimm.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\shtypes.idl
+         shtypes.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\dispex.idl
+         dispex.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\dxgitype.idl
+         dxgitype.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\dxgiformat.idl
+         dxgiformat.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\mshtmhst.idl
+         mshtmhst.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\docobj.idl
+         docobj.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\exdisp.idl
+         exdisp.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\objsafe.idl
+         objsafe.idl
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\oaidl.acf
+         oaidl.acf
+         Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\ocidl.acf
+         ocidl.acf
+         EvcSolver.vcxproj -> D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver32.dll
+       PostBuildEvent:
+         Description: Performing Custom Post-Build Step
+         copy /Y "D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver32.dll" "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\*.*"
+         IF "1"=="" (
+           IF exist "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver32.dll" (
+             IF "x86"=="x86" (
+               "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver32.dll" /s
+             ) else (
+               %WINDIR%\system32\regsvr32.exe /s "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver32.dll"
+             )
+           )
+         )
+         exit 0
+         :VCEnd
+                 1 file(s) copied.
+       FinalizeBuildStatus:
+         Deleting file "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.tlog\unsuccessfulbuild".
+         Touching "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\Win32\EvcSolver.tlog\EvcSolver.lastbuildstate".
+     4>Done Building Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj" (Rebuild target(s)).
+     2>Done Building Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (Rebuild target(s)).
+     1>Done Building Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" (rebuild target(s)).
+
+Build succeeded.
+
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" (rebuild target) (1) ->
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (Rebuild target) (2) ->
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj" (Rebuild target) (3) ->
+       (ClCompile target) -> 
+         D:\Archive\arccasperdeploy\ArcCASPER-dev\glut\glut.h(549): warning C4505: 'glutCreateMenu_ATEXIT_HACK' : unreferenced local function has been removed [D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj]
+
+
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" (rebuild target) (1) ->
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (Rebuild target) (2) ->
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj" (Rebuild target) (4) ->
+         Evacuee.cpp(37): warning C4189: 'OrgEvcCost' : local variable is initialized but not referenced [D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj]
+
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:48.45
+Microsoft (R) Build Engine version 12.0.30723.0
+[Microsoft .NET Framework, version 4.0.30319.34014]
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Build started 10/29/2014 8:01:31 AM.
+     1>Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" on node 1 (rebuild target(s)).
+     1>ValidateSolutionConfiguration:
+         Building solution configuration "Release|x64".
+       ValidateProjects:
+         The project "ArcCASPERLog" is not selected for building in solution configuration "Release|x64".
+     1>Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" (1) is building "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (2) on node 1 (Rebuild target(s)).
+     2>Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj" (3) on node 1 (Rebuild target(s)).
+     3>_PrepareForClean:
+         Deleting file "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\opensteer.tlog\opensteer.lastbuildstate".
+       InitializeBuildStatus:
+         Creating "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\opensteer.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+       PreBuildEvent:
+         del /Q D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\opensteer64.*
+         :VCEnd
+         Could Not Find D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\opensteer64.*
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Oi /Ot /Oy /GL /D OPENSTEER_EXPORT /D _CRTDBG_MAP_ALLOC /D WIN32 /D NDEBUG /D _CONSOLE /D _DLL /D _VC80_UPGRADE=0x0710 /D _WINDLL /D _MBCS /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\\" /Fd"D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\vc12064.pdb" /Gd /TP /analyze- /errorReport:queue /Qpar /Qpar-report:1 /Qvec-report:1 ..\src\Camera.cpp ..\src\Clock.cpp ..\src\Draw.cpp ..\src\main.cpp ..\src\OpenSteerDemo.cpp ..\src\Pathway.cpp ..\src\PlugIn.cpp ..\src\SimpleVehicle.cpp ..\src\Vec3.cpp
+         Camera.cpp
+         Clock.cpp
+         Draw.cpp
+     3>C:\Program Files (x86)\Windows Kits\8.1\Include\shared\minwindef.h(127): warning C4005: 'CALLBACK' : macro redefinition [D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj]
+                 D:\Archive\arccasperdeploy\ArcCASPER-dev\glut\glut.h(34) : see previous definition of 'CALLBACK'
+     3>D:\Archive\arccasperdeploy\ArcCASPER-dev\glut\glut.h(549): warning C4505: 'glutCreateMenu_ATEXIT_HACK' : unreferenced local function has been removed [D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj]
+         main.cpp
+         OpenSteerDemo.cpp
+         Pathway.cpp
+         PlugIn.cpp
+         SimpleVehicle.cpp
+         Vec3.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Oi /Ot /Oy /GL /D OPENSTEER_EXPORT /D _CRTDBG_MAP_ALLOC /D WIN32 /D NDEBUG /D _CONSOLE /D _DLL /D _VC80_UPGRADE=0x0710 /D _WINDLL /D _MBCS /GF /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\\" /Fd"D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\vc12064.pdb" /Gd /TC /analyze- /errorReport:queue /Qpar /Qpar-report:1 /Qvec-report:1 ..\src\lq.c
+         lq.c
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer64.dll" /NOLOGO glut64.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer64.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer64.lib" /MACHINE:X64 /DLL "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\Camera.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\Clock.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\Draw.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\lq.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\main.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\OpenSteerDemo.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\Pathway.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\PlugIn.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\SimpleVehicle.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\Vec3.obj"
+            Creating library D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer64.lib and object D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer64.exp
+         Generating code
+         Finished generating code
+         opensteer.vcxproj -> D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer64.dll
+       PostBuildEvent:
+         Description: Post build script to copy files
+         copy /Y "D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\opensteer64.dll" "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\*.*"
+         :VCEnd
+                 1 file(s) copied.
+       FinalizeBuildStatus:
+         Deleting file "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\opensteer.tlog\unsuccessfulbuild".
+         Touching "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\obj\Release\x64\opensteer.tlog\opensteer.lastbuildstate".
+     3>Done Building Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj" (Rebuild target(s)).
+     2>Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (2) is building "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj" (4) on node 1 (Rebuild target(s)).
+     4>_PrepareForClean:
+         Deleting file "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.tlog\EvcSolver.lastbuildstate".
+       InitializeBuildStatus:
+         Creating "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+       PreBuildEvent:
+         Description: Performing Custom Pre-Build Step
+         IF exist "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver64.dll" (
+           IF "1"=="" (
+             IF "x64"=="x86" (
+               "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop  "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver64.dll" /s /u
+             ) else (
+               regsvr32.exe /u /s "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver64.dll" 
+             )
+           )
+           del /Q D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver64.*
+         )
+         exit 0
+         :VCEnd
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W4 /WX- /Ox /Ob2 /Oi /Ot /Oy /GL /D WIN64 /D _WINDOWS /D NDEBUG /D _USRDLL /D _ATL_ATTRIBUTES /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /fp:except- /Zc:wchar_t /Zc:forScope /Fo"D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\\" /Fd"D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\vc120.pdb" /Gd /TP /analyze- /errorReport:queue /Qpar /Qpar-report:1 /Qvec-report:1 CustomSolver.cpp Evacuee.cpp EvcSolver.cpp EvcSolver.GetSet.cpp EvcSolver.Method.cpp EvcSolver.Solve.cpp EvcSolverPropPage.cpp EvcSolverSymbolizer.cpp FibonacciHeap.cpp Flocking.cpp NAEdge.cpp NAVertex.cpp stdafx.cpp TrafficModel.cpp
+         CustomSolver.cpp
+         Evacuee.cpp
+     4>Evacuee.cpp(37): warning C4189: 'OrgEvcCost' : local variable is initialized but not referenced [D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj]
+         EvcSolver.cpp
+         EvcSolver.GetSet.cpp
+         EvcSolver.Method.cpp
+     4>EvcSolver.Method.cpp(80): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data [D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj]
+         EvcSolver.Solve.cpp
+         EvcSolverPropPage.cpp
+         EvcSolverSymbolizer.cpp
+         FibonacciHeap.cpp
+         Flocking.cpp
+         NAEdge.cpp
+         NAVertex.cpp
+         stdafx.cpp
+         TrafficModel.cpp
+       ResourceCompile:
+         C:\Program Files (x86)\Windows Kits\8.1\bin\x86\rc.exe /D _UNICODE /D UNICODE /D NDEBUG /D _UNICODE /D UNICODE /l"0x0409" /I"D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\\" /nologo /fo"D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.res" EvcSolver.rc 
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:QUEUE /OUT:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver64.dll" /NOLOGO Psapi.lib opensteer64.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /PDB:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver64.pdb" /ASSEMBLYDEBUG:DISABLE /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /IDLOUT:"_EvcSolver64.idl" /TLBID:1 /NXCOMPAT /IMPLIB:"D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver64.lib" /MACHINE:X64 /SAFESEH:NO /DLL "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.res"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\CustomSolver.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\Evacuee.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.GetSet.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.Method.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.Solve.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolverPropPage.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolverSymbolizer.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\FibonacciHeap.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\Flocking.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\NAEdge.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\NAVertex.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\stdafx.obj"
+         "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\TrafficModel.obj"
+            Creating library D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver64.lib and object D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver64.exp
+         Generating code
+         Finished generating code
+         Microsoft (R) 32b/64b MIDL Compiler Version 8.00.0603 
+         Copyright (c) Microsoft Corporation. All rights reserved.
+         64 bit Processing .\_EvcSolver64.idl
+         _EvcSolver64.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\prsht.idl
+         prsht.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\wtypes.idl
+         wtypes.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\wtypesbase.idl
+         wtypesbase.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\basetsd.h
+         basetsd.h
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\guiddef.h
+         guiddef.h
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\mshtml.idl
+         mshtml.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\ocidl.idl
+         ocidl.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\oleidl.idl
+         oleidl.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\objidl.idl
+         objidl.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\unknwn.idl
+         unknwn.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\oaidl.idl
+         oaidl.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\servprov.idl
+         servprov.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\urlmon.idl
+         urlmon.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\msxml.idl
+         msxml.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\dimm.idl
+         dimm.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\shtypes.idl
+         shtypes.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\dispex.idl
+         dispex.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\dxgitype.idl
+         dxgitype.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\shared\dxgiformat.idl
+         dxgiformat.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\mshtmhst.idl
+         mshtmhst.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\docobj.idl
+         docobj.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\exdisp.idl
+         exdisp.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\objsafe.idl
+         objsafe.idl
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\oaidl.acf
+         oaidl.acf
+         64 bit Processing C:\Program Files (x86)\Windows Kits\8.1\Include\um\ocidl.acf
+         ocidl.acf
+         EvcSolver.vcxproj -> D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver64.dll
+       PostBuildEvent:
+         Description: Performing Custom Post-Build Step
+         copy /Y "D:\Archive\arccasperdeploy\ArcCASPER-dev\bin\Release\EvcSolver64.dll" "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\*.*"
+         IF "1"=="" (
+           IF exist "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver64.dll" (
+             IF "x64"=="x86" (
+               "C:\Program Files (x86)\Common Files\ArcGIS\bin\esriregasm.exe" /p:desktop "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver64.dll" /s
+             ) else (
+               %WINDIR%\system32\regsvr32.exe /s "D:\Archive\arccasperdeploy\ArcCASPER-dev\Package\EvcSolver64.dll"
+             )
+           )
+         )
+         exit 0
+         :VCEnd
+                 1 file(s) copied.
+       FinalizeBuildStatus:
+         Deleting file "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.tlog\unsuccessfulbuild".
+         Touching "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\obj\Release\x64\EvcSolver.tlog\EvcSolver.lastbuildstate".
+     4>Done Building Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj" (Rebuild target(s)).
+     2>Done Building Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (Rebuild target(s)).
+     1>Done Building Project "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" (rebuild target(s)).
+
+Build succeeded.
+
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" (rebuild target) (1) ->
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (Rebuild target) (2) ->
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj" (Rebuild target) (3) ->
+       (ClCompile target) -> 
+         C:\Program Files (x86)\Windows Kits\8.1\Include\shared\minwindef.h(127): warning C4005: 'CALLBACK' : macro redefinition [D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj]
+         D:\Archive\arccasperdeploy\ArcCASPER-dev\glut\glut.h(549): warning C4505: 'glutCreateMenu_ATEXIT_HACK' : unreferenced local function has been removed [D:\Archive\arccasperdeploy\ArcCASPER-dev\opensteer\win32\opensteer.vcxproj]
+
+
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\ArcCASPER.sln" (rebuild target) (1) ->
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj.metaproj" (Rebuild target) (2) ->
+       "D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj" (Rebuild target) (4) ->
+         Evacuee.cpp(37): warning C4189: 'OrgEvcCost' : local variable is initialized but not referenced [D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj]
+         EvcSolver.Method.cpp(80): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data [D:\Archive\arccasperdeploy\ArcCASPER-dev\src\EvcSolver.vcxproj]
+
+    4 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:48.35
+Build is complete and ready for zipping and uploading
+
+7-Zip [64] 9.22 beta  Copyright (c) 1999-2011 Igor Pavlov  2011-04-18
+Scanning
+
+Creating archive ArcCASPER-v10.2.3-19-g04938aa-nightly.zip
+
+Compressing  EvcSolver32.dll
+Compressing  EvcSolver64.dll
+Compressing  glut32.dll
+Compressing  glut64.dll
+Compressing  install.cmd
+Compressing  Manual.pdf
+Compressing  opensteer32.dll
+Compressing  opensteer64.dll
+Compressing  README.md
+Compressing  uninstall.cmd
+Compressing  Visual C++ Redistributable.url
+
+Everything is Ok
+ > Uploading "ArcCASPER-v10.2.3-19-g04938aa-nightly.zip" to "/ArcCASPER-v10.2.3-19-g04938aa-nightly.zip"... DONE
