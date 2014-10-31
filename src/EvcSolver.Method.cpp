@@ -36,8 +36,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	BOOL dummy;
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	vector_NAEdgePtr_Ptr adj;
-	CString statusMsg;
-	CString AlgName;
+	ATL::CString statusMsg, AlgName;
 	CARMASort carmaSortDirection = this->CarmaSortDirection;
 	size_t Iteration = 0;
 
@@ -86,7 +85,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		{
 			if (FAILED(hr = ipStepProgressor->put_Position((long)(AllEvacuees->size() - NumberOfEvacueesInIteration)))) goto END_OF_FUNC;
 			statusMsg.Format(_T("Performing %s search (pass %d)"), AlgName, Iteration);
-			if (FAILED(hr = ipStepProgressor->put_Message(CComBSTR(statusMsg)))) goto END_OF_FUNC;
+			if (FAILED(hr = ipStepProgressor->put_Message(ATL::CComBSTR(statusMsg)))) goto END_OF_FUNC;
 		}
 		do
 		{
@@ -164,7 +163,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (FAILED(hr = closedList->Insert(myEdge)))
 						{
 							// closedList violation happened
-							pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
+							pMessages->AddError(-myEdge->EID, ATL::CComBSTR(L"ClosedList Violation Error."));
 							hr = -myEdge->EID;
 							goto END_OF_FUNC;
 						}
@@ -304,7 +303,7 @@ HRESULT EvcSolver::GetPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEva
 	for each(auto evc in *AllEvacuees)
 		for each(auto path in *evc->Paths)
 		{
-			path->CalculateFinalEvacuationCost(initDelayCostPerPop);
+			path->CalculateFinalEvacuationCost(initDelayCostPerPop, solverMethod);
 			allPaths.push_back(path);
 		}
 
@@ -407,7 +406,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			if (FAILED(hr = closedList->Insert(myEdge)))
 			{
 				// closedList violation happened
-				pMessages->AddError(-myEdge->EID, CComBSTR(L"ClosedList Violation Error."));
+				pMessages->AddError(-myEdge->EID, ATL::CComBSTR(L"ClosedList Violation Error."));
 				hr = -myEdge->EID;
 				goto END_OF_FUNC;
 			}

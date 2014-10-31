@@ -27,9 +27,9 @@
   helpstring("EvcSolverPropPage Class")
 ]
 class ATL_NO_VTABLE EvcSolverPropPage :
-  public IPropertyPageImpl<EvcSolverPropPage>,
-  public CDialogImpl<EvcSolverPropPage>,
-  public IPropertyPageContext
+	public ATL::IPropertyPageImpl<EvcSolverPropPage>,
+    public ATL::CDialogImpl<EvcSolverPropPage>,
+    public IPropertyPageContext
 {
 public:
   EvcSolverPropPage()
@@ -68,7 +68,7 @@ public:
 	COMMAND_HANDLER(IDC_CHECK_SHARECAP, BN_CLICKED, OnBnClickedCheckSharecap)
 	COMMAND_HANDLER(IDC_COMBO_PROFILE, CBN_SELCHANGE, OnCbnSelchangeComboProfile)
 	COMMAND_HANDLER(IDC_EDIT_CARMA, EN_CHANGE, OnEnChangeEditCARMA)
-	CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
+	CHAIN_MSG_MAP(ATL::IPropertyPageImpl<EvcSolverPropPage>)
 	MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
 	COMMAND_HANDLER(IDC_EDIT_Critical, EN_CHANGE, OnEnChangeEditCritical)

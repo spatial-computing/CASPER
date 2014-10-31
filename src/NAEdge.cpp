@@ -154,7 +154,7 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 										   long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag)
 {
 	HRESULT hr = S_OK;
-	CComVariant featureID(0);
+	ATL::CComVariant featureID(0);
 	long sourceOID, sourceID;
 	double fromPosition, toPosition;
 	IGeometryPtr ipGeometry;
@@ -169,14 +169,14 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 
 	// Store the feature values on the feature buffer
 	if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, CComVariant(EID)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceIDFieldIndex, CComVariant(sourceID)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, CComVariant(sourceOID)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(GetCurrentCost())))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(OriginalCost)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, CComVariant(GetCurrentCost() / OriginalCost)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, ATL::CComVariant(EID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceIDFieldIndex, ATL::CComVariant(sourceID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, ATL::CComVariant(sourceOID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, ATL::CComVariant(dir)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, ATL::CComVariant(resPop)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, ATL::CComVariant(GetCurrentCost())))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, ATL::CComVariant(OriginalCost)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, ATL::CComVariant(GetCurrentCost() / OriginalCost)))) return hr;
 
 	// Insert the feature buffer in the insert cursor
 	if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;

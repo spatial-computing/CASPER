@@ -74,7 +74,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INetworkDatasetPtr ipNetworkDataset;
 	if (FAILED(hr = pNAContext->get_NetworkDataset(&ipNetworkDataset))) return hr;
 
-	if (!ipNetworkDataset) return AtlReportError(GetObjectCLSID(), _T("Context does not have a valid network dataset."), IID_INASolver);
+	if (!ipNetworkDataset) return ATL::AtlReportError(this->GetObjectCLSID(), _T("Context does not have a valid network dataset."), IID_INASolver);
 
 	// NOTE: this is also a good place to perform any additional necessary validation, such as
 	// synchronizing the attribute names set on your solver with those of the context's network dataset
@@ -117,22 +117,22 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// remove any features that might have been created on previous solves
 	IUnknownPtr ipUnk;
-	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTES_NAME), &ipUnk))) return hr;
+	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipRoutesNAClass(ipUnk);
 	if (FAILED(hr = ipRoutesNAClass->DeleteAllRows())) return hr;
 
-	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_EDGES_NAME), &ipUnk))) return hr;
+	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_EDGES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
 
 	ipUnk = NULL;
-	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
+	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
 	bool DoNotExportRouteEdges = ipUnk == NULL;
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
 	if (!DoNotExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
 
 	ipUnk = NULL;
-	if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
+	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
 	INAClassPtr ipFlocksNAClass(ipUnk);
 	if (flockingEnabled == VARIANT_TRUE && ipUnk == NULL) flockingEnabled = VARIANT_FALSE;
 	if (ipFlocksNAClass != NULL) { if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr; }
@@ -164,7 +164,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Get the "Barriers" NAClass table (we need the NALocation objects from this NAClass to push barriers into the Forward Star)
 	ITablePtr ipBarriersTable;
-	if (FAILED(hr = GetNAClassTable(pNAContext, CComBSTR(CS_BARRIERS_NAME), &ipBarriersTable))) return hr;
+	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_BARRIERS_NAME), &ipBarriersTable))) return hr;
 
 	// Load the barriers
 	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipForwardStar))) return hr;
@@ -188,10 +188,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Get the "Evacuee Points" NAClass table (we need the NALocation objects from
 	// this NAClass as the starting points for Forward Star traversals)
 	ITablePtr ipEvacueePointsTable;
-	if (FAILED(hr = GetNAClassTable(pNAContext, CComBSTR(CS_EVACUEES_NAME), &ipEvacueePointsTable))) return hr;
+	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_EVACUEES_NAME), &ipEvacueePointsTable))) return hr;
 	// Same for safe zone points
 	ITablePtr ipZonesTable;
-	if (FAILED(hr = GetNAClassTable(pNAContext, CComBSTR(CS_ZONES_NAME), &ipZonesTable))) return hr;
+	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_ZONES_NAME), &ipZonesTable))) return hr;
 
 	// Create variables for looping through the cursor and traversing the network
 	IRowESRI * ipRow;
@@ -234,13 +234,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID;
 	VARIANT evName, pop, cap;
 
-	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Collecting input point(s)")); // add more specific information here if appropriate
+	if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Collecting input point(s)")); // add more specific information here if appropriate
 
 	///////////////////////////
 	// here we begin collecting safe zone points for all the evacuees
 
 	// Get a cursor on the zones table to loop through each row
-	if (FAILED(hr = ipZonesTable->FindField(CComBSTR(CS_FIELD_CAP), &capFieldIndex))) return hr;
+	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CAP), &capFieldIndex))) return hr;
 	if (FAILED(hr = ipZonesTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
@@ -355,9 +355,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	NAVertexPtr myVertex;
 
 	// pre-process evacuee NALayer primary field index
-	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
-	if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
-	if (popFieldIndex < 1) { if (FAILED(hr = ipEvacueePointsTable->FindField(CComBSTR(CS_FIELD_EVC_POP1), &popFieldIndex))) return hr; }
+	if (FAILED(hr = ipEvacueePointsTable->FindField(ATL::CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
+	if (FAILED(hr = ipEvacueePointsTable->FindField(ATL::CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
+	if (popFieldIndex < 1) { if (FAILED(hr = ipEvacueePointsTable->FindField(ATL::CComBSTR(CS_FIELD_EVC_POP1), &popFieldIndex))) return hr; }
 
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
@@ -550,7 +550,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// to the "LineData" NAClass
 
 	// Setup a message on our step progress bar indicating that we are outputting feature information
-	if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Writing output features"));
+	if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Writing output features"));
 
 	// looping through processed evacuees and generate routes in output feature class
 	std::list<EvcPathPtr>::const_iterator tpit;
@@ -622,21 +622,21 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	long evNameFieldIndex = -1, evacTimeFieldIndex = -1, orgTimeFieldIndex = -1, RIDFieldIndex = -1, ERRouteFieldIndex = -1, EREdgeFieldIndex = -1,
 		ERSeqFieldIndex = -1, ERFromPosFieldIndex = -1, ERToPosFieldIndex = -1, ERCostFieldIndex = -1, EREdgeDirFieldIndex = -1;
 
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_ORG), &orgTimeFieldIndex))) return hr;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_RID), &RIDFieldIndex))) return hr;
-	if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
-	if (popFieldIndex < 0) { if (FAILED(hr = ipRoutesFC->FindField(CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr; }
+	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_ORG), &orgTimeFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_RID), &RIDFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
+	if (popFieldIndex < 0) { if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr; }
 	if (!DoNotExportRouteEdges)
 	{
-		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_RID), &ERRouteFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_EID), &EREdgeFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_SEQ), &ERSeqFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_FromP), &ERFromPosFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_ToP), &ERToPosFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_COST), &ERCostFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(CComBSTR(CS_FIELD_DIR), &EREdgeDirFieldIndex))) return hr;
+		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_RID), &ERRouteFieldIndex))) return hr;
+		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_EID), &EREdgeFieldIndex))) return hr;
+		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_SEQ), &ERSeqFieldIndex))) return hr;
+		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_FromP), &ERFromPosFieldIndex))) return hr;
+		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_ToP), &ERToPosFieldIndex))) return hr;
+		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_COST), &ERCostFieldIndex))) return hr;
+		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_DIR), &EREdgeDirFieldIndex))) return hr;
 	}
 
 #ifdef DEBUG
@@ -667,7 +667,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		while (routeFeature)
 		{
 			if (FAILED(hr = routeFeature->get_OID(&routeID))) return hr;     // get OID
-			if (FAILED(hr = routeFeature->put_Value(RIDFieldIndex, CComVariant(routeID)))) return hr;    // put OID as routeID
+			if (FAILED(hr = routeFeature->put_Value(RIDFieldIndex, ATL::CComVariant(routeID)))) return hr;    // put OID as routeID
 			if (FAILED(hr = ipFeatureCursorU->UpdateFeature(routeFeature))) return hr;    // put update back in table
 			if (FAILED(hr = ipFeatureCursorU->NextFeature(&routeFeature))) return hr;     // for loop next feature
 		}
@@ -690,15 +690,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipEdgesFC->CreateFeatureBuffer(&ipFeatureBuffer))) return hr;
 
 		// Query for the appropriate field index values in the "EdgeStat" feature class
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_SOURCE_ID), &sourceIDFieldIndex))) return hr;
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_SOURCE_OID), &sourceOIDFieldIndex))) return hr;
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_DIR), &dirFieldIndex))) return hr;
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_Congestion), &congestionFieldIndex))) return hr;
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_TravCost), &travCostFieldIndex))) return hr;
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_OrgCost), &orgCostFieldIndex))) return hr;
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_EID), &eidFieldIndex))) return hr;
-		if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_ReservPop2), &resPopFieldIndex))) return hr;
-		if (resPopFieldIndex < 1) { if (FAILED(hr = ipEdgesFC->FindField(CComBSTR(CS_FIELD_ReservPop1), &resPopFieldIndex))) return hr; }
+		if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_SOURCE_ID), &sourceIDFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_SOURCE_OID), &sourceOIDFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_DIR), &dirFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_Congestion), &congestionFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_TravCost), &travCostFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_OrgCost), &orgCostFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_EID), &eidFieldIndex))) return hr;
+		if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_ReservPop2), &resPopFieldIndex))) return hr;
+		if (resPopFieldIndex < 1) { if (FAILED(hr = ipEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_ReservPop1), &resPopFieldIndex))) return hr; }
 
 		for (NAEdgeTableItr it = ecache->AlongBegin(); it != ecache->AlongEnd(); it++)
 		{
@@ -734,7 +734,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		ipFeatureCursor->Flush();
 	}
 
-	if (sourceNotFoundFlag) pMessages->AddWarning(CComBSTR(_T("A network source could not be found by source ID.")));
+	if (sourceNotFoundFlag) pMessages->AddWarning(ATL::CComBSTR(_T("A network source could not be found by source ID.")));
 
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
 	tenNanoSec64 = (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
@@ -747,7 +747,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Perform flocking simulation if requested
 
 	// At this stage we create many evacuee points within a flocking simulation environment to validate the calculated results
-	CString collisionMsg, simulationIncompleteEndingMsg;
+	ATL::CString collisionMsg, simulationIncompleteEndingMsg;
 	std::vector<FlockingLocationPtr> * history = 0;
 	std::list<double> * collisionTimes = 0;
 
@@ -768,7 +768,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		bool movingObjectLeft;
 		wchar_t * thisTimeBuf = new DEBUG_NEW_PLACEMENT wchar_t[25];
 		tm local;
-		CComVariant featureID(0);
+		ATL::CComVariant featureID(0);
 		EvcPathPtr path;
 
 		// read cost attribute unit
@@ -798,19 +798,19 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// init
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
-		if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Initializing flocking environment"));
+		if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Initializing flocking environment"));
 		FlockingEnviroment * flock = new DEBUG_NEW_PLACEMENT FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, initDelayCostPerPop);
 
 		// run simulation
 		try
 		{
 			flock->Init(Evacuees, ipNetworkQuery, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
-			if (ipStepProgressor) ipStepProgressor->put_Message(CComBSTR(L"Running flocking simulation"));
+			if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Running flocking simulation"));
 			hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, globalEvcCost);
 		}
 		catch(std::exception& e)
 		{
-			CComBSTR ccombstrErr("Critical error during flocking simulation: ");
+			ATL::CComBSTR ccombstrErr("Critical error during flocking simulation: ");
 			hr = ccombstrErr.Append(e.what());
 			pMessages->AddError(-1, ccombstrErr);
 		}
@@ -856,7 +856,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// start writing into the feature class
 		if (ipStepProgressor)
 		{
-			ipStepProgressor->put_Message(CComBSTR(L"Writing flocking results"));
+			ipStepProgressor->put_Message(ATL::CComBSTR(L"Writing flocking results"));
 			ipStepProgressor->put_MinRange(0);
 			ipStepProgressor->put_MaxRange((long)(history->size()));
 			ipStepProgressor->put_StepValue(1);
@@ -868,16 +868,16 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipFlocksFC->CreateFeatureBuffer(&ipFeatureBuffer))) return hr;
 
 		// Query for the appropriate field index values in the "EdgeStat" feature class
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_ID), &idFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_COST), &costFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TRAVELED), &traveledFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_VelocityX), &speedXFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_VelocityY), &speedYFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_SPEED), &speedFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_PTIME), &ptimeFieldIndex))) return hr;
-		if (FAILED(hr = ipFlocksFC->FindField(CComBSTR(CS_FIELD_STATUS), &statFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_ID), &idFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_COST), &costFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_TRAVELED), &traveledFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_VelocityX), &speedXFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_VelocityY), &speedYFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_SPEED), &speedFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_TIME), &timeFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_PTIME), &ptimeFieldIndex))) return hr;
+		if (FAILED(hr = ipFlocksFC->FindField(ATL::CComBSTR(CS_FIELD_STATUS), &statFieldIndex))) return hr;
 
 		for(FlockingLocationItr it = history->begin(); it != history->end(); it++)
 		{
@@ -895,40 +895,40 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = (*it)->MyLocation->Project(ipNAContextSR))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant((*it)->ID)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, ATL::CComVariant((*it)->ID)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, (*it)->GroupName))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, CComVariant((*it)->MyTime)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant((*it)->Traveled)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant((*it)->Velocity.x)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant((*it)->Velocity.y)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant((*it)->Velocity.length())))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(thisTimeBuf)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, CComVariant((*it)->GTime / (costPerSec * 60.0))))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, ATL::CComVariant((*it)->MyTime)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, ATL::CComVariant((*it)->Traveled)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, ATL::CComVariant((*it)->Velocity.x)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, ATL::CComVariant((*it)->Velocity.y)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, ATL::CComVariant((*it)->Velocity.length())))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, ATL::CComVariant(thisTimeBuf)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, ATL::CComVariant((*it)->GTime / (costPerSec * 60.0))))) return hr;
 
 			// print out the status
 			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT)
 			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("I"))))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("I"))))) return hr;
 			}
 			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_MOVE)
 			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("M"))))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("M"))))) return hr;
 			}
 			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_END)
 			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("E"))))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("E"))))) return hr;
 			}
 			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_STOP)
 			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("S"))))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("S"))))) return hr;
 			}
 			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_COLLID)
 			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("C"))))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("C"))))) return hr;
 			}
 			else
 			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T(""))))) return hr;
+				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T(""))))) return hr;
 			}
 
 			// Insert the feature buffer in the insert cursor
@@ -952,18 +952,18 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 			// Store the feature values on the feature buffer
 			if (FAILED(hr = ipFeatureBuffer->putref_Shape((*it)->MyLocation))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, CComVariant(0)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, CComVariant("0")))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, CComVariant(99999)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, CComVariant(0)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, CComVariant(0)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, CComVariant(0)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, CComVariant(0)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, CComVariant(thisTimeBuf)))) return hr;
-			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, CComVariant(99999)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(idFieldIndex, ATL::CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(nameFieldIndex, ATL::CComVariant("0")))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(costFieldIndex, ATL::CComVariant(99999)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(traveledFieldIndex, ATL::CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedXFieldIndex, ATL::CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedYFieldIndex, ATL::CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, ATL::CComVariant(0)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, ATL::CComVariant(thisTimeBuf)))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, ATL::CComVariant(99999)))) return hr;
 
 			// print out the status
-			if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, CComVariant(_T("E"))))) return hr;
+			if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("E"))))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
@@ -995,7 +995,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg;
+	ATL::CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg;
 
 	initMsg.Format(_T("%d routes are generated from the evacuee point(s) with ArcCASPER version %s."), tempPathList->size(), _T(GIT_DESCRIBE));
 
@@ -1019,29 +1019,29 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage (exclude flocking) is %d MB."), globalEvcCost, max(0, mem));
 	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
-	pMessages->AddMessage(CComBSTR(initMsg));
-	pMessages->AddMessage(CComBSTR(performanceMsg));
-	pMessages->AddMessage(CComBSTR(CARMALoopMsg));
-	pMessages->AddMessage(CComBSTR(CARMAExtractsMsg));
-	pMessages->AddMessage(CComBSTR(ExtraInfoMsg));
-	if (ecache->GetCacheHitPercentage() < 80.0) pMessages->AddMessage(CComBSTR(CacheHitMsg));
+	pMessages->AddMessage(ATL::CComBSTR(initMsg));
+	pMessages->AddMessage(ATL::CComBSTR(performanceMsg));
+	pMessages->AddMessage(ATL::CComBSTR(CARMALoopMsg));
+	pMessages->AddMessage(ATL::CComBSTR(CARMAExtractsMsg));
+	pMessages->AddMessage(ATL::CComBSTR(ExtraInfoMsg));
+	if (ecache->GetCacheHitPercentage() < 80.0) pMessages->AddMessage(ATL::CComBSTR(CacheHitMsg));
 
 	// check version lock: if the evclayer is too old to be solved then add a warning
-	if (DoNotExportRouteEdges) pMessages->AddWarning(CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
+	if (DoNotExportRouteEdges) pMessages->AddWarning(ATL::CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
 
 	if (EvacueesWithRestrictedSafezone > 0)
 	{
-		CString RestrictedWarning;
+		ATL::CString RestrictedWarning;
 		RestrictedWarning.Format(_T("For %d evacuee(s), a route could not be found because all reachable safe zones were restricted. Make sure you have some non-restricted safe zones with a non-zero capacity."), EvacueesWithRestrictedSafezone);
-		pMessages->AddWarning(CComBSTR(RestrictedWarning));
+		pMessages->AddWarning(ATL::CComBSTR(RestrictedWarning));
 	}
 
-	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(CComBSTR(simulationIncompleteEndingMsg));
+	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(ATL::CComBSTR(simulationIncompleteEndingMsg));
 
 	if (!(collisionMsg.IsEmpty()))
 	{
 		collisionMsg.Insert(0, _T("Some collisions have been reported at the following intervals: "));
-		pMessages->AddWarning(CComBSTR(collisionMsg));
+		pMessages->AddWarning(ATL::CComBSTR(collisionMsg));
 	}
 
 	// clear and release evacuees and their paths

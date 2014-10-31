@@ -41,22 +41,31 @@
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS	// some CString constructors will be explicit
 
-#pragma warning(push)
-#pragma warning(disable : 4192) /* Ignore warnings for types that are duplicated in win32 header files */
-#pragma warning(disable : 4146) /* Ignore warnings for use of minus on unsigned types */
-#pragma warning(disable : 4278) /* Ignore warnings for use of duplicate macros */
-#pragma warning(disable : 4336) /* Ignore warnings for order of imports */
-
+#pragma component(browser, off, references)
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
 #include <atltypes.h>
 #include <atlctl.h>
 #include <atlhost.h>
+#pragma component(browser, on, references)
 
-using namespace ATL;
+// So I did all of these extra 'using's just so I can avoid doinbg 'using namespace ATL'
+using ATL::CComCoClass;
+using ATL::CComObjectRootEx;
+using ATL::CComSingleThreadModel;
+using ATL::IProvideClassInfoImpl;
+using ATL::IDispatchImpl;
+using ATL::CComCreator;
+using ATL::CComObject;
+using ATL::RGSDWORD;
+using ATL::RGSBinary;
+using ATL::RGSStrings;
+using ATL::CRegistryVirtualMachine;
 
-// Be sure to set these paths to the version of the software against which you want to run
+#pragma warning(push)
+#pragma warning(disable : 4336) /* Ignore warnings for order of imports */
+
 #ifdef __INTELLISENSE__
 	#ifdef _WIN64
 		#import "obj\Debug\x64\esrisystem.tlh"
@@ -66,7 +75,6 @@ using namespace ATL;
 		#import "obj\Debug\x64\esriGeoDatabase.tlh"
 		#import "obj\Debug\x64\esriNetworkAnalyst.tlh"
 		#import "obj\Debug\x64\esriDisplay.tlh"
-		#import "obj\Debug\x64\esriDataSourcesRaster.tlh"
 		#import "obj\Debug\x64\esriCarto.tlh"
 	#else
 		#import "obj\Debug\Win32\esrisystem.tlh"
@@ -76,35 +84,23 @@ using namespace ATL;
 		#import "obj\Debug\Win32\esriGeoDatabase.tlh"
 		#import "obj\Debug\Win32\esriNetworkAnalyst.tlh"
 		#import "obj\Debug\Win32\esriDisplay.tlh"
-		#import "obj\Debug\Win32\esriDataSourcesRaster.tlh"
 		#import "obj\Debug\Win32\esriCarto.tlh"
 	#endif
 #else
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystem.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer")
+    // Be sure to set these paths to the version of the software against which you want to run
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystem.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("GetJob", "GetJobESRI") rename("GetObject", "GetObjectESRI") rename("max", "maxESRI") rename("min", "minESRI") exclude("IErrorInfo", "ISupportErrorInfo", "IPersistStream", "IPersist", "tagRECT", "OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer", "IStream", "ISequentialStream", "_LARGE_INTEGER", "_ULARGE_INTEGER", "tagSTATSTG", "_FILETIME")
 	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystemui.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR")
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR", "IPropertyPageSite", "tagMSG", "wireHWND", "_RemotableHandle", "__MIDL_IWinTypes_0009", "IPropertyPage", "tagPROPPAGEINFO", "tagSIZE")
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")  exclude("IClassFactory")
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI") rename("GetMessage", "GetMessageESRI") exclude("IPersistStreamInit")
 	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriNetworkAnalyst.olb" named_guids no_namespace raw_interfaces_only no_implementation
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDisplay.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDataSourcesRaster.olb" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI")
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDisplay.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("ResetDC", "ResetDCESRI") rename("DrawText", "DrawTextESRI") rename("CMYK", "CMYKESRI") rename("RGB", "RGBESRI") exclude("tagPOINT", "IConnectionPointContainer", "IEnumConnectionPoints", "IConnectionPoint", "IEnumConnections", "tagCONNECTDATA")
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI") rename("PostMessage", "PostMessageESRI")
 #endif
 
-/*
-#import "libid:5E1F7BC3-67C5-4AEE-8EC6-C4B73AAC42ED" named_guids no_namespace raw_interfaces_only no_implementation exclude("OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer") // System
-#import "libid:4ECCA6E2-B16B-4ACA-BD17-E74CAE4C150A" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI") // SystemUI
-#import "libid:866AE5D3-530C-11D2-A2BD-0000F8774FB5" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR") // Framework
-#import "libid:C4B094C2-FF32-4FA1-ABCB-7820F8D6FB68" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI") // Geometry
-#import "libid:0475BDB1-E5B2-4CA2-9127-B4B1683E70C2" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI") // GeoDatabase
-#import "libid:9B4F73F7-90C0-11D5-A6C3-0008C7DF88AB" named_guids no_namespace raw_interfaces_only no_implementation // NetworkAnalyst
-#import "libid:59FCCD31-434C-4017-BDEF-DB4B7EDC9CE0" raw_interfaces_only, raw_native_types, no_namespace, named_guids // Display
-#import "libid:8F0541A3-D5BE-4B3F-A8D9-062D5579E19B" raw_interfaces_only, raw_native_types, no_namespace, no_implementation named_guids // DataSourcesRaster
-#import "libid:45AC68FF-DEFF-4884-B3A9-7D882EDCAEF1" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI") // Carto
-*/
+#pragma warning(pop)
 
 // This is included below so we can refer to CLSID_, IID_, etc. defined within this project.
-
 #include "_CustomSolver_i.c"
 
 // other needed libraries
@@ -129,10 +125,6 @@ using namespace ATL;
 #include <stdlib.h>
 #include <crtdbg.h>
 
-// new memory leak detection library
-// ref: http://vld.codeplex.com/wikipage?title=Using%20Visual%20Leak%20Detector&referringTitle=Documentation
-/// #include <vld.h>
-
 /// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
 #ifdef _DEBUG
 #define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)
@@ -140,4 +132,3 @@ using namespace ATL;
 #define DEBUG_NEW_PLACEMENT
 #endif
 
-#pragma warning(pop)

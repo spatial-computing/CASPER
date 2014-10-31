@@ -69,7 +69,7 @@ public:
 	inline double GetRoutedPop()             const { return RoutedPop;             }
 	inline double GetReserveEvacuationCost() const { return ReserveEvacuationCost; }
 	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
-	void CalculateFinalEvacuationCost(double);
+	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
 
 	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
 	{

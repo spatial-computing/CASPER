@@ -224,7 +224,7 @@ STDMETHODIMP EvcSolverPropPage::SetObjects(ULONG nObjects, IUnknown ** ppUnk)
 STDMETHODIMP EvcSolverPropPage::Apply(void)
 {
 	// Pass the m_ipEvcSolver member variable to the QueryObject method
-	HRESULT hr = QueryObject(CComVariant((IUnknown*) m_ipEvcSolver));
+	HRESULT hr = QueryObject(ATL::CComVariant((IUnknown*)m_ipEvcSolver));
 
 	// Set the page to not dirty
 	SetDirty(FALSE);
@@ -314,7 +314,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 {
 	// Check if we have a marker symbol
 	// If we do, apply the setting from the page.
-	CComVariant vObject(theObject);
+	ATL::CComVariant vObject(theObject);
 	if (vObject.vt != VT_UNKNOWN) return E_UNEXPECTED;
 	// Try and QI to IEvcSolver
 	IEvcSolverPtr ipSolver(vObject.punkVal);

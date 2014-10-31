@@ -65,10 +65,10 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Create the main analysis layer
   HRESULT             hr = S_OK;
   INamedSetPtr        ipNAClasses;
-  CComBSTR            layerName;
+  ATL::CComBSTR       layerName;
   INALayerPtr         ipNALayer(CLSID_NALayer);
   IUnknownPtr         ipUnknown;
-  CString             szSubLayerName;
+  ATL::CString        szSubLayerName;
   IFeatureRendererPtr ipFeatureRenderer;
   IFeatureLayerPtr    ipSubFeatureLayer;
 
@@ -85,13 +85,13 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   // Create a standard selection color
   IColorPtr ipSelectionColor(CLSID_RgbColor);
-  ipSelectionColor->put_RGB(RGB(0,255,255));
+  ipSelectionColor->put_RGBESRI(RGB(0,255,255));
 
   /////////////////////////////////////////////////////////////////////////////////////////
   // Zones layer
 
   // Get the Zone Points NAClass/FeatureClass
-  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ZONES_NAME), &ipUnknown))) return hr;
+  if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ZONES_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipZonesFC(ipUnknown);
   if (!ipZonesFC) return E_UNEXPECTED;
@@ -99,7 +99,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Create a new feature layer for the Zones feature class
   IFeatureLayerPtr ipZonesFeatureLayer(CLSID_FeatureLayer);
   ipZonesFeatureLayer->putref_FeatureClass(ipZonesFC);
-  ipZonesFeatureLayer->put_Name(CComBSTR(CS_ZONES_NAME));
+  ipZonesFeatureLayer->put_Name(ATL::CComBSTR(CS_ZONES_NAME));
 
   // Give the Zone Points layer a renderer and a unique value property page
   CreatePointRenderer(ipSolverColor, &ipFeatureRenderer);
@@ -111,7 +111,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   IUIDPtr ipUniqueValuePropertyPageUID(CLSID_UID);
 
-  if (FAILED(ipUniqueValuePropertyPageUID->put_Value(CComVariant(L"esriCartoUI.UniqueValuePropertyPage"))))
+  if (FAILED(ipUniqueValuePropertyPageUID->put_Value(ATL::CComVariant(L"esriCartoUI.UniqueValuePropertyPage"))))
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
@@ -132,7 +132,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Evacuees layer
 
   // Get the Evacuee Points NAClass/FeatureClass
-  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_EVACUEES_NAME), &ipUnknown))) return hr;
+  if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_EVACUEES_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipEvacueesFC(ipUnknown);
   if (!ipEvacueesFC) return E_UNEXPECTED;
@@ -140,7 +140,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Create a new feature layer for the Evacuee Points feature class
   IFeatureLayerPtr ipEvacueesFeatureLayer(CLSID_FeatureLayer);
   ipEvacueesFeatureLayer->putref_FeatureClass(ipEvacueesFC);
-  ipEvacueesFeatureLayer->put_Name(CComBSTR(CS_EVACUEES_NAME));
+  ipEvacueesFeatureLayer->put_Name(ATL::CComBSTR(CS_EVACUEES_NAME));
 
   // Give the Evacuee Points layer a renderer and a unique value property page
   CreatePointRenderer(ipSolverColor, &ipFeatureRenderer);
@@ -164,7 +164,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Barriers layer
 
   // Get the Barriers NAClass/FeatureClass
-  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_BARRIERS_NAME), &ipUnknown))) return hr;
+  if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_BARRIERS_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipBarriersFC(ipUnknown);
   if (!ipBarriersFC) return E_UNEXPECTED;
@@ -172,7 +172,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Create a new feature layer for the Barriers feature class
   IFeatureLayerPtr ipBarrierFeatureLayer(CLSID_FeatureLayer);
   ipBarrierFeatureLayer->putref_FeatureClass(ipBarriersFC);
-  ipBarrierFeatureLayer->put_Name(CComBSTR(CS_BARRIERS_NAME));
+  ipBarrierFeatureLayer->put_Name(ATL::CComBSTR(CS_BARRIERS_NAME));
 
   // Give the Barriers layer a unique value renderer and a unique value property page
   CreateBarrierRenderer(ipSolverColor, &ipFeatureRenderer);
@@ -196,7 +196,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // routes layer
 
   // Get the Routes NAClass/FeatureClass
-  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTES_NAME), &ipUnknown))) return hr;
+  if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTES_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipRoutesFC(ipUnknown);
   if (!ipRoutesFC) return E_UNEXPECTED;
@@ -204,7 +204,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Create a new feature layer for the Routes feature class
   IFeatureLayerPtr ipRoutesFeatureLayer(CLSID_FeatureLayer);
   ipRoutesFeatureLayer->putref_FeatureClass(ipRoutesFC);
-  ipRoutesFeatureLayer->put_Name(CComBSTR(CS_ROUTES_NAME));
+  ipRoutesFeatureLayer->put_Name(ATL::CComBSTR(CS_ROUTES_NAME));
 
   // Give the Routes layer a simple renderer and a single symbol property page
   CreateLineRenderer(ipSolverColor, &ipFeatureRenderer);
@@ -216,7 +216,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   IUIDPtr ipSingleSymbolPropertyPageUIDR(CLSID_UID);
 
-  if (FAILED(ipSingleSymbolPropertyPageUIDR->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
+  if (FAILED(ipSingleSymbolPropertyPageUIDR->put_Value(ATL::CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
@@ -237,7 +237,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // EdgeStat layer
 
   // Get the EdgeStat NAClass/FeatureClass
-  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_EDGES_NAME), &ipUnknown))) return hr;
+  if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_EDGES_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipEdgesFC(ipUnknown);
   if (!ipEdgesFC) return E_UNEXPECTED;
@@ -245,7 +245,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Create a new feature layer for the EdgeStat feature class
   IFeatureLayerPtr ipEdgesFeatureLayer(CLSID_FeatureLayer);
   ipEdgesFeatureLayer->putref_FeatureClass(ipEdgesFC);
-  ipEdgesFeatureLayer->put_Name(CComBSTR(CS_EDGES_NAME));
+  ipEdgesFeatureLayer->put_Name(ATL::CComBSTR(CS_EDGES_NAME));
 
   // Give the EdgeStat layer a simple renderer and a single symbol property page
   CreateLineRenderer(ipSolverColor, &ipFeatureRenderer);
@@ -257,7 +257,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   IUIDPtr ipSingleSymbolPropertyPageUIDE(CLSID_UID);
 
-  if (FAILED(ipSingleSymbolPropertyPageUIDE->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
+  if (FAILED(ipSingleSymbolPropertyPageUIDE->put_Value(ATL::CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
@@ -278,7 +278,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // RouteEdges layer
 
   // Get the EdgeStat NAClass/FeatureClass
-  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_ROUTEEDGES_NAME), &ipUnknown))) return hr;
+  if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipRouteEdgesFC(ipUnknown);
   if (!ipRouteEdgesFC) return E_UNEXPECTED;
@@ -286,7 +286,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Create a new feature layer for the EdgeStat feature class
   IFeatureLayerPtr ipRouteEdgesFeatureLayer(CLSID_FeatureLayer);
   ipRouteEdgesFeatureLayer->putref_FeatureClass(ipRouteEdgesFC);
-  ipRouteEdgesFeatureLayer->put_Name(CComBSTR(CS_ROUTEEDGES_NAME));
+  ipRouteEdgesFeatureLayer->put_Name(ATL::CComBSTR(CS_ROUTEEDGES_NAME));
 
   // Give the EdgeStat layer a simple renderer and a single symbol property page
   CreateLineRenderer(ipSolverColor, &ipFeatureRenderer);
@@ -298,7 +298,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   IUIDPtr ipSingleSymbolPropertyPageUIDRE(CLSID_UID);
 
-  if (FAILED(ipSingleSymbolPropertyPageUIDRE->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
+  if (FAILED(ipSingleSymbolPropertyPageUIDRE->put_Value(ATL::CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
   {
 	  // Renderer Property Pages are not installed with Engine. In this
 	  // case getting the property page by PROGID is an expected failure.
@@ -318,7 +318,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   /////////////////////////////////////////////////////////////////////////////////////////////
   // flocks layer
   // Get the flocks NAClass/FeatureClass
-  if (FAILED(hr = ipNAClasses->get_ItemByName(CComBSTR(CS_FLOCKS_NAME), &ipUnknown))) return hr;
+  if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnknown))) return hr;
 
   IFeatureClassPtr ipFlocksFC(ipUnknown);
   if (!ipRoutesFC) return E_UNEXPECTED;
@@ -326,7 +326,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Create a new feature layer for the flocks feature class
   IFeatureLayerPtr ipFlocksFeatureLayer(CLSID_FeatureLayer);
   ipFlocksFeatureLayer->putref_FeatureClass(ipFlocksFC);
-  ipFlocksFeatureLayer->put_Name(CComBSTR(CS_FLOCKS_NAME));
+  ipFlocksFeatureLayer->put_Name(ATL::CComBSTR(CS_FLOCKS_NAME));
 
   // Give the Routes layer a simple renderer and a single symbol property page
   CreateSimplePointRenderer(ipSolverColor, &ipFeatureRenderer);
@@ -338,7 +338,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   IUIDPtr ipSingleSymbolPropertyPageUID3(CLSID_UID);
 
-  if (FAILED(ipSingleSymbolPropertyPageUID3->put_Value(CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
+  if (FAILED(ipSingleSymbolPropertyPageUID3->put_Value(ATL::CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
@@ -399,7 +399,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Flocks
-  pNALayer->get_LayerByNAClassName(CComBSTR(CS_FLOCKS_NAME), &ipSubLayer);
+  pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
     ipGeoFeatureLayer = ipSubLayer;
@@ -409,7 +409,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Zones
-  pNALayer->get_LayerByNAClassName(CComBSTR(CS_ZONES_NAME), &ipSubLayer);
+  pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_ZONES_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
     ipGeoFeatureLayer = ipSubLayer;
@@ -419,7 +419,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Evacuee Points
-  pNALayer->get_LayerByNAClassName(CComBSTR(CS_EVACUEES_NAME), &ipSubLayer);
+  pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_EVACUEES_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
     ipGeoFeatureLayer = ipSubLayer;
@@ -429,7 +429,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Barriers
-  pNALayer->get_LayerByNAClassName(CComBSTR(CS_BARRIERS_NAME), &ipSubLayer);
+  pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_BARRIERS_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
     ipGeoFeatureLayer = ipSubLayer;
@@ -439,7 +439,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // Routes
-  pNALayer->get_LayerByNAClassName(CComBSTR(CS_ROUTES_NAME), &ipSubLayer);
+  pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_ROUTES_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
     ipGeoFeatureLayer = ipSubLayer;
@@ -449,7 +449,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // EdgeStat
-  pNALayer->get_LayerByNAClassName(CComBSTR(CS_EDGES_NAME), &ipSubLayer);
+  pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_EDGES_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
     ipGeoFeatureLayer = ipSubLayer;
@@ -459,7 +459,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   // RouteEdges
-  pNALayer->get_LayerByNAClassName(CComBSTR(CS_ROUTEEDGES_NAME), &ipSubLayer);
+  pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipSubLayer);
   if (ipSubLayer)
   {
 	  ipGeoFeatureLayer = ipSubLayer;
@@ -509,37 +509,37 @@ HRESULT EvcSolverSymbolizer::CreateBarrierRenderer(IColor* pBarrierColor, IFeatu
               ipErrorSymbol;
   COLORREF    colorRef;
 
-  ipErrorColor->put_RGB(RGB(255,0,0));
-  ipBackgroundColor->put_RGB(RGB(255,255,255));
-  pBarrierColor->get_RGB(&colorRef);
+  ipErrorColor->put_RGBESRI(RGB(255,0,0));
+  ipBackgroundColor->put_RGBESRI(RGB(255,255,255));
+  pBarrierColor->get_RGBESRI(&colorRef);
 
   IHsvColorPtr ipHsvColor(CLSID_HsvColor);
-  ipHsvColor->put_RGB(colorRef);
+  ipHsvColor->put_RGBESRI(colorRef);
   long s;
   ipHsvColor->get_Saturation(&s);
   if (s > c_maxFadedColorHSVSaturation)
   {
     ipHsvColor->put_Saturation(c_maxFadedColorHSVSaturation);
-    ipHsvColor->get_RGB(&colorRef);
+    ipHsvColor->get_RGBESRI(&colorRef);
   }
-  ipUnlocatedColor->put_RGB(colorRef);
+  ipUnlocatedColor->put_RGBESRI(colorRef);
 
-  if (FAILED(hr = CreateCharacterMarkerSymbol(CString(_T("ESRI Default Marker")), pBarrierColor, ipBackgroundColor, 67, 33, 18, 10, 45.0, &ipBarrierSymbol))) return hr;
+  if (FAILED(hr = CreateCharacterMarkerSymbol(ATL::CString(_T("ESRI Default Marker")), pBarrierColor, ipBackgroundColor, 67, 33, 18, 10, 45.0, &ipBarrierSymbol))) return hr;
   if (FAILED(hr = CreateUnlocatedSymbol(ipBarrierSymbol, &ipUnlocatedBarrierSymbol))) return hr;
-  if (FAILED(hr = CreateCharacterMarkerSymbol(CString(_T("ESRI Default Marker")), ipErrorColor, ipBackgroundColor, 67, 33, 18, 10, 45.0, &ipErrorSymbol))) return hr;
+  if (FAILED(hr = CreateCharacterMarkerSymbol(ATL::CString(_T("ESRI Default Marker")), ipErrorColor, ipBackgroundColor, 67, 33, 18, 10, 45.0, &ipErrorSymbol))) return hr;
 
   ipRenderer->put_FieldCount(1);
-  ipRenderer->put_Field(0, CComBSTR(CS_FIELD_STATUS));
+  ipRenderer->put_Field(0, ATL::CComBSTR(CS_FIELD_STATUS));
 
   ipRenderer->put_DefaultSymbol(ipErrorSymbol);
-  ipRenderer->put_DefaultLabel(CComBSTR(L"Error"));
+  ipRenderer->put_DefaultLabel(ATL::CComBSTR(L"Error"));
   ipRenderer->put_UseDefaultSymbol(VARIANT_TRUE);
 
-  ipRenderer->AddValue(CComBSTR(L"0"), CComBSTR(L""), ipBarrierSymbol);
-  ipRenderer->put_Label(CComBSTR(L"0"), CComBSTR(L"Located"));
+  ipRenderer->AddValue(ATL::CComBSTR(L"0"), ATL::CComBSTR(L""), ipBarrierSymbol);
+  ipRenderer->put_Label(ATL::CComBSTR(L"0"), ATL::CComBSTR(L"Located"));
 
-  ipRenderer->AddValue(CComBSTR(L"1"), CComBSTR(L""), ipUnlocatedBarrierSymbol);
-  ipRenderer->put_Label(CComBSTR(L"1"), CComBSTR(L"Unlocated"));
+  ipRenderer->AddValue(ATL::CComBSTR(L"1"), ATL::CComBSTR(L""), ipUnlocatedBarrierSymbol);
+  ipRenderer->put_Label(ATL::CComBSTR(L"1"), ATL::CComBSTR(L"Unlocated"));
 
   *ppFRenderer = (IFeatureRendererPtr)ipRenderer;
   if (*ppFRenderer) (*ppFRenderer)->AddRef();
@@ -547,7 +547,7 @@ HRESULT EvcSolverSymbolizer::CreateBarrierRenderer(IColor* pBarrierColor, IFeatu
   return S_OK;
 }
 
-HRESULT EvcSolverSymbolizer::CreateCharacterMarkerSymbol(CString   fontName,
+HRESULT EvcSolverSymbolizer::CreateCharacterMarkerSymbol(ATL::CString   fontName,
                                                             IColor*   pMarkerColor,
                                                             IColor*   pMarkerBackgroundColor,
                                                             long      characterIndex,
@@ -570,7 +570,7 @@ HRESULT EvcSolverSymbolizer::CreateCharacterMarkerSymbol(CString   fontName,
 
   ::memset(&fontDesc, 0, sizeof(FONTDESC));
   fontDesc.cbSizeofstruct = sizeof(FONTDESC);
-  fontDesc.lpstrName      = CComBSTR(fontName);
+  fontDesc.lpstrName = ATL::CComBSTR(fontName);
   ::OleCreateFontIndirect(&fontDesc, IID_IFontDisp, (void**)&ipFontDisp);
   if (!ipFontDisp) return E_INVALIDARG;
 
@@ -643,19 +643,19 @@ HRESULT EvcSolverSymbolizer::CreateUnlocatedSymbol(ISymbol* pLocatedMarkerSymbol
 
   ((IMarkerSymbolPtr)ipMultiLayerSymbol)->get_Size(&symbolSize);
   ((IMarkerSymbolPtr)ipMultiLayerSymbol)->get_Color(&ipLocatedColor);
-  ipLocatedColor->get_RGB(&colorRef);
+  ipLocatedColor->get_RGBESRI(&colorRef);
 
   IHsvColorPtr ipHsvColor(CLSID_HsvColor);
-  ipHsvColor->put_RGB(colorRef);
+  ipHsvColor->put_RGBESRI(colorRef);
   long s;
   ipHsvColor->get_Saturation(&s);
   if (s > c_maxFadedColorHSVSaturation)
   {
     ipHsvColor->put_Saturation(c_maxFadedColorHSVSaturation);
-    ipHsvColor->get_RGB(&colorRef);
+    ipHsvColor->get_RGBESRI(&colorRef);
   }
 
-  ipUnlocatedColor->put_RGB(colorRef);
+  ipUnlocatedColor->put_RGBESRI(colorRef);
 
   ((IMarkerSymbolPtr)ipMultiLayerSymbol)->put_Color(ipUnlocatedColor);
 
@@ -665,13 +665,13 @@ HRESULT EvcSolverSymbolizer::CreateUnlocatedSymbol(ISymbol* pLocatedMarkerSymbol
 
   ::memset(&fontDesc, 0, sizeof(FONTDESC));
   fontDesc.cbSizeofstruct = sizeof(FONTDESC);
-  fontDesc.lpstrName      = CComBSTR(L"Arial Black");
+  fontDesc.lpstrName = ATL::CComBSTR(L"Arial Black");
   ::OleCreateFontIndirect(&fontDesc, IID_IFontDisp, (void**)&ipFontDisp);
   if (!ipFontDisp) return E_INVALIDARG;
 
   IColorPtr ipRedColor(CLSID_RgbColor);
 
-  ipRedColor->put_RGB(RGB(255, 0, 0));
+  ipRedColor->put_RGBESRI(RGB(255, 0, 0));
 
   ICharacterMarkerSymbolPtr ipCharacterMarkerSymbol;
   ipCharacterMarkerSymbol.CreateInstance(CLSID_CharacterMarkerSymbol);
@@ -695,7 +695,7 @@ HRESULT EvcSolverSymbolizer::CreateSimplePointRenderer(IColor* pPointColor, IFea
 
   ISimpleRendererPtr ipRenderer(CLSID_SimpleRenderer);
   IColorPtr   ipErrorColor(CLSID_RgbColor);
-  ipErrorColor->put_RGB(RGB(255,0,0));
+  ipErrorColor->put_RGBESRI(RGB(255,0,0));
 
   ISymbolPtr ipPointSymbol(CLSID_SimpleMarkerSymbol);
   ISimpleMarkerSymbolPtr ipSimpleMarkerPointSymbol(ipPointSymbol);
@@ -720,7 +720,7 @@ HRESULT EvcSolverSymbolizer::CreatePointRenderer(IColor* pPointColor, IFeatureRe
   // Three symbols: Located, Unlocated and Error (default) are created for the renderer
   HRESULT     hr;
   IColorPtr   ipErrorColor(CLSID_RgbColor);
-  ipErrorColor->put_RGB(RGB(255,0,0));
+  ipErrorColor->put_RGBESRI(RGB(255,0,0));
 
   ISymbolPtr ipPointSymbol(CLSID_SimpleMarkerSymbol);
   ISimpleMarkerSymbolPtr ipSimpleMarkerPointSymbol(ipPointSymbol);
@@ -738,17 +738,17 @@ HRESULT EvcSolverSymbolizer::CreatePointRenderer(IColor* pPointColor, IFeatureRe
   if (FAILED(hr = CreateUnlocatedSymbol(ipPointSymbol, &ipUnlocatedPointSymbol))) return hr;
 
   ipRenderer->put_FieldCount(1);
-  ipRenderer->put_Field(0, CComBSTR(CS_FIELD_STATUS));
+  ipRenderer->put_Field(0, ATL::CComBSTR(CS_FIELD_STATUS));
 
   ipRenderer->put_DefaultSymbol(ipErrorPointSymbol);
-  ipRenderer->put_DefaultLabel(CComBSTR(L"Error"));
+  ipRenderer->put_DefaultLabel(ATL::CComBSTR(L"Error"));
   ipRenderer->put_UseDefaultSymbol(VARIANT_TRUE);
 
-  ipRenderer->AddValue(CComBSTR(L"0"), CComBSTR(L""), ipPointSymbol);
-  ipRenderer->put_Label(CComBSTR(L"0"), CComBSTR(L"Located"));
+  ipRenderer->AddValue(ATL::CComBSTR(L"0"), ATL::CComBSTR(L""), ipPointSymbol);
+  ipRenderer->put_Label(ATL::CComBSTR(L"0"), ATL::CComBSTR(L"Located"));
 
-  ipRenderer->AddValue(CComBSTR(L"1"), CComBSTR(L""), ipUnlocatedPointSymbol);
-  ipRenderer->put_Label(CComBSTR(L"1"), CComBSTR(L"Unlocated"));
+  ipRenderer->AddValue(ATL::CComBSTR(L"1"), ATL::CComBSTR(L""), ipUnlocatedPointSymbol);
+  ipRenderer->put_Label(ATL::CComBSTR(L"1"), ATL::CComBSTR(L"Unlocated"));
 
   *ppFRenderer = (IFeatureRendererPtr)ipRenderer;
   if (*ppFRenderer) (*ppFRenderer)->AddRef();

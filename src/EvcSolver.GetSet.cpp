@@ -41,7 +41,7 @@ STDMETHODIMP EvcSolver::get_ClassDefinitions(INamedSet ** ppDefinitions)
 
 	HRESULT hr;
 	if (FAILED(hr = BuildClassDefinitions(ipUnkSR, ppDefinitions, 0)))
-		return AtlReportError(GetObjectCLSID(), _T("Failed to create class definitions."), IID_INASolver, hr);
+		return ATL::AtlReportError(GetObjectCLSID(), _T("Failed to create class definitions."), IID_INASolver, hr);
 
 	return S_OK;
 }

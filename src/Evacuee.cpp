@@ -23,18 +23,18 @@ void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSe
 	this->push_front(segment);
 	segment->Edge->AddReservation(this, population2Route, method);
 	double p = abs(segment->GetEdgePortion());
-	ReserveEvacuationCost += segment->Edge->GetCurrentCost() * p;
+	ReserveEvacuationCost += segment->Edge->GetCurrentCost(method) * p;
 	OrginalCost    += segment->Edge->OriginalCost     * p;
 }
 
-void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop)
+void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method)
 {
 	FinalEvacuationCost = 0.0;
 	OrginalCost = 0.0;
 	for each (auto pathSegment in *this)
 	{
 		double p = abs(pathSegment->GetEdgePortion());
-		FinalEvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
+		FinalEvacuationCost += pathSegment->Edge->GetCurrentCost(method) * p;
 		OrginalCost         += pathSegment->Edge->OriginalCost     * p;
 	}	
 	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
@@ -112,9 +112,9 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	// Store the feature values on the feature buffer
 	if (FAILED(hr = ipFeatureBufferR->putref_Shape((IPolylinePtr)pline))) return hr;
 	if (FAILED(hr = ipFeatureBufferR->put_Value(evNameFieldIndex, myEvc->Name))) return hr;
-	if (FAILED(hr = ipFeatureBufferR->put_Value(evacTimeFieldIndex, CComVariant(FinalEvacuationCost)))) return hr;
-	if (FAILED(hr = ipFeatureBufferR->put_Value(orgTimeFieldIndex, CComVariant(OrginalCost)))) return hr;
-	if (FAILED(hr = ipFeatureBufferR->put_Value(popFieldIndex, CComVariant(RoutedPop)))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->put_Value(evacTimeFieldIndex, ATL::CComVariant(FinalEvacuationCost)))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->put_Value(orgTimeFieldIndex, ATL::CComVariant(OrginalCost)))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->put_Value(popFieldIndex, ATL::CComVariant(RoutedPop)))) return hr;
 
 	// Insert the feature buffer in the insert cursor
 	if (FAILED(hr = ipFeatureCursorR->InsertFeature(ipFeatureBufferR, &RouteOID))) return hr;
@@ -140,12 +140,12 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 
 			if (FAILED(hr = ipFeatureBufferE->putref_Shape(pathSegment->pline))) return hr;
 			if (FAILED(hr = ipFeatureBufferE->put_Value(ERRouteFieldIndex, RouteOID))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(EREdgeFieldIndex, CComVariant(pathSegment->Edge->EID)))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(EREdgeDirFieldIndex, CComVariant(dir)))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERSeqFieldIndex, CComVariant(seq)))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERFromPosFieldIndex, CComVariant(pathSegment->GetFromRatio())))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERToPosFieldIndex, CComVariant(pathSegment->GetToRatio())))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERCostFieldIndex, CComVariant(segmentCost)))) return hr;
+			if (FAILED(hr = ipFeatureBufferE->put_Value(EREdgeFieldIndex, ATL::CComVariant(pathSegment->Edge->EID)))) return hr;
+			if (FAILED(hr = ipFeatureBufferE->put_Value(EREdgeDirFieldIndex, ATL::CComVariant(dir)))) return hr;
+			if (FAILED(hr = ipFeatureBufferE->put_Value(ERSeqFieldIndex, ATL::CComVariant(seq)))) return hr;
+			if (FAILED(hr = ipFeatureBufferE->put_Value(ERFromPosFieldIndex, ATL::CComVariant(pathSegment->GetFromRatio())))) return hr;
+			if (FAILED(hr = ipFeatureBufferE->put_Value(ERToPosFieldIndex, ATL::CComVariant(pathSegment->GetToRatio())))) return hr;
+			if (FAILED(hr = ipFeatureBufferE->put_Value(ERCostFieldIndex, ATL::CComVariant(segmentCost)))) return hr;
 
 			if (FAILED(hr = ipFeatureCursorE->InsertFeature(ipFeatureBufferE, &RouteEdgesOID))) return hr;
 		}
