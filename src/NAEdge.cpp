@@ -234,7 +234,7 @@ double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow,
 	if (deltaCostOfNewFlow > 0.0 && selfishRatio > 0.0)
 		for(std::vector<EvcPathPtr>::const_iterator pi = reservations->begin(); pi != reservations->end(); ++pi)
 		{
-			AddedGlobalCost = max(AddedGlobalCost, (*pi)->GetEvacuationCost() + deltaCostOfNewFlow - cutoffCost);
+			AddedGlobalCost = max(AddedGlobalCost, (*pi)->GetReserveEvacuationCost() + deltaCostOfNewFlow - cutoffCost);
 		}
 	else return 0.0;
 

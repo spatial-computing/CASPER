@@ -53,7 +53,8 @@ class EvcPath : private std::list<PathSegmentPtr>
 {
 private:
 	double  RoutedPop;
-	double  EvacuationCost;
+	double  ReserveEvacuationCost;
+	double  FinalEvacuationCost;
 	double  OrginalCost;
 	int     Order;
 	Evacuee * myEvc;
@@ -62,16 +63,19 @@ public:
 	typedef std::list<PathSegmentPtr>::const_iterator  const_iterator;
 	typedef std::list<PathSegmentPtr>::const_reference const_reference;
 
-	const_reference Front()           const { return this->front();  }
-	const_iterator Begin()            const { return this->begin();  }
-	const_iterator End()              const { return this->end();    }
-	inline double GetRoutedPop()      const { return RoutedPop;      }
-	inline double GetEvacuationCost() const { return EvacuationCost; }
+	const_reference Front()                  const { return this->front();         }
+	const_iterator Begin()                   const { return this->begin();         }
+	const_iterator End()                     const { return this->end();           }
+	inline double GetRoutedPop()             const { return RoutedPop;             }
+	inline double GetReserveEvacuationCost() const { return ReserveEvacuationCost; }
+	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
+	void CalculateFinalEvacuationCost(double);
 
 	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
 	{
 		RoutedPop = routedPop;
-		EvacuationCost = 0.0;
+		FinalEvacuationCost = 0.0;
+		ReserveEvacuationCost = 0.0;
 		OrginalCost = 0.0;
 		Order = order;
 		myEvc = evc;
@@ -138,7 +142,7 @@ public:
 
 	static bool ReverseEvacuationCost(const Evacuee * e1, const Evacuee * e2)
 	{
-		return e1->Paths->back()->GetEvacuationCost() > e2->Paths->back()->GetEvacuationCost();
+		return e1->Paths->back()->GetReserveEvacuationCost() > e2->Paths->back()->GetReserveEvacuationCost();
 	}
 };
 

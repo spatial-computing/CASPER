@@ -23,8 +23,21 @@ void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSe
 	this->push_front(segment);
 	segment->Edge->AddReservation(this, population2Route, method);
 	double p = abs(segment->GetEdgePortion());
-	EvacuationCost += segment->Edge->GetCurrentCost() * p;
+	ReserveEvacuationCost += segment->Edge->GetCurrentCost() * p;
 	OrginalCost    += segment->Edge->OriginalCost     * p;
+}
+
+void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop)
+{
+	FinalEvacuationCost = 0.0;
+	OrginalCost = 0.0;
+	for each (auto pathSegment in *this)
+	{
+		double p = abs(pathSegment->GetEdgePortion());
+		FinalEvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
+		OrginalCost         += pathSegment->Edge->OriginalCost     * p;
+	}	
+	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
 }
 
 HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag,
@@ -34,8 +47,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 {
 	HRESULT hr = S_OK;
 	OrginalCost = 0.0;
-	double OrgEvcCost = EvacuationCost;
-	EvacuationCost = 0.0;
+	FinalEvacuationCost = 0.0;
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
@@ -82,8 +94,8 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 		}
 		// Final cost calculations
 		double p = abs(pathSegment->GetEdgePortion());
-		EvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
-		OrginalCost    += pathSegment->Edge->OriginalCost     * p;
+		FinalEvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
+		OrginalCost         += pathSegment->Edge->OriginalCost     * p;
 	}
 
 	// Add the last point of the last path segment to the polyline
@@ -94,13 +106,13 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	}
 
 	// add the initial delay cost
-	EvacuationCost += RoutedPop * initDelayCostPerPop;
-	globalEvcCost = max(globalEvcCost, EvacuationCost);
+	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
+	globalEvcCost = max(globalEvcCost, FinalEvacuationCost);
 
 	// Store the feature values on the feature buffer
 	if (FAILED(hr = ipFeatureBufferR->putref_Shape((IPolylinePtr)pline))) return hr;
 	if (FAILED(hr = ipFeatureBufferR->put_Value(evNameFieldIndex, myEvc->Name))) return hr;
-	if (FAILED(hr = ipFeatureBufferR->put_Value(evacTimeFieldIndex, CComVariant(EvacuationCost)))) return hr;
+	if (FAILED(hr = ipFeatureBufferR->put_Value(evacTimeFieldIndex, CComVariant(FinalEvacuationCost)))) return hr;
 	if (FAILED(hr = ipFeatureBufferR->put_Value(orgTimeFieldIndex, CComVariant(OrginalCost)))) return hr;
 	if (FAILED(hr = ipFeatureBufferR->put_Value(popFieldIndex, CComVariant(RoutedPop)))) return hr;
 
@@ -110,7 +122,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 #ifdef DEBUG
 	std::wostringstream os_;
 	os_.precision(3);
-	os_ << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << OrgEvcCost << ',' << EvacuationCost << std::endl;
+	os_ << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << ReserveEvacuationCost << ',' << FinalEvacuationCost << std::endl;
 	OutputDebugStringW(os_.str().c_str());
 #endif
 
