@@ -23,12 +23,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	SafeZoneTableItr iterator;
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipJunctionElement;
-	bool restricted = false, separationRequired, foundRestrictedSafezone, AnotherIterationIsNeeded = true;
+	bool restricted = false, separationRequired, foundRestrictedSafezone;
 	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
 	EvacueeListItr eit;
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
-	int pathGenerationCount = -1, EvacueeProcessOrder = -1, NumberOfEvacueesInIteration = 0;
-	size_t CARMAClosedSize = 0, sumVisitedEdge = 0;
+	int pathGenerationCount = -1, EvacueeProcessOrder = -1;
+	size_t CARMAClosedSize = 0, sumVisitedEdge = 0, NumberOfEvacueesInIteration = 0;
 	countCARMALoops = 0;
 	NAEdgeContainer * leafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer(200);
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
@@ -38,7 +38,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	vector_NAEdgePtr_Ptr adj;
 	ATL::CString statusMsg, AlgName;
 	CARMASort carmaSortDirection = this->CarmaSortDirection;
-	size_t Iteration = 0;
+	std::vector<double> GlobalEvcCostAtIteration;
+	std::vector<EvcPathPtr> * detachedPaths = new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>();
 
 	switch (solverMethod)
 	{
@@ -80,11 +81,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 	do // iteration loop
 	{
-		++Iteration;
 		if (ipStepProgressor)
 		{
 			if (FAILED(hr = ipStepProgressor->put_Position((long)(AllEvacuees->size() - NumberOfEvacueesInIteration)))) goto END_OF_FUNC;
-			statusMsg.Format(_T("Performing %s search (pass %d)"), AlgName, Iteration);
+			statusMsg.Format(_T("Performing %s search (pass %d)"), AlgName, GlobalEvcCostAtIteration.size() + 1);
 			if (FAILED(hr = ipStepProgressor->put_Message(ATL::CComBSTR(statusMsg)))) goto END_OF_FUNC;
 		}
 		do
@@ -275,9 +275,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		CARMAExtractCounts.pop_back();
 
 		/// TODO figure out how may of paths need to be detached and process again
-		if (FAILED(hr = GetPathsThatNeedToBeProcessedInIteration(AllEvacuees, NumberOfEvacueesInIteration, AnotherIterationIsNeeded))) goto END_OF_FUNC;
+		NumberOfEvacueesInIteration = GetPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
 
-	} while (AnotherIterationIsNeeded);
+	} while (NumberOfEvacueesInIteration > 0);
+
 END_OF_FUNC:
 
 	_ASSERT(hr >= 0);
@@ -288,18 +289,19 @@ END_OF_FUNC:
 	delete heap;
 	delete sortedEvacuees;
 	delete leafs;
+	delete detachedPaths;
 	return hr;
 }
 
-HRESULT EvcSolver::GetPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvacuees, int & NumberOfEvacueesInIteration, bool & AnotherIterationIsNeeded) const
+size_t EvcSolver::GetPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvacuees, std::vector<EvcPathPtr> * detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
 {
-	HRESULT hr = S_OK;
+	double ThreasholdForFinalCost = 0.25;
 	std::vector<EvcPathPtr> allPaths;
-	
-	AnotherIterationIsNeeded = false;
-	NumberOfEvacueesInIteration = 0;
+	std::vector<EvacueePtr> EvacueesForNextIteration;
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() * 0.5), MaxNumberOfIterations = 10;
+	size_t NumberOfEvacueesInIteration = 0;
 
-	// Recalculate all path costs and then list them
+	// Recalculate all path costs and then list them in a sorted list by descending final cost
 	for each(auto evc in *AllEvacuees)
 		for each(auto path in *evc->Paths)
 		{
@@ -307,7 +309,40 @@ HRESULT EvcSolver::GetPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEva
 			allPaths.push_back(path);
 		}
 
-	return hr;
+	std::sort(allPaths.begin(), allPaths.end(), EvcPath::MoreThanFinalCost);
+
+	// collect what is the global evacuation time at each iteration and check that we're not getting worse
+	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
+	int Iteration = GlobalEvcCostAtIteration.size();
+
+	// check if it got worse and then undo it
+	if (Iteration > 1 && GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2])
+	{
+		for each(auto path in *detachedPaths) path->CleanYourEvacueePaths();
+		for each(auto path in *detachedPaths) path->ReattachToEvacuee();
+		detachedPaths->clear();
+		return NumberOfEvacueesInIteration;
+	}
+
+	// since we're not going to undo then we don't need the detached paths. Let's cleanup and collect new paths.
+	for each(auto path in *detachedPaths) delete path;
+	detachedPaths->clear();
+
+	// check if more iteration is allowed otherwise finish iteration
+	if (GlobalEvcCostAtIteration.size() >= MaxNumberOfIterations) return NumberOfEvacueesInIteration;
+
+	// And the final loop is to find 'bad' paths and detach them so that the next iteration can find new paths for these evacuees.
+	// If no `bad` paths where found then we leave `NumberOfEvacueesInIteration` as zero so that the solver terminates and returns.
+	for each(auto path in allPaths)
+	{
+		if (NumberOfEvacueesInIteration >= MaxEvacueesInIteration) break;
+		if (!path->DoesItNeedASecondChance(ThreasholdForFinalCost, EvacueesForNextIteration, NumberOfEvacueesInIteration)) break;
+	}
+
+	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
+	for each (auto evc in EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, detachedPaths);
+
+	return NumberOfEvacueesInIteration;
 }
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,

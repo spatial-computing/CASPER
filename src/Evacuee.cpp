@@ -18,6 +18,25 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
+void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, std::vector<EvcPathPtr> * detachedPaths)
+{
+
+}
+
+void EvcPath::ReattachToEvacuee()
+{
+
+}
+
+void EvcPath::CleanYourEvacueePaths()
+{
+
+}
+bool EvcPath::DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, size_t & NumberOfEvacueesInIteration)
+{
+	return false;
+}
+
 void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment)
 {
 	this->push_front(segment);

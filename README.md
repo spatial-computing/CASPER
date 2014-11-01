@@ -35,10 +35,10 @@ unix2dos src/gitdescribe.h
 ```
 
 ####Installation
-In order to install, first unzip the downloaded file.  Next, execute the "install.cmd" script.  This script needs to be run as an administrator in Windows Visa and later operating systems.  Make sure any previous ArcCASPER installation is completely uninstalled.  You may find detailed instructions in the user manual.
+In order to install, first unzip the downloaded file.  Next, execute the "install.cmd" script.  This script needs to run as an administrator in Windows Visa and later operating systems.  Make sure any previous ArcCASPER installation is completely uninstalled.  You may find detailed instructions in the user manual.
 
 ####Acknowledgement
-We would like to thank ESRI APL and Network Analyst teams to support us during the development of this tool.
+I would like to thank Esri [Application Prototype Lab (APL)](https://maps.esri.com/), the Esri Network Analyst team, and USC [Spatial Sciences Institute (SSI)](http://spatial.usc.edu/) for their support during the development of this tool. The programing of this tool started when I was a summer intern at Esri in 2011. I worked at APL during that summer and also received tremendous support from the Network Analyst team. After Esri, I continued as a PhD student and research assistant at USC SSI. Thanks to SSI support, I'm still actively developing the CASPER algorithm to improve the future of public safety.
 
 ####Copyright / Permission
 ArcCASPER is released as a free closed-source tool.

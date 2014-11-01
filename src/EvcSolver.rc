@@ -42,19 +42,17 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""gitdescribe.h""\r\n"
-    "\0"
+    "winres.h\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
-    "#include ""winres.h""\r\n"
-    "\0"
+    "gitdescribe.h\0"
 END
 
-4 TEXTINCLUDE 
+4 TEXTINCLUDE
 BEGIN
-    "\r\0"
+	"\r\0"
 END
 
 #endif    // APSTUDIO_INVOKED

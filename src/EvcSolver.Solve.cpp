@@ -1,14 +1,3 @@
-// Copyright 2010 ESRI
-//
-// All rights reserved under the copyright laws of the United States
-// and applicable international laws, treaties, and conventions.
-//
-// You may freely redistribute and use this sample code, with or
-// without modification, provided you include the original copyright
-// notice and use restrictions.
-//
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
-
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "EvcSolver.h"
@@ -603,7 +592,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
 
-	std::sort(tempPathList->begin(), tempPathList->end(), EvcPath::LessThan);
+	std::sort(tempPathList->begin(), tempPathList->end(), EvcPath::LessThanOrder);
 
 	// Get the "Routes" NAClass feature class
 	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);

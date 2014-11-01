@@ -84,6 +84,10 @@ public:
 	void AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
 									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
+	static void DetachPathsFromEvacuee(Evacuee * evc, std::vector<EvcPath *> * detachedPaths);
+	void ReattachToEvacuee();
+	void CleanYourEvacueePaths();
+	bool DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, size_t & NumberOfEvacueesInIteration);
 
 	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
 	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
@@ -95,9 +99,14 @@ public:
 		clear();
 	}
 
-	static bool LessThan(const EvcPath * p1, const EvcPath * p2)
+	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2)
 	{
 		return p1->Order < p2->Order;
+	}
+
+	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2)
+	{
+		return p1->FinalEvacuationCost > p2->FinalEvacuationCost;
 	}
 };
 
