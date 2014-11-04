@@ -21,8 +21,6 @@ public:
 	}
 };
 
-// enum EdgeDirtyFlagEnum { EdgeFlagClean = 0x0, EdgeFlagMaybe = 0x1, EdgeFlagDirty = 0x2 };
-
 class EdgeReservations : std::vector<EvcPathPtr>
 {
 private:
@@ -35,6 +33,7 @@ public:
 	EdgeReservations(float capacity, TrafficModel * trafficModel);
 	EdgeReservations(const EdgeReservations& cpy);
 	void AddReservation(double newFlow, EvcPathPtr path);
+	void RemoveReservation(double flow, EvcPathPtr path);
 
 	friend class NAEdge;
 };
@@ -82,7 +81,7 @@ public:
 	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
 	NAEdge(const NAEdge& cpy);
 
-	inline EdgeDirtyState HowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
+	EdgeDirtyState HowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
 	inline void SetClean(EvcSolverMethod method, double minPop2Route);
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
@@ -92,6 +91,18 @@ public:
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
 									  long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag);
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
+	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
+	std::vector<EvcPathPtr> & GetCrossingPaths() { return *reservations; }
+
+	static bool CostLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
+	{
+		return e1->GetCurrentCost(method) < e2->GetCurrentCost(method);
+	}
+
+	static bool CongestionLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
+	{
+		return e1->GetTrafficSpeedRatio(e1->reservations->ReservedPop, method) > e2->GetTrafficSpeedRatio(e2->reservations->ReservedPop, method);
+	}
 };
 
 double GetHeapKeyHur   (const NAEdge * e);
@@ -123,7 +134,8 @@ public:
 		delete cacheAlong;
 		delete cacheAgainst;
 	}
-
+	
+	void CallHowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
 	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const;
 	void Erase(NAEdgePtr edge) {        Erase(edge->EID, edge->Direction)  ; }
 	bool Exist(NAEdgePtr edge) { return Exist(edge->EID, edge->Direction)  ; }

@@ -6,12 +6,15 @@ class NAVertex;
 class NAEdge;
 class NAEdgeCache;
 class NAEdgeContainer;
+class NAEdgeMap;
 typedef NAVertex * NAVertexPtr;
 enum EvcSolverMethod : unsigned char;
 
 // enum for carma sort setting
 [export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char
-     { None = 0x0, FWSingle = 0x1, FWCont = 0x2, BWSingle = 0x3, BWCont = 0x4, ReverseProcessOrder = 0x5, ReversePredictedCost = 0x6 };
+{
+	None = 0x0, FWSingle = 0x1, FWCont = 0x2, BWSingle = 0x3, BWCont = 0x4, ReverseFinalCost = 0x5, ReverseEvacuationCost = 0x6
+};
 enum class EvacueeStatus : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
 
 class PathSegment
@@ -84,10 +87,10 @@ public:
 	void AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
 									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
-	static void DetachPathsFromEvacuee(Evacuee * evc, std::vector<EvcPath *> * detachedPaths);
+	static void DetachPathsFromEvacuee(Evacuee * evc, std::vector<EvcPath *> * detachedPaths, NAEdgeMap & touchedEdges);
 	void ReattachToEvacuee();
 	void CleanYourEvacueePaths();
-	bool DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, size_t & NumberOfEvacueesInIteration);
+	bool DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, size_t & NumberOfEvacueesInIteration, double ThisIterationMaxCost, EvcSolverMethod method);
 
 	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
 	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
@@ -120,6 +123,7 @@ public:
 	VARIANT                  Name;
 	double                   Population;
 	double                   PredictedCost;
+	double                   FinalCost;
 	UINT32                   ObjectID;
 	EvacueeStatus            Status;
 	int                      ProcessOrder;
@@ -144,9 +148,9 @@ public:
 		return e1->ObjectID < e2->ObjectID;
 	}
 
-	static bool ReverseProcessOrder(const Evacuee * e1, const Evacuee * e2)
+	static bool ReverseFinalCost(const Evacuee * e1, const Evacuee * e2)
 	{
-		return e1->ProcessOrder > e2->ProcessOrder;
+		return e1->FinalCost > e2->FinalCost;
 	}
 
 	static bool ReverseEvacuationCost(const Evacuee * e1, const Evacuee * e2)

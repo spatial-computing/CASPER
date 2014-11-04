@@ -188,6 +188,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INALocationObjectPtr ipNALocationObject;
 	INALocationPtr ipNALocation(CLSID_NALocation);
 	IEnumNetworkElementPtr ipEnumNetworkElement;
+	std::vector<double> GlobalEvcCostAtIteration;
 
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -481,7 +482,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts, ipNetworkDataset, EvacueesWithRestrictedSafezone);
+		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts, ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration);
 	}
 	catch (std::exception & ex)
 	{
@@ -984,15 +985,18 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	ATL::CString performanceMsg, CARMALoopMsg, ExtraInfoMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg;
+	ATL::CString performanceMsg, CARMALoopMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg, iterationMsg;
+	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 
 	initMsg.Format(_T("%d routes are generated from the evacuee point(s) with ArcCASPER version %s."), tempPathList->size(), _T(GIT_DESCRIBE));
+
+	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), countCARMALoops, carmaSec, max(0, mem));
+
+	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
 	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
 		inputSecSys, inputSecCpu, calcSecSys, calcSecCpu, outputSecSys, outputSecCpu, flockSecSys, flockSecCpu,
 		inputSecSys + inputSecCpu + calcSecSys + calcSecCpu + flockSecSys + flockSecCpu + outputSecSys + outputSecCpu);
-
-	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds."), countCARMALoops, carmaSec);
 
 	std::stringstream ss;
 	ss.imbue(std::locale(""));
@@ -1004,15 +1008,21 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 	CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
 
-	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
-	ExtraInfoMsg.Format(_T("Global evacuation cost is %.2f and Peak memory usage (exclude flocking) is %d MB."), globalEvcCost, max(0, mem));
-	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
+	if (GlobalEvcCostAtIteration.size() == 1)
+	{
+		iterationMsg.Format(_T("The program ran for 1 iteration. Evacuation cost at the end is: %.2f"), GlobalEvcCostAtIteration[0]);
+	}
+	else if (GlobalEvcCostAtIteration.size() > 1)
+	{
+		iterationMsg.Format(_T("The program ran for %d iterations. Evacuation costs at each iteration are: %.2f"), GlobalEvcCostAtIteration.size(), GlobalEvcCostAtIteration[0]);
+		for (size_t i = 1; i < GlobalEvcCostAtIteration.size(); ++i) iterationMsg.AppendFormat(_T(", %.2f"), GlobalEvcCostAtIteration[i]);
+	}
 
 	pMessages->AddMessage(ATL::CComBSTR(initMsg));
 	pMessages->AddMessage(ATL::CComBSTR(performanceMsg));
 	pMessages->AddMessage(ATL::CComBSTR(CARMALoopMsg));
 	pMessages->AddMessage(ATL::CComBSTR(CARMAExtractsMsg));
-	pMessages->AddMessage(ATL::CComBSTR(ExtraInfoMsg));
+	pMessages->AddMessage(ATL::CComBSTR(iterationMsg));
 	if (ecache->GetCacheHitPercentage() < 80.0) pMessages->AddMessage(ATL::CComBSTR(CacheHitMsg));
 
 	// check version lock: if the evclayer is too old to be solved then add a warning

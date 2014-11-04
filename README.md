@@ -48,6 +48,9 @@ K. Shahabi and J. P. Wilson, “CASPER: Intelligent capacity-aware evacuation ro
 
 NO WARRANTIES.  The SOFTWARE PRODUCT and any related documentation is provided “as is” without warranty of any kind, either express or implied, including, without limitation, the implied warranties or merchantability, fitness for a particular purpose, or non-infringement. The entire risk arising out of use or performance of the SOFTWARE PRODUCT remains with you.
 
+####Fibonacci Heap
+For the heap data structure, the Fibonacci Heap implementation by [Max Winkler](http://www.codeproject.com/KB/recipes/Dijkstras_Algorithm.aspx) has been utilized with some modifications. The modificsations allowed us to use it both in CASPER and CARMA loops. The original source code is released under the [Code Project Open License](http://www.codeproject.com/info/cpol10.aspx).
+
 ####OpenSteer Library
 This tool utilizes OpenSteer library to run evacuation simulations. The library is released under [MIT licence](http://opensource.org/licenses/mit-license.php).
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:

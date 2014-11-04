@@ -28,6 +28,15 @@ void EdgeReservations::AddReservation(double newFlow, EvcPathPtr path)
 	ReservedPop += (float)newFlow;
 }
 
+void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
+{
+	/// TODO this function needs some performance improvment at its design
+	size_t i;
+	for (i = 0; i < size(); ++i) if (path == at(i)) break;
+	erase(begin() + i);
+	ReservedPop -= (float)flow;
+}
+
 ///////////////////////////////////////////////////////////////////////
 // NAEdge Methods
 
@@ -39,7 +48,6 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	Direction = cpy.Direction;
 	EID = cpy.EID;
 	ToVertex = cpy.ToVertex;
-	//LastExteriorEdge = cpy.LastExteriorEdge;
 	CleanCost = cpy.CleanCost;
 	TreePrevious = cpy.TreePrevious;
 	TreeNext = cpy.TreeNext;
@@ -55,7 +63,6 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, N
 	CleanCost = -1.0;
 	ToVertex = 0;
 	this->NetEdge = edge;
-	//LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
 	float capacity = 1.0;
 	HRESULT hr = 0;
@@ -276,6 +283,15 @@ void NAEdge::AddReservation(EvcPath * path, double population, EvcSolverMethod m
 	HowDirty(method);
 }
 
+void NAEdge::RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState)
+{
+	double flow = path->GetRoutedPop();
+	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) flow = min(flow, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);
+	reservations->RemoveReservation(flow, path);
+	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
+	if (!delayedDirtyState) HowDirty(method);
+}
+
 void NAEdge::TreeNextEraseFirst(NAEdge * child)
 {
 	if (child)
@@ -462,6 +478,13 @@ void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
 
 	NAEdgeTableItr i = cache->find(eid);
 	if (i != cache->end()) cache->erase(i);
+}
+
+void NAEdgeMap::CallHowDirty(EvcSolverMethod method, double minPop2Route, bool exhaustive)
+{
+	NAEdgeTableItr i;
+	for (i = cacheAlong->begin(); i != cacheAlong->end(); i++) i->second->HowDirty(method, minPop2Route, exhaustive);
+	for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) i->second->HowDirty(method, minPop2Route, exhaustive);
 }
 
 HRESULT NAEdgeMap::Insert(NAEdgePtr edge)

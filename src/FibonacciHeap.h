@@ -35,30 +35,6 @@ public:
 };
 
 typedef HeapNode * HeapNodePtr;
-/*
-#define HeapDataType NAVertex
-
-class HeapNodeTable
-{
-private:
-	stdext::hash_map<long, HeapNodePtr> * cache;
-
-public:
-	HeapNodeTable(void) { cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, HeapNodePtr>(); }
-	~HeapNodeTable(void)
-	{
-		Clear();
-		delete cache;
-	}
-
-	int Size() { return cache->size(); }
-	void Clear() { cache->clear(); }
-
-	void Erase(NAVertex * vertex);
-	void Insert(HeapNodePtr node);
-	HeapNodePtr Find(NAVertex * vertex);
-};
-*/
 
 class HeapNodeTable
 {

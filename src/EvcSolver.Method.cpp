@@ -4,7 +4,7 @@
 #include "FibonacciHeap.h"
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, EvacueeList * AllEvacuees, NAVertexCache * vcache, NAEdgeCache * ecache,
-	                           SafeZoneTable * safeZoneList, double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone)
+	SafeZoneTable * safeZoneList, double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts, INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone, std::vector<double> & GlobalEvcCostAtIteration)
 {
 	// creating the heap for the Dijkstra search
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyHur);
@@ -37,8 +37,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	vector_NAEdgePtr_Ptr adj;
 	ATL::CString statusMsg, AlgName;
-	CARMASort carmaSortDirection = this->CarmaSortDirection;
-	std::vector<double> GlobalEvcCostAtIteration;
+	CARMASort carmaSortCriteria = this->CarmaSortCriteria;
 	std::vector<EvcPathPtr> * detachedPaths = new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>();
 
 	switch (solverMethod)
@@ -92,7 +91,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			// Indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone. Also time the carma loops.
 			dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 			if (FAILED(hr = CARMALoop(ipNetworkQuery, pMessages, pTrackCancel, AllEvacuees, sortedEvacuees, vcache, ecache, safeZoneList, CARMAClosedSize,
-				carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, minPop2Route, separationRequired, carmaSortDirection))) goto END_OF_FUNC;
+				carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, minPop2Route, separationRequired, carmaSortCriteria))) goto END_OF_FUNC;
 			dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeE, &cpuTimeE);
 			carmaSec += (*((__int64 *)&cpuTimeE)) - (*((__int64 *)&cpuTimeS)) + (*((__int64 *)&sysTimeE)) - (*((__int64 *)&sysTimeS));
 
@@ -276,6 +275,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 		/// TODO figure out how may of paths need to be detached and process again
 		NumberOfEvacueesInIteration = GetPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
+		carmaSortCriteria = CARMASort::ReverseFinalCost;
 
 	} while (NumberOfEvacueesInIteration > 0);
 
@@ -300,13 +300,18 @@ size_t EvcSolver::GetPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvac
 	std::vector<EvacueePtr> EvacueesForNextIteration;
 	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() * 0.5), MaxNumberOfIterations = 10;
 	size_t NumberOfEvacueesInIteration = 0;
+	NAEdgeMap touchededges;
 
 	// Recalculate all path costs and then list them in a sorted list by descending final cost
-	for each(auto evc in *AllEvacuees)
-		for each(auto path in *evc->Paths)
+	for(auto evc : *AllEvacuees)
+		if (evc->Status != EvacueeStatus::Unreachable)
 		{
-			path->CalculateFinalEvacuationCost(initDelayCostPerPop, solverMethod);
-			allPaths.push_back(path);
+			evc->FinalCost = 0.0;
+			for(auto path : *evc->Paths)
+			{
+				path->CalculateFinalEvacuationCost(initDelayCostPerPop, solverMethod);
+				allPaths.push_back(path);
+			}
 		}
 
 	std::sort(allPaths.begin(), allPaths.end(), EvcPath::MoreThanFinalCost);
@@ -315,39 +320,44 @@ size_t EvcSolver::GetPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvac
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
 	int Iteration = GlobalEvcCostAtIteration.size();
 
-	// check if it got worse and then undo it
-	if (Iteration > 1 && GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2])
+	if (Iteration > 1)
 	{
-		for each(auto path in *detachedPaths) path->CleanYourEvacueePaths();
-		for each(auto path in *detachedPaths) path->ReattachToEvacuee();
+		// check if it got worse and then undo it
+		if (GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2])
+		{
+			for(auto path : *detachedPaths) path->CleanYourEvacueePaths();
+			for(auto path : *detachedPaths) path->ReattachToEvacuee();
+			detachedPaths->clear();
+			GlobalEvcCostAtIteration.pop_back();
+			return NumberOfEvacueesInIteration;
+		}
+
+		// since we're not going to undo then we don't need the detached paths. Let's cleanup and collect new paths.
+		for(auto path : *detachedPaths) delete path;
 		detachedPaths->clear();
-		return NumberOfEvacueesInIteration;
+
+		// check if more iteration is allowed otherwise finish iteration
+		if (GlobalEvcCostAtIteration.size() >= MaxNumberOfIterations) return NumberOfEvacueesInIteration;
 	}
 
-	// since we're not going to undo then we don't need the detached paths. Let's cleanup and collect new paths.
-	for each(auto path in *detachedPaths) delete path;
-	detachedPaths->clear();
-
-	// check if more iteration is allowed otherwise finish iteration
-	if (GlobalEvcCostAtIteration.size() >= MaxNumberOfIterations) return NumberOfEvacueesInIteration;
-
-	// And the final loop is to find 'bad' paths and detach them so that the next iteration can find new paths for these evacuees.
+	// And the next step is to find 'bad' paths and detach them so that the next iteration can find new paths for these evacuees.
 	// If no `bad` paths where found then we leave `NumberOfEvacueesInIteration` as zero so that the solver terminates and returns.
-	for each(auto path in allPaths)
+	for(auto path : allPaths)
 	{
 		if (NumberOfEvacueesInIteration >= MaxEvacueesInIteration) break;
-		if (!path->DoesItNeedASecondChance(ThreasholdForFinalCost, EvacueesForNextIteration, NumberOfEvacueesInIteration)) break;
+		if (!path->DoesItNeedASecondChance(ThreasholdForFinalCost, EvacueesForNextIteration, NumberOfEvacueesInIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod)) break;
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
-	for each (auto evc in EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, detachedPaths);
+	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, detachedPaths, touchededges);
+	touchededges.CallHowDirty(solverMethod, 1.0, true);
 
 	return NumberOfEvacueesInIteration;
 }
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
 	                         NAEdgeCache * ecache, SafeZoneTable * safeZoneList, size_t & closedSize, NAEdgeMapTwoGen * closedList, NAEdgeContainer * leafs,
-							 std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired, CARMASort carmaSortDirection)
+							 std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired, CARMASort carmaSortCriteria)
 {
 	HRESULT hr = S_OK;
 
@@ -370,12 +380,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	unsigned int CARMAExtractCount = 0;
 	vector_NAEdgePtr_Ptr adj;
 	NAEdgeContainer * removedDirty = new NAEdgeContainer(1000);
-	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseProcessOrder, Evacuee::ReverseEvacuationCost };
+	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseFinalCost, Evacuee::ReverseEvacuationCost };
 
 	// keeping reachable evacuees in a new hashtable for better access
 	// also keep unreachable ones in the redundant list
 	NAEvacueeVertexTable * EvacueePairs = new DEBUG_NEW_PLACEMENT NAEvacueeVertexTable();
-	EvacueePairs->InsertReachable(Evacuees, carmaSortDirection);
+	EvacueePairs->InsertReachable(Evacuees, CarmaSortCriteria); // this is very important to be 'CarmaSortCriteria' with capital 'C'
 	SortedEvacuees->clear();
 
     if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
@@ -565,7 +575,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	// load discovered evacuees into sorted list
 	EvacueePairs->LoadSortedEvacuees(SortedEvacuees);
 
-	std::sort(SortedEvacuees->begin(), SortedEvacuees->end(), SortFunctions[carmaSortDirection]);
+	std::sort(SortedEvacuees->begin(), SortedEvacuees->end(), SortFunctions[carmaSortCriteria]);
 	UpdatePeakMemoryUsage();
 	closedSize = closedList->Size();
 

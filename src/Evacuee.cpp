@@ -18,9 +18,23 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
-void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, std::vector<EvcPathPtr> * detachedPaths)
+void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, std::vector<EvcPathPtr> * detachedPaths, NAEdgeMap & touchedEdges)
 {
-
+	// It's time to clean up the evacuee object and reset it for the next iteration
+	// To do this we first collect all its paths, take away all edge reservations, and then reset some of its fields.
+	// at the end keep a record of touched edges for a 'HowDirty' call
+	for (const auto & p : *evc->Paths)
+	{
+		for (const auto & s : *p)
+		{
+			s->Edge->RemoveReservation(p, CASPERSolver, true);
+			touchedEdges.Insert(s->Edge);
+		}
+		detachedPaths->push_back(p);
+	}
+	evc->Status = EvacueeStatus::Unprocessed;
+	evc->Paths->clear();
+	evc->PredictedCost = FLT_MAX;
 }
 
 void EvcPath::ReattachToEvacuee()
@@ -32,9 +46,52 @@ void EvcPath::CleanYourEvacueePaths()
 {
 
 }
-bool EvcPath::DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, size_t & NumberOfEvacueesInIteration)
+bool EvcPath::DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, size_t & NumberOfEvacueesInIteration, double ThisIterationMaxCost, EvcSolverMethod method)
 {
-	return false;
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost ) / ThisIterationMaxCost;
+	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
+	bool NeedsAChance = PredictionCostRatio > ThreasholdForFinalCost || EvacuationCostRatio > ThreasholdForFinalCost;
+
+	if (PredictionCostRatio > ThreasholdForFinalCost && myEvc->Status == EvacueeStatus::Processed)
+	{
+		// since the prediction was bad it probably means the evacuee has more than average vehicles so it should be processed sooner
+		AffectingList.push_back(myEvc);
+		++NumberOfEvacueesInIteration;
+		myEvc->Status = EvacueeStatus::Unprocessed;
+	}
+
+	if (EvacuationCostRatio > ThreasholdForFinalCost)
+	{
+		// we have to add the affecting list to be re-routed as well
+		// we do this by selecxting the highly congestied and most costly path segment and then extract all the evacuees that share the same segments (edges)
+		PathSegmentPtr maxCong = front(), maxCost = front();
+		for (const auto & seg : *this)
+		{
+			if (NAEdge::CostLessThan(maxCost->Edge, seg->Edge, method)) maxCost = seg;
+			if (NAEdge::CongestionLessThan(maxCost->Edge, seg->Edge, method)) maxCong = seg;
+		}
+		std::vector<EvcPathPtr> & crossing = maxCong->Edge->GetCrossingPaths();
+		for (const auto & p : crossing)
+			if (p->myEvc->Status == EvacueeStatus::Processed)
+			{
+				AffectingList.push_back(p->myEvc);
+				++NumberOfEvacueesInIteration;
+				p->myEvc->Status = EvacueeStatus::Unprocessed;
+			}
+		if (maxCong != maxCost)
+		{
+			std::vector<EvcPathPtr> & crossing = maxCost->Edge->GetCrossingPaths();
+			for (const auto & p : crossing)
+				if (p->myEvc->Status == EvacueeStatus::Processed)
+				{
+					AffectingList.push_back(p->myEvc);
+					++NumberOfEvacueesInIteration;
+					p->myEvc->Status = EvacueeStatus::Unprocessed;
+				}
+		}
+	}
+
+	return NeedsAChance;
 }
 
 void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment)
@@ -50,13 +107,14 @@ void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolver
 {
 	FinalEvacuationCost = 0.0;
 	OrginalCost = 0.0;
-	for each (auto pathSegment in *this)
+	for (const auto & pathSegment : *this)
 	{
 		double p = abs(pathSegment->GetEdgePortion());
 		FinalEvacuationCost += pathSegment->Edge->GetCurrentCost(method) * p;
 		OrginalCost         += pathSegment->Edge->OriginalCost     * p;
 	}	
 	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
+	myEvc->FinalCost = max(myEvc->FinalCost, FinalEvacuationCost);
 }
 
 HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag,
@@ -191,6 +249,7 @@ Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
 	PredictedCost = FLT_MAX;
 	Status = EvacueeStatus::Unprocessed;
 	ProcessOrder = -1;
+	FinalCost = FLT_MAX;
 }
 
 Evacuee::~Evacuee(void)

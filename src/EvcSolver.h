@@ -294,9 +294,9 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-		                double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &);
+						double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &);
 	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-		size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, double &, bool, CARMASort);
+				      size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, double &, bool, CARMASort);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -335,7 +335,7 @@ private:
 	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
-	CARMASort               CarmaSortDirection;
+	CARMASort               CarmaSortCriteria;
 
 	VARIANT_BOOL twoWayShareCapacity;
 	VARIANT_BOOL ThreeGenCARMA;
