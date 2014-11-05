@@ -103,8 +103,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hComboTrafficModel, CB_SETCURSEL, (WPARAM)model, 0);
 
 		// set the loaded network descriptive attribs
-		m_ipEvcSolver->get_DiscriptiveAttributesCount(&c);
-		m_ipEvcSolver->get_DiscriptiveAttributes(&names);
+		m_ipEvcSolver->get_DiscriptiveAttributes(c, &names);
 		::SendMessage(m_hCapCombo, CB_RESETCONTENT, NULL, NULL);
 		for (i = 0; i < c; i++) ::SendMessage(m_hCapCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));
 		m_ipEvcSolver->get_CapacityAttribute(&selectedIndex);
@@ -112,8 +111,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		delete [] names;
 
 		// set the loaded network cost attribs
-		m_ipEvcSolver->get_CostAttributesCount(&c);
-		m_ipEvcSolver->get_CostAttributes(&names);
+		m_ipEvcSolver->get_CostAttributes(c, &names);
 		::SendMessage(m_hCostCombo, CB_RESETCONTENT, NULL, NULL);
 		for (i = 0; i < c; i++) ::SendMessage(m_hCostCombo, CB_ADDSTRING, NULL, (LPARAM)(names[i]));
 		m_ipEvcSolver->get_CostAttribute(&selectedIndex);

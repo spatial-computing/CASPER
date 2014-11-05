@@ -115,7 +115,7 @@ using ATL::CRegistryVirtualMachine;
 #include <psapi.h>
 #include <vector>
 #include <stack>
-#include <hash_map>
+#include <unordered_map>
 #include <fstream>
 #include <functional>
 

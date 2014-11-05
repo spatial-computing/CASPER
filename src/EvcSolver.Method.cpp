@@ -274,7 +274,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		CARMAExtractCounts.pop_back();
 
 		/// TODO figure out how may of paths need to be detached and process again
-		NumberOfEvacueesInIteration = GetPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
+		NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
 		carmaSortCriteria = CARMASort::ReverseFinalCost;
 
 	} while (NumberOfEvacueesInIteration > 0);
@@ -293,21 +293,21 @@ END_OF_FUNC:
 	return hr;
 }
 
-size_t EvcSolver::GetPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvacuees, std::vector<EvcPathPtr> * detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
+size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvacuees, std::vector<EvcPathPtr> * detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
 {
 	double ThreasholdForFinalCost = 0.25;
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() * 0.5), MaxNumberOfIterations = 10;
-	size_t NumberOfEvacueesInIteration = 0;
+	int Iteration = GlobalEvcCostAtIteration.size() + 1;
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (0x1 << Iteration));
 	NAEdgeMap touchededges;
 
-	// Recalculate all path costs and then list them in a sorted list by descending final cost
-	for(auto evc : *AllEvacuees)
+	// Recalculate all path costs and then list them in a sorted manner by descending final cost
+	for (const auto & evc : *AllEvacuees)
 		if (evc->Status != EvacueeStatus::Unreachable)
 		{
 			evc->FinalCost = 0.0;
-			for(auto path : *evc->Paths)
+			for (const auto & path : *evc->Paths)
 			{
 				path->CalculateFinalEvacuationCost(initDelayCostPerPop, solverMethod);
 				allPaths.push_back(path);
@@ -318,41 +318,37 @@ size_t EvcSolver::GetPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvac
 
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
-	int Iteration = GlobalEvcCostAtIteration.size();
 
 	if (Iteration > 1)
 	{
 		// check if it got worse and then undo it
 		if (GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2])
 		{
-			for(auto path : *detachedPaths) path->CleanYourEvacueePaths();
-			for(auto path : *detachedPaths) path->ReattachToEvacuee();
+			for (const auto & path : *detachedPaths) path->CleanYourEvacueePaths(solverMethod);
+			for (const auto & path : *detachedPaths) path->ReattachToEvacuee(solverMethod);
 			detachedPaths->clear();
 			GlobalEvcCostAtIteration.pop_back();
-			return NumberOfEvacueesInIteration;
+			return 0;
 		}
 
 		// since we're not going to undo then we don't need the detached paths. Let's cleanup and collect new paths.
-		for(auto path : *detachedPaths) delete path;
+		for (const auto & path : *detachedPaths) delete path;
 		detachedPaths->clear();
-
-		// check if more iteration is allowed otherwise finish iteration
-		if (GlobalEvcCostAtIteration.size() >= MaxNumberOfIterations) return NumberOfEvacueesInIteration;
 	}
 
 	// And the next step is to find 'bad' paths and detach them so that the next iteration can find new paths for these evacuees.
-	// If no `bad` paths where found then we leave `NumberOfEvacueesInIteration` as zero so that the solver terminates and returns.
-	for(auto path : allPaths)
+	// If no `bad` paths where found then we leave `EvacueesForNextIteration` as empty so that the solver terminates and returns.
+	for (const auto & path : allPaths)
 	{
-		if (NumberOfEvacueesInIteration >= MaxEvacueesInIteration) break;
-		if (!path->DoesItNeedASecondChance(ThreasholdForFinalCost, EvacueesForNextIteration, NumberOfEvacueesInIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod)) break;
+		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;
+		if (!path->DoesItNeedASecondChance(ThreasholdForFinalCost, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod)) break;
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
-	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, detachedPaths, touchededges);
+	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, solverMethod, detachedPaths, &touchededges);
 	touchededges.CallHowDirty(solverMethod, 1.0, true);
 
-	return NumberOfEvacueesInIteration;
+	return EvacueesForNextIteration.size();
 }
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
@@ -402,7 +398,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		#endif
 
 		if (ThreeGenCARMA == VARIANT_TRUE) closedList->MarkAllAsOldGen();
-		else closedList->Clear(NAEdgeMap_ALLGENS);
+		else closedList->Clear(NAEdgeMapGeneration::AllGens);
 
 		// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
 		// the h values should always be an underestimation
@@ -510,7 +506,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, 0))) goto END_OF_FUNC;
 
 				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, solverMethod);
-				if (closedList->Exist(currentEdge, NAEdgeMap_OLDGEN))
+				if (closedList->Exist(currentEdge, NAEdgeMapGeneration::OldGen))
 				{
 					if (myVertex->ParentCostIsDecreased)
 					{
@@ -518,14 +514,14 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 						EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
 						if (currentEdge->ToVertex->GVal < EdgeCostToBeat)
 						{
-							closedList->Erase(currentEdge, NAEdgeMap_OLDGEN);
+							closedList->Erase(currentEdge, NAEdgeMapGeneration::OldGen);
 							heap->Insert(currentEdge);
 						}
 					}
 				}
 				else
 				{
-					if (closedList->Exist(currentEdge, NAEdgeMap_NEWGEN))
+					if (closedList->Exist(currentEdge, NAEdgeMapGeneration::NewGen))
 					{
 						// Maybe sima khanum bug (issue #8) is from here ... don't change the edge parent until you're sure it's the better parent
 						neighbor = currentEdge->ToVertex;
@@ -533,7 +529,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 						// EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID); // == neighbor->GVal ??
 						if (currentEdge->ToVertex->GVal < neighbor->GVal)
 						{
-							closedList->Erase(currentEdge, NAEdgeMap_NEWGEN);
+							closedList->Erase(currentEdge, NAEdgeMapGeneration::NewGen);
 							heap->Insert(currentEdge);
 						}
 						else neighbor->SetBehindEdge(currentEdge);						// undo whatever PrepareUnvisitedVertexForHeap did to currentEdge
@@ -757,7 +753,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
 	betterH = myVertex->GVal;
 
-	if (checkOldClosedlist && closedList->Size(NAEdgeMap_OLDGEN) > 0)
+	if (checkOldClosedlist && closedList->Size(NAEdgeMapGeneration::OldGen) > 0)
 	{
 		if (FAILED(hr = ecache->QueryAdjacencies(myVertex, edge, QueryDirection::Forward, adj))) return hr;
 
@@ -765,7 +761,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 		for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
 		{
 			tempEdge = *e;
-			if (!closedList->Exist(tempEdge, NAEdgeMap_OLDGEN)) continue; // it has to be present in closed list from previous CARMA loop
+			if (!closedList->Exist(tempEdge, NAEdgeMapGeneration::OldGen)) continue; // it has to be present in closed list from previous CARMA loop
 			if (IsEqual(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
 
 			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
@@ -888,12 +884,12 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 		if (BetterSafeZone->getBehindEdge())
 		{
 			edgePortion = BetterSafeZone->getPositionAlong();
-			if (edgePortion > 0.0) path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(BetterSafeZone->getBehindEdge(), 0.0, edgePortion));
+			if (edgePortion > 0.0) path->AddSegment(solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(BetterSafeZone->getBehindEdge(), 0.0, edgePortion));
 		}
 
 		while (finalVertex->Previous)
 		{
-			if (finalVertex->GetBehindEdge()) path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(finalVertex->GetBehindEdge()));
+			if (finalVertex->GetBehindEdge()) path->AddSegment(solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(finalVertex->GetBehindEdge()));
 			finalVertex = finalVertex->Previous;
 		}
 
@@ -917,7 +913,7 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 			}
 			else if (edgePortion > 0.0)
 			{
-				path->AddSegment(population2Route, this->solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(finalVertex->GetBehindEdge(), 1.0 - edgePortion, 1.0));
+				path->AddSegment(solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(finalVertex->GetBehindEdge(), 1.0 - edgePortion, 1.0));
 			}
 		}
 		if (path->Empty())

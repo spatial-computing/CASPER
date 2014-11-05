@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hash_map>
+#include "StdAfx.h"
 
 class Evacuee;
 class NAEdge;
@@ -74,13 +74,13 @@ public:
 };
 
 typedef NAVertex * NAVertexPtr;
-typedef stdext::hash_map<long, NAVertexPtr> NAVertexTable;
-typedef stdext::hash_map<long, NAVertexPtr>::_Pairib NAVertexTableInsertReturn;
-typedef stdext::hash_map<long, NAVertexPtr>::const_iterator NAVertexTableItr;
+typedef std::unordered_map<long, NAVertexPtr> NAVertexTable;
+typedef std::unordered_map<long, NAVertexPtr>::_Pairib NAVertexTableInsertReturn;
+typedef std::unordered_map<long, NAVertexPtr>::const_iterator NAVertexTableItr;
 typedef std::pair<long, NAVertexPtr> _NAVertexTablePair;
 #define NAVertexTablePair(a) _NAVertexTablePair(a->EID, a)
 
-typedef stdext::hash_map<int, std::list<long> *> NAVertexLoopCountList;
+typedef std::unordered_map<int, std::list<long> *> NAVertexLoopCountList;
 typedef NAVertexLoopCountList::_Pairib NAVertexLoopCountListReturn;
 typedef NAVertexLoopCountList::const_iterator NAVertexLoopCountListItr;
 typedef std::pair<int, std::list<long> *> NAVertexLoopCountListPair;
@@ -106,7 +106,7 @@ private:
 public:
 	NAVertexCache(void)
 	{
-		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAVertexPtr>();
+		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAVertexPtr>();
 		bucketCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
 		heuristicForOutsideVertices = 0.0;
 		currentBucket = NULL;

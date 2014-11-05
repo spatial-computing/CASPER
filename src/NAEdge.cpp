@@ -24,16 +24,13 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 
 void EdgeReservations::AddReservation(double newFlow, EvcPathPtr path)
 {
-	this->insert(this->end(), path);
+	this->insert(std::pair<int, EvcPathPtr>(path->GetKey(), path));
 	ReservedPop += (float)newFlow;
 }
 
 void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 {
-	/// TODO this function needs some performance improvment at its design
-	size_t i;
-	for (i = 0; i < size(); ++i) if (path == at(i)) break;
-	erase(begin() + i);
+	erase(path->GetKey());
 	ReservedPop -= (float)flow;
 }
 
@@ -239,10 +236,7 @@ double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow,
 	double cutoffCost = max(longestPathSoFar, currentPathSoFar);
 
 	if (deltaCostOfNewFlow > 0.0 && selfishRatio > 0.0)
-		for(std::vector<EvcPathPtr>::const_iterator pi = reservations->begin(); pi != reservations->end(); ++pi)
-		{
-			AddedGlobalCost = max(AddedGlobalCost, (*pi)->GetReserveEvacuationCost() + deltaCostOfNewFlow - cutoffCost);
-		}
+		for(const auto & p: *reservations) AddedGlobalCost = max(AddedGlobalCost, p.second->GetReserveEvacuationCost() + deltaCostOfNewFlow - cutoffCost);		
 	else return 0.0;
 
 	return selfishRatio * min(AddedGlobalCost, deltaCostOfNewFlow);
@@ -273,14 +267,15 @@ void NAEdge::SetClean(EvcSolverMethod method, double minPop2Route)
 
 // this function adds the reservation also determines if the new added population makes the edge dirty.
 // if this new reservation made the edge change from clean to dirty then the return is true otherwise returns false.
-void NAEdge::AddReservation(EvcPath * path, double population, EvcSolverMethod method)
+void NAEdge::AddReservation(EvcPath * path, EvcSolverMethod method, bool delayedDirtyState)
 {
 	// actual reservation code
+	double population = path->GetRoutedPop();
 	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) population = min(population, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);
 	reservations->AddReservation(population, path);
 
 	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
-	HowDirty(method);
+	if (!delayedDirtyState) HowDirty(method);
 }
 
 void NAEdge::RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState)
@@ -339,7 +334,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 		resTable = resTableAgainst;
 	}
 
-	stdext::hash_map<long, NAEdgePtr>::const_iterator it = cache->find(EID);
+	std::unordered_map<long, NAEdgePtr>::const_iterator it = cache->find(EID);
 
 	if (it == cache->end())
 	{
@@ -519,40 +514,40 @@ void NAEdgeMapTwoGen::MarkAllAsOldGen()
 	newGen->Clear();
 }
 
-void NAEdgeMapTwoGen::Clear(UCHAR gen)
+void NAEdgeMapTwoGen::Clear(NAEdgeMapGeneration gen)
 {
-	if ((gen & NAEdgeMap_OLDGEN) != 0) oldGen->Clear();
-	if ((gen & NAEdgeMap_NEWGEN) != 0) newGen->Clear();
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) oldGen->Clear();
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) newGen->Clear();
 }
 
-size_t NAEdgeMapTwoGen::Size(UCHAR gen)
+size_t NAEdgeMapTwoGen::Size(NAEdgeMapGeneration gen)
 {
 	size_t t = 0;
-	if ((gen & NAEdgeMap_OLDGEN) != 0) t += oldGen->Size();
-	if ((gen & NAEdgeMap_NEWGEN) != 0) t += newGen->Size();
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) t += oldGen->Size();
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) t += newGen->Size();
 	return t;
 }
 
-HRESULT NAEdgeMapTwoGen::Insert(NAEdgePtr edge, UCHAR gen)
+HRESULT NAEdgeMapTwoGen::Insert(NAEdgePtr edge, NAEdgeMapGeneration gen)
 {
 	HRESULT hr = S_OK;
-	if ((gen & NAEdgeMap_OLDGEN) != 0) if (FAILED(hr = oldGen->Insert(edge))) return hr;
-	if ((gen & NAEdgeMap_NEWGEN) != 0) if (FAILED(hr = newGen->Insert(edge))) return hr;
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) if (FAILED(hr = oldGen->Insert(edge))) return hr;
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) if (FAILED(hr = newGen->Insert(edge))) return hr;
 	return hr;
 }
 
-bool NAEdgeMapTwoGen::Exist(long eid, esriNetworkEdgeDirection dir, UCHAR gen)
+bool NAEdgeMapTwoGen::Exist(long eid, esriNetworkEdgeDirection dir, NAEdgeMapGeneration gen)
 {
 	bool e = false;
-	if ((gen & NAEdgeMap_OLDGEN) != 0) e |= oldGen->Exist(eid, dir);
-	if ((gen & NAEdgeMap_NEWGEN) != 0) e |= newGen->Exist(eid, dir);
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) e |= oldGen->Exist(eid, dir);
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) e |= newGen->Exist(eid, dir);
 	return e;
 }
 
-void NAEdgeMapTwoGen::Erase(NAEdgePtr edge, UCHAR gen)
+void NAEdgeMapTwoGen::Erase(NAEdgePtr edge, NAEdgeMapGeneration gen)
 {
-	if ((gen & NAEdgeMap_OLDGEN) != 0) oldGen->Erase(edge);
-	if ((gen & NAEdgeMap_NEWGEN) != 0) newGen->Erase(edge);
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) oldGen->Erase(edge);
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) newGen->Erase(edge);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -584,7 +579,7 @@ HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 
 HRESULT NAEdgeContainer::Insert(long eid, unsigned char dir)
 {
-	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
+	std::unordered_map<long, unsigned char>::iterator i = cache->find(eid);
 	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, dir));
 	else i->second |= dir;
 	return S_OK;
@@ -598,7 +593,7 @@ HRESULT NAEdgeContainer::Insert(long eid, esriNetworkEdgeDirection dir)
 
 bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
 {
-	stdext::hash_map<long, unsigned char>::const_iterator i = cache->find(eid);
+	std::unordered_map<long, unsigned char>::const_iterator i = cache->find(eid);
 	bool ret = false;
 	unsigned char d = (unsigned char)dir;
 	if (i != cache->end() && i->second != 0) ret = (i->second & d) != 0;
@@ -617,7 +612,7 @@ HRESULT NAEdgeContainer::Remove(INetworkEdgePtr edge)
 
 HRESULT NAEdgeContainer::Remove(long eid, unsigned char dir)
 {
-	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
+	std::unordered_map<long, unsigned char>::iterator i = cache->find(eid);
 	if (i != cache->end())
 	{
 		i->second &= ~dir;

@@ -39,13 +39,11 @@ __interface IEvcSolver : IUnknown
 	[propget, helpstring("Gets the selected critical density per capacity")]
 		HRESULT CriticalDensPerCap([out, retval] BSTR * value);
 	[propget, helpstring("Lists descriptive attributes from the network dataset")]
-		HRESULT DiscriptiveAttributes([out, retval] BSTR ** names);
+		HRESULT DiscriptiveAttributes([out] unsigned __int3264 & count, [out, retval] BSTR ** names);
 	[propput, helpstring("Sets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([in] unsigned __int3264 index);
 	[propget, helpstring("Gets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([out, retval] unsigned __int3264 * index);
-	[propget, helpstring("Counts descriptive attributes from the network dataset")]
-		HRESULT DiscriptiveAttributesCount([out, retval] unsigned __int3264 * Count);
 	[propput, helpstring("Sets the separable evacuee flag")]
 		HRESULT SeparableEvacuee([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the separable evacuee flag")]
@@ -113,9 +111,7 @@ __interface IEvcSolver : IUnknown
 	[propget, helpstring("Gets the selected cost attribute index")]
 		HRESULT CostAttribute([out, retval] unsigned __int3264 * index);
 	[propget, helpstring("Lists impedance attributes from the network dataset")]
-		HRESULT CostAttributes([out, retval] BSTR ** names);
-	[propget, helpstring("Counts impedance attributes from the network dataset")]
-		HRESULT CostAttributesCount([out, retval] unsigned __int3264 * count);
+		HRESULT CostAttributes([out] unsigned __int3264 & count, [out, retval] BSTR ** names);
 	/*
 	[propput, helpstring("Sets the uturn policy")]
 		HRESULT RestrictUTurns([in] esriNetworkForwardStarBacktrack backtrack);
@@ -193,8 +189,7 @@ public:
 	STDMETHOD(get_SaturationPerCap)(BSTR * value);
 	STDMETHOD(put_CriticalDensPerCap)(BSTR   value);
 	STDMETHOD(get_CriticalDensPerCap)(BSTR * value);
-	STDMETHOD(get_DiscriptiveAttributes)(BSTR ** names);
-	STDMETHOD(get_DiscriptiveAttributesCount)(unsigned __int3264 * count);
+	STDMETHOD(get_DiscriptiveAttributes)(unsigned __int3264 & count, BSTR ** names);
 	STDMETHOD(put_CapacityAttribute)(unsigned __int3264   index);
 	STDMETHOD(get_CapacityAttribute)(unsigned __int3264 * index);
 	STDMETHOD(get_CostPerZoneDensity)(BSTR * value);
@@ -219,8 +214,7 @@ public:
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	STDMETHOD(put_CostAttribute)(unsigned __int3264 index);
 	STDMETHOD(get_CostAttribute)(unsigned __int3264 * index);
-	STDMETHOD(get_CostAttributes)(BSTR ** names);
-	STDMETHOD(get_CostAttributesCount)(unsigned __int3264 * count);
+	STDMETHOD(get_CostAttributes)(unsigned __int3264 & count, BSTR ** names);
 
 	// INARouteSolver2
 
@@ -308,7 +302,7 @@ private:
 	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
 										  NAVertexCache * vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
 	HRESULT DeterminMinimumPop2Route(EvacueeList *, INetworkDatasetPtr, double &, bool &) const;
-	size_t  GetPathsThatNeedToBeProcessedInIteration(EvacueeList *, std::vector<EvcPathPtr> *, std::vector<double> &) const;
+	size_t  FindPathsThatNeedToBeProcessedInIteration(EvacueeList *, std::vector<EvcPathPtr> *, std::vector<double> &) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, NAEdgeContainer *, NAEdgeContainer *, double, EvcSolverMethod) const;
 	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
 	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, NAEdgeContainer *) const;

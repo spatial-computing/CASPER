@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <hash_map>
+#include "StdAfx.h"
 #include "NAEdge.h"
 #include "NAVertex.h"
 
@@ -39,14 +39,14 @@ typedef HeapNode * HeapNodePtr;
 class HeapNodeTable
 {
 private:
-	stdext::hash_map<long, HeapNodePtr> * cacheAlong;
-	stdext::hash_map<long, HeapNodePtr> * cacheAgainst;
+	std::unordered_map<long, HeapNodePtr> * cacheAlong;
+	std::unordered_map<long, HeapNodePtr> * cacheAgainst;
 
 public:
 	HeapNodeTable(void)
 	{
-		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, HeapNodePtr>();
-		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, HeapNodePtr>();
+		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, HeapNodePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, HeapNodePtr>();
 	}
 
 	~HeapNodeTable(void)

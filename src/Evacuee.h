@@ -84,17 +84,18 @@ public:
 		myEvc = evc;
 	}
 
-	void AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment);
+	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
 									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
-	static void DetachPathsFromEvacuee(Evacuee * evc, std::vector<EvcPath *> * detachedPaths, NAEdgeMap & touchedEdges);
-	void ReattachToEvacuee();
-	void CleanYourEvacueePaths();
-	bool DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, size_t & NumberOfEvacueesInIteration, double ThisIterationMaxCost, EvcSolverMethod method);
+	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::vector<EvcPath *> * detachedPaths = NULL, NAEdgeMap * touchedEdges = NULL);
+	void ReattachToEvacuee(EvcSolverMethod method);
+	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
+	bool DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
 
 	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
 	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
 	PathSegmentPtr Back()        { return std::list<PathSegmentPtr>::back();  }
+	inline const int & GetKey()  const { return Order; }
 
 	~EvcPath(void)
 	{
@@ -163,9 +164,9 @@ typedef Evacuee * EvacueePtr;
 typedef std::vector<EvacueePtr> EvacueeList;
 typedef std::vector<EvacueePtr>::const_iterator EvacueeListItr;
 typedef std::pair<long, std::vector<EvacueePtr> *> _NAEvacueeVertexTablePair;
-typedef stdext::hash_map<long, std::vector<EvacueePtr> *>::const_iterator NAEvacueeVertexTableItr;
+typedef std::unordered_map<long, std::vector<EvacueePtr> *>::const_iterator NAEvacueeVertexTableItr;
 
-class NAEvacueeVertexTable : protected stdext::hash_map<long, std::vector<EvacueePtr> *>
+class NAEvacueeVertexTable : protected std::unordered_map<long, std::vector<EvacueePtr> *>
 {
 private:
 	std::vector<EvacueePtr> * Find(long junctionEID);
@@ -202,8 +203,8 @@ public:
 };
 
 typedef SafeZone * SafeZonePtr;
-typedef stdext::hash_map<long, SafeZonePtr> SafeZoneTable;
-typedef stdext::hash_map<long, SafeZonePtr>::_Pairib SafeZoneTableInsertReturn;
-typedef stdext::hash_map<long, SafeZonePtr>::const_iterator SafeZoneTableItr;
+typedef std::unordered_map<long, SafeZonePtr> SafeZoneTable;
+typedef std::unordered_map<long, SafeZonePtr>::_Pairib SafeZoneTableInsertReturn;
+typedef std::unordered_map<long, SafeZonePtr>::const_iterator SafeZoneTableItr;
 typedef std::pair<long, SafeZonePtr> _SafeZoneTablePair;
 #define SafeZoneTablePair(a) _SafeZoneTablePair(a->Vertex->EID, a)

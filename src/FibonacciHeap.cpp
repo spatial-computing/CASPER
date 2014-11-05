@@ -298,11 +298,11 @@ void HeapNodeTable::Insert(HeapNodePtr node)
 
 HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 {
-	stdext::hash_map<long, HeapNodePtr> * cache = 0;
+	std::unordered_map<long, HeapNodePtr> * cache = 0;
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache  = cacheAgainst;
 
-	stdext::hash_map<long, HeapNodePtr>::const_iterator it = cache->find(edge->EID);
+	std::unordered_map<long, HeapNodePtr>::const_iterator it = cache->find(edge->EID);
 	HeapNodePtr o = 0;
 	if (it != cache->end()) o = it->second;
 	return o;

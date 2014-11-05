@@ -18,45 +18,36 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
-void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, std::vector<EvcPathPtr> * detachedPaths, NAEdgeMap & touchedEdges)
+void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::vector<EvcPathPtr> * detachedPaths, NAEdgeMap * touchedEdges)
 {
 	// It's time to clean up the evacuee object and reset it for the next iteration
 	// To do this we first collect all its paths, take away all edge reservations, and then reset some of its fields.
 	// at the end keep a record of touched edges for a 'HowDirty' call
 	for (const auto & p : *evc->Paths)
 	{
-		for (const auto & s : *p)
-		{
-			s->Edge->RemoveReservation(p, CASPERSolver, true);
-			touchedEdges.Insert(s->Edge);
-		}
-		detachedPaths->push_back(p);
+		for (const auto & s : *p) s->Edge->RemoveReservation(p, method, true);
+		if (touchedEdges) { for (const auto & s : *p) touchedEdges->Insert(s->Edge); }
+		if (detachedPaths) detachedPaths->push_back(p); else delete p;
 	}
-	evc->Status = EvacueeStatus::Unprocessed;
 	evc->Paths->clear();
-	evc->PredictedCost = FLT_MAX;
 }
 
-void EvcPath::ReattachToEvacuee()
+void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 {
-
+	for (const auto & s : *this) s->Edge->AddReservation(this, method, true);
+	myEvc->Paths->push_back(this);
 }
 
-void EvcPath::CleanYourEvacueePaths()
-{
-
-}
-bool EvcPath::DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, size_t & NumberOfEvacueesInIteration, double ThisIterationMaxCost, EvcSolverMethod method)
+bool EvcPath::DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
 	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost ) / ThisIterationMaxCost;
 	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
 	bool NeedsAChance = PredictionCostRatio > ThreasholdForFinalCost || EvacuationCostRatio > ThreasholdForFinalCost;
 
-	if (PredictionCostRatio > ThreasholdForFinalCost && myEvc->Status == EvacueeStatus::Processed)
+	if (NeedsAChance && myEvc->Status == EvacueeStatus::Processed)
 	{
 		// since the prediction was bad it probably means the evacuee has more than average vehicles so it should be processed sooner
 		AffectingList.push_back(myEvc);
-		++NumberOfEvacueesInIteration;
 		myEvc->Status = EvacueeStatus::Unprocessed;
 	}
 
@@ -70,34 +61,25 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector
 			if (NAEdge::CostLessThan(maxCost->Edge, seg->Edge, method)) maxCost = seg;
 			if (NAEdge::CongestionLessThan(maxCost->Edge, seg->Edge, method)) maxCong = seg;
 		}
-		std::vector<EvcPathPtr> & crossing = maxCong->Edge->GetCrossingPaths();
+		std::vector<EvcPathPtr> crossing;
+		crossing.reserve(50);
+		maxCong->Edge->GetCrossingPaths(crossing);
+		if (maxCong != maxCost) maxCost->Edge->GetCrossingPaths(crossing);
 		for (const auto & p : crossing)
 			if (p->myEvc->Status == EvacueeStatus::Processed)
 			{
 				AffectingList.push_back(p->myEvc);
-				++NumberOfEvacueesInIteration;
 				p->myEvc->Status = EvacueeStatus::Unprocessed;
 			}
-		if (maxCong != maxCost)
-		{
-			std::vector<EvcPathPtr> & crossing = maxCost->Edge->GetCrossingPaths();
-			for (const auto & p : crossing)
-				if (p->myEvc->Status == EvacueeStatus::Processed)
-				{
-					AffectingList.push_back(p->myEvc);
-					++NumberOfEvacueesInIteration;
-					p->myEvc->Status = EvacueeStatus::Unprocessed;
-				}
-		}
 	}
 
 	return NeedsAChance;
 }
 
-void EvcPath::AddSegment(double population2Route, EvcSolverMethod method, PathSegmentPtr segment)
+void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
 {
 	this->push_front(segment);
-	segment->Edge->AddReservation(this, population2Route, method);
+	segment->Edge->AddReservation(this, method);
 	double p = abs(segment->GetEdgePortion());
 	ReserveEvacuationCost += segment->Edge->GetCurrentCost(method) * p;
 	OrginalCost    += segment->Edge->OriginalCost     * p;

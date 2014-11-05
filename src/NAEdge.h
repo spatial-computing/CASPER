@@ -1,27 +1,16 @@
 #pragma once
 
-#include <hash_map>
+#include "StdAfx.h"
 #include "Evacuee.h"
 #include "TrafficModel.h"
 
 enum class EdgeDirtyState : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
+enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGen = 0x2, AllGens = 0x3 };
 
-struct EdgeReservation
-{
-public:
-	double FromCost;
-	double ToCost;
-	Evacuee * Who;
+DEFINE_ENUM_FLAG_OPERATORS(NAEdgeMapGeneration)
+template <class T> inline bool CheckFlag(T var, T flag) { return (var & flag) != T::None; }
 
-	EdgeReservation(Evacuee * who, double fromCost, double toCost)
-	{
-		Who = who;
-		FromCost = fromCost;
-		ToCost = toCost;
-	}
-};
-
-class EdgeReservations : std::vector<EvcPathPtr>
+class EdgeReservations : private std::unordered_map<int, EvcPathPtr>
 {
 private:
 	float          ReservedPop;
@@ -40,8 +29,8 @@ public:
 
 // EdgeReservations hash map
 typedef EdgeReservations * EdgeReservationsPtr;
-typedef public stdext::hash_map<long, EdgeReservationsPtr> NAResTable;
-typedef stdext::hash_map<long, EdgeReservationsPtr>::const_iterator NAResTableItr;
+typedef public std::unordered_map<long, EdgeReservationsPtr> NAResTable;
+typedef std::unordered_map<long, EdgeReservationsPtr>::const_iterator NAResTableItr;
 typedef std::pair<long, EdgeReservationsPtr> NAResTablePair;
 
 // The NAEdge class is what sits on top of the INetworkEdge interface and holds extra
@@ -77,7 +66,7 @@ public:
 	double OriginalCapacity() const { return reservations->Capacity; }
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;
-	void AddReservation(EvcPath * path, double population, EvcSolverMethod method);
+	void AddReservation(EvcPath * path, EvcSolverMethod method, bool delayedDirtyState = false);
 	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
 	NAEdge(const NAEdge& cpy);
 
@@ -86,13 +75,13 @@ public:
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	void TreeNextEraseFirst(NAEdge * child);
+	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
+	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
+	void GetCrossingPaths(std::vector<EvcPathPtr> & crossings) { for (const auto & p : *reservations) crossings.push_back(p.second); }
 	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const;
 	HRESULT InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
 									  long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag);
-	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
-	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
-	std::vector<EvcPathPtr> & GetCrossingPaths() { return *reservations; }
 
 	static bool CostLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
 	{
@@ -110,8 +99,8 @@ double GetHeapKeyNonHur(const NAEdge * e);
 bool   IsEqual         (const NAEdge * n1, const NAEdge * n2);
 
 typedef NAEdge * NAEdgePtr;
-typedef public stdext::hash_map<long, NAEdgePtr> NAEdgeTable;
-typedef stdext::hash_map<long, NAEdgePtr>::const_iterator NAEdgeTableItr;
+typedef public std::unordered_map<long, NAEdgePtr> NAEdgeTable;
+typedef std::unordered_map<long, NAEdgePtr>::const_iterator NAEdgeTableItr;
 typedef std::pair<long, NAEdgePtr> _NAEdgeTablePair;
 #define NAEdgeTablePair(a) _NAEdgeTablePair(a->EID, a)
 
@@ -124,8 +113,8 @@ private:
 public:
 	NAEdgeMap(void)
 	{
-		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
-		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
+		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
 	}
 
 	~NAEdgeMap(void)
@@ -147,11 +136,6 @@ public:
 	void Erase(long eid, esriNetworkEdgeDirection dir);
 };
 
-#define NAEdgeMap_NOGEN   0x0
-#define NAEdgeMap_OLDGEN  0x1
-#define NAEdgeMap_NEWGEN  0x2
-#define NAEdgeMap_ALLGENS 0x3
-
 class NAEdgeMapTwoGen
 {
 public:
@@ -166,7 +150,7 @@ public:
 
 	~NAEdgeMapTwoGen(void)
 	{
-		Clear(NAEdgeMap_ALLGENS);
+		Clear(NAEdgeMapGeneration::AllGens);
 		delete oldGen;
 		delete newGen;
 	}
@@ -178,26 +162,26 @@ public:
 	}
 
 	void MarkAllAsOldGen();
-	bool Exist(NAEdgePtr edge, UCHAR gen = NAEdgeMap_ALLGENS) { return Exist(edge->EID, edge->Direction, gen)  ; }
-	void Erase(NAEdgePtr edge, UCHAR gen = NAEdgeMap_ALLGENS);
-	void Clear(UCHAR gen);
-	size_t Size(UCHAR gen = NAEdgeMap_NEWGEN);
-	HRESULT Insert(NAEdgePtr edge, UCHAR gen = NAEdgeMap_NEWGEN);
-	bool Exist(long eid, esriNetworkEdgeDirection dir, UCHAR gen = NAEdgeMap_ALLGENS);
+	bool Exist(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens) { return Exist(edge->EID, edge->Direction, gen); }
+	void Erase(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens);
+	void Clear(NAEdgeMapGeneration gen);
+	size_t Size(NAEdgeMapGeneration gen = NAEdgeMapGeneration::NewGen);
+	HRESULT Insert(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::NewGen);
+	bool Exist(long eid, esriNetworkEdgeDirection dir, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens);
 };
 
 typedef std::pair<long, unsigned char> NAEdgeContainerPair;
-typedef stdext::hash_map<long, unsigned char>::const_iterator NAEdgeIterator;
+typedef std::unordered_map<long, unsigned char>::const_iterator NAEdgeIterator;
 
 class NAEdgeContainer
 {
 private:
-	stdext::hash_map<long, unsigned char> * cache;
+	std::unordered_map<long, unsigned char> * cache;
 
 public:
 	NAEdgeContainer(size_t capacity)
 	{
-		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, unsigned char>();
+		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, unsigned char>();
 		cache->reserve(capacity);
 	}
 
@@ -256,8 +240,8 @@ public:
 	{
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
-		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
-		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
+		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
 		myTrafficModel = new DEBUG_NEW_PLACEMENT TrafficModel(model, CriticalDensPerCap, SaturationPerCap, InitDelayCostPerPop);
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 

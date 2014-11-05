@@ -448,47 +448,29 @@ STDMETHODIMP EvcSolver::put_CostPerZoneDensity(BSTR value)
 
 // returns the name of the heuristic attributes loaded from the network dataset.
 // this will be called from the property page so the user can select.
-STDMETHODIMP EvcSolver::get_CostAttributes(BSTR ** Names)
+STDMETHODIMP EvcSolver::get_CostAttributes(unsigned __int3264 & count, BSTR ** Names)
 {
-	size_t count = costAttribs.size(), i;
+	count = costAttribs.size();
 	HRESULT hr;
 	BSTR * names = new DEBUG_NEW_PLACEMENT BSTR[count];
-
-	for (i = 0; i < count; i++) if (FAILED(hr = costAttribs[i]->get_Name(&(names[i])))) return hr;
-
 	*Names = names;
+
+	for (size_t i = 0; i < count; i++) if (FAILED(hr = costAttribs[i]->get_Name(&(names[i])))) return hr;
 
 	return S_OK;
 }
 
 // returns the name of the heuristic attributes loaded from the network dataset.
 // this will be called from the property page so the user can select.
-STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(BSTR ** Names)
+STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(unsigned __int3264 & count, BSTR ** Names)
 {
-	size_t count = discriptiveAttribs.size(), i;
+	count = discriptiveAttribs.size();
 	HRESULT hr;
 	BSTR * names = new DEBUG_NEW_PLACEMENT BSTR[count];
-
-	for (i = 0; i < count; i++) if (FAILED(hr = discriptiveAttribs[i]->get_Name(&(names[i])))) return hr;
-
 	*Names = names;
 
-	return S_OK;
-}
+	for (size_t i = 0; i < count; i++) if (FAILED(hr = discriptiveAttribs[i]->get_Name(&(names[i])))) return hr;
 
-// returns the count of available heuristic attributes from the network dataset to the property page
-STDMETHODIMP EvcSolver::get_CostAttributesCount(size_t * Count)
-{
-	size_t count = costAttribs.size();
-	*Count = count;
-	return S_OK;
-}
-
-// returns the count of available heuristic attributes from the network dataset to the property page
-STDMETHODIMP EvcSolver::get_DiscriptiveAttributesCount(size_t * Count)
-{
-	size_t count = discriptiveAttribs.size();
-	*Count = count;
 	return S_OK;
 }
 
