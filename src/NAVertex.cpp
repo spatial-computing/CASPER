@@ -92,8 +92,8 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 			}
 			else // carmaLoop > i->CarmaLoop
 			{
-				_ASSERT(i->Value - hur <= FLT_EPSILON);
-				unnesecery = hur - i->Value <= FLT_EPSILON;
+				// _ASSERT(i->Value - hur <= FLT_EPSILON);
+				unnesecery = abs(hur - i->Value) <= FLT_EPSILON;
 				i->Value = hur;
 				i->CarmaLoop = carmaLoop;
 			}

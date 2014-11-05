@@ -295,11 +295,9 @@ END_OF_FUNC:
 
 size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvacuees, std::vector<EvcPathPtr> * detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
 {
-	double ThreasholdForFinalCost = 0.25;
+	double ThreasholdForFinalCost = 0.15;
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
-	int Iteration = GlobalEvcCostAtIteration.size() + 1;
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (0x1 << Iteration));
 	NAEdgeMap touchededges;
 
 	// Recalculate all path costs and then list them in a sorted manner by descending final cost
@@ -318,6 +316,8 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEva
 
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
+	int Iteration = GlobalEvcCostAtIteration.size();
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (0x1 << Iteration));
 
 	if (Iteration > 1)
 	{

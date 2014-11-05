@@ -88,13 +88,7 @@ void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
 void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method)
 {
 	FinalEvacuationCost = 0.0;
-	OrginalCost = 0.0;
-	for (const auto & pathSegment : *this)
-	{
-		double p = abs(pathSegment->GetEdgePortion());
-		FinalEvacuationCost += pathSegment->Edge->GetCurrentCost(method) * p;
-		OrginalCost         += pathSegment->Edge->OriginalCost     * p;
-	}	
+	for (const auto & pathSegment : *this) FinalEvacuationCost += pathSegment->Edge->GetCurrentCost(method) * abs(pathSegment->GetEdgePortion());
 	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
 	myEvc->FinalCost = max(myEvc->FinalCost, FinalEvacuationCost);
 }
