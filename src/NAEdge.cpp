@@ -24,13 +24,17 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 
 void EdgeReservations::AddReservation(double newFlow, EvcPathPtr path)
 {
-	this->insert(std::pair<int, EvcPathPtr>(path->GetKey(), path));
+	push_back(path);
 	ReservedPop += (float)newFlow;
 }
 
 void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 {
-	erase(path->GetKey());
+	int i;
+	for (i = size() - 1; i >= 0; --i) if (*path == *at(i)) break;
+	if (i < 0) throw std::out_of_range("Path not found in edge reservation");
+	erase(begin() + i);
+	_ASSERT(i == size() - 1);
 	ReservedPop -= (float)flow;
 }
 
@@ -58,11 +62,11 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, N
 	myGeometry = NULL;
 	TreePrevious = NULL;
 	CleanCost = -1.0;
-	ToVertex = 0;
+	ToVertex = NULL;
 	this->NetEdge = edge;
 	VARIANT vcost, vcap;
 	float capacity = 1.0;
-	HRESULT hr = 0;
+	HRESULT hr = S_OK;
 	AdjacentForward = NULL;
 	AdjacentBackward = NULL;
 
@@ -236,7 +240,7 @@ double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow,
 	double cutoffCost = max(longestPathSoFar, currentPathSoFar);
 
 	if (deltaCostOfNewFlow > 0.0 && selfishRatio > 0.0)
-		for(const auto & p: *reservations) AddedGlobalCost = max(AddedGlobalCost, p.second->GetReserveEvacuationCost() + deltaCostOfNewFlow - cutoffCost);		
+		for(const auto & p: *reservations) AddedGlobalCost = max(AddedGlobalCost, p->GetReserveEvacuationCost() + deltaCostOfNewFlow - cutoffCost);		
 	else return 0.0;
 
 	return selfishRatio * min(AddedGlobalCost, deltaCostOfNewFlow);

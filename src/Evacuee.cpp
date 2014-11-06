@@ -18,6 +18,11 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
+bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2)
+{
+	return e1->Paths->front()->Order > e2->Paths->front()->Order;
+}
+
 void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::vector<EvcPathPtr> * detachedPaths, NAEdgeMap * touchedEdges)
 {
 	// It's time to clean up the evacuee object and reset it for the next iteration
@@ -25,7 +30,7 @@ void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std:
 	// at the end keep a record of touched edges for a 'HowDirty' call
 	for (const auto & p : *evc->Paths)
 	{
-		for (const auto & s : *p) s->Edge->RemoveReservation(p, method, true);
+		for (auto s = p->crbegin(); s != p->crend(); ++s) (*s)->Edge->RemoveReservation(p, method, true);
 		if (touchedEdges) { for (const auto & s : *p) touchedEdges->Insert(s->Edge); }
 		if (detachedPaths) detachedPaths->push_back(p); else delete p;
 	}

@@ -41,7 +41,7 @@ private:
 
 public:
 	double GVal;
-	double GlobalPenaltyCost;
+	float  GlobalPenaltyCost;
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;

@@ -96,6 +96,7 @@ public:
 	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
 	PathSegmentPtr Back()        { return std::list<PathSegmentPtr>::back();  }
 	inline const int & GetKey()  const { return Order; }
+	friend inline bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
 
 	~EvcPath(void)
 	{
@@ -112,6 +113,8 @@ public:
 	{
 		return p1->FinalEvacuationCost > p2->FinalEvacuationCost;
 	}
+
+	static bool MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2);
 };
 
 typedef EvcPath * EvcPathPtr;

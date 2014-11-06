@@ -18,7 +18,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing;
-	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, addedCostAsPenalty = 0.0, MaxPathCostSoFar = 0.0;
+	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, MaxPathCostSoFar = 0.0;
+	float addedCostAsPenalty = 0.0f;
 	std::vector<NAVertexPtr>::const_iterator vit;
 	SafeZoneTableItr iterator;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -345,6 +346,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEva
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
+	std::sort(EvacueesForNextIteration.begin(), EvacueesForNextIteration.end(), EvcPath::MoreThanPathOrder);
 	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, solverMethod, detachedPaths, &touchededges);
 	touchededges.CallHowDirty(solverMethod, 1.0, true);
 
@@ -532,7 +534,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 							closedList->Erase(currentEdge, NAEdgeMapGeneration::NewGen);
 							heap->Insert(currentEdge);
 						}
-						else neighbor->SetBehindEdge(currentEdge);						// undo whatever PrepareUnvisitedVertexForHeap did to currentEdge
+						// undo whatever PrepareUnvisitedVertexForHeap did to currentEdge
+						else neighbor->SetBehindEdge(currentEdge);
 					}
 					else
 					{

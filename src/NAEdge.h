@@ -10,7 +10,7 @@ enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGe
 DEFINE_ENUM_FLAG_OPERATORS(NAEdgeMapGeneration)
 template <class T> inline bool CheckFlag(T var, T flag) { return (var & flag) != T::None; }
 
-class EdgeReservations : private std::unordered_map<int, EvcPathPtr>
+class EdgeReservations : private std::vector<EvcPathPtr>
 {
 private:
 	float          ReservedPop;
@@ -53,7 +53,6 @@ public:
 	NAEdge * TreePrevious;
 	std::vector<NAEdge *> TreeNext;
 	INetworkEdgePtr NetEdge;
-	// INetworkEdgePtr LastExteriorEdge;
 	long EID;
 	std::vector<NAEdge *> * AdjacentForward;
 	std::vector<NAEdge *> * AdjacentBackward;
@@ -77,7 +76,7 @@ public:
 	void TreeNextEraseFirst(NAEdge * child);
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
-	void GetCrossingPaths(std::vector<EvcPathPtr> & crossings) { for (const auto & p : *reservations) crossings.push_back(p.second); }
+	void GetCrossingPaths(std::vector<EvcPathPtr> & crossings) { for (const auto & p : *reservations) crossings.push_back(p); }
 	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const;
 	HRESULT InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
@@ -130,7 +129,7 @@ public:
 	bool Exist(NAEdgePtr edge) { return Exist(edge->EID, edge->Direction)  ; }
 	void Clear()               { cacheAlong->clear(); cacheAgainst->clear(); }
 	size_t Size()              { return cacheAlong->size() + cacheAgainst->size(); }
-	HRESULT Insert(NAEdgePtr edge);
+	HRESULT Insert(NAEdgePtr   edge );
 	HRESULT Insert(NAEdgeMap * edges);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
 	void Erase(long eid, esriNetworkEdgeDirection dir);
