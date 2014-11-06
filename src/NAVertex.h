@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StdAfx.h"
+#include "utils.h"
 
 class Evacuee;
 class NAEdge;
@@ -41,7 +42,7 @@ private:
 
 public:
 	double GVal;
-	float  GlobalPenaltyCost;
+	double GlobalPenaltyCost;
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
@@ -106,8 +107,9 @@ private:
 public:
 	NAVertexCache(void)
 	{
-		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAVertexPtr>();
+		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAVertexPtr>(size_t(10000));
 		bucketCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
+		cache->max_load_factor(3.0f);
 		heuristicForOutsideVertices = 0.0;
 		currentBucket = NULL;
 		currentBucketIndex = 0;

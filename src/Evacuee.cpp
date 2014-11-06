@@ -364,18 +364,13 @@ HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool 
 {
 	HRESULT hr = S_OK;
 	restricted = capacity == 0.0 && costPerDensity > 0.0;
-	NAEdgePtr currentEdge = NULL;
-	vector_NAEdgePtr_Ptr adj;
+	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
 
 	if (behindEdge && !restricted)
 	{
 		restricted = true;
-		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, adj))) return hr;
-		for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
-		{
-			currentEdge = *e;
-			if (IsEqual(behindEdge, currentEdge)) restricted = false;
-		}
+		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj))) return hr;
+		for (const auto & currentEdge : *adj) if (IsEqual(behindEdge, currentEdge)) restricted = false;
 	}
 	return hr;
 }

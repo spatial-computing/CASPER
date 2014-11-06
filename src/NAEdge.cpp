@@ -57,7 +57,7 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	myGeometry = cpy.myGeometry;
 }
 
-NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model)
+NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, const NAEdge * otherEdge, bool twoWayRoadsShareCap, std::list<EdgeReservationsPtr> & ResTable, TrafficModel * model)
 {
 	myGeometry = NULL;
 	TreePrevious = NULL;
@@ -96,15 +96,12 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, N
 		if (vcap.vt == VT_R8) capacity = max(1.0f, (float)(vcap.dblVal));
 		else if (vcap.vt == VT_I4) capacity = max(1.0f, (float)(vcap.intVal));
 
-		NAResTableItr it = resTable->find(EID);
-		if (it == resTable->end())
-		{
-			reservations = new DEBUG_NEW_PLACEMENT EdgeReservations(capacity, model);
-			resTable->insert(NAResTablePair(EID, reservations));
-		}
+		// now deal with reservation list
+		if (twoWayRoadsShareCap && otherEdge) reservations = otherEdge->reservations;
 		else
 		{
-			reservations = it->second;
+			reservations = new DEBUG_NEW_PLACEMENT EdgeReservations(capacity, model);
+			ResTable.push_back(reservations);
 		}
 	}
 }
@@ -295,15 +292,15 @@ void NAEdge::TreeNextEraseFirst(NAEdge * child)
 {
 	if (child)
 	{
-		std::vector<NAEdge *>::size_type j = TreeNext.size();
-		for(std::vector<NAEdge *>::size_type i = 0; i < TreeNext.size(); i++)
-			if (IsEqual(TreeNext[i], child))
+		std::list<NAEdge *>::const_iterator i, j = TreeNext.end();
+		for (i = TreeNext.cbegin(); i != TreeNext.cend(); ++i)
+			if (IsEqual(*i, child))
 			{
 				j = i;
 				break;
 			}
-		_ASSERT(j < TreeNext.size());
-		if (j < TreeNext.size()) TreeNext.erase(TreeNext.begin() + j);
+		_ASSERT(j != TreeNext.end());
+		if (j != TreeNext.end()) TreeNext.erase(j);
 	}
 }
 
@@ -319,8 +316,8 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 	NAEdgePtr n = 0;
 	long EID;
 	NAEdgeTable * cache = 0;
-	NAResTable  * resTable = 0;
-	esriNetworkEdgeDirection dir;
+	//NAResTable  * resTable = 0;
+	esriNetworkEdgeDirection dir, otherDir;
 	INetworkElementPtr ipEdgeElement;
 	INetworkEdgePtr edgeClone;
 
@@ -330,12 +327,14 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 	if (dir == esriNEDAlongDigitized)
 	{
 		cache = cacheAlong;
-		resTable = resTableAlong;
+		otherDir = esriNEDAgainstDigitized;
+		//resTable = resTableAlong;
 	}
 	else
 	{
 		cache = cacheAgainst;
-		resTable = resTableAgainst;
+		otherDir = esriNEDAlongDigitized;
+		//resTable = resTableAgainst;
 	}
 
 	std::unordered_map<long, NAEdgePtr>::const_iterator it = cache->find(EID);
@@ -352,7 +351,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 		{
 			edgeClone = edge;
 		}
-		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, resTable, myTrafficModel);
+		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, Get(EID, otherDir), twoWayRoadsShareCap, ResTable, myTrafficModel);
 		cache->insert(NAEdgeTablePair(n));
 	}
 	else
@@ -373,28 +372,30 @@ void NAEdgeCache::Clear()
 	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++)
 	{
 		NAEdgePtr e = (*cit).second;
-		if (e->AdjacentForward) delete e->AdjacentForward;
-		if (e->AdjacentBackward) delete e->AdjacentBackward;
+		//if (e->AdjacentForward) delete e->AdjacentForward;
+		//if (e->AdjacentBackward) delete e->AdjacentBackward;
 		delete e;
 	}
 	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++)
 	{
 		NAEdgePtr e = (*cit).second;
-		if (e->AdjacentForward) delete e->AdjacentForward;
-		if (e->AdjacentBackward) delete e->AdjacentBackward;
+		//if (e->AdjacentForward) delete e->AdjacentForward;
+		//if (e->AdjacentBackward) delete e->AdjacentBackward;
 		delete e;
 	}
-	for(NAResTableItr ires = resTableAlong->begin(); ires != resTableAlong->end(); ires++) delete (*ires).second;
+	for (auto r : ResTable) delete r;
+	for (auto n : GarbageNeighborList) delete n;
 
+	GarbageNeighborList.clear();
 	cacheAlong->clear();
 	cacheAgainst->clear();
-	resTableAlong->clear();
+	ResTable.clear();
 
-	if (!twoWayRoadsShareCap)
-	{
-		for(NAResTableItr ires = resTableAgainst->begin(); ires != resTableAgainst->end(); ires++) delete (*ires).second;
-		resTableAgainst->clear();
-	}
+	//if (!twoWayRoadsShareCap)
+	//{
+	//	for(NAResTableItr ires = resTableAgainst->begin(); ires != resTableAgainst->end(); ires++) delete (*ires).second;
+	//	resTableAgainst->clear();
+	//}
 }
 
 NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
@@ -406,43 +407,39 @@ NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
 	else return NULL;
 }
 
-HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, vector_NAEdgePtr_Ptr & neighbors)
+HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr, unsigned short, 0> ** returnNeighbors)
 {
 	HRESULT hr = S_OK;
 	long adjacentEdgeCount;
 	double fromPosition, toPosition;
 	INetworkForwardStarExPtr star;
-	neighbors = NULL;
+	ArrayList<NAEdgePtr, unsigned short, 0> * neighbors = NULL;
 	INetworkEdgePtr netEdge = NULL;
 
 	if (Edge)
 	{
-		neighbors = dir == QueryDirection::Forward ? Edge->AdjacentForward : Edge->AdjacentBackward;
+		neighbors = dir == QueryDirection::Forward ? &Edge->AdjacentForward : &Edge->AdjacentBackward;
 		netEdge = Edge->NetEdge;
-	}
-	if (neighbors) return hr;
-	neighbors = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
-
-	if (dir == QueryDirection::Forward)
-	{
-		star = ipForwardStar;
-		if (Edge) Edge->AdjacentForward = neighbors;
 	}
 	else
 	{
-		star = ipBackwardStar;
-		if (Edge) Edge->AdjacentBackward = neighbors;
+		neighbors = new DEBUG_NEW_PLACEMENT ArrayList<NAEdgePtr, unsigned short, 0>();
+		GarbageNeighborList.push_back(neighbors);
 	}
-
-	if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, 0 /*lastExteriorEdge*/, ipAdjacencies))) return hr;
-	if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
-	neighbors->reserve(adjacentEdgeCount);
-	for (long i = 0; i < adjacentEdgeCount; i++)
+	if (neighbors->empty())
 	{
-		if (FAILED(hr = ipAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-		neighbors->push_back(this->New(ipCurrentEdge, false));
-	}
+		star = dir == QueryDirection::Forward ? ipForwardStar: ipBackwardStar;
 
+		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, 0 /*lastExteriorEdge*/, ipAdjacencies))) return hr;
+		if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
+		neighbors->Init((unsigned short)adjacentEdgeCount);
+		for (long i = 0; i < adjacentEdgeCount; i++)
+		{
+			if (FAILED(hr = ipAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
+			neighbors->at((unsigned short)i, this->New(ipCurrentEdge, false));
+		}
+	}
+	*returnNeighbors = neighbors;
 	return hr;
 }
 

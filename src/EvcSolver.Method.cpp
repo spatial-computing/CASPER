@@ -10,7 +10,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyHur);
 	NAEdgeMap * closedList = new DEBUG_NEW_PLACEMENT NAEdgeMap();
 	NAEdgeMapTwoGen * carmaClosedList = new DEBUG_NEW_PLACEMENT NAEdgeMapTwoGen();
-	NAEdgePtr currentEdge;
 	std::vector<EvacueePtr>::const_iterator seit;
 	NAVertexPtr neighbor, finalVertex = 0, myVertex;
 	SafeZonePtr BetterSafeZone = 0;
@@ -18,8 +17,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HRESULT hr = S_OK;
 	EvacueePtr currentEvacuee;
 	VARIANT_BOOL keepGoing;
-	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, MaxPathCostSoFar = 0.0;
-	float addedCostAsPenalty = 0.0f;
+	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, costLeft = 0.0, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, MaxPathCostSoFar = 0.0, addedCostAsPenalty = 0.0;
 	std::vector<NAVertexPtr>::const_iterator vit;
 	SafeZoneTableItr iterator;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -36,7 +34,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HANDLE proc = GetCurrentProcess();
 	BOOL dummy;
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
-	vector_NAEdgePtr_Ptr adj;
+	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
 	ATL::CString statusMsg, AlgName;
 	CARMASort carmaSortCriteria = this->CarmaSortCriteria;
 	std::vector<EvcPathPtr> * detachedPaths = new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>();
@@ -195,12 +193,11 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							}
 						}
 
-						if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Forward, adj))) goto END_OF_FUNC;
+						if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Forward, &adj))) goto END_OF_FUNC;
 
-						for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
+						for (const auto & currentEdge : *adj)
 						{
 							// if edge has already been discovered then no need to heap it
-							currentEdge = *e; // ecache->New(ipCurrentEdge, false);
 							if (closedList->Exist(currentEdge)) continue;
 
 							newCost = myVertex->GVal + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
@@ -362,7 +359,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	// performing pre-process: Here we will mark each vertex/junction with a heuristic value indicating
 	// true distance to closest safe zone using backward traversal and Dijkstra
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyNonHur);	// creating the heap for the dijkstra search
-	NAEdge * currentEdge;
 	NAVertexPtr neighbor;
 	INetworkElementPtr ipElementEdge;
 	VARIANT val;
@@ -376,7 +372,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	readyEdges->reserve(safeZoneList->size());
 	unsigned int CARMAExtractCount = 0;
-	vector_NAEdgePtr_Ptr adj;
+	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
 	NAEdgeContainer * removedDirty = new NAEdgeContainer(1000);
 	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseFinalCost, Evacuee::ReverseEvacuationCost };
 
@@ -500,11 +496,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 				continue;
 			}
 
-			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, adj))) goto END_OF_FUNC;
+			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, &adj))) goto END_OF_FUNC;
 
-			for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
+			for (const auto & currentEdge : *adj)
 			{
-				currentEdge = *e;
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, 0))) goto END_OF_FUNC;
 
 				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, solverMethod);
@@ -647,10 +642,10 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
 {
 	closedList->Erase(e);
-	for(std::vector<NAEdgePtr>::const_iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++)
+	for(const auto & i : e->TreeNext)
 	{
-		(*i)->TreePrevious = NULL;
-		RecursiveMarkAndRemove(*i, closedList);
+		i->TreePrevious = NULL;
+		RecursiveMarkAndRemove(i, closedList);
 	}
 	e->TreeNext.clear();
 }
@@ -666,10 +661,10 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 		subtree.pop();
 		closedList->Erase(e);
 		removedDirty->Insert(e);
-		for(std::vector<NAEdgePtr>::const_iterator i = e->TreeNext.begin(); i != e->TreeNext.end(); i++)
+		for (const auto & i : e->TreeNext)
 		{
-			(*i)->TreePrevious = NULL;
-			subtree.push(*i);
+			i->TreePrevious = NULL;
+			subtree.push(i);
 		}
 		e->TreeNext.clear();
 	}
@@ -747,10 +742,10 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 {
 	HRESULT hr = S_OK;
 	NAVertexPtr betterMyVertex;
-	NAEdgePtr tempEdge, betterEdge = NULL;
+	NAEdgePtr betterEdge = NULL;
 	double betterH, tempH;
 	NAVertexPtr tempVertex, neighbor;
-	vector_NAEdgePtr_Ptr adj;
+	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
 
 	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closed-list
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
@@ -758,12 +753,11 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 
 	if (checkOldClosedlist && closedList->Size(NAEdgeMapGeneration::OldGen) > 0)
 	{
-		if (FAILED(hr = ecache->QueryAdjacencies(myVertex, edge, QueryDirection::Forward, adj))) return hr;
+		if (FAILED(hr = ecache->QueryAdjacencies(myVertex, edge, QueryDirection::Forward, &adj))) return hr;
 
 		// Loop through all adjacent edges and update their cost value
-		for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
+		for (const auto & tempEdge : *adj)
 		{
-			tempEdge = *e;
 			if (!closedList->Exist(tempEdge, NAEdgeMapGeneration::OldGen)) continue; // it has to be present in closed list from previous CARMA loop
 			if (IsEqual(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
 
@@ -806,7 +800,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 	NAVertexPtr temp;
 	NAEdgePtr edge;
 	double globalDeltaPenalty = 0.0;
-	vector_NAEdgePtr_Ptr adj;
+	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
 
 	if(readyEdges)
 	{
@@ -833,11 +827,10 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 		else
 		{
 			// if the start point was a single junction, then all the adjacent edges can be start edges
-			if (FAILED(hr = ecache->QueryAdjacencies(temp, NULL, dir, adj))) return hr;
+			if (FAILED(hr = ecache->QueryAdjacencies(temp, NULL, dir, &adj))) return hr;
 
-			for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
+			for (const auto & edge : *adj)
 			{
-				edge = *e;
 				if (closedList->Exist(edge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
 				temp = vcache->New(point->Junction);
 				temp->Previous = 0;

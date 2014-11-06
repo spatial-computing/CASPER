@@ -3,12 +3,7 @@
 #include "StdAfx.h"
 #include "Evacuee.h"
 #include "TrafficModel.h"
-
-enum class EdgeDirtyState : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
-enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGen = 0x2, AllGens = 0x3 };
-
-DEFINE_ENUM_FLAG_OPERATORS(NAEdgeMapGeneration)
-template <class T> inline bool CheckFlag(T var, T flag) { return (var & flag) != T::None; }
+#include "utils.h"
 
 class EdgeReservations : private std::vector<EvcPathPtr>
 {
@@ -51,11 +46,11 @@ public:
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
 	NAEdge * TreePrevious;
-	std::vector<NAEdge *> TreeNext;
+	std::list<NAEdge *> TreeNext;
 	INetworkEdgePtr NetEdge;
 	long EID;
-	std::vector<NAEdge *> * AdjacentForward;
-	std::vector<NAEdge *> * AdjacentBackward;
+	ArrayList<NAEdge *, unsigned short, 0> AdjacentForward;
+	ArrayList<NAEdge *, unsigned short, 0> AdjacentBackward;
 
 	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = NULL) const;
 	double GetCurrentCost(EvcSolverMethod method = CASPERSolver) const;
@@ -66,7 +61,7 @@ public:
 
 	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;
 	void AddReservation(EvcPath * path, EvcSolverMethod method, bool delayedDirtyState = false);
-	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
+	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, const NAEdge * otherEdge, bool twoWayRoadsShareCap, std::list<EdgeReservationsPtr> & ResTable, TrafficModel * model);
 	NAEdge(const NAEdge& cpy);
 
 	EdgeDirtyState HowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
@@ -114,6 +109,16 @@ public:
 	{
 		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
 		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
+		cacheAlong->max_load_factor(3.0f);
+		cacheAgainst->max_load_factor(3.0f);
+	}
+
+	NAEdgeMap(size_t cap)
+	{
+		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>(cap);
+		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>(cap);
+		cacheAlong->max_load_factor(3.0f);
+		cacheAgainst->max_load_factor(3.0f);
 	}
 
 	~NAEdgeMap(void)
@@ -144,7 +149,7 @@ public:
 	NAEdgeMapTwoGen(void)
 	{
 		oldGen = new DEBUG_NEW_PLACEMENT NAEdgeMap();
-		newGen = new DEBUG_NEW_PLACEMENT NAEdgeMap();
+		newGen = new DEBUG_NEW_PLACEMENT NAEdgeMap(size_t(10000));
 	}
 
 	~NAEdgeMapTwoGen(void)
@@ -223,8 +228,10 @@ private:
 	bool			twoWayRoadsShareCap;
 	NAEdgeTable		* cacheAlong;
 	NAEdgeTable		* cacheAgainst;
-	NAResTable		* resTableAlong;
-	NAResTable		* resTableAgainst;
+	//NAResTable		* resTableAlong;
+	//NAResTable		* resTableAgainst;
+	std::list<ArrayList<NAEdgePtr, unsigned short, 0> *> GarbageNeighborList;
+	std::list<EdgeReservationsPtr> ResTable;
 	TrafficModel    * myTrafficModel;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkQueryPtr                  ipNetworkQuery;
@@ -239,14 +246,16 @@ public:
 	{
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
-		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
-		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
+		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>(size_t(10000));
+		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>(size_t(10000));
 		myTrafficModel = new DEBUG_NEW_PLACEMENT TrafficModel(model, CriticalDensPerCap, SaturationPerCap, InitDelayCostPerPop);
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
+		cacheAlong->max_load_factor(3.0f);
+		cacheAgainst->max_load_factor(3.0f);
 
-		resTableAlong = new DEBUG_NEW_PLACEMENT NAResTable();
-		if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
-		else resTableAgainst = new DEBUG_NEW_PLACEMENT NAResTable();
+		//resTableAlong = new DEBUG_NEW_PLACEMENT NAResTable();
+		//if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
+		//else resTableAgainst = new DEBUG_NEW_PLACEMENT NAResTable();
 
 		// network variables init
 		INetworkElementPtr ipEdgeElement;
@@ -264,8 +273,8 @@ public:
 		delete myTrafficModel;
 		delete cacheAlong;
 		delete cacheAgainst;
-		delete resTableAlong;
-		if (!twoWayRoadsShareCap) delete resTableAgainst;
+		//delete resTableAlong;
+		//if (!twoWayRoadsShareCap) delete resTableAgainst;
 	}
 
 	NAEdgePtr New(INetworkEdgePtr edge, bool reuseEdgeElement);
@@ -279,5 +288,5 @@ public:
 	void Clear();
 	void CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver);
 	double GetCacheHitPercentage() const { return myTrafficModel->GetCacheHitPercentage(); }
-	HRESULT QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, vector_NAEdgePtr_Ptr & neighbors);
+	HRESULT QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr, unsigned short, 0> ** neighbors);
 };

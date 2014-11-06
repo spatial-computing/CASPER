@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StdAfx.h"
+#include "utils.h"
 
 class NAVertex;
 class NAEdge;
@@ -8,14 +9,7 @@ class NAEdgeCache;
 class NAEdgeContainer;
 class NAEdgeMap;
 typedef NAVertex * NAVertexPtr;
-enum EvcSolverMethod : unsigned char;
-
-// enum for carma sort setting
-[export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char
-{
-	None = 0x0, FWSingle = 0x1, FWCont = 0x2, BWSingle = 0x3, BWCont = 0x4, ReverseFinalCost = 0x5, ReverseEvacuationCost = 0x6
-};
-enum class EvacueeStatus : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
+// enum EvcSolverMethod : unsigned char;
 
 class PathSegment
 {
