@@ -34,7 +34,7 @@ void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 	for (i = size() - 1; i >= 0; --i) if (*path == *at(i)) break;
 	if (i < 0) throw std::out_of_range("Path not found in edge reservation");
 	erase(begin() + i);
-	_ASSERT(i == size() - 1);
+	_ASSERT((size_t)i == size() - 1);
 	ReservedPop -= (float)flow;
 }
 
@@ -430,7 +430,7 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 	{
 		star = dir == QueryDirection::Forward ? ipForwardStar: ipBackwardStar;
 
-		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, 0 /*lastExteriorEdge*/, ipAdjacencies))) return hr;
+		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, NULL /*lastExteriorEdge*/, ipAdjacencies))) return hr;
 		if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
 		neighbors->Init((UINT8)adjacentEdgeCount);
 		for (long i = 0; i < adjacentEdgeCount; i++)

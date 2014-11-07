@@ -15,6 +15,8 @@
 #define STRICT
 #endif
 
+#define _CRTDBG_MAP_ALLOC
+
 // ref: http://msdn.microsoft.com/en-us/library/windows/desktop/ms683219%28v=vs.85%29.aspx
 #define PSAPI_VERSION 1
 
@@ -121,7 +123,6 @@ using ATL::CRegistryVirtualMachine;
 
 // memory leak detection in DEBUG mode
 // ref: http://msdn.microsoft.com/en-us/library/e5ewb1h3%28v=vs.80%29.aspx
-#define _CRTDBG_MAP_ALLOC // defined in project file
 #include <stdlib.h>
 #include <crtdbg.h>
 

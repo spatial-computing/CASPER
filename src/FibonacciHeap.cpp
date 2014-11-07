@@ -26,8 +26,8 @@ HeapNode::HeapNode(HeapDataType * data, double key)
 
 HeapNode::HeapNode()
 {
-	this->data = 0;
-	this->key = 0;
+	this->data = NULL;
+	this->key = 0.0;
 	parent = NULL;
 	children = NULL;
 	leftSibling = NULL;
@@ -214,7 +214,7 @@ HeapDataType * FibonacciHeap::DeleteMin()
 bool FibonacciHeap::IsVisited(HeapDataType * vertex)
 {
 	HeapNode * out = nodeTable->Find(vertex);
-	return out != 0;
+	return out != NULL;
 }
 
 HRESULT FibonacciHeap::DecreaseKey(HeapDataType * edge)
@@ -298,12 +298,12 @@ void HeapNodeTable::Insert(HeapNodePtr node)
 
 HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 {
-	std::unordered_map<long, HeapNodePtr> * cache = 0;
+	std::unordered_map<long, HeapNodePtr> * cache = NULL;
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache  = cacheAgainst;
 
 	std::unordered_map<long, HeapNodePtr>::const_iterator it = cache->find(edge->EID);
-	HeapNodePtr o = 0;
+	HeapNodePtr o = NULL;
 	if (it != cache->end()) o = it->second;
 	return o;
 }

@@ -39,7 +39,7 @@ public:
 	    toRatio = ToRatio;
 		_ASSERT(FromRatio < ToRatio);
 	    Edge = edge;
-	    pline = 0;
+	    pline = NULL;
     }
 };
 

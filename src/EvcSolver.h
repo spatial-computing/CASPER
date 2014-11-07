@@ -334,7 +334,7 @@ private:
 	VARIANT_BOOL twoWayShareCapacity;
 	VARIANT_BOOL ThreeGenCARMA;
 	VARIANT_BOOL separable;
-	VARIANT_BOOL exportEdgeStat;
+	VARIANT_BOOL VarExportEdgeStat;
 	VARIANT_BOOL m_CreateTraversalResult;
 	VARIANT_BOOL m_FindBestSequence;
 	VARIANT_BOOL m_PreserveFirstStop;

@@ -44,6 +44,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	hProcessPeakMemoryUsage = NULL;
 	UpdatePeakMemoryUsage();
 	SIZE_T baseMemoryUsage = peakMemoryUsage;
+	bool exportEdgeStat = VarExportEdgeStat == VARIANT_TRUE;
 
 	// Check for null parameter variables (the track cancel variable is typically considered optional)
 	if (!pNAContext || !pMessages) return E_POINTER;
@@ -116,9 +117,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	ipUnk = NULL;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
-	bool DoNotExportRouteEdges = ipUnk == NULL;
+	bool ExportRouteEdges = ipUnk != NULL;
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
-	if (!DoNotExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
+	if (ExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
 
 	ipUnk = NULL;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
@@ -599,14 +600,17 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
 	IFeatureClassPtr ipRouteEdgesFC(ipRouteEdgesNAClass);
 
+	// If EdgeStats are not going to be exported then we don't even bother with RouteEdges
+	ExportRouteEdges &= exportEdgeStat;
+
 	// Create an insert cursor and feature buffer from the "Routes" feature class to be used to write routes
 	IFeatureCursorPtr ipFeatureCursorR, ipFeatureCursorE, ipFeatureCursorU;
 	if (FAILED(hr = ipRoutesFC->Insert(VARIANT_TRUE, &ipFeatureCursorR))) return hr;
-	if (!DoNotExportRouteEdges) if (FAILED(hr = ipRouteEdgesFC->Insert(VARIANT_TRUE, &ipFeatureCursorE))) return hr;
+	if (ExportRouteEdges) if (FAILED(hr = ipRouteEdgesFC->Insert(VARIANT_TRUE, &ipFeatureCursorE))) return hr;
 
 	IFeatureBufferPtr ipFeatureBufferR, ipFeatureBufferE;
 	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBufferR))) return hr;
-	if (!DoNotExportRouteEdges) if (FAILED(hr = ipRouteEdgesFC->CreateFeatureBuffer(&ipFeatureBufferE))) return hr;
+	if (ExportRouteEdges) if (FAILED(hr = ipRouteEdgesFC->CreateFeatureBuffer(&ipFeatureBufferE))) return hr;
 
 	// Query for the appropriate field index values in the "routes" feature class
 	long evNameFieldIndex = -1, evacTimeFieldIndex = -1, orgTimeFieldIndex = -1, RIDFieldIndex = -1, ERRouteFieldIndex = -1, EREdgeFieldIndex = -1,
@@ -618,7 +622,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_RID), &RIDFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
 	if (popFieldIndex < 0) { if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr; }
-	if (!DoNotExportRouteEdges)
+	if (ExportRouteEdges)
 	{
 		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_RID), &ERRouteFieldIndex))) return hr;
 		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_EID), &EREdgeFieldIndex))) return hr;
@@ -640,12 +644,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		if (FAILED(hr = (*pit)->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
 			ipFeatureBufferE, ipFeatureCursorR, ipFeatureCursorE, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, EREdgeDirFieldIndex, ERSeqFieldIndex,
-			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex, DoNotExportRouteEdges))) return hr;
+			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex, ExportRouteEdges))) return hr;
 	}
 
 	// flush the insert buffer
 	ipFeatureCursorR->Flush();
-	if (!DoNotExportRouteEdges) ipFeatureCursorE->Flush();
+	if (ExportRouteEdges) ipFeatureCursorE->Flush();
 
 	// copy all route OIDs to RouteID field
 	if (RIDFieldIndex > -1)
@@ -1026,7 +1030,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (ecache->GetCacheHitPercentage() < 80.0) pMessages->AddMessage(ATL::CComBSTR(CacheHitMsg));
 
 	// check version lock: if the evclayer is too old to be solved then add a warning
-	if (DoNotExportRouteEdges) pMessages->AddWarning(ATL::CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
+	if (!ExportRouteEdges && exportEdgeStat) pMessages->AddWarning(ATL::CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
 
 	if (EvacueesWithRestrictedSafezone > 0)
 	{

@@ -232,13 +232,13 @@ STDMETHODIMP EvcSolver::put_TwoWayShareCapacity(VARIANT_BOOL value)
 
 STDMETHODIMP EvcSolver::get_ExportEdgeStat(VARIANT_BOOL * value)
 {
-	*value = exportEdgeStat;
+	*value = VarExportEdgeStat;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_ExportEdgeStat(VARIANT_BOOL value)
 {
-	exportEdgeStat = value;
+	VarExportEdgeStat = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }

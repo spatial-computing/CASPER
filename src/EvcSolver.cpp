@@ -224,7 +224,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	m_PreserveLastStop = VARIANT_FALSE;
 	m_UseTimeWindows = VARIANT_FALSE;
 	separable = VARIANT_FALSE;
-	exportEdgeStat = VARIANT_TRUE;
+	VarExportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
 	twoWayShareCapacity = VARIANT_TRUE;
@@ -292,7 +292,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&m_PreserveLastStop, sizeof(m_PreserveLastStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&separable, sizeof(separable), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Read(&VarExportEdgeStat, sizeof(VarExportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&backtrack, sizeof(backtrack), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&flockingEnabled, sizeof(flockingEnabled), &numBytes))) return hr;
@@ -367,7 +367,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&m_PreserveLastStop, sizeof(m_PreserveLastStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&separable, sizeof(separable), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&VarExportEdgeStat, sizeof(VarExportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&backtrack, sizeof(backtrack), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&flockingEnabled, sizeof(flockingEnabled), &numBytes))) return hr;

@@ -69,11 +69,6 @@ typedef std::unordered_map<long, NAVertexPtr>::const_iterator NAVertexTableItr;
 typedef std::pair<long, NAVertexPtr> _NAVertexTablePair;
 #define NAVertexTablePair(a) _NAVertexTablePair(a->EID, a)
 
-typedef std::unordered_map<int, std::list<long> *> NAVertexLoopCountList;
-typedef NAVertexLoopCountList::_Pairib NAVertexLoopCountListReturn;
-typedef NAVertexLoopCountList::const_iterator NAVertexLoopCountListItr;
-typedef std::pair<int, std::list<long> *> NAVertexLoopCountListPair;
-
 // This collection object has two jobs:
 // it makes sure that there exist only one copy of a vertex in it that is connected to each INetworkJunction.
 // this will be helpful to avoid duplicate copies pointing to the same junction structure. So data attached
@@ -95,9 +90,9 @@ private:
 public:
 	NAVertexCache(void)
 	{
-		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAVertexPtr>(size_t(10000));
+		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAVertexPtr>();
 		bucketCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
-		cache->max_load_factor(3.0f);
+		//cache->max_load_factor(5.0f);
 		heuristicForOutsideVertices = 0.0;
 		currentBucket = NULL;
 		currentBucketIndex = 0;
@@ -111,7 +106,7 @@ public:
 	}
 
 	void PrintVertexHeuristicFeq();
-	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = 0);
+	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = NULL);
 	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
 	void UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);

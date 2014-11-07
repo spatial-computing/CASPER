@@ -24,9 +24,6 @@ public:
 
 // EdgeReservations hash map
 typedef EdgeReservations * EdgeReservationsPtr;
-typedef public std::unordered_map<long, EdgeReservationsPtr> NAResTable;
-typedef std::unordered_map<long, EdgeReservationsPtr>::const_iterator NAResTableItr;
-typedef std::pair<long, EdgeReservationsPtr> NAResTablePair;
 
 // The NAEdge class is what sits on top of the INetworkEdge interface and holds extra
 // information about each edge which are helpful for CASPER algorithm.
@@ -109,16 +106,6 @@ public:
 	{
 		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
 		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
-		cacheAlong->max_load_factor(3.0f);
-		cacheAgainst->max_load_factor(3.0f);
-	}
-
-	NAEdgeMap(size_t cap)
-	{
-		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>(cap);
-		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>(cap);
-		cacheAlong->max_load_factor(3.0f);
-		cacheAgainst->max_load_factor(3.0f);
 	}
 
 	~NAEdgeMap(void)
@@ -149,7 +136,7 @@ public:
 	NAEdgeMapTwoGen(void)
 	{
 		oldGen = new DEBUG_NEW_PLACEMENT NAEdgeMap();
-		newGen = new DEBUG_NEW_PLACEMENT NAEdgeMap(size_t(10000));
+		newGen = new DEBUG_NEW_PLACEMENT NAEdgeMap();
 	}
 
 	~NAEdgeMapTwoGen(void)
@@ -241,12 +228,10 @@ public:
 	{
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
-		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>(size_t(10000));
-		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>(size_t(10000));
+		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
 		myTrafficModel = new DEBUG_NEW_PLACEMENT TrafficModel(model, CriticalDensPerCap, SaturationPerCap, InitDelayCostPerPop);
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
-		cacheAlong->max_load_factor(3.0f);
-		cacheAgainst->max_load_factor(3.0f);
 
 		// network variables init
 		INetworkElementPtr ipEdgeElement;
