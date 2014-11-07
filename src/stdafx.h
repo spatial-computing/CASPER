@@ -107,7 +107,7 @@ using ATL::CRegistryVirtualMachine;
 
 // other needed libraries
 #include "float.h"  // for FLT_MAX, etc.
-#include <cmath>   // for HUGE_VAL
+#include <cmath>    // for HUGE_VAL
 #include <algorithm>
 #include <ctime>
 #include <string>
@@ -126,7 +126,7 @@ using ATL::CRegistryVirtualMachine;
 #include <stdlib.h>
 #include <crtdbg.h>
 
-/// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
+// ref: http://stackoverflow.com/questions/3202520/c-memory-leak-testing-with-crtdumpmemoryleaks-does-not-output-line-numb
 #ifdef _DEBUG
 #define DEBUG_NEW_PLACEMENT (_NORMAL_BLOCK, __FILE__, __LINE__)
 #else

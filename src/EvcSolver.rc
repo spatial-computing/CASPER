@@ -7,20 +7,9 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "gitdescribe.h"
-
+winres.h
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-#include "winres.h"
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
 
 /////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
@@ -50,9 +39,9 @@ BEGIN
     "gitdescribe.h\0"
 END
 
-4 TEXTINCLUDE
+4 TEXTINCLUDE 
 BEGIN
-	"\r\0"
+    "\r\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -82,12 +71,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "USC SSI"
             VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
-            VALUE "FileVersion", GIT_DESCRIBE
+            VALUE "FileVersion", "v10.2.3-32-g8811f62"
             VALUE "InternalName", "EvcSolver32.dll"
             VALUE "LegalCopyright", "Copyright (C) 2014"
             VALUE "OriginalFilename", "EvcSolver32.dll"
-            VALUE "ProductName", "EvcSolver"
-			VALUE "ProductVersion", GIT_DESCRIBE
+            VALUE "ProductName", "CASPER for ArcGIS"
+            VALUE "ProductVersion", "v10.2.3-32-g8811f62"
         END
     END
     BLOCK "VarFileInfo"
@@ -114,7 +103,7 @@ STYLE DS_SETFONT | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
 FONT 8, "Arial", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Evacuation Options",IDC_SearchGroup,7,12,190,139
+    GROUPBOX        "Evacuation Options",IDC_SearchGroup,7,12,190,156
     LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,217,134,119,8
     EDITTEXT        IDC_EDIT_SAT,343,130,46,14,ES_AUTOHSCROLL
     LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,115,108,8
@@ -126,9 +115,9 @@ BEGIN
     LTEXT           "Traffic Model:",IDC_STATIC,217,96,84,8
     COMBOBOX        IDC_COMBO_TRAFFICMODEL,298,93,91,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Population at each location is separable",IDC_CHECK_SEPARABLE,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,174,147,12
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,185,147,12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,189,115,13
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,199,115,13
     GROUPBOX        "Traffic Options",IDC_CapacityOptions,205,78,191,73
     LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,20,101,95,8
     EDITTEXT        IDC_EDIT_ZoneDensity,123,98,66,14,ES_AUTOHSCROLL
@@ -140,16 +129,15 @@ BEGIN
     LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,217,224,60,8
     LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,217,28,77,8
     COMBOBOX        IDC_COMBO_COST,298,26,91,46,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,203,129,13
-    LTEXT           "Init Delay Cost Per Evacuee:",IDC_STATIC_INITDELAY,20,82,102,8
-    EDITTEXT        IDC_EDIT_INITDELAY,123,80,66,14,ES_AUTOHSCROLL
+    CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,212,129,13
+    LTEXT           "Init Delay Cost Per Evacuee:",IDC_STATIC_INITDELAY,20,83,102,8
+    EDITTEXT        IDC_EDIT_INITDELAY,123,81,66,14,ES_AUTOHSCROLL
     LTEXT           "Flocking Profile:",IDC_STATIC_FlockProfile,217,188,61,8
     COMBOBOX        IDC_COMBO_PROFILE,298,185,91,47,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "CARMA Ratio:",IDC_LableCARMA,20,118,95,8
     EDITTEXT        IDC_EDIT_CARMA,123,115,66,14,ES_AUTOHSCROLL
     CONTROL         "<a>Release Date: 1 Jan 2013</a>",IDC_RELEASE,"SysLink",LWS_USEVISUALSTYLE | WS_TABSTOP,12,243,366,13
-    CONTROL         "Run CARMA with DSPT",IDL_CHECK_CARMAGEN,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,20,217,171,13
+    CONTROL         "Run CARMA with DSPT",IDL_CHECK_CARMAGEN,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,225,98,9
     EDITTEXT        IDC_EDIT_SELFISH,123,132,66,14,ES_AUTOHSCROLL
     LTEXT           "Selfish Routing Ratio:",IDC_Lable_SelfishRatio,20,135,78,8
     LTEXT           "CARMA Sort Direction:",IDC_STATIC_CarmaSort,20,63,102,8
@@ -157,7 +145,9 @@ BEGIN
     GROUPBOX        "Routing Options",IDC_RoutingOptions,205,12,191,55
     LTEXT           "UTurn Policy:",IDC_STATIC_UTurn,217,45,65,8
     COMBOBOX        IDC_COMBO_UTurn,298,44,91,38,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,WS_EX_TRANSPARENT
-    GROUPBOX        "General Options",IDC_GeneralOptions,7,158,190,82
+    GROUPBOX        "General Options",IDC_GeneralOptions,7,172,190,68
+    EDITTEXT        IDC_EDIT_Iterative,123,149,66,14,ES_AUTOHSCROLL
+    LTEXT           "Iterative Solver Ratio:",IDC_Lable_IterationRatio,20,152,78,8
 END
 
 
@@ -195,3 +185,15 @@ END
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+gitdescribe.h
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

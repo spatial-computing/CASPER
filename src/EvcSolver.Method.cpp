@@ -72,9 +72,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 	if (FAILED(hr = DeterminMinimumPop2Route(AllEvacuees, ipNetworkDataset, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
 
-	/// TODO somewhere here we have to decide about which evacuees need to be processed. Or if it's an iteration then which ones to be re-processed
-	// change carmaSortDirection
-	// observe MaxEvacueeCostSoFar
 	NumberOfEvacueesInIteration = AllEvacuees->size();
 
 	do // iteration loop
@@ -271,7 +268,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		UpdatePeakMemoryUsage();
 		CARMAExtractCounts.pop_back();
 
-		/// TODO figure out how may of paths need to be detached and process again
+		// figure out how may of paths need to be detached and process again
 		NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
 		carmaSortCriteria = CARMASort::ReverseFinalCost;
 
@@ -596,19 +593,17 @@ END_OF_FUNC:
 
 void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContainer * oldLeafs, NAEdgeContainer * removedDirty, double minPop2Route, EvcSolverMethod method) const
 {
-	std::vector<NAEdgePtr> * dirtyVisited = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
-	std::vector<NAEdgePtr>::const_iterator i;
+	std::vector<NAEdgePtr> dirtyVisited;
 	NAEdgeIterator j;
-	dirtyVisited->reserve(closedList->Size());
+	dirtyVisited.reserve(closedList->Size());
 	NAEdgeContainer * tempLeafs = new DEBUG_NEW_PLACEMENT NAEdgeContainer(100);
 	removedDirty->Clear();
 
-	closedList->GetDirtyEdges(dirtyVisited, minPop2Route, method);
+	closedList->GetDirtyEdges(&dirtyVisited, minPop2Route, method);
 
-	for(i = dirtyVisited->begin(); i != dirtyVisited->end(); i++)
-		if (closedList->Exist(*i))
+	for (auto & leaf : dirtyVisited)
+		if (closedList->Exist(leaf))
 		{
-			NAEdgePtr leaf = *i;
 			while (leaf->TreePrevious && leaf->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) leaf = leaf->TreePrevious;
 			NonRecursiveMarkAndRemove(leaf, closedList, removedDirty);
 
@@ -634,7 +629,6 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 	oldLeafs->Clear();
 	oldLeafs->Insert(tempLeafs);
 
-	delete dirtyVisited;
 	delete tempLeafs;
 }
 
@@ -696,7 +690,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vc
 
 		/// TODO check if Edge new cost is less than clean cost and in this case we have to set the ParentCostDecreased flag for the vertex
 		fPtr->SetBehindEdge(leaf);
-		fPtr->GVal = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCleanCost();    // tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCost(minPop2Route, solverMethod);
+		fPtr->GVal = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCleanCost();
 		fPtr->Previous = NULL;
 		_ASSERT(fPtr->GVal < FLT_MAX);
 		heap->Insert(leaf);

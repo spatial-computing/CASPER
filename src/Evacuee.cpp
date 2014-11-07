@@ -261,7 +261,8 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 	{
 		if ((*i)->Status == EvacueeStatus::Unprocessed && (*i)->Population > 0.0)
 		{
-			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) (*i)->PredictedCost = FLT_MAX; // reset evacuation prediction for continues carma sort
+			// reset evacuation prediction for continues carma sort
+			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) (*i)->PredictedCost = FLT_MAX;
 
 			for (v = (*i)->Vertices->begin(); v != (*i)->Vertices->end(); v++)
 			{
@@ -310,7 +311,8 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 			}
 		}
 		this->Erase(myVertex->EID);
-		if (AtLeastOneEvacueeFound) leafs->Insert(myEdge); // because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
+		// because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
+		if (AtLeastOneEvacueeFound) leafs->Insert(myEdge); 
 	}
 }
 

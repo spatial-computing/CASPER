@@ -210,8 +210,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// This cache will maintain a list of all created vertices/edges. You can retrieve
 	// them later using EID. The benefit of using this cache is that we
 	// can maintain one-to-one relationship between network junctions and vertices.
-	// This will particularly be helpful with the heuristic calculator part of the algorithm.
-	// if (FAILED(hr = heuristicAttribs[heuristicAttribIndex]->get_ID(&capAttributeID))) return hr;
+	// This will particularly be helpful with the heuristic calculator part of the algorithm.	
 	NAVertexCache * vcache = new DEBUG_NEW_PLACEMENT NAVertexCache();
 	NAEdgeCache   * ecache = new DEBUG_NEW_PLACEMENT NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE,
 		initDelayCostPerPop, trafficModel, ipForwardStar, ipBackwardStar, ipNetworkQuery, hr);

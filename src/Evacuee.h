@@ -9,7 +9,6 @@ class NAEdgeCache;
 class NAEdgeContainer;
 class NAEdgeMap;
 typedef NAVertex * NAVertexPtr;
-// enum EvcSolverMethod : unsigned char;
 
 class PathSegment
 {

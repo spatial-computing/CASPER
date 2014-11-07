@@ -112,12 +112,6 @@ __interface IEvcSolver : IUnknown
 		HRESULT CostAttribute([out, retval] unsigned __int3264 * index);
 	[propget, helpstring("Lists impedance attributes from the network dataset")]
 		HRESULT CostAttributes([out] unsigned __int3264 & count, [out, retval] BSTR ** names);
-	/*
-	[propput, helpstring("Sets the uturn policy")]
-		HRESULT RestrictUTurns([in] esriNetworkForwardStarBacktrack backtrack);
-	[propget, helpstring("Gets the uturn policy")]
-		HRESULT RestrictUTurns([out, retval] esriNetworkForwardStarBacktrack * backtrack);
-	*/
 };
 
 // EvcSolver
@@ -133,7 +127,6 @@ __interface IEvcSolver : IUnknown
 ]
 class ATL_NO_VTABLE EvcSolver :
 	public IEvcSolver,
-	// public INARouteSolver,
 	public INASolver,
 	public INASolverSettings,
 	public IPersistStream,
@@ -172,7 +165,6 @@ public:
 	STDMETHOD(get_OutputGeometryPrecisionUnits)(esriUnits * value);
 
 	// IEvcSolver
-
 	STDMETHOD(put_ThreeGenCARMA)(VARIANT_BOOL threeGenCARMA);
 	STDMETHOD(get_ThreeGenCARMA)(VARIANT_BOOL* threeGenCARMA);
 	STDMETHOD(put_ExportEdgeStat)(VARIANT_BOOL   value);
@@ -217,7 +209,6 @@ public:
 	STDMETHOD(get_CostAttributes)(unsigned __int3264 & count, BSTR ** names);
 
 	// INARouteSolver2
-
 	STDMETHOD(get_OutputLines)(esriNAOutputLineType* pVal);
 	STDMETHOD(put_OutputLines)(esriNAOutputLineType newVal);
 	STDMETHOD(get_CreateTraversalResult)(VARIANT_BOOL * Value);
@@ -236,7 +227,6 @@ public:
 	STDMETHOD(put_UseStartTime)(VARIANT_BOOL Value);
 
 	// INASolver
-
 	STDMETHOD(get_Name)(BSTR* pName);
 	STDMETHOD(get_DisplayName)(BSTR* pName);
 	STDMETHOD(get_ClassDefinitions)(INamedSet** ppDefinitions);
@@ -251,7 +241,6 @@ public:
 	STDMETHOD(Bind)(INAContext* pContext, IDENetworkDataset* pNetwork, IGPMessages* pMessages);
 
 	// INASolverSettings2
-
 	STDMETHOD(get_AccumulateAttributeNames)(IStringArray** ppAttributeNames);
 	STDMETHOD(putref_AccumulateAttributeNames)(IStringArray* pAttributeNames);
 	STDMETHOD(put_ImpedanceAttributeName)(BSTR attributeName);
@@ -278,7 +267,6 @@ public:
 	STDMETHOD(get_ResetHierarchyRangesOnBind)(VARIANT_BOOL * value);
 
 	// IPersistStream
-
 	STDMETHOD(IsDirty)();
 	STDMETHOD(Load)(IStream* pStm);
 	STDMETHOD(Save)(IStream* pstm, BOOL fClearDirty);

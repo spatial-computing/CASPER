@@ -70,11 +70,11 @@ double TrafficModel::internalGetCongestionPercentage(double capacity, double flo
 	{
 	case EXPModel:
 		/* Exp Model z = exp(-(((flow - 1) / beta) ^ gamma) * log(2))
-		a = flow of normal speed, 	b = flow where the speed is dropped to half
-		(modelRatio) beta  = b * lane - 1;
-		(expGamma)   gamma = (log(log(0.96) / log(0.5))) / log((a * lane - 1) / (b * lane - 1));
+			a = flow of normal speed, 	b = flow where the speed is dropped to half
+			(modelRatio) beta  = b * lane - 1;
+			(expGamma)   gamma = (log(log(0.96) / log(0.5))) / log((a * lane - 1) / (b * lane - 1));
 		*/
-		a = 2.0; // max(2.0, reservations->CriticalDens);
+		a = 2.0;
 		b = max(a + 1.0, saturationDensPerCap);
 		modelRatio  = b * capacity - 1.0;
 		expGamma    = (log(log(0.9) / log(0.5))) / log((a * capacity - 1.0) / (b * capacity - 1.0));
@@ -82,7 +82,7 @@ double TrafficModel::internalGetCongestionPercentage(double capacity, double flo
 		break;
 	case POWERModel:
 		/* Power model z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
-		modelRatio = 0.0202 * exp(-0.01127 * reservations->Capacity);
+			modelRatio = 0.0202 * exp(-0.01127 * reservations->Capacity);
 		*/
 		modelRatio  = 0.5 / (sqrt(saturationDensPerCap) * exp(-0.01127));
 		modelRatio *= exp(-0.01127 * capacity);

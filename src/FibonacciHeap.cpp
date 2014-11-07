@@ -245,7 +245,6 @@ void FibonacciHeap::Clear()
 {
 	while (!IsEmpty()) DeleteMin();
 	nodeTable->Clear();
-	// visitTable->clear();
 }
 
 bool FibonacciHeap::link(HeapNode * root)

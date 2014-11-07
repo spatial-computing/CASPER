@@ -170,6 +170,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnknown);
 	ipRouteEdgesClassDef = ipUnknown;
+
 	// Create a context and initialize it
 	INAContextPtr     ipNAContext(CLSID_NAContext);
 	INAContextEditPtr ipNAContextEdit(ipNAContext);

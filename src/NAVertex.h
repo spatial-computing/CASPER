@@ -92,7 +92,6 @@ public:
 	{
 		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAVertexPtr>();
 		bucketCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
-		//cache->max_load_factor(5.0f);
 		heuristicForOutsideVertices = 0.0;
 		currentBucket = NULL;
 		currentBucketIndex = 0;

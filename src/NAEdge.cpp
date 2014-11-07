@@ -288,22 +288,6 @@ void NAEdge::RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool del
 	if (!delayedDirtyState) HowDirty(method);
 }
 
-void NAEdge::TreeNextEraseFirst(NAEdge * child)
-{
-	if (child)
-	{
-		TreeNext.unordered_erase(child, IsEqual);
-		//for (const auto & i :TreeNext)
-		//	if (IsEqual(i, child))
-		//	{
-		//		j = i;
-		//		break;
-		//	}
-		//_ASSERT(j != TreeNext.end());
-		//if (j != TreeNext.end()) TreeNext.erase(j);
-	}
-}
-
 double GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
 double GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
 bool   IsEqual         (const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
@@ -316,7 +300,6 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 	NAEdgePtr n = 0;
 	long EID;
 	NAEdgeTable * cache = 0;
-	//NAResTable  * resTable = 0;
 	esriNetworkEdgeDirection dir, otherDir;
 	INetworkElementPtr ipEdgeElement;
 	INetworkEdgePtr edgeClone;
@@ -328,13 +311,11 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 	{
 		cache = cacheAlong;
 		otherDir = esriNEDAgainstDigitized;
-		//resTable = resTableAlong;
 	}
 	else
 	{
 		cache = cacheAgainst;
 		otherDir = esriNEDAlongDigitized;
-		//resTable = resTableAgainst;
 	}
 
 	std::unordered_map<long, NAEdgePtr>::const_iterator it = cache->find(EID);
@@ -372,15 +353,11 @@ void NAEdgeCache::Clear()
 	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++)
 	{
 		NAEdgePtr e = (*cit).second;
-		//if (e->AdjacentForward) delete e->AdjacentForward;
-		//if (e->AdjacentBackward) delete e->AdjacentBackward;
 		delete e;
 	}
 	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++)
 	{
 		NAEdgePtr e = (*cit).second;
-		//if (e->AdjacentForward) delete e->AdjacentForward;
-		//if (e->AdjacentBackward) delete e->AdjacentBackward;
 		delete e;
 	}
 	for (auto r : ResTable) delete r;
@@ -390,12 +367,6 @@ void NAEdgeCache::Clear()
 	cacheAlong->clear();
 	cacheAgainst->clear();
 	ResTable.clear();
-
-	//if (!twoWayRoadsShareCap)
-	//{
-	//	for(NAResTableItr ires = resTableAgainst->begin(); ires != resTableAgainst->end(); ires++) delete (*ires).second;
-	//	resTableAgainst->clear();
-	//}
 }
 
 NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
@@ -430,7 +401,7 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 	{
 		star = dir == QueryDirection::Forward ? ipForwardStar: ipBackwardStar;
 
-		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, NULL /*lastExteriorEdge*/, ipAdjacencies))) return hr;
+		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, NULL, ipAdjacencies))) return hr;
 		if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
 		neighbors->Init((UINT8)adjacentEdgeCount);
 		for (long i = 0; i < adjacentEdgeCount; i++)

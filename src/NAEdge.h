@@ -22,7 +22,6 @@ public:
 	friend class NAEdge;
 };
 
-// EdgeReservations hash map
 typedef EdgeReservations * EdgeReservationsPtr;
 
 // The NAEdge class is what sits on top of the INetworkEdge interface and holds extra
@@ -65,7 +64,7 @@ public:
 	inline void SetClean(EvcSolverMethod method, double minPop2Route);
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
-	void TreeNextEraseFirst(NAEdge * child);
+	inline void TreeNextEraseFirst(NAEdge * child) { if (child) TreeNext.unordered_erase(child, IsEqual); }
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
 	void GetCrossingPaths(std::vector<EvcPathPtr> & crossings) { for (const auto & p : *reservations) crossings.push_back(p); }
@@ -172,8 +171,7 @@ private:
 public:
 	NAEdgeContainer(size_t capacity)
 	{
-		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, unsigned char>();
-		cache->reserve(capacity);
+		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, unsigned char>(capacity);
 	}
 
 	~NAEdgeContainer(void)

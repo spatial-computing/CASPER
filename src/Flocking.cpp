@@ -98,7 +98,6 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors, double x1, double y1, double & dx, double & dy)
 {
 	myNeighborVehicles.clear();
-	// HRESULT hr = S_OK;
 	bool possibleCollision = true;
 	IPointPtr p = 0;
 	double x2, y2, step = myVehicle->radius() * 4.0;
@@ -107,7 +106,6 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 
 	OpenSteer::Vec3 loc(x1, y1, 0.0);
 	OpenSteer::Vec3 move(x2 - x1, y2 - y1, 0.0);
-	// if (move.length() == 0.0) move = OpenSteer::Vec3::up;
 	_ASSERT(move.length() > 0.0);
 	move = move.normalize();
 	OpenSteer::Vec3 dir;
@@ -126,7 +124,6 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	for (double radius = 0.0; possibleCollision; radius += step)
 	{
 		dx = radius + DoubleRangedRand(0.0, step);
-		// if (rand() < RAND_MAX / 2) dx *= -1.0;
 		dy = DoubleRangedRand(0.0, max(step, radius));
 		myVehicle->setPosition(loc + dx * dir - dy * move);
 		possibleCollision = DetectMyCollision();
@@ -226,20 +223,6 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 
 			// moving object check
 			if ((*it)->MyStatus == FLOCK_OBJ_STAT_END) continue;
-			// if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT) continue; // should we add init flocks also as a neighbor?
-
-			// check if they share an edge or if they are both crossing an intersection
-			/*
-			if (twoWayRoadsShareCap)
-			{
-				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID) && (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
-			}
-			else
-			{
-				if (((*(*it)->pathSegIt)->Edge->EID != (*pathSegIt)->Edge->EID || (*(*it)->pathSegIt)->Edge->Direction != (*pathSegIt)->Edge->Direction)
-					&& (BindVertex == -1l || (*it)->BindVertex != BindVertex)) continue;
-			}
-			*/
 			myNeighborVehicles.push_back((*it)->myVehicle);
 		}
 	}

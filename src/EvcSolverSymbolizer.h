@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "resource.h"                                           // main symbols
+#include "resource.h"             // main symbols
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
@@ -60,14 +60,12 @@ public:
 public:
 
   // INASymbolizer
-
   STDMETHOD(Applies)(INAContext* pNAContext, VARIANT_BOOL* pFlag);
   STDMETHOD(get_Priority)(long* pPriority);
   STDMETHOD(CreateLayer)(INAContext* pNAContext, INALayer** ppNALayer);
   STDMETHOD(UpdateLayer)(INALayer* pNALayer, VARIANT_BOOL* pUpdated);
 
   // INASymbolizer2 methods
-
   STDMETHOD(ResetRenderers)(IColor* pSolverColor, INALayer* pNALayer);
 
 private:
@@ -93,5 +91,3 @@ private:
   const long c_maxAboveBaseRandomColorHSVValue;
   const long c_maxFadedColorHSVSaturation;
 };
-
-

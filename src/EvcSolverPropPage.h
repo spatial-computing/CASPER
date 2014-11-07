@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "resource.h"                                           // main symbols
+#include "resource.h"             // main symbols
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 #include "EvcSolver.h"
 
@@ -85,19 +85,12 @@ public:
 	COMMAND_HANDLER(IDC_EDIT_SELFISH, EN_CHANGE, OnEnChangeEditSelfish)
   END_MSG_MAP()
 
-  // Handler prototypes:
-  //  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  //  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-  //  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
-
   // IPropertyPage
-
   STDMETHOD(Apply)(void);
   STDMETHOD(Show)(UINT nCmdShow);
   STDMETHOD(SetObjects)(ULONG nObjects, IUnknown** ppUnk);
 
   // IPropertyPageContext
-
   STDMETHOD(get_Priority)(LONG* pPriority);
   STDMETHOD(Applies)(VARIANT unkArray, VARIANT_BOOL* pApplies);
   STDMETHOD(CreateCompatibleObject)(VARIANT kind, VARIANT* pNewObject);
@@ -107,7 +100,6 @@ public:
   STDMETHOD(Cancel)();
 
   // Dialog
-
   LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnBnClickedRadioConnected(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
   LRESULT OnBnClickedRadioDisconnected(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
