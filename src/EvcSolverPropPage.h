@@ -83,6 +83,7 @@ public:
 	NOTIFY_HANDLER(IDC_RELEASE, NM_CLICK, OnNMClickRelease)
 	COMMAND_HANDLER(IDL_CHECK_CARMAGEN, BN_CLICKED, OnBnClickedCheckCarmagen)
 	COMMAND_HANDLER(IDC_EDIT_SELFISH, EN_CHANGE, OnEnChangeEditSelfish)
+	COMMAND_HANDLER(IDC_EDIT_Iterative, EN_CHANGE, OnEnChangeEditIterative)
   END_MSG_MAP()
 
   // IPropertyPage
@@ -130,6 +131,7 @@ private:
   HWND					  m_heditCARMA;
   HWND					  m_hThreeGenCARMA;
   HWND					  m_heditSelfish;
+  HWND					  m_heditIterative;
 
   void SetFlockingEnabled();
 
@@ -161,4 +163,5 @@ public:
 	LRESULT OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnStnClickedLablecarma2(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnEnChangeEditIterative(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };

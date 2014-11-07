@@ -7,9 +7,20 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-winres.h
+#include "gitdescribe.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif // not APSTUDIO_INVOKED
 
 /////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
@@ -26,22 +37,19 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 1 TEXTINCLUDE 
 BEGIN
-    "resource.h\0"
+	"resource.h\0"
 END
 
 2 TEXTINCLUDE 
 BEGIN
-    "winres.h\0"
+	"#include ""gitdescribe.h""\r\n"
+    "\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
-    "gitdescribe.h\0"
-END
-
-4 TEXTINCLUDE 
-BEGIN
-    "\r\0"
+	"#include ""winres.h""\r\n"
+    "\0"
 END
 
 #endif    // APSTUDIO_INVOKED

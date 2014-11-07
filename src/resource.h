@@ -37,8 +37,6 @@
 #define _USE_ATTRIBUTES_FOR_SAL         0
 #define __drv_typeConst                 0
 #define WINAPI_PARTITION_APP            1
-#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
-#define MINIMUM_RESERVED_MANIFEST_RESOURCE_ID 1
 #define SW_SHOWNORMAL                   1
 #define SW_NORMAL                       1
 #define SHOW_OPENWINDOW                 1
@@ -221,7 +219,6 @@
 #define VFF_CURNEDEST                   0x0001
 #define VIFF_FORCEINSTALL               0x0001
 #define WINAPI_FAMILY_PC_APP            2
-#define ISOLATIONAWARE_MANIFEST_RESOURCE_ID 2
 #define SW_SHOWMINIMIZED                2
 #define SHOW_ICONWINDOW                 2
 #define SW_OTHERZOOM                    2
@@ -310,7 +307,6 @@
 #define VFF_FILEINUSE                   0x0002
 #define VIFF_DONTDELETEOLD              0x0002
 #define WINAPI_FAMILY_PHONE_APP         3
-#define ISOLATIONAWARE_NOSTATICIMPORT_MANIFEST_RESOURCE_ID 3
 #define SW_SHOWMAXIMIZED                3
 #define SW_MAXIMIZE                     3
 #define SHOW_FULLSCREEN                 3
@@ -536,7 +532,6 @@
 #define LANG_ICELANDIC                  0x0f
 #define SUBLANG_ARABIC_BAHRAIN          0x0f
 #define SUBLANG_SPANISH_PARAGUAY        0x0f
-#define MAXIMUM_RESERVED_MANIFEST_RESOURCE_ID 16
 #define VK_SHIFT                        0x10
 #define WM_CLOSE                        0x0010
 #define HTBOTTOMLEFT                    16
@@ -573,7 +568,6 @@
 #define VK_MENU                         0x12
 #define WM_QUIT                         0x0012
 #define HTBORDER                        18
-#define CF_MAX                          18
 #define LANG_KOREAN                     0x12
 #define SUBLANG_ENGLISH_SINGAPORE       0x12
 #define SUBLANG_SPANISH_HONDURAS        0x12
@@ -599,7 +593,6 @@
 #define LANG_PORTUGUESE                 0x16
 #define VK_JUNJA                        0x17
 #define LANG_ROMANSH                    0x17
-#define RT_MANIFEST                     24
 #define VK_FINAL                        0x18
 #define WM_SHOWWINDOW                   0x0018
 #define LANG_ROMANIAN                   0x18
@@ -1096,7 +1089,6 @@
 #define WM_SYSCHAR                      0x0106
 #define WM_SYSDEADCHAR                  0x0107
 #define WM_UNICHAR                      0x0109
-#define WM_KEYLAST                      0x0109
 #define WM_IME_STARTCOMPOSITION         0x010D
 #define WM_IME_ENDCOMPOSITION           0x010E
 #define WM_IME_COMPOSITION              0x010F
@@ -1158,7 +1150,6 @@
 #define WM_XBUTTONUP                    0x020C
 #define WM_XBUTTONDBLCLK                0x020D
 #define WM_MOUSEHWHEEL                  0x020E
-#define WM_MOUSELAST                    0x020E
 #define WM_PARENTNOTIFY                 0x0210
 #define WM_ENTERMENULOOP                0x0211
 #define WM_EXITMENULOOP                 0x0212
@@ -1450,7 +1441,6 @@
 #define PRINTDLGORD                     1538
 #define _WIN32_WINNT_WINBLUE            0x0603
 #define _WIN32_IE_IE60SP2               0x0603
-#define _WIN32_WINNT                    0x0603
 #define PRNSETUPDLGORD                  1539
 #define FINDDLGORD                      1540
 #define REPLACEDLGORD                   1541
@@ -1481,7 +1471,6 @@
 #define TCS_RAGGEDRIGHT                 0x0800
 #define _WIN32_IE_IE90                  0x0900
 #define _WIN32_IE_IE100                 0x0A00
-#define _WIN32_IE                       0x0A00
 #define LVS_ALIGNMASK                   0x0c00
 #define CS_BYTEALIGNCLIENT              0x1000
 #define HDS_OVERFLOW                    0x1000
@@ -1515,21 +1504,15 @@
 #define IDTIMEOUT                       32000
 #define OCR_NORMAL                      32512
 #define OIC_SAMPLE                      32512
-#define IDI_APPLICATION                 32512
 #define OCR_IBEAM                       32513
 #define OIC_HAND                        32513
-#define IDI_HAND                        32513
 #define OCR_WAIT                        32514
 #define OIC_QUES                        32514
-#define IDI_QUESTION                    32514
 #define OCR_CROSS                       32515
 #define OIC_BANG                        32515
-#define IDI_EXCLAMATION                 32515
 #define OCR_UP                          32516
 #define OIC_NOTE                        32516
-#define IDI_ASTERISK                    32516
 #define OIC_WINLOGO                     32517
-#define IDI_WINLOGO                     32517
 #define OIC_SHIELD                      32518
 #define IDI_SHIELD                      32518
 #define OCR_SIZE                        32640
@@ -1606,10 +1589,7 @@
 #define SC_CONTEXTHELP                  0xF180
 #define LVS_TYPESTYLEMASK               0xfc00
 #define SPVERSION_MASK                  0x0000FF00
-#define HTERROR                         -2
-#define PWR_FAIL                        -1
 #define UNICODE_NOCHAR                  0xFFFF
-#define HTTRANSPARENT                   -1
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

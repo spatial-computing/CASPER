@@ -30,11 +30,11 @@ void EdgeReservations::AddReservation(double newFlow, EvcPathPtr path)
 
 void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 {
-	int i;
-	for (i = size() - 1; i >= 0; --i) if (*path == *at(i)) break;
+	int i, last = (int)size() - 1;
+	for (i = last; i >= 0; --i) if (*path == *at(i)) break;
 	if (i < 0) throw std::out_of_range("Path not found in edge reservation");
 	erase(begin() + i);
-	_ASSERT((size_t)i == size() - 1);
+	_ASSERT(i == last);
 	ReservedPop -= (float)flow;
 }
 
@@ -190,10 +190,7 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 
 // Special function for CCRP: to check how much capacity is left on this edge.
 // Will be used to get max capacity available on a path
-double NAEdge::LeftCapacity() const
-{
-	return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost);
-}
+double NAEdge::LeftCapacity() const { return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost); }
 
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
@@ -290,7 +287,7 @@ void NAEdge::RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool del
 
 double GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
 double GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
-bool   IsEqual         (const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
+bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
 
 /////////////////////////////////////////////////////////////
 // NAEdgeCache

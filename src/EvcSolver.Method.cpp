@@ -311,8 +311,8 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEva
 
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
-	int Iteration = GlobalEvcCostAtIteration.size();
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (0x1 << Iteration));
+	size_t Iteration = GlobalEvcCostAtIteration.size();
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / iterativeRatio, Iteration)));
 
 	if (Iteration > 1)
 	{
@@ -465,7 +465,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// Code to build the CARMA Tree
 			if (myVertex->Previous)
 			{
-				if(myEdge->TreePrevious) myEdge->TreePrevious->TreeNextEraseFirst(myEdge);
+				if (myEdge->TreePrevious) myEdge->TreePrevious->TreeNext.unordered_erase(myEdge, IsEqualNAEdgePtr);
 				myEdge->TreePrevious = myVertex->Previous->GetBehindEdge();
 				myEdge->TreePrevious->TreeNext.push_back(myEdge);
 			}
@@ -753,7 +753,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 		for (const auto & tempEdge : *adj)
 		{
 			if (!closedList->Exist(tempEdge, NAEdgeMapGeneration::OldGen)) continue; // it has to be present in closed list from previous CARMA loop
-			if (IsEqual(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
+			if (IsEqualNAEdgePtr(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
 
 			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
 			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
@@ -897,7 +897,7 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 
 			// path can be empty if the source and destination are the same vertex
 			PathSegmentPtr lastAdded = path->Front();
-			if (!path->Empty() && IsEqual(lastAdded->Edge, finalVertex->GetBehindEdge()))
+			if (!path->Empty() && IsEqualNAEdgePtr(lastAdded->Edge, finalVertex->GetBehindEdge()))
 			{
 				lastAdded->SetFromRatio(1.0 - edgePortion);
 			}

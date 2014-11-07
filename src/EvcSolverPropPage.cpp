@@ -158,9 +158,15 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		BSTR carma;
 		m_ipEvcSolver->get_CARMAPerformanceRatio(&carma);
 		::SendMessage(m_heditCARMA, WM_SETTEXT, NULL, (LPARAM)carma);
-		delete [] carma;
+		delete[] carma;
 
-		// set CARMA ratio
+		// set iterative ratio
+		BSTR iterative;
+		m_ipEvcSolver->get_IterativeRatio(&iterative);
+		::SendMessage(m_heditIterative, WM_SETTEXT, NULL, (LPARAM)iterative);
+		delete[] iterative;
+
+		// set selfish ratio
 		BSTR selfish;
 		m_ipEvcSolver->get_SelfishRatio(&selfish);
 		::SendMessage(m_heditSelfish, WM_SETTEXT, NULL, (LPARAM)selfish);
@@ -384,13 +390,21 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		ipSolver->put_CARMAPerformanceRatio(carma);
 		delete [] carma;
 
-		// CARMA ratio
+		// iterative ratio
+		BSTR iterative;
+		size = ::SendMessage(m_heditIterative, WM_GETTEXTLENGTH, 0, 0);
+		iterative = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
+		::SendMessage(m_heditIterative, WM_GETTEXT, size + 1, (LPARAM)iterative);
+		ipSolver->put_IterativeRatio(iterative);
+		delete[] iterative;
+
+		// selfish ratio
 		BSTR selfish;
 		size = ::SendMessage(m_heditSelfish, WM_GETTEXTLENGTH, 0, 0);
 		selfish = new DEBUG_NEW_PLACEMENT WCHAR[size + 1];
 		::SendMessage(m_heditSelfish, WM_GETTEXT, size + 1, (LPARAM)selfish);
 		ipSolver->put_SelfishRatio(selfish);
-		delete [] selfish;
+		delete[] selfish;
 
 		// saturation density per capacity
 		BSTR sat;
@@ -471,6 +485,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_heditCARMA = GetDlgItem(IDC_EDIT_CARMA);
 	m_hThreeGenCARMA = GetDlgItem(IDL_CHECK_CARMAGEN);
 	m_heditSelfish = GetDlgItem(IDC_EDIT_SELFISH);
+	m_heditIterative = GetDlgItem(IDC_EDIT_Iterative);
 	m_hCmbCarmaSort = GetDlgItem(IDC_COMBO_CarmaSort);
 	m_hUTurnCombo = GetDlgItem(IDC_COMBO_UTurn);
 
@@ -661,6 +676,14 @@ LRESULT EvcSolverPropPage::OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /
 }
 
 LRESULT EvcSolverPropPage::OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnEnChangeEditIterative(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

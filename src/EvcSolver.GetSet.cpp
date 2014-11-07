@@ -309,6 +309,24 @@ STDMETHODIMP EvcSolver::put_CARMAPerformanceRatio(BSTR value)
 {
 	swscanf_s(value, L"%f", &CARMAPerformanceRatio);
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
+	m_bPersistDirty = true; 
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_IterativeRatio(BSTR * value)
+{
+	if (value)
+	{
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
+		swprintf_s(*value, 100, L"%.3f", iterativeRatio);
+	}
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_IterativeRatio(BSTR value)
+{
+	swscanf_s(value, L"%f", &iterativeRatio);
+	iterativeRatio = min(max(iterativeRatio, 0.0f), 1.0f);
 	m_bPersistDirty = true;
 	return S_OK;
 }

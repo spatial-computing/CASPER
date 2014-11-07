@@ -372,7 +372,7 @@ HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool 
 	{
 		restricted = true;
 		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj))) return hr;
-		for (const auto & currentEdge : *adj) if (IsEqual(behindEdge, currentEdge)) restricted = false;
+		for (const auto & currentEdge : *adj) if (IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
 	}
 	return hr;
 }

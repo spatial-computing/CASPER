@@ -47,27 +47,32 @@
 //
 // ----------------------------------------------------------------------------
 
-
 #include <iomanip>
 #include <sstream>
-
 
 // Include headers for OpenGL (gl.h), OpenGL Utility Library (glu.h) and
 // OpenGL Utility Toolkit (glut.h).
 //
 // XXX In Mac OS X these headers are located in a different directory.
 // XXX Need to revisit conditionalization on operating system.
+
+#define GLUT_DISABLE_ATEXIT_HACK
+
 #if __APPLE__ && __MACH__
 #include <GLUT/glut.h>   // for Mac OS X
 #else
 #include <glut.h>     // for Linux and Windows
 #endif
 
+#pragma warning(push)
+#pragma warning(disable : 4005) /* Ignore warnings for order of imports */
 
 #include "OpenSteerDemo.h"
 
 // To include OpenSteer::round.
 #include "Utilities.h"
+
+#pragma warning(pop)
 
 // ----------------------------------------------------------------------------
 

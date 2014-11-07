@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "TrafficModel.h"
 
 TrafficModel::TrafficModel(EvcTrafficModel Model, double _criticalDensPerCap, double _saturationDensPerCap, double _initDelayCostPerPop)

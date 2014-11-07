@@ -64,7 +64,6 @@ public:
 	inline void SetClean(EvcSolverMethod method, double minPop2Route);
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
-	inline void TreeNextEraseFirst(NAEdge * child) { if (child) TreeNext.unordered_erase(child, IsEqual); }
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
 	void GetCrossingPaths(std::vector<EvcPathPtr> & crossings) { for (const auto & p : *reservations) crossings.push_back(p); }
@@ -86,7 +85,7 @@ public:
 
 double GetHeapKeyHur   (const NAEdge * e);
 double GetHeapKeyNonHur(const NAEdge * e);
-bool   IsEqual         (const NAEdge * n1, const NAEdge * n2);
+bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2);
 
 typedef NAEdge * NAEdgePtr;
 typedef public std::unordered_map<long, NAEdgePtr> NAEdgeTable;

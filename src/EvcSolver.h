@@ -104,6 +104,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT SelfishRatio([in] BSTR value);
 	[propget, helpstring("Gets the ratio of selfish routing")]
 		HRESULT SelfishRatio([out, retval] BSTR * value);
+	[propput, helpstring("Sets the ratio of iterative solver")]
+		HRESULT IterativeRatio([in] BSTR value);
+	[propget, helpstring("Gets the ratio of iterative solver")]
+		HRESULT IterativeRatio([out, retval] BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
@@ -136,7 +140,7 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(5),
+		  c_version(6),
 		  c_featureRetrievalInterval(500)
 	  {
 	  }
@@ -201,7 +205,9 @@ public:
 	STDMETHOD(put_CARMAPerformanceRatio)(BSTR   value);
 	STDMETHOD(get_CARMAPerformanceRatio)(BSTR * value);
 	STDMETHOD(put_SelfishRatio)(BSTR   value);
-	STDMETHOD(get_SelfishRatio)(BSTR * value);
+	STDMETHOD(get_SelfishRatio)(BSTR * value); 
+	STDMETHOD(put_IterativeRatio)(BSTR   value);
+	STDMETHOD(get_IterativeRatio)(BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	STDMETHOD(put_CostAttribute)(unsigned __int3264 index);
@@ -314,6 +320,7 @@ private:
 	FLOCK_PROFILE			flockingProfile;
 	float                   CARMAPerformanceRatio;
 	float                   selfishRatio;
+	float                   iterativeRatio;
 	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
