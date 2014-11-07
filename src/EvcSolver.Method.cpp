@@ -34,7 +34,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	HANDLE proc = GetCurrentProcess();
 	BOOL dummy;
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
-	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
+	ArrayList<NAEdgePtr> * adj = NULL;
 	ATL::CString statusMsg, AlgName;
 	CARMASort carmaSortCriteria = this->CarmaSortCriteria;
 	std::vector<EvcPathPtr> * detachedPaths = new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>();
@@ -372,7 +372,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	std::vector<NAEdgePtr> * readyEdges = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
 	readyEdges->reserve(safeZoneList->size());
 	unsigned int CARMAExtractCount = 0;
-	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
+	ArrayList<NAEdgePtr> * adj = NULL;
 	NAEdgeContainer * removedDirty = new NAEdgeContainer(1000);
 	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseFinalCost, Evacuee::ReverseEvacuationCost };
 
@@ -475,7 +475,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			// part to check if this branch of DJ tree needs expanding to update heuristics. This update should know if this is the first time this vertex is coming out
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min or update absolutely to this new value.
-			myVertex->UpdateHeuristic(myEdge->EID, myVertex->GVal, countCARMALoops);
+			myVertex->UpdateHeuristic(myEdge->EID, myVertex->GVal);
 
 			EvacueePairs->RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs, minPop2Route, solverMethod);
 
@@ -563,7 +563,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	}
 
 	// set new default heuristic value
-	vcache->UpdateHeuristicForOutsideVertices(SearchRadius, countCARMALoops);
+	vcache->UpdateHeuristicForOutsideVertices(SearchRadius, countCARMALoops == 1);
 	CARMAExtractCounts.push_back(CARMAExtractCount);
 
 	// load discovered evacuees into sorted list
@@ -745,7 +745,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	NAEdgePtr betterEdge = NULL;
 	double betterH, tempH;
 	NAVertexPtr tempVertex, neighbor;
-	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
+	ArrayList<NAEdgePtr> * adj = NULL;
 
 	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closed-list
 	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
@@ -800,7 +800,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 	NAVertexPtr temp;
 	NAEdgePtr edge;
 	double globalDeltaPenalty = 0.0;
-	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
+	ArrayList<NAEdgePtr> * adj = NULL;
 
 	if(readyEdges)
 	{

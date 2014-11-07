@@ -364,7 +364,7 @@ HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool 
 {
 	HRESULT hr = S_OK;
 	restricted = capacity == 0.0 && costPerDensity > 0.0;
-	ArrayList<NAEdgePtr, unsigned short, 0> * adj = NULL;
+	ArrayList<NAEdgePtr> * adj = NULL;
 
 	if (behindEdge && !restricted)
 	{

@@ -292,15 +292,15 @@ void NAEdge::TreeNextEraseFirst(NAEdge * child)
 {
 	if (child)
 	{
-		std::list<NAEdge *>::const_iterator i, j = TreeNext.end();
-		for (i = TreeNext.cbegin(); i != TreeNext.cend(); ++i)
-			if (IsEqual(*i, child))
-			{
-				j = i;
-				break;
-			}
-		_ASSERT(j != TreeNext.end());
-		if (j != TreeNext.end()) TreeNext.erase(j);
+		TreeNext.unordered_erase(child, IsEqual);
+		//for (const auto & i :TreeNext)
+		//	if (IsEqual(i, child))
+		//	{
+		//		j = i;
+		//		break;
+		//	}
+		//_ASSERT(j != TreeNext.end());
+		//if (j != TreeNext.end()) TreeNext.erase(j);
 	}
 }
 
@@ -407,13 +407,13 @@ NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
 	else return NULL;
 }
 
-HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr, unsigned short, 0> ** returnNeighbors)
+HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr> ** returnNeighbors)
 {
 	HRESULT hr = S_OK;
 	long adjacentEdgeCount;
 	double fromPosition, toPosition;
 	INetworkForwardStarExPtr star;
-	ArrayList<NAEdgePtr, unsigned short, 0> * neighbors = NULL;
+	ArrayList<NAEdgePtr> * neighbors = NULL;
 	INetworkEdgePtr netEdge = NULL;
 
 	if (Edge)
@@ -423,7 +423,7 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 	}
 	else
 	{
-		neighbors = new DEBUG_NEW_PLACEMENT ArrayList<NAEdgePtr, unsigned short, 0>();
+		neighbors = new DEBUG_NEW_PLACEMENT ArrayList<NAEdgePtr>();
 		GarbageNeighborList.push_back(neighbors);
 	}
 	if (neighbors->empty())
@@ -432,11 +432,11 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 
 		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, 0 /*lastExteriorEdge*/, ipAdjacencies))) return hr;
 		if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
-		neighbors->Init((unsigned short)adjacentEdgeCount);
+		neighbors->Init((UINT8)adjacentEdgeCount);
 		for (long i = 0; i < adjacentEdgeCount; i++)
 		{
 			if (FAILED(hr = ipAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-			neighbors->at((unsigned short)i, this->New(ipCurrentEdge, false));
+			neighbors->at((UINT8)i, this->New(ipCurrentEdge, false));
 		}
 	}
 	*returnNeighbors = neighbors;

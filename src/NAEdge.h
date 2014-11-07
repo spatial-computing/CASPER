@@ -46,11 +46,11 @@ public:
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
 	NAEdge * TreePrevious;
-	std::list<NAEdge *> TreeNext;
+	GrowingArrayList<NAEdge *> TreeNext;
 	INetworkEdgePtr NetEdge;
 	long EID;
-	ArrayList<NAEdge *, unsigned short, 0> AdjacentForward;
-	ArrayList<NAEdge *, unsigned short, 0> AdjacentBackward;
+	ArrayList<NAEdge *> AdjacentForward;
+	ArrayList<NAEdge *> AdjacentBackward;
 
 	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = NULL) const;
 	double GetCurrentCost(EvcSolverMethod method = CASPERSolver) const;
@@ -211,9 +211,6 @@ public:
 	bool IsEmpty() const { return cache->empty(); }
 };
 
-enum QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };
-typedef std::vector<NAEdgePtr> * vector_NAEdgePtr_Ptr;
-
 // This collection object has two jobs:
 // it makes sure that there exist only one copy of an edge in it that is connected to each INetworkEdge.
 // this will be helpful to avoid duplicate copies pointing to the same edge structure. So data attached
@@ -228,9 +225,7 @@ private:
 	bool			twoWayRoadsShareCap;
 	NAEdgeTable		* cacheAlong;
 	NAEdgeTable		* cacheAgainst;
-	//NAResTable		* resTableAlong;
-	//NAResTable		* resTableAgainst;
-	std::list<ArrayList<NAEdgePtr, unsigned short, 0> *> GarbageNeighborList;
+	std::list<ArrayList<NAEdgePtr> *> GarbageNeighborList;
 	std::list<EdgeReservationsPtr> ResTable;
 	TrafficModel    * myTrafficModel;
 	INetworkEdgePtr ipCurrentEdge;
@@ -253,10 +248,6 @@ public:
 		cacheAlong->max_load_factor(3.0f);
 		cacheAgainst->max_load_factor(3.0f);
 
-		//resTableAlong = new DEBUG_NEW_PLACEMENT NAResTable();
-		//if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
-		//else resTableAgainst = new DEBUG_NEW_PLACEMENT NAResTable();
-
 		// network variables init
 		INetworkElementPtr ipEdgeElement;
 		ipNetworkQuery = _ipNetworkQuery;
@@ -273,8 +264,6 @@ public:
 		delete myTrafficModel;
 		delete cacheAlong;
 		delete cacheAgainst;
-		//delete resTableAlong;
-		//if (!twoWayRoadsShareCap) delete resTableAgainst;
 	}
 
 	NAEdgePtr New(INetworkEdgePtr edge, bool reuseEdgeElement);
@@ -288,5 +277,5 @@ public:
 	void Clear();
 	void CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver);
 	double GetCacheHitPercentage() const { return myTrafficModel->GetCacheHitPercentage(); }
-	HRESULT QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr, unsigned short, 0> ** neighbors);
+	HRESULT QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr> ** neighbors);
 };

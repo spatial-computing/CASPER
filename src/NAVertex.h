@@ -18,13 +18,11 @@ struct HValue
 public:
 	double   Value;
 	long     EdgeID;
-	unsigned short CarmaLoop;
 
-	HValue(long edgeID, double value, unsigned short carmaLoop)
+	HValue(long edgeID, double value)
 	{
 		EdgeID = edgeID;
 		Value = value;
-		CarmaLoop = carmaLoop;
 	}
 
 	static inline bool LessThan(HValue & a, HValue & b)
@@ -37,7 +35,7 @@ class NAVertex
 {
 private:
 	NAEdge * BehindEdge;
-	std::vector<HValue> * h;
+	MinimumArrayList<long, double> * h;
 	bool     isShadowCopy;
 
 public:
@@ -46,26 +44,16 @@ public:
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
-	size_t HCount() const { return h->size(); }
 	bool ParentCostIsDecreased;
 
-	double GetH(long eid) const
-	{
-		for(std::vector<HValue>::const_iterator i = h->begin(); i != h->end(); i++) if (i->EdgeID == eid) return i->Value;
-		return FLT_MAX;
-	}
-
-	double GetMinHOrZero() const
-	{
-		if (h->empty()) return 0.0;
-		else return h->front().Value;
-	}
+	double GetMinHOrZero() const { return h->GetMinValueOrDefault(0.0); }
+	double GetH(long eid) const { return h->GetByKey(eid); }
+	size_t HCount() const { return h->size(); }
 
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
-	void ResetHValues(void)  { h->clear(); }
 	inline bool IsHEmpty()   const { return h->empty(); }
-	bool UpdateHeuristic     (long edgeid, double hur, unsigned short carmaLoop);
+	void UpdateHeuristic(long edgeid, double hur) { h->InsertOrUpdate(edgeid, hur); }
 
 	inline void Clone (NAVertex * cpy);
 	NAVertex   (void);
@@ -124,8 +112,8 @@ public:
 
 	void PrintVertexHeuristicFeq();
 	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = 0);
-	void UpdateHeuristicForOutsideVertices(double hur, unsigned short carmaLoop);
-	bool UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop);
+	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
+	void UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);
 	NAVertexPtr Get(INetworkJunctionPtr junction);
 	NAVertexPtr NewFromBucket(NAVertexPtr clone);
