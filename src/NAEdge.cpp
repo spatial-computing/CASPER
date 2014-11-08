@@ -34,7 +34,6 @@ void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 	for (i = last; i >= 0; --i) if (*path == *at(i)) break;
 	if (i < 0) throw std::out_of_range("Path not found in edge reservation");
 	erase(begin() + i);
-	_ASSERT(i == last);
 	ReservedPop -= (float)flow;
 }
 

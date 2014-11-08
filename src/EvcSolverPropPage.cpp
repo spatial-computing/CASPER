@@ -465,6 +465,18 @@ STDMETHODIMP EvcSolverPropPage::GetHelpId(LONG controlID, LONG* pHelpID)
 /////////////////////////////////////////////////////////////////////////////
 // Dialog
 
+// helper function
+// ref: http://stackoverflow.com/questions/371018/create-modified-hfont-from-hfont
+static HFONT CreateBoldWindowFont(HWND window, bool makeLarger = false)
+{
+	const HFONT font = GetWindowFont(window);
+	LOGFONT fontAttributes = { 0 };
+	::GetObject(font, sizeof(fontAttributes), &fontAttributes);
+	fontAttributes.lfWeight = FW_BOLD;
+	if (makeLarger) fontAttributes.lfHeight = -13;
+	return ::CreateFontIndirect(&fontAttributes);
+}
+
 LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	m_hCapCombo = GetDlgItem(IDC_COMBO_CAPACITY);
@@ -489,25 +501,20 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCmbCarmaSort = GetDlgItem(IDC_COMBO_CarmaSort);
 	m_hUTurnCombo = GetDlgItem(IDC_COMBO_UTurn);
 
-	HWND m_hGroupFlock = GetDlgItem(IDC_FlockOptions);
-	HWND m_hlblSimulationFlock = GetDlgItem(IDC_STATIC_FlockSimulationInterval);
-	HWND m_hlblSnapFlock = GetDlgItem(IDC_STATIC_FlockSnapInterval);
-	HWND m_hlblFlockProfile = GetDlgItem(IDC_STATIC_FlockProfile);
-
-	::ShowWindow(m_hGroupFlock, SW_SHOW);
-	::ShowWindow(m_hEditSnapFlock, SW_SHOW);
-	::ShowWindow(m_hEditSimulationFlock, SW_SHOW);
-	::ShowWindow(m_hCheckFlock, SW_SHOW);
-	::ShowWindow(m_hlblSimulationFlock, SW_SHOW);
-	::ShowWindow(m_hlblSnapFlock, SW_SHOW);
-	::ShowWindow(m_hlblFlockProfile, SW_SHOW);
-	::ShowWindow(m_hCmbFlockProfile, SW_SHOW);
-
 	// release date label
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
 	wchar_t compileDateBuff[500];
-	swprintf_s(compileDateBuff, 500, L"Release: %s  |  %s  |  <a href=\"http://facebook.com/arccasper\">Like</a>  |  <a href=\"http://esri.com/arccasper\">Info</a>  |  <a href=\"https://www.dropbox.com/sh/b01zkyb6ka56xiv/oOjJBINPIr\">Download</a>", _T(__DATE__), _T(GIT_DESCRIBE));
+	swprintf_s(compileDateBuff, 500, L"Release: %s  |  <a href=\"http://facebook.com/arccasper\">Like</a>  |  <a href=\"http://esri.com/arccasper\">Info</a>  |  <a href=\"https://www.dropbox.com/sh/b01zkyb6ka56xiv/oOjJBINPIr\">Download</a>", _T(__DATE__));
 	::SendMessage(m_hlblRelease, WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
+	swprintf_s(compileDateBuff, 500, L"%s %s", PROJ_NAME, _T(GIT_DESCRIBE));
+	::SendMessage(GetDlgItem(IDC_STATIC_Title), WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
+
+	// using bold font for title and gropu boxes
+	HWND groupBoxes[] = { GetDlgItem(IDC_SearchGroup), GetDlgItem(IDC_GeneralOptions), GetDlgItem(IDC_CapacityOptions), GetDlgItem(IDC_FlockOptions), GetDlgItem(IDC_RoutingOptions) };
+	HFONT boldFont = CreateBoldWindowFont(groupBoxes[0]);
+	HFONT bigFont = CreateBoldWindowFont(groupBoxes[0], true);
+	for (const auto & h : groupBoxes) SetWindowFont(h, boldFont, TRUE);
+	SetWindowFont(GetDlgItem(IDC_STATIC_Title), bigFont, true);
 
 	return 0;
 }

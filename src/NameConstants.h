@@ -13,6 +13,7 @@
 
 // EvcSolver Names
 
+#define PROJ_NAME                                   L"CASPER for ArcGIS"
 #define CS_NAME                                     L"Evacuation Solver"
 #define CS_DISPLAY_NAME                             L"Evacuation Routing"
 

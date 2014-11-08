@@ -1063,6 +1063,7 @@
 #define IDC_GeneralOptions              254
 #define SUBVERSION_MASK                 0x000000FF
 #define WM_INPUT                        0x00FF
+#define IDC_STATIC_Title                255
 #define WM_KEYFIRST                     0x0100
 #define WM_KEYDOWN                      0x0100
 #define WVR_HREDRAW                     0x0100
@@ -1590,7 +1591,6 @@
 #define LVS_TYPESTYLEMASK               0xfc00
 #define SPVERSION_MASK                  0x0000FF00
 #define UNICODE_NOCHAR                  0xFFFF
-#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 

@@ -37,6 +37,14 @@ public:
     m_dwTitleID = IDS_TITLEEvcSolverPROPPAGE;
     m_dwHelpFileID = IDS_HELPFILEEvcSolverPROPPAGE;
     m_dwDocStringID = IDS_DOCSTRINGEvcSolverPROPPAGE;
+	boldFont = NULL;
+	bigFont = NULL;
+  }
+
+  ~EvcSolverPropPage()
+  {
+	  if (bigFont)  ::DeleteObject(bigFont);
+	  if (boldFont) ::DeleteObject(boldFont);
   }
 
   DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -132,6 +140,9 @@ private:
   HWND					  m_hThreeGenCARMA;
   HWND					  m_heditSelfish;
   HWND					  m_heditIterative;
+
+  HFONT boldFont;
+  HFONT bigFont;
 
   void SetFlockingEnabled();
 
