@@ -236,7 +236,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	initDelayCostPerPop = 0.01f;
 	CARMAPerformanceRatio = 0.1f;
 	selfishRatio = 0.0f;
-	iterativeRatio = 0.5f;
+	iterativeRatio = 0.0f;
 
 	backtrack = esriNFSBAllowBacktrack;
 	CarmaSortCriteria = BWCont;

@@ -978,6 +978,7 @@ HRESULT EvcSolver::DeterminMinimumPop2Route(EvacueeList * Evacuees, INetworkData
 
 void EvcSolver::UpdatePeakMemoryUsage()
 {
+	_ASSERTE(_CrtCheckMemory());
 	PROCESS_MEMORY_COUNTERS pmc;
 	if(!hProcessPeakMemoryUsage) hProcessPeakMemoryUsage = GetCurrentProcess();
 	if (GetProcessMemoryInfo(hProcessPeakMemoryUsage, &pmc, sizeof(pmc))) peakMemoryUsage = max(peakMemoryUsage, pmc.PagefileUsage);
