@@ -83,7 +83,7 @@ public:
 	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::vector<EvcPath *> * detachedPaths = NULL, NAEdgeMap * touchedEdges = NULL);
 	void ReattachToEvacuee(EvcSolverMethod method);
 	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
-	bool DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
+	bool DoesItNeedASecondChance(double ThreasholdForReserveConst, double ThreasholdForPredictionCost, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
 
 	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
 	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }

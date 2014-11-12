@@ -234,7 +234,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	double costPerDay = GetUnitPerDay(unit, flockProfile.UsualSpeed);
 	double costPerSec = costPerDay / (3600.0 * 24.0);
 
-	if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Collecting input point(s)")); // add more specific information here if appropriate
+	if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Collecting input points")); // add more specific information here if appropriate
 
 	///////////////////////////
 	// here we begin collecting safe zone points for all the evacuees

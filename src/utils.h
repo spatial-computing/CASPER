@@ -229,3 +229,33 @@ public:
 		return this->data[minValueIndex].second;
 	}
 };
+
+template <class T, typename _Hasher = std::hash<T>, typename _Keyeq = std::equal_to<T>, typename _Alloc = std::allocator<std::pair<const T, double> >>
+class Histogram : protected std::unordered_map<T, double, _Hasher, _Keyeq, _Alloc>
+{
+private:
+	typedef std::unordered_map<T, double, _Hasher, _Keyeq, _Alloc> map;
+
+public:
+	double minWeight;
+	double maxWeight;
+
+	using map::size;
+	using map::begin;
+	using map::end;
+	using map::cbegin;
+	using map::cend;
+
+	Histogram(size_t capacity = 0) : map(capacity), minWeight(FLT_MAX), maxWeight(-FLT_MAX) { }
+	void WeightedAdd(const std::vector<T> & list, double weight) { for (const auto & i : list) WeightedAdd(i, weight); }
+	virtual ~Histogram() { }
+
+	void WeightedAdd(const T & item, double weight)
+	{
+		if (map::find(item) == map::end()) map::insert(std::pair<T, double>(item, weight));
+		double & newWeight = map::at(item);
+		newWeight += weight;
+		minWeight = min(minWeight, newWeight);
+		maxWeight = max(maxWeight, newWeight);
+	}
+};

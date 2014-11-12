@@ -289,7 +289,6 @@ END_OF_FUNC:
 
 size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEvacuees, std::vector<EvcPathPtr> * detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
 {
-	double ThreasholdForFinalCost = 0.15;
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
 	NAEdgeMap touchededges;
@@ -335,7 +334,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEva
 	for (const auto & path : allPaths)
 	{
 		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;
-		if (!path->DoesItNeedASecondChance(ThreasholdForFinalCost, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod)) break;
+		if (!path->DoesItNeedASecondChance(0.15, 0.1, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod)) break;
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.

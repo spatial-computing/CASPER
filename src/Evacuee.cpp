@@ -43,11 +43,11 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 	myEvc->Paths->push_back(this);
 }
 
-bool EvcPath::DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
+bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveConst, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
 	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost ) / ThisIterationMaxCost;
 	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
-	bool NeedsAChance = PredictionCostRatio > ThreasholdForFinalCost || EvacuationCostRatio > ThreasholdForFinalCost;
+	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveConst;
 
 	if (NeedsAChance && myEvc->Status == EvacueeStatus::Processed)
 	{
@@ -56,26 +56,29 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForFinalCost, std::vector
 		myEvc->Status = EvacueeStatus::Unprocessed;
 	}
 
-	if (EvacuationCostRatio > ThreasholdForFinalCost)
+	if (EvacuationCostRatio > ThreasholdForReserveConst)
 	{
 		// we have to add the affecting list to be re-routed as well
 		// we do this by selecxting the highly congestied and most costly path segment and then extract all the evacuees that share the same segments (edges)
-		PathSegmentPtr maxCong = front(), maxCost = front();
-		for (const auto & seg : *this)
-		{
-			if (NAEdge::CostLessThan(maxCost->Edge, seg->Edge, method)) maxCost = seg;
-			if (NAEdge::CongestionLessThan(maxCost->Edge, seg->Edge, method)) maxCong = seg;
-		}
 		std::vector<EvcPathPtr> crossing;
 		crossing.reserve(50);
-		maxCong->Edge->GetCrossingPaths(crossing);
-		if (maxCong != maxCost) maxCost->Edge->GetCrossingPaths(crossing);
-		for (const auto & p : crossing)
-			if (p->myEvc->Status == EvacueeStatus::Processed)
+		Histogram<EvcPathPtr> FreqOfOverlaps;
+
+		for (const auto & seg : *this)
+		{
+			crossing.clear();
+			seg->Edge->GetCrossingPaths(crossing);
+			FreqOfOverlaps.WeightedAdd(crossing, seg->Edge->GetCurrentCost(method));
+		}
+
+		for (const auto & pair : FreqOfOverlaps)
+		{
+			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > ReserveEvacuationCost)
 			{
-				AffectingList.push_back(p->myEvc);
-				p->myEvc->Status = EvacueeStatus::Unprocessed;
+				AffectingList.push_back(pair.first->myEvc);
+				pair.first->myEvc->Status = EvacueeStatus::Unprocessed;
 			}
+		}
 	}
 
 	return NeedsAChance;
@@ -304,8 +307,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance)
 					i->second->Population += evc->Population;
 				}
 			}
-			// evacuee mapped to both side of an street segment
-			else if (evc->Vertices->size() == 2) SortedInsertIntoMapOfLists(DoubleEdgeEvacuee, e1->EID, evc);
+			else if (evc->Vertices->size() == 2) SortedInsertIntoMapOfLists(DoubleEdgeEvacuee, e1->EID, evc);  // evacuee mapped to both side of the street segment
 			else if (e1->Direction == esriNetworkEdgeDirection::esriNEDAlongDigitized) SortedInsertIntoMapOfLists(EdgeAlongEvacuee, e1->EID, evc);
 			else SortedInsertIntoMapOfLists(EdgeAgainstEvacuee, e1->EID, evc);
 		}
@@ -319,9 +321,9 @@ void EvacueeList::FinilizeGroupings(double OKDistance)
 			unordered_erase(e, [&](const EvacueePtr & evc1, const EvacueePtr & evc2)->bool { return evc1->ObjectID == evc2->ObjectID; });
 			delete e;
 		}
-
-		shrink_to_fit();
 	}
+
+	shrink_to_fit();
 }
 
 std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
