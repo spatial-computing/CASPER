@@ -44,10 +44,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT CapacityAttribute([in] unsigned __int3264 index);
 	[propget, helpstring("Gets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([out, retval] unsigned __int3264 * index);
-	[propput, helpstring("Sets the separable evacuee flag")]
-		HRESULT SeparableEvacuee([in] VARIANT_BOOL value);
-	[propget, helpstring("Gets the separable evacuee flag")]
-		HRESULT SeparableEvacuee([out, retval] VARIANT_BOOL * value);
+	[propput, helpstring("Sets the Evacuee Grouping Option flag")]
+		HRESULT EvacueeGroupingOption([in] EvacueeGrouping value);
+	[propget, helpstring("Gets the Evacuee Grouping Option flag")]
+		HRESULT EvacueeGroupingOption([out, retval] EvacueeGrouping * value);
 	[propput, helpstring("Sets the 3rd generation carma flag")]
 		HRESULT ThreeGenCARMA([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the 3rd generation carma flag")]
@@ -140,7 +140,7 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(6),
+		  c_version(7),
 		  c_featureRetrievalInterval(500)
 	  {
 	  }
@@ -173,8 +173,8 @@ public:
 	STDMETHOD(get_ThreeGenCARMA)(VARIANT_BOOL* threeGenCARMA);
 	STDMETHOD(put_ExportEdgeStat)(VARIANT_BOOL   value);
 	STDMETHOD(get_ExportEdgeStat)(VARIANT_BOOL * value);
-	STDMETHOD(put_SeparableEvacuee)(VARIANT_BOOL   value);
-	STDMETHOD(get_SeparableEvacuee)(VARIANT_BOOL * value);
+	STDMETHOD(put_EvacueeGroupingOption)(EvacueeGrouping   value);
+	STDMETHOD(get_EvacueeGroupingOption)(EvacueeGrouping * value);
 	STDMETHOD(put_SolverMethod)(EvcSolverMethod   value);
 	STDMETHOD(get_SolverMethod)(EvcSolverMethod * value);
 	STDMETHOD(put_CARMASortSetting)(CARMASort   value);
@@ -283,7 +283,7 @@ private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
 						double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &);
-	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
+	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, std::vector<EvacueePtr> *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
 				      size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, double &, bool, CARMASort);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
@@ -325,10 +325,10 @@ private:
 	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
 	CARMASort               CarmaSortCriteria;
+	EvacueeGrouping         evacueeGroupingOption;
 
 	VARIANT_BOOL twoWayShareCapacity;
 	VARIANT_BOOL ThreeGenCARMA;
-	VARIANT_BOOL separable;
 	VARIANT_BOOL VarExportEdgeStat;
 	VARIANT_BOOL m_CreateTraversalResult;
 	VARIANT_BOOL m_FindBestSequence;

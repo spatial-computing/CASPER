@@ -243,6 +243,87 @@ Evacuee::~Evacuee(void)
 	delete Paths;
 }
 
+EvacueeList::~EvacueeList()
+{
+	for (const auto & e : *this) delete e;
+	clear();
+}
+
+void MergeEvacueeClusters(std::unordered_map<long, std::list<EvacueePtr>> & EdgeEvacuee, std::vector<EvacueePtr> & ToErase, double OKDistance)
+{
+	for (const auto & l : EdgeEvacuee)
+	{
+		EvacueePtr left = NULL;
+		for (const auto & i : l.second)
+		{
+			if (left != NULL && abs(i->Vertices->front()->GVal - left->Vertices->front()->GVal) <= OKDistance)
+			{
+				// merge i with left
+				ToErase.push_back(i);
+				left->Population += i->Population;
+			}
+			else left = i;
+		}
+	}
+}
+
+void SortedInsertIntoMapOfLists(std::unordered_map<long, std::list<EvacueePtr>> & EdgeEvacuee, long eid, EvacueePtr evc)
+{
+	auto i = EdgeEvacuee.find(eid);
+	if (i == EdgeEvacuee.end())
+	{
+		EdgeEvacuee.insert(std::pair<long, std::list<EvacueePtr>>(eid, std::list<EvacueePtr>()));
+		i = EdgeEvacuee.find(eid);
+	}
+	auto j = i->second.begin();
+	while (j != i->second.end() && evc->Vertices->front()->GVal > (*j)->Vertices->front()->GVal) ++j;
+	i->second.insert(j, evc);
+}
+
+void EvacueeList::FinilizeGroupings(double OKDistance)
+{
+	if (CheckFlag(groupingOption, EvacueeGrouping::Merge))
+	{
+		std::unordered_map<long, EvacueePtr> VertexEvacuee;
+		std::unordered_map<long, std::list<EvacueePtr>> EdgeAlongEvacuee, EdgeAgainstEvacuee, DoubleEdgeEvacuee;
+		std::vector<EvacueePtr> ToErase;
+		NAVertexPtr v1;
+		NAEdgePtr e1;
+		
+		for (const auto & evc : *this)
+		{
+			v1 = evc->Vertices->front();
+			e1 = v1->GetBehindEdge();
+			if (e1 == NULL) // evacuee mapped to intersection
+			{
+				auto i = VertexEvacuee.find(v1->EID);
+				if (i == VertexEvacuee.end()) VertexEvacuee.insert(std::pair<long, EvacueePtr>(v1->EID, evc));
+				else
+				{
+					ToErase.push_back(evc);
+					i->second->Population += evc->Population;
+				}
+			}
+			// evacuee mapped to both side of an street segment
+			else if (evc->Vertices->size() == 2) SortedInsertIntoMapOfLists(DoubleEdgeEvacuee, e1->EID, evc);
+			else if (e1->Direction == esriNetworkEdgeDirection::esriNEDAlongDigitized) SortedInsertIntoMapOfLists(EdgeAlongEvacuee, e1->EID, evc);
+			else SortedInsertIntoMapOfLists(EdgeAgainstEvacuee, e1->EID, evc);
+		}
+
+		MergeEvacueeClusters(EdgeAgainstEvacuee, ToErase, OKDistance);
+		MergeEvacueeClusters(EdgeAlongEvacuee,   ToErase, OKDistance);
+		MergeEvacueeClusters(DoubleEdgeEvacuee,  ToErase, OKDistance);
+
+		for (const auto & e : ToErase)
+		{
+			unordered_erase(e, [&](const EvacueePtr & evc1, const EvacueePtr & evc2)->bool { return evc1->ObjectID == evc2->ObjectID; });
+			delete e;
+		}
+
+		shrink_to_fit();
+	}
+}
+
 std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
 {
 	std::vector<EvacueePtr> * p = 0;
@@ -254,17 +335,16 @@ std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
 void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir)
 {
 	std::vector<EvacueePtr> * p = 0;
-	std::vector<EvacueePtr>::const_iterator i;
 	std::vector<NAVertexPtr>::const_iterator v;
 
-	for(i = list->begin(); i != list->end(); i++)
+	for(const auto & evc : *list)
 	{
-		if ((*i)->Status == EvacueeStatus::Unprocessed && (*i)->Population > 0.0)
+		if (evc->Status == EvacueeStatus::Unprocessed && evc->Population > 0.0)
 		{
 			// reset evacuation prediction for continues carma sort
-			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) (*i)->PredictedCost = FLT_MAX;
+			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = FLT_MAX;
 
-			for (v = (*i)->Vertices->begin(); v != (*i)->Vertices->end(); v++)
+			for (v = evc->Vertices->begin(); v != evc->Vertices->end(); v++)
 			{
 				p = Find((*v)->EID);
 				if (!p)
@@ -272,13 +352,13 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 					p = new DEBUG_NEW_PLACEMENT std::vector<EvacueePtr>();
 					insert(_NAEvacueeVertexTablePair((*v)->EID, p));
 				}
-				p->push_back(*i);
+				p->push_back(evc);
 			}
 		}
 	}
 }
 
-void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, EvacueeList * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method)
+void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, std::vector<EvacueePtr> * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method)
 {
 	NAEvacueeVertexTableItr pair = find(myVertex->EID);
 	EvacueePtr evc;
@@ -316,14 +396,14 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 	}
 }
 
-void NAEvacueeVertexTable::LoadSortedEvacuees(EvacueeList * SortedEvacuees) const
+void NAEvacueeVertexTable::LoadSortedEvacuees(std::vector<EvacueePtr> * SortedEvacuees) const
 {
 	for (NAEvacueeVertexTableItr evcItr = begin(); evcItr != end(); evcItr++)
 	{
-		for (std::vector<EvacueePtr>::const_iterator eit = evcItr->second->begin(); eit != evcItr->second->end(); eit++)
+		for (const auto & e : *evcItr->second)
 		{
-			if ((*eit)->PredictedCost >= FLT_MAX) (*eit)->Status = EvacueeStatus::Unreachable;
-			else SortedEvacuees->push_back(*eit);
+			if (e->PredictedCost >= FLT_MAX) e->Status = EvacueeStatus::Unreachable;
+			else SortedEvacuees->push_back(e);
 		}
 	}
 }

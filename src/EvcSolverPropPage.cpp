@@ -73,11 +73,18 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 			::SendMessage(m_hUTurnCombo, CB_SETCURSEL, (WPARAM)uturn, 0);
 		}
 
+		// set the flocking profile names
+		EvacueeGrouping evcOption;
+		m_ipEvcSolver->get_EvacueeGroupingOption(&evcOption);
+		::SendMessage(m_hcmbEvcOptions, CB_RESETCONTENT, NULL, NULL);
+		::SendMessage(m_hcmbEvcOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("None")));
+		::SendMessage(m_hcmbEvcOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Merge")));
+		::SendMessage(m_hcmbEvcOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Separate")));
+		::SendMessage(m_hcmbEvcOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Merge and Seperate")));
+		::SendMessage(m_hcmbEvcOptions, CB_SETCURSEL, (WPARAM)evcOption, 0);
+
 		// set flags
 		VARIANT_BOOL val;
-		m_ipEvcSolver->get_SeparableEvacuee(&val);
-		if (val == VARIANT_TRUE) ::SendMessage(m_hSeparable, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
-		else  ::SendMessage(m_hSeparable, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 		m_ipEvcSolver->get_ExportEdgeStat(&val);
 		if (val == VARIANT_TRUE) ::SendMessage(m_hEdgeStat, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 		else  ::SendMessage(m_hEdgeStat, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
@@ -338,6 +345,8 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex > -1) ipSolver->put_FlockingProfile((FLOCK_PROFILE)selectedIndex);
 		selectedIndex = ::SendMessage(m_hCmbCarmaSort, CB_GETCURSEL, 0, 0);
 		if (selectedIndex > -1) ipSolver->put_CARMASortSetting((CARMASort)selectedIndex);
+		selectedIndex = ::SendMessage(m_hcmbEvcOptions, CB_GETCURSEL, 0, 0);
+		if (selectedIndex > -1) ipSolver->put_EvacueeGroupingOption((EvacueeGrouping)selectedIndex);
 
 		if ((INASolverSettingsPtr)m_ipEvcSolver)
 		{
@@ -346,10 +355,6 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		}
 
 		// flags
-		selectedIndex = ::SendMessage(m_hSeparable, BM_GETCHECK, 0, 0);
-		if (selectedIndex == BST_CHECKED) ipSolver->put_SeparableEvacuee(VARIANT_TRUE);
-		else ipSolver->put_SeparableEvacuee(VARIANT_FALSE);
-
 		selectedIndex = ::SendMessage(m_hThreeGenCARMA, BM_GETCHECK, 0, 0);
 		if (selectedIndex == BST_CHECKED) ipSolver->put_ThreeGenCARMA(VARIANT_TRUE);
 		else ipSolver->put_ThreeGenCARMA(VARIANT_FALSE);
@@ -499,6 +504,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_heditSelfish = GetDlgItem(IDC_EDIT_SELFISH);
 	m_heditIterative = GetDlgItem(IDC_EDIT_Iterative);
 	m_hCmbCarmaSort = GetDlgItem(IDC_COMBO_CarmaSort);
+	m_hcmbEvcOptions = GetDlgItem(IDC_CMB_GroupOption);
 	m_hUTurnCombo = GetDlgItem(IDC_COMBO_UTurn);
 
 	// release date label
@@ -707,6 +713,14 @@ LRESULT EvcSolverPropPage::OnCbnSelchangeComboCARMASort(WORD /*wNotifyCode*/, WO
 }
 
 LRESULT EvcSolverPropPage::OnCbnSelchangeComboUTurn(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return 0;
+}
+
+LRESULT EvcSolverPropPage::OnCbnSelchangeComboEvcOption(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

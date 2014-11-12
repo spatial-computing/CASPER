@@ -380,7 +380,6 @@ FlockingEnviroment::~FlockingEnviroment(void)
 
 void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
 {
-	EvacueeListItr evcItr;
 	int i = 0, size = 0, id = 0;
 	double pathLen = 0.0;
 	std::list<EvcPathPtr>::const_iterator pathItr;
@@ -395,11 +394,11 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 	history->clear();
 	collisions->clear();
 
-	for(evcItr = evcList->begin(); evcItr != evcList->end(); evcItr++)
+	for(const auto & evc : *evcList)
 	{
-		if (!((*evcItr)->Paths->empty()))
+		if (!(evc->Paths->empty()))
 		{
-			for (pathItr = (*evcItr)->Paths->begin(); pathItr != (*evcItr)->Paths->end(); pathItr++)
+			for (pathItr = evc->Paths->begin(); pathItr != evc->Paths->end(); pathItr++)
 			{
 				pathLen = PathLength(*pathItr);
 				maxPathLen = max(maxPathLen, pathLen);
@@ -407,7 +406,7 @@ void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQ
 				size = (int)(ceil((*pathItr)->GetRoutedPop()));
 				for (i = 0; i < size; i++)
 				{
-					objects->push_back(new DEBUG_NEW_PLACEMENT FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, (*evcItr)->Name, ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects, pathLen));
+					objects->push_back(new DEBUG_NEW_PLACEMENT FlockingObject(id++, *pathItr, initDelayCostPerPop * -i, evc->Name, ipNetworkQuery, flockProfile, TwoWayRoadsShareCap, objects, pathLen));
 				}
 			}
 		}

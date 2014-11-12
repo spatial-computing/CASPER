@@ -197,8 +197,8 @@ double NAEdge::LeftCapacity() const { return reservations->myTrafficModel->LeftC
 double NAEdge::GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const
 {
 	double speedPercent = 1.0;
-	if (method == CASPERSolver) speedPercent = reservations->myTrafficModel->GetCongestionPercentage(reservations->Capacity, allPop);
-	else if (method == CCRPSolver) speedPercent = allPop > reservations->myTrafficModel->CriticalDensPerCap * reservations->Capacity ? 0.0 : 1.0;
+	if (method == EvcSolverMethod::CASPERSolver) speedPercent = reservations->myTrafficModel->GetCongestionPercentage(reservations->Capacity, allPop);
+	else if (method == EvcSolverMethod::CCRPSolver) speedPercent = allPop > reservations->myTrafficModel->CriticalDensPerCap * reservations->Capacity ? 0.0 : 1.0;
 	speedPercent = min(1.0, max(0.0001, speedPercent));
 	return speedPercent;
 }

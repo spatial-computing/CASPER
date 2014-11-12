@@ -215,8 +215,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	capAttributeID = -1;
 	SaturationPerCap = 500.0;
 	CriticalDensPerCap = 20.0;
-	solverMethod = CASPERSolver;
-	trafficModel = POWERModel;
+	solverMethod = EvcSolverMethod::CASPERSolver;
+	trafficModel = EvcTrafficModel::POWERModel;
 	flockingProfile = FLOCK_PROFILE_CAR;
 
 	m_CreateTraversalResult = VARIANT_TRUE;
@@ -224,7 +224,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	m_PreserveFirstStop = VARIANT_FALSE;
 	m_PreserveLastStop = VARIANT_FALSE;
 	m_UseTimeWindows = VARIANT_FALSE;
-	separable = VARIANT_FALSE;
+	evacueeGroupingOption = EvacueeGrouping::None;
 	VarExportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
@@ -239,7 +239,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	iterativeRatio = 0.0f;
 
 	backtrack = esriNFSBAllowBacktrack;
-	CarmaSortCriteria = BWCont;
+	CarmaSortCriteria = CARMASort::BWCont;
 	savedVersion = c_version;
 
 	return S_OK;
@@ -293,7 +293,16 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&m_PreserveFirstStop, sizeof(m_PreserveFirstStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_PreserveLastStop, sizeof(m_PreserveLastStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&separable, sizeof(separable), &numBytes))) return hr;
+
+	if (savedVersion < 7)
+	{
+		VARIANT_BOOL separable;
+		evacueeGroupingOption = EvacueeGrouping::None;
+		if (FAILED(hr = pStm->Read(&separable, sizeof(separable), &numBytes))) return hr;
+		if (separable == VARIANT_TRUE) evacueeGroupingOption |= EvacueeGrouping::Separate;
+	}
+	else if (FAILED(hr = pStm->Read(&evacueeGroupingOption, sizeof(evacueeGroupingOption), &numBytes))) return hr;
+
 	if (FAILED(hr = pStm->Read(&VarExportEdgeStat, sizeof(VarExportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&backtrack, sizeof(backtrack), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
@@ -334,7 +343,7 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	}
 	else
 	{
-		CarmaSortCriteria = BWCont;
+		CarmaSortCriteria = CARMASort::BWCont;
 		savedVersion = 5;
 	}
 
@@ -380,7 +389,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&m_PreserveFirstStop, sizeof(m_PreserveFirstStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_PreserveLastStop, sizeof(m_PreserveLastStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&separable, sizeof(separable), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&evacueeGroupingOption, sizeof(evacueeGroupingOption), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&VarExportEdgeStat, sizeof(VarExportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&backtrack, sizeof(backtrack), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;

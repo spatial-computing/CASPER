@@ -92,6 +92,7 @@ public:
 	COMMAND_HANDLER(IDL_CHECK_CARMAGEN, BN_CLICKED, OnBnClickedCheckCarmagen)
 	COMMAND_HANDLER(IDC_EDIT_SELFISH, EN_CHANGE, OnEnChangeEditSelfish)
 	COMMAND_HANDLER(IDC_EDIT_Iterative, EN_CHANGE, OnEnChangeEditIterative)
+	COMMAND_HANDLER(IDC_CMB_GroupOption, CBN_SELCHANGE, OnCbnSelchangeComboEvcOption)
   END_MSG_MAP()
 
   // IPropertyPage
@@ -140,9 +141,10 @@ private:
   HWND					  m_hThreeGenCARMA;
   HWND					  m_heditSelfish;
   HWND					  m_heditIterative;
+  HWND					  m_hcmbEvcOptions;
 
-  HFONT boldFont;
-  HFONT bigFont;
+  HFONT                   boldFont;
+  HFONT                   bigFont;
 
   void SetFlockingEnabled();
 
@@ -175,4 +177,5 @@ public:
 	LRESULT OnStnClickedLablecarma2(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditIterative(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCbnSelchangeComboEvcOption(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };

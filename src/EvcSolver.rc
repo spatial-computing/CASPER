@@ -71,7 +71,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "USC SSI"
             VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
-			VALUE "FileVersion", GIT_DESCRIBE
+            VALUE "FileVersion", GIT_DESCRIBE
             VALUE "InternalName", "EvcSolver32.dll"
             VALUE "LegalCopyright", "Copyright (C) 2014"
             VALUE "OriginalFilename", "EvcSolver32.dll"
@@ -117,9 +117,8 @@ BEGIN
     LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,59,91,8
     COMBOBOX        IDC_COMBO_METHOD,113,57,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Traffic Model:",IDC_STATIC,217,111,84,8
-    COMBOBOX        IDC_COMBO_TRAFFICMODEL,298,108,91,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Population at each location is separable",IDC_CHECK_SEPARABLE,
-                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,201,147,12
+	COMBOBOX        IDC_COMBO_TRAFFICMODEL, 298, 108, 91, 50, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+	LTEXT           "Population split or group:", IDC_CHECK_SEPARABLE, 19, 201, 91, 12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,215,115,13
     LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,20,114,95,8
@@ -149,6 +148,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_Iterative,142,162,47,14,ES_AUTOHSCROLL
     LTEXT           "Iterative Solver Ratio (experimental):",IDC_Lable_IterationRatio,20,163,120,8
     LTEXT           "CASPER for ArcGIS v10.2.3",IDC_STATIC_Title,7,7,389,14
+    COMBOBOX        IDC_CMB_GroupOption,113,199,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 

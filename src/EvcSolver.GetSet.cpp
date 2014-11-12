@@ -243,15 +243,15 @@ STDMETHODIMP EvcSolver::put_ExportEdgeStat(VARIANT_BOOL value)
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::get_SeparableEvacuee(VARIANT_BOOL * value)
+STDMETHODIMP EvcSolver::get_EvacueeGroupingOption(EvacueeGrouping * value)
 {
-	*value = separable;
+	*value = evacueeGroupingOption;
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_SeparableEvacuee(VARIANT_BOOL value)
+STDMETHODIMP EvcSolver::put_EvacueeGroupingOption(EvacueeGrouping value)
 {
-	separable = value;
+	evacueeGroupingOption = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }

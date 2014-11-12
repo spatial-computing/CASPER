@@ -49,7 +49,7 @@ public:
 	ArrayList<NAEdge *> AdjacentBackward;
 
 	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = NULL) const;
-	double GetCurrentCost(EvcSolverMethod method = CASPERSolver) const;
+	double GetCurrentCost(EvcSolverMethod method = EvcSolverMethod::CASPERSolver) const;
 	double LeftCapacity() const;
 
 	// Special function for Flocking: to check how much capacity the edge had originally

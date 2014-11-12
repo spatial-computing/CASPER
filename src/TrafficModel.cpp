@@ -19,7 +19,7 @@ TrafficModel::~TrafficModel(void)
 double TrafficModel::LeftCapacityOnEdge(double capacity, double reservedFlow, double originalEdgeCost) const
 {
 	double newPop = 0.0;
-	if (model == STEPModel) newPop = (CriticalDensPerCap * capacity) - reservedFlow;
+	if (model == EvcTrafficModel::STEPModel) newPop = (CriticalDensPerCap * capacity) - reservedFlow;
 	else newPop = (CriticalDensPerCap * capacity) - (saturationDensPerCap * capacity);
 	if ((InitDelayCostPerPop > 0.0) && (newPop > originalEdgeCost / InitDelayCostPerPop)) newPop = 2147483647.0; // max_int
 	newPop = max(newPop, 0.0);
@@ -68,7 +68,7 @@ double TrafficModel::internalGetCongestionPercentage(double capacity, double flo
 
 	switch (model)
 	{
-	case EXPModel:
+	case EvcTrafficModel::EXPModel:
 		/* Exp Model z = exp(-(((flow - 1) / beta) ^ gamma) * log(2))
 			a = flow of normal speed, 	b = flow where the speed is dropped to half
 			(modelRatio) beta  = b * lane - 1;
@@ -80,7 +80,7 @@ double TrafficModel::internalGetCongestionPercentage(double capacity, double flo
 		expGamma    = (log(log(0.9) / log(0.5))) / log((a * capacity - 1.0) / (b * capacity - 1.0));
 		speedPercent = exp(-pow(((flow - 1.0) / modelRatio), expGamma) * log(2.0));
 		break;
-	case POWERModel:
+	case EvcTrafficModel::POWERModel:
 		/* Power model z = 1.0 - 0.0202 * sqrt(x) * exp(-0.01127 * y)
 			modelRatio = 0.0202 * exp(-0.01127 * reservations->Capacity);
 		*/
@@ -88,10 +88,10 @@ double TrafficModel::internalGetCongestionPercentage(double capacity, double flo
 		modelRatio *= exp(-0.01127 * capacity);
 		speedPercent = 1.0 - modelRatio * sqrt(flow);
 		break;
-	case LINEARModel:
+	case EvcTrafficModel::LINEARModel:
 		speedPercent = 1.0 - (flow - CriticalDensPerCap * capacity) / (2.0 * (saturationDensPerCap * capacity - CriticalDensPerCap * capacity));
 		break;
-	case STEPModel:
+	case EvcTrafficModel::STEPModel:
 		speedPercent = 0.0;
 		break;
 	}

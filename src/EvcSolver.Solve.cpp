@@ -205,6 +205,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	VARIANT_BOOL keepGoing, isLocated, isRestricted;
 	esriNetworkElementType elementType;
 	SafeZonePtr safePoint;
+	esriNAEdgeSideType side;
 
 	// Initialize Caches
 	// This cache will maintain a list of all created vertices/edges. You can retrieve
@@ -223,6 +224,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
 	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID;
 	VARIANT evName, pop, cap;
+
+	// read cost attribute unit
+	INetworkAttributePtr costAttrib;
+	esriNetworkAttributeUnits unit;
+	FlockProfile flockProfile(flockingEnabled ? flockingProfile : FLOCK_PROFILE_CAR);
+	if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
+	if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
+	double costPerDay = GetUnitPerDay(unit, flockProfile.UsualSpeed);
+	double costPerSec = costPerDay / (3600.0 * 24.0);
 
 	if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Collecting input point(s)")); // add more specific information here if appropriate
 
@@ -263,6 +273,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Get the PosAlong for the NALocation
 			if (FAILED(hr = ipNALocation->get_SourcePosition(&posAlong))) return hr;
 
+			// Get the side of street for the NALocation
+			if (FAILED(hr = ipNALocation->get_Side(&side))) return hr;
+
 			// Once we have a located NALocation, we query the network to obtain its associated network elements
 			if (FAILED(hr = ipNetworkQuery->get_ElementsByOID(sourceID, sourceOID, &ipEnumNetworkElement))) return hr;
 
@@ -297,7 +310,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					ipEdge = ipElement;
 					if (FAILED(hr = ipEdge->QueryPositions(&fromPosition, &toPosition))) return hr;
 
-					if (fromPosition <= posAlong && posAlong <= toPosition)
+					if (fromPosition <= posAlong && posAlong <= toPosition && (side & esriNAEdgeSideType::esriNAEdgeSideRight))
 					{
 						// Our NALocation lies along this edge element
 						// We will start our traversal from the junctions of this edge
@@ -319,7 +332,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (FAILED(hr = ipEdge->QueryEdgeInOtherDirection(ipOtherEdge))) return hr;
 					if (FAILED(hr = ipOtherEdge->QueryPositions(&toPosition, &fromPosition))) return hr;
 
-					if (fromPosition <= posAlong && posAlong <= toPosition)
+					if (fromPosition <= posAlong && posAlong <= toPosition && (side & esriNAEdgeSideType::esriNAEdgeSideLeft))
 					{
 						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipOtherEdge, &isRestricted))) return hr;
 						if (!isRestricted)
@@ -339,8 +352,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 
 	// Get a cursor on the Evacuee points table to loop through each row
-	if (FAILED(hr = ipEvacueePointsTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
-	EvacueeList * Evacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
+	long evacueeCount;
+	if (FAILED(hr = ipEvacueePointsTable->Search(NULL, VARIANT_TRUE, &ipCursor))) return hr;
+	if (FAILED(hr = ipEvacueePointsTable->RowCount(NULL, &evacueeCount))) return hr;
+	EvacueeList * Evacuees = new DEBUG_NEW_PLACEMENT EvacueeList(evacueeGroupingOption, evacueeCount);
 	Evacuee * currentEvacuee;
 	NAVertexPtr myVertex;
 
@@ -385,6 +400,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Get the PosAlong for the NALocation
 			if (FAILED(hr = ipNALocation->get_SourcePosition(&posAlong))) return hr;
 
+			// Get the side of street for the NALocation
+			if (FAILED(hr = ipNALocation->get_Side(&side))) return hr;
+
 			// Once we have a located NALocation, we query the network to obtain its associated network elements
 			if (FAILED(hr = ipNetworkQuery->get_ElementsByOID(sourceID, sourceOID, &ipEnumNetworkElement))) return hr;
 
@@ -410,7 +428,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (!isRestricted)
 					{
 						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
-						currentEvacuee->Vertices->insert(currentEvacuee->Vertices->end(), myVertex);
+						currentEvacuee->Vertices->push_back(myVertex);
 					}
 				}
 
@@ -422,7 +440,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					ipEdge = ipElement;
 					if (FAILED(hr = ipEdge->QueryPositions(&fromPosition, &toPosition))) return hr;
 
-					if (fromPosition <= posAlong && posAlong <= toPosition)
+					if (fromPosition <= posAlong && posAlong <= toPosition && (side & esriNAEdgeSideType::esriNAEdgeSideRight))
 					{
 						// Our NALocation lies along this edge element
 						// We will start our traversal from the junctions of this edge
@@ -437,14 +455,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge, true));
 							myVertex->GVal = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
-							currentEvacuee->Vertices->insert(currentEvacuee->Vertices->end(), myVertex);
+							currentEvacuee->Vertices->push_back(myVertex);
 						}
 					}
 
 					if (FAILED(hr = ipEdge->QueryEdgeInOtherDirection(ipOtherEdge))) return hr;
 					if (FAILED(hr = ipOtherEdge->QueryPositions(&toPosition, &fromPosition))) return hr;
 
-					if (fromPosition <= posAlong && posAlong <= toPosition)
+					if (fromPosition <= posAlong && posAlong <= toPosition && (side & esriNAEdgeSideType::esriNAEdgeSideLeft))
 					{
 						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipOtherEdge, &isRestricted))) return hr;
 						if (!isRestricted)
@@ -455,15 +473,17 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge, true));
 							myVertex->GVal = posAlong * myVertex->GetBehindEdge()->OriginalCost;
-							currentEvacuee->Vertices->insert(currentEvacuee->Vertices->end(), myVertex);
+							currentEvacuee->Vertices->push_back(myVertex);
 						}
 					}
 				}
 			}
-			if (currentEvacuee->Vertices->size() > 0) Evacuees->insert(Evacuees->end(), currentEvacuee);
+			if (currentEvacuee->Vertices->size() > 0) Evacuees->Insert(currentEvacuee);
 			else delete currentEvacuee;
 		}
 	}
+
+	Evacuees->FinilizeGroupings(5.0 * costPerSec); // five seconds diameter for clustering
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -505,8 +525,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr))
 	{
 		// it either failed or canceled. clean up and then return.
-		for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
-		Evacuees->clear();
 		delete Evacuees;
 
 		// releasing all internal objects
@@ -547,7 +565,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::vector<EvcPathPtr>::const_iterator pit;
 	bool sourceNotFoundFlag = false;
 	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);
-	std::vector<EvacueePtr>::const_iterator eit;
 
 	// load the Mercator projection and analysis projection
 	ISpatialReferencePtr ipNAContextSR;
@@ -560,11 +577,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::vector<EvcPathPtr> * tempPathList = new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>(Evacuees->size());
 	tempPathList->clear();
 
-	for(eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
+	for (const auto & currentEvacuee : *Evacuees)
 	{
 		// get all points from the stack and make one polyline from them. this will be the path.
-		currentEvacuee = *eit;
-
 		if (currentEvacuee->Paths->empty())
 		{
 			if (currentEvacuee->Population > 0.0) *pIsPartialSolution = VARIANT_TRUE;
@@ -753,28 +768,17 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		EvcPath::const_iterator psit;
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
 		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex, statFieldIndex, ptimeFieldIndex;
-		double costPerDay = 1.0, costPerSec = 1.0;
-		INetworkAttributePtr costAttrib;
-		esriNetworkAttributeUnits unit;
 		time_t baseTime = time(NULL), thisTime = 0;
-		FlockProfile flockProfile(flockingProfile);
 		bool movingObjectLeft;
 		wchar_t * thisTimeBuf = new DEBUG_NEW_PLACEMENT wchar_t[25];
 		tm local;
 		ATL::CComVariant featureID(0);
 		EvcPathPtr path;
 
-		// read cost attribute unit
-		if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
-		if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
-		costPerDay = GetUnitPerDay(unit, flockProfile.UsualSpeed);
-		costPerSec = costPerDay / (3600.0 * 24.0);
-
 		// project to Mercator for the simulator
-		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
+		for (const auto & currentEvacuee : *Evacuees)
 		{
 			// get all points from the stack and make one polyline from them. this will be the path.
-			currentEvacuee = *eit;
 			if (!currentEvacuee->Paths->empty())
 			{
 				for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++)
@@ -818,8 +822,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			delete [] thisTimeBuf;
 
 			// clear and release evacuees and their paths
-			for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
-			Evacuees->clear();
 			delete Evacuees;
 
 			// releasing all internal objects
@@ -832,9 +834,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}
 
 		// project back to analysis coordinate system
-		for(eit = Evacuees->begin(); eit < Evacuees->end(); eit++)
+		for (const auto & currentEvacuee : *Evacuees)
 		{
-			currentEvacuee = *eit;
 			for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++)
 			{
 				path = *tpit;
@@ -1047,8 +1048,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 
 	// clear and release evacuees and their paths
-	for(EvacueeListItr evcItr = Evacuees->begin(); evcItr != Evacuees->end(); evcItr++) delete (*evcItr);
-	Evacuees->clear();
 	delete Evacuees;
 
 	// releasing all internal objects

@@ -1084,6 +1084,8 @@
 #define WM_KEYUP                        0x0101
 #define IDC_Lable_IterationRatio        257
 #define WM_CHAR                         0x0102
+#define IDC_COMBO_CarmaSort2            258
+#define IDC_CMB_GroupOption             258
 #define WM_DEADCHAR                     0x0103
 #define WM_SYSKEYDOWN                   0x0104
 #define WM_SYSKEYUP                     0x0105

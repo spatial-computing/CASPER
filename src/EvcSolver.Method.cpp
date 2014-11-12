@@ -23,8 +23,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	INetworkJunctionPtr ipCurrentJunction;
 	INetworkElementPtr ipJunctionElement;
 	bool restricted = false, separationRequired, foundRestrictedSafezone;
-	EvacueeList * sortedEvacuees = new DEBUG_NEW_PLACEMENT EvacueeList();
-	EvacueeListItr eit;
+	std::vector<EvacueePtr> * sortedEvacuees = new DEBUG_NEW_PLACEMENT std::vector<EvacueePtr>();
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
 	int pathGenerationCount = -1, EvacueeProcessOrder = -1;
 	size_t CARMAClosedSize = 0, sumVisitedEdge = 0, NumberOfEvacueesInIteration = 0;
@@ -41,13 +40,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 	switch (solverMethod)
 	{
-	case CASPERSolver:
+	case EvcSolverMethod::CASPERSolver:
 		AlgName = _T("CASPER");
 		break;
-	case SPSolver:
+	case EvcSolverMethod::SPSolver:
 		AlgName = _T("SP");
 		break;
-	case CCRPSolver:
+	case EvcSolverMethod::CCRPSolver:
 		AlgName = _T("CCRP");
 		break;
 	default:
@@ -128,8 +127,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 					// the next 'if' is a distinctive feature by CASPER that CCRP does not have
 					// and can actually improve routes even with a STEP traffic model
-					if (this->solverMethod == CCRPSolver) population2Route = 1.0;
-					else if (this->solverMethod == CASPERSolver && separationRequired)
+					if (this->solverMethod == EvcSolverMethod::CCRPSolver) population2Route = 1.0;
+					else if (this->solverMethod == EvcSolverMethod::CASPERSolver && separationRequired)
 					{
 						if (populationLeft - globalMinPop2Route < globalMinPop2Route) population2Route = populationLeft;
 						else population2Route = globalMinPop2Route;
@@ -260,7 +259,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				currentEvacuee->Status = EvacueeStatus::Processed;
 
 				// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
-				if (this->solverMethod == CASPERSolver && sumVisitedDirtyEdge > this->CARMAPerformanceRatio * sumVisitedEdge) break;
+				if (this->solverMethod == EvcSolverMethod::CASPERSolver && sumVisitedDirtyEdge > this->CARMAPerformanceRatio * sumVisitedEdge) break;
 
 			} // end of for loop over sortedEvacuees
 		} while (!sortedEvacuees->empty());
@@ -347,7 +346,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEva
 	return EvacueesForNextIteration.size();
 }
 
-HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, EvacueeList * SortedEvacuees, NAVertexCache * vcache,
+HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, EvacueeList * Evacuees, std::vector<EvacueePtr> * SortedEvacuees, NAVertexCache * vcache,
 	                         NAEdgeCache * ecache, SafeZoneTable * safeZoneList, size_t & closedSize, NAEdgeMapTwoGen * closedList, NAEdgeContainer * leafs,
 							 std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired, CARMASort carmaSortCriteria)
 {
@@ -398,13 +397,13 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
 		// the h values should always be an underestimation
 		minPop2Route = 1.0; // separable CCRPSolver and any case of SPSolver
-		if ((this->solverMethod == CASPERSolver) || (this->solverMethod == CCRPSolver && !separationRequired))
+		if ((this->solverMethod == EvcSolverMethod::CASPERSolver) || (this->solverMethod == EvcSolverMethod::CCRPSolver && !separationRequired))
 		{
 			minPop2Route = FLT_MAX;
-			for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
+			for(const auto & e : *Evacuees)
 			{
-				if ((*eit)->Status != EvacueeStatus::Unprocessed || (*eit)->Population <= 0.0) continue;
-				minPop2Route = min(minPop2Route, (*eit)->Population);
+				if (e->Status != EvacueeStatus::Unprocessed || e->Population <= 0.0) continue;
+				minPop2Route = min(minPop2Route, e->Population);
 			}
 			if (separationRequired) minPop2Route = min(globalMinPop2Route, minPop2Route);
 		}
@@ -849,7 +848,7 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 		// First find out about remaining capacity of this path
 		NAVertexPtr temp = finalVertex;
 
-		if (this->solverMethod == CCRPSolver)
+		if (this->solverMethod == EvcSolverMethod::CCRPSolver)
 		{
 			if (separationRequired)
 			{
@@ -857,7 +856,7 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 				while (temp->Previous)
 				{
 					leftCap = temp->GetBehindEdge()->LeftCapacity();
-					if (this->solverMethod == CCRPSolver || leftCap > 0.0) population2Route = min(population2Route, leftCap);
+					if (this->solverMethod == EvcSolverMethod::CCRPSolver || leftCap > 0.0) population2Route = min(population2Route, leftCap);
 					temp = temp->Previous;
 				}
 				if (population2Route <= 0.0) population2Route = populationLeft;
@@ -935,17 +934,17 @@ HRESULT EvcSolver::DeterminMinimumPop2Route(EvacueeList * Evacuees, INetworkData
 	esriNetworkAttributeUnits unit;
 	size_t count = 0;
 	globalMinPop2Route = 0.0;
-	separationRequired = this->separable == VARIANT_TRUE;
+	separationRequired = CheckFlag(evacueeGroupingOption, EvacueeGrouping::Separate);
 
-	if (this->separable && this->solverMethod == CASPERSolver)
+	if (separationRequired && this->solverMethod == EvcSolverMethod::CASPERSolver)
 	{
-		for(EvacueeListItr eit = Evacuees->begin(); eit != Evacuees->end(); eit++)
-			if ((*eit)->Population > 0.0)
+		for(const auto & e : *Evacuees)
+			if (e->Population > 0.0)
 			{
 				count++;
-				avgPop += (*eit)->Population;
-				if ((*eit)->Population > maxPop) maxPop = (*eit)->Population;
-				if ((*eit)->Population < minPop) minPop = (*eit)->Population;
+				avgPop += e->Population;
+				if (e->Population > maxPop) maxPop = e->Population;
+				if (e->Population < minPop) minPop = e->Population;
 			}
 
 		avgPop = avgPop / count;
