@@ -222,12 +222,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	SafeZoneTableInsertReturn insertRet;
 	INetworkEdgePtr ipEdge(ipElement);
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
-	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID;
+	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID, curbSideIndex = -1;
 	VARIANT evName, pop, cap;
 
 	// read cost attribute unit
 	INetworkAttributePtr costAttrib;
 	esriNetworkAttributeUnits unit;
+	esriNACurbApproachType curbApproach;
+	VARIANT curbApproachVar;
 	FlockProfile flockProfile(flockingEnabled ? flockingProfile : FLOCK_PROFILE_CAR);
 	if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
 	if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
@@ -241,6 +243,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Get a cursor on the zones table to loop through each row
 	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CAP), &capFieldIndex))) return hr;
+	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CURBAPPROACH), &curbSideIndex))) return hr;
 	if (FAILED(hr = ipZonesTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
@@ -276,10 +279,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Get the side of street for the NALocation
 			if (FAILED(hr = ipNALocation->get_Side(&side))) return hr;
 
+			if (FAILED(hr = ipRow->get_Value(capFieldIndex, &cap))) return hr;
+
+			// Get the side of curb that we can approach
+			if (FAILED(hr = ipRow->get_Value(curbSideIndex, &curbApproachVar))) curbApproach = esriNACurbApproachType::esriNANoUTurn;
+			else curbApproach = (esriNACurbApproachType)curbApproachVar.intVal;
+
 			// Once we have a located NALocation, we query the network to obtain its associated network elements
 			if (FAILED(hr = ipNetworkQuery->get_ElementsByOID(sourceID, sourceOID, &ipEnumNetworkElement))) return hr;
-
-			if (FAILED(hr = ipRow->get_Value(capFieldIndex, &cap))) return hr;
 
 			// We must loop through the returned elements, looking for an appropriate ending point
 			ipEnumNetworkElement->Reset();
@@ -310,7 +317,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					ipEdge = ipElement;
 					if (FAILED(hr = ipEdge->QueryPositions(&fromPosition, &toPosition))) return hr;
 
-					if (fromPosition <= posAlong && posAlong <= toPosition && (side & esriNAEdgeSideType::esriNAEdgeSideRight))
+					if (fromPosition <= posAlong && posAlong <= toPosition &&
+						(side == esriNAEdgeSideType::esriNAEdgeSideRight && curbApproach != esriNACurbApproachType::esriNALeftSideOfVehicle) ||
+						(side == esriNAEdgeSideType::esriNAEdgeSideLeft && curbApproach != esriNACurbApproachType::esriNARightSideOfVehicle))
 					{
 						// Our NALocation lies along this edge element
 						// We will start our traversal from the junctions of this edge
@@ -332,7 +341,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (FAILED(hr = ipEdge->QueryEdgeInOtherDirection(ipOtherEdge))) return hr;
 					if (FAILED(hr = ipOtherEdge->QueryPositions(&toPosition, &fromPosition))) return hr;
 
-					if (fromPosition <= posAlong && posAlong <= toPosition && (side & esriNAEdgeSideType::esriNAEdgeSideLeft))
+					if (fromPosition <= posAlong && posAlong <= toPosition &&
+						(side == esriNAEdgeSideType::esriNAEdgeSideRight && curbApproach != esriNACurbApproachType::esriNARightSideOfVehicle) ||
+						(side == esriNAEdgeSideType::esriNAEdgeSideLeft && curbApproach != esriNACurbApproachType::esriNALeftSideOfVehicle))
 					{
 						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipOtherEdge, &isRestricted))) return hr;
 						if (!isRestricted)
@@ -360,6 +371,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	NAVertexPtr myVertex;
 
 	// pre-process evacuee NALayer primary field index
+	if (FAILED(hr = ipEvacueePointsTable->FindField(ATL::CComBSTR(CS_FIELD_CURBAPPROACH), &curbSideIndex))) return hr;
 	if (FAILED(hr = ipEvacueePointsTable->FindField(ATL::CComBSTR(CS_FIELD_NAME), &nameFieldIndex))) return hr;
 	if (FAILED(hr = ipEvacueePointsTable->FindField(ATL::CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
 	if (popFieldIndex < 1) { if (FAILED(hr = ipEvacueePointsTable->FindField(ATL::CComBSTR(CS_FIELD_EVC_POP1), &popFieldIndex))) return hr; }
@@ -403,17 +415,21 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			// Get the side of street for the NALocation
 			if (FAILED(hr = ipNALocation->get_Side(&side))) return hr;
 
-			// Once we have a located NALocation, we query the network to obtain its associated network elements
-			if (FAILED(hr = ipNetworkQuery->get_ElementsByOID(sourceID, sourceOID, &ipEnumNetworkElement))) return hr;
-
-			// We must loop through the returned elements, looking for an appropriate starting point
-			ipEnumNetworkElement->Reset();
+			// Get the side of curb that we can approach
+			if (FAILED(hr = ipRow->get_Value(curbSideIndex, &curbApproachVar))) curbApproach = esriNACurbApproachType::esriNANoUTurn;
+			else curbApproach = (esriNACurbApproachType)curbApproachVar.intVal;
 
 			// Get the OID of the evacuee NALocation
 			if (FAILED(hr = ipRow->get_Value(nameFieldIndex, &evName))) return hr;
 			if (FAILED(hr = ipRow->get_Value(popFieldIndex, &pop))) return hr;
 			if (FAILED(hr = ipRow->get_OID(&objectID))) return hr;
 			currentEvacuee = new DEBUG_NEW_PLACEMENT Evacuee(evName, pop.dblVal, objectID);
+
+			// Once we have a located NALocation, we query the network to obtain its associated network elements
+			if (FAILED(hr = ipNetworkQuery->get_ElementsByOID(sourceID, sourceOID, &ipEnumNetworkElement))) return hr;
+
+			// We must loop through the returned elements, looking for an appropriate starting point
+			ipEnumNetworkElement->Reset();
 
 			while (ipEnumNetworkElement->Next(&ipElement) == S_OK)
 			{
@@ -440,7 +456,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					ipEdge = ipElement;
 					if (FAILED(hr = ipEdge->QueryPositions(&fromPosition, &toPosition))) return hr;
 
-					if (fromPosition <= posAlong && posAlong <= toPosition && (side & esriNAEdgeSideType::esriNAEdgeSideRight))
+					if (fromPosition <= posAlong && posAlong <= toPosition &&
+						(side == esriNAEdgeSideType::esriNAEdgeSideRight && curbApproach != esriNACurbApproachType::esriNALeftSideOfVehicle) ||
+						(side == esriNAEdgeSideType::esriNAEdgeSideLeft && curbApproach != esriNACurbApproachType::esriNARightSideOfVehicle))
 					{
 						// Our NALocation lies along this edge element
 						// We will start our traversal from the junctions of this edge
@@ -462,7 +480,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (FAILED(hr = ipEdge->QueryEdgeInOtherDirection(ipOtherEdge))) return hr;
 					if (FAILED(hr = ipOtherEdge->QueryPositions(&toPosition, &fromPosition))) return hr;
 
-					if (fromPosition <= posAlong && posAlong <= toPosition && (side & esriNAEdgeSideType::esriNAEdgeSideLeft))
+					if (fromPosition <= posAlong && posAlong <= toPosition &&
+						(side == esriNAEdgeSideType::esriNAEdgeSideRight && curbApproach != esriNACurbApproachType::esriNARightSideOfVehicle) ||
+						(side == esriNAEdgeSideType::esriNAEdgeSideLeft && curbApproach != esriNACurbApproachType::esriNALeftSideOfVehicle))
 					{
 						if (FAILED(hr = ipForwardStar->get_IsRestricted(ipOtherEdge, &isRestricted))) return hr;
 						if (!isRestricted)
