@@ -326,19 +326,8 @@ void EvacueeList::FinilizeGroupings(double OKDistance)
 	shrink_to_fit();
 }
 
-std::vector<EvacueePtr> * NAEvacueeVertexTable::Find(long junctionEID)
-{
-	std::vector<EvacueePtr> * p = 0;
-	NAEvacueeVertexTableItr i = find(junctionEID);
-	if (i != end()) p = i->second;
-	return p;
-}
-
 void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir)
 {
-	std::vector<EvacueePtr> * p = 0;
-	std::vector<NAVertexPtr>::const_iterator v;
-
 	for(const auto & evc : *list)
 	{
 		if (evc->Status == EvacueeStatus::Unprocessed && evc->Population > 0.0)
@@ -346,15 +335,10 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 			// reset evacuation prediction for continues carma sort
 			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = FLT_MAX;
 
-			for (v = evc->Vertices->begin(); v != evc->Vertices->end(); v++)
+			for (const auto & v : *evc->Vertices)
 			{
-				p = Find((*v)->EID);
-				if (!p)
-				{
-					p = new DEBUG_NEW_PLACEMENT std::vector<EvacueePtr>();
-					insert(_NAEvacueeVertexTablePair((*v)->EID, p));
-				}
-				p->push_back(evc);
+				if (find(v->EID) == end()) insert(_NAEvacueeVertexTablePair(v->EID, std::vector<EvacueePtr>()));
+				at(v->EID).push_back(evc);
 			}
 		}
 	}
@@ -362,23 +346,21 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 
 void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, std::vector<EvacueePtr> * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method)
 {
-	NAEvacueeVertexTableItr pair = find(myVertex->EID);
-	EvacueePtr evc;
+	const auto & pair = find(myVertex->EID);
 	NAVertexPtr foundVertex;
 	bool AtLeastOneEvacueeFound = false;
 	double newPredictedCost = 0.0;
 
 	if (pair != end())
 	{
-		for (std::vector<EvacueePtr>::const_iterator eitr = pair->second->begin(); eitr != pair->second->end(); eitr++)
+		for (const auto & evc : pair->second)
 		{
-			evc = (*eitr);
 			foundVertex = NULL;
-			for (std::vector<NAVertexPtr>::const_iterator v = evc->Vertices->begin(); v != evc->Vertices->end(); v++)
+			for (const auto & v : *evc->Vertices)
 			{
-				if ((*v)->EID == myVertex->EID)
+				if (v->EID == myVertex->EID)
 				{
-					foundVertex = *v;
+					foundVertex = v;
 					break;
 				}
 			}
@@ -392,7 +374,7 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 				AtLeastOneEvacueeFound = true;
 			}
 		}
-		this->Erase(myVertex->EID);
+		erase(myVertex->EID);
 		// because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
 		if (AtLeastOneEvacueeFound) leafs->Insert(myEdge); 
 	}
@@ -400,28 +382,12 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 
 void NAEvacueeVertexTable::LoadSortedEvacuees(std::vector<EvacueePtr> * SortedEvacuees) const
 {
-	for (NAEvacueeVertexTableItr evcItr = begin(); evcItr != end(); evcItr++)
-	{
-		for (const auto & e : *evcItr->second)
+	for (const auto & evc : *this)
+		for (const auto & e : evc.second)
 		{
 			if (e->PredictedCost >= FLT_MAX) e->Status = EvacueeStatus::Unreachable;
 			else SortedEvacuees->push_back(e);
 		}
-	}
-}
-
-NAEvacueeVertexTable::~NAEvacueeVertexTable()
-{
-	for (NAEvacueeVertexTableItr i = begin(); i != end(); i++) delete i->second;
-	this->clear();
-}
-
-void NAEvacueeVertexTable::Erase(long junctionEID)
-{
-	std::vector<NAVertexPtr>::const_iterator vi;
-	NAEvacueeVertexTableItr evcItr1, evcItr2 = this->find(junctionEID);
-	delete evcItr2->second;
-	erase(junctionEID);
 }
 
 SafeZone::~SafeZone() { delete Vertex; }

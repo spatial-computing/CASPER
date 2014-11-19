@@ -157,8 +157,8 @@ public:
 };
 
 typedef Evacuee * EvacueePtr;
-typedef std::pair<long, std::vector<EvacueePtr> *> _NAEvacueeVertexTablePair;
-typedef std::unordered_map<long, std::vector<EvacueePtr> *>::const_iterator NAEvacueeVertexTableItr;
+typedef std::pair<long, std::vector<EvacueePtr>> _NAEvacueeVertexTablePair;
+typedef std::unordered_map<long, std::vector<EvacueePtr>>::const_iterator NAEvacueeVertexTableItr;
 
 class EvacueeList : private DoubleGrowingArrayList<EvacueePtr, size_t>
 {
@@ -175,14 +175,9 @@ public:
 	size_t size() const { return DoubleGrowingArrayList<EvacueePtr, size_t, 0>::size(); }
 };
 
-class NAEvacueeVertexTable : protected std::unordered_map<long, std::vector<EvacueePtr> *>
+class NAEvacueeVertexTable : protected std::unordered_map<long, std::vector<EvacueePtr>>
 {
-private:
-	std::vector<EvacueePtr> * Find(long junctionEID);
-	void Erase(long junctionEID);
 public:
-	~NAEvacueeVertexTable();
-
 	void InsertReachable(EvacueeList * list, CARMASort sortDir);
 	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::vector<EvacueePtr> * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method);
 	bool Empty() const { return empty(); }

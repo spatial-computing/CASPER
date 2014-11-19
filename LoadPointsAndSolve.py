@@ -44,7 +44,7 @@ Input_Layer_Location = arcpy.GetParameterAsText(4)
 if Input_Layer_Location == '#' or not Input_Layer_Location:
     raise ValueError("Evacuation routing layer file is missing")
 
-#laod the experiments table
+# laod the experiments table
 ExpNames = arcpy.da.TableToNumPyArray(Experiments, 'ShortName')
 
 # load layer file
@@ -71,7 +71,8 @@ for ExpName in ExpNames:
                     arcpy.AddReturnMessage(msg)
 
                 # solve the layer
-                #arcpy.SetProgressor("step", "Solving " + lyr.nameString + " with experiment " + ExpName[0] + "...", 0, 100, 1)
+                # arcpy.SetProgressor("step", "Solving " + lyr.nameString + " with experiment " + ExpName[0] + "...", 0, 100, 1)
+                arcpy.AddMessage("Solving " + lyr.nameString + " with experiment " + ExpName[0])
                 arcpy.Solve_na(lyr, "SKIP", "TERMINATE")
                 for msg in range(0, arcpy.GetMessageCount()):
                     arcpy.AddReturnMessage(msg)
