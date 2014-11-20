@@ -77,7 +77,6 @@ inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 // return true if update was unnecessary
 bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop)
 {
-	/// TODO Once I finish iteration, this function needs some cleanup
 	bool unnesecery = false;
 	for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++)
 	{
@@ -92,7 +91,7 @@ bool NAVertex::UpdateHeuristic(long edgeid, double hur, unsigned short carmaLoop
 			}
 			else // carmaLoop > i->CarmaLoop
 			{
-				// _ASSERT(i->Value - hur <= FLT_EPSILON);
+				_ASSERT_EXPR(ParentCostIsDecreased || i->Value - hur <= FLT_EPSILON, L"h value violation");
 				unnesecery = abs(hur - i->Value) <= FLT_EPSILON;
 				i->Value = hur;
 				i->CarmaLoop = carmaLoop;
