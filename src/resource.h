@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by EvcSolver.rc
 //
+#define PROJ_NAME_S                     "CASPER for ArcGIS"
 #define SW_HIDE                         0
 #define HIDE_WINDOW                     0
 #define WM_NULL                         0x0000

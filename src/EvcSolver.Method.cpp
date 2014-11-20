@@ -886,10 +886,11 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 		{
 			// search for mother vertex and its position along the edge
 			edgePortion = 1.0;
-			for (std::vector<NAVertexPtr>::const_iterator vi = currentEvacuee->Vertices->begin(); vi != currentEvacuee->Vertices->end(); ++vi)
-				if ((*vi)->EID == finalVertex->EID)
+			for (const auto & v : *currentEvacuee->Vertices)
+				if (v->EID == finalVertex->EID)
 				{
-					edgePortion = (*vi)->GVal / (*vi)->GetBehindEdge()->OriginalCost;
+					if (v->GetBehindEdge()) edgePortion = v->GVal / v->GetBehindEdge()->OriginalCost;
+					else edgePortion = v->GVal;
 					break;
 				}
 

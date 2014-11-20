@@ -91,7 +91,7 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, c
 	else
 	{
 		_ASSERT(vcost.dblVal >= 0.0);
-		OriginalCost = max(0.0, vcost.dblVal);
+		OriginalCost = max(FLT_MIN, vcost.dblVal);
 		if (vcap.vt == VT_R8) capacity = max(1.0f, (float)(vcap.dblVal));
 		else if (vcap.vt == VT_I4) capacity = max(1.0f, (float)(vcap.intVal));
 

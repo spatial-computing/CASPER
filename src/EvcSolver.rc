@@ -75,7 +75,7 @@ BEGIN
             VALUE "InternalName", "EvcSolver32.dll"
             VALUE "LegalCopyright", "Copyright (C) 2014"
             VALUE "OriginalFilename", "EvcSolver32.dll"
-            VALUE "ProductName", "CASPER for ArcGIS"
+			VALUE "ProductName", PROJ_NAME_S
 			VALUE "ProductVersion", GIT_DESCRIBE
         END
     END
@@ -178,9 +178,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROJNAME            "CASPER for ArcGIS"
-    IDS_TITLEEvcSolverPROPPAGE "Evacuation Settings"
-    IDS_HELPFILEEvcSolverPROPPAGE "EvacuationSolverHelpFile"
+    IDS_PROJNAME                   PROJ_NAME_S
+    IDS_TITLEEvcSolverPROPPAGE     "Evacuation Settings"
+    IDS_HELPFILEEvcSolverPROPPAGE  "EvacuationSolverHelpFile"
     IDS_DOCSTRINGEvcSolverPROPPAGE "Evacuation Settings"
 END
 
