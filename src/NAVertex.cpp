@@ -73,12 +73,8 @@ inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 	if (BehindEdge != NULL) BehindEdge->ToVertex = this;
 }
 
-// return true if update was unnecessary
-void NAVertexCache::UpdateHeuristic(long edgeid, NAVertex * n)
-{
-	NAVertexPtr a = Get(n->EID);
-	a->UpdateHeuristic(edgeid, n->GVal);
-}
+void NAVertex::UpdateYourHeuristic()                    { UpdateHeuristic(BehindEdge != NULL ? BehindEdge->EID : -1, GVal); }
+void NAVertex::UpdateHeuristic(long edgeid, double hur) { h->InsertOrUpdate(edgeid, hur); }
 
 void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)
 {

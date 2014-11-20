@@ -194,10 +194,15 @@ class MinimumArrayList : protected GrowingArrayList <std::pair<K, V>, S, ZeroSiz
 {
 private:
 	S minValueIndex;
+	typedef GrowingArrayList <std::pair<K, V>, S, ZeroSize> baseArray;
 
 public:
 	inline S    size()  const { return this->_size; }
 	inline bool empty() const { return this->_size == ZeroSize; }
+
+	using baseArray::begin;
+	using baseArray::end;
+	using baseArray::const_iterator;
 
 	MinimumArrayList(S cap = ZeroSize) : GrowingArrayList<std::pair<K, V>, S, ZeroSize>(cap), minValueIndex(ZeroSize) { }
 
@@ -212,7 +217,7 @@ public:
 				this->data[i].second = value;
 				break;
 			}
-		if (i == this->_size) GrowingArrayList <std::pair<K, V>, S, ZeroSize>::push_back(std::pair<K, V>(key, value));
+		if (i == this->_size) baseArray::push_back(std::pair<K, V>(key, value));
 		if (c(value, this->data[minValueIndex].second)) minValueIndex = i;
 	}
 

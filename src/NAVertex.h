@@ -53,7 +53,8 @@ public:
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
 	inline bool IsHEmpty()   const { return h->empty(); }
-	void UpdateHeuristic(long edgeid, double hur) { h->InsertOrUpdate(edgeid, hur); }
+	void UpdateHeuristic(long edgeid, double hur);
+	void UpdateYourHeuristic();
 
 	inline void Clone (NAVertex * cpy);
 	NAVertex   (void);
@@ -107,7 +108,6 @@ public:
 	void PrintVertexHeuristicFeq();
 	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = NULL);
 	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
-	void UpdateHeuristic(long edgeid, NAVertex * n);
 	NAVertexPtr Get(long eid);
 	NAVertexPtr Get(INetworkJunctionPtr junction);
 	NAVertexPtr NewFromBucket(NAVertexPtr clone);

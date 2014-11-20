@@ -470,7 +470,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			// part to check if this branch of DJ tree needs expanding to update heuristics. This update should know if this is the first time this vertex is coming out
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min or update absolutely to this new value.
-			myVertex->UpdateHeuristic(myEdge->EID, myVertex->GVal);
+			myVertex->UpdateYourHeuristic();
 
 			EvacueePairs->RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs, minPop2Route, solverMethod);
 
