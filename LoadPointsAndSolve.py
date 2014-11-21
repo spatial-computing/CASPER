@@ -44,11 +44,16 @@ Input_Layer_Location = arcpy.GetParameterAsText(4)
 if Input_Layer_Location == '#' or not Input_Layer_Location:
     raise ValueError("Evacuation routing layer file is missing")
 
+# Set current workspace
+arcpy.env.workspace = Input_Dataset
+
 # laod the experiments table
 ExpNames = arcpy.da.TableToNumPyArray(Experiments, 'ShortName')
 
 # load layer file
 lyrFile = arcpy.mapping.Layer(Input_Layer_Location)
+totalSolves = ExpNames.shape[0] * len(arcpy.mapping.ListLayers(lyrFile)) / 8
+arcpy.SetProgressor("step", "Solving {0} experiment(s)".format(ExpNames.shape[0]), 0, totalSolves, 1)
 
 # loop over all experiments, import them into each NA layer
 for ExpName in ExpNames:
@@ -59,9 +64,11 @@ for ExpName in ExpNames:
     # now loop over all NA layers and solve them one by one
     for lyr in arcpy.mapping.ListLayers(lyrFile):
         desc = arcpy.Describe(Input_Layer_Location + "\\" + lyr.longName)
-        # only solve if the layer is associated with the evacuation solver
+        # only solve if the layer is a network analysis layer
         if desc.dataType == "NALayer":
+            arcpy.SetProgressorLabel("Solving " + lyr.name + " with experiment " + ExpName[0] + "...")
             # load input locations
+            arcpy.AddMessage("loading input points to " + lyr.name + " from experiment " + ExpName[0])
             arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name OBJECTID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
@@ -70,8 +77,7 @@ for ExpName in ExpNames:
                 arcpy.AddReturnMessage(msg)
 
             # solve the layer
-            arcpy.AddMessage("Solving " + lyr.name + " with experiment " + ExpName[0])
-            arcpy.SetProgressor("step", "Solving " + lyr.name + " with experiment " + ExpName[0] + "...", 0, 100, 1)
+            arcpy.AddMessage("Solving NALayer " + lyr.name + " with experiment " + ExpName[0])
             arcpy.Solve_na(lyr, "SKIP", "TERMINATE")
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
@@ -86,9 +92,10 @@ for ExpName in ExpNames:
                 arcpy.AddReturnMessage(msg)
             del solved_layers
             arcpy.AddMessage("Solved " + lyr.name + " with experiment " + ExpName[0])
+            arcpy.SetProgressorPosition()
         del desc
 
+# Update the progressor position
+arcpy.SetProgressorPosition()
 del lyrFile
-
-arcpy.SetParameter(5, True)
 arcpy.CheckInExtension("Network")
