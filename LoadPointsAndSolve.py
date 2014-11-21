@@ -52,40 +52,43 @@ lyrFile = arcpy.mapping.Layer(Input_Layer_Location)
 
 # loop over all experiments, import them into each NA layer
 for ExpName in ExpNames:
-    arcpy.AddMessage("Importing experiment: " + ExpName[0])
-    EVC = Input_Dataset+'\\'+Evacuation_Feature_Class_Prefix+ExpName[0]
-    SAFE = Input_Dataset+'\\'+Safe_Zone_Feature_Class_Prefix+ExpName[0]
+    # arcpy.AddMessage("Importing experiment: " + ExpName[0])
+    EVC = Input_Dataset + '\\' + Evacuation_Feature_Class_Prefix + ExpName[0]
+    SAFE = Input_Dataset + '\\' + Safe_Zone_Feature_Class_Prefix + ExpName[0]
 
     # now loop over all NA layers and solve them one by one
     for lyr in arcpy.mapping.ListLayers(lyrFile):
         desc = arcpy.Describe(Input_Layer_Location + "\\" + lyr.longName)
-        try:
-            # only solve if the layer is associated with the evacuation solver
-            if desc.dataType == "NALayer":
-                # load input locations
-                arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount OrgPop #;Name BLKGRPCE #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
-                for msg in range(0, arcpy.GetMessageCount()):
-                    arcpy.AddReturnMessage(msg)
-                arcpy.AddLocations_na(lyr, "Zones", SAFE, "Name OBJECTID #;Capacity Capacity #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
-                for msg in range(0, arcpy.GetMessageCount()):
-                    arcpy.AddReturnMessage(msg)
+        # only solve if the layer is associated with the evacuation solver
+        if desc.dataType == "NALayer":
+            # load input locations
+            arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name OBJECTID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
+            for msg in range(0, arcpy.GetMessageCount()):
+                arcpy.AddReturnMessage(msg)
+            arcpy.AddLocations_na(lyr, "Zones", SAFE, "Name OBJECTID #;Capacity Capacity #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
+            for msg in range(0, arcpy.GetMessageCount()):
+                arcpy.AddReturnMessage(msg)
 
-                # solve the layer
-                # arcpy.SetProgressor("step", "Solving " + lyr.nameString + " with experiment " + ExpName[0] + "...", 0, 100, 1)
-                arcpy.AddMessage("Solving " + lyr.nameString + " with experiment " + ExpName[0])
-                arcpy.Solve_na(lyr, "SKIP", "TERMINATE")
-                for msg in range(0, arcpy.GetMessageCount()):
-                    arcpy.AddReturnMessage(msg)
+            # solve the layer
+            arcpy.AddMessage("Solving " + lyr.name + " with experiment " + ExpName[0])
+            arcpy.SetProgressor("step", "Solving " + lyr.name + " with experiment " + ExpName[0] + "...", 0, 100, 1)
+            arcpy.Solve_na(lyr, "SKIP", "TERMINATE")
+            for msg in range(0, arcpy.GetMessageCount()):
+                arcpy.AddReturnMessage(msg)
 
-                # going to export route and edge sub_layers
-                solved_layers = arcpy.mapping.ListLayers(lyr)
-                arcpy.CopyFeatures_management(solved_layers[4], Input_Dataset + "\\" + lyr.nameString + "_Routes_" + ExpName[0]) #Routes
-                arcpy.CopyFeatures_management(solved_layers[5], Input_Dataset + "\\" + lyr.nameString + "_EdgeStat_" + ExpName[0]) #EdgeStat
-                arcpy.AddMessage("Solved " + lyr.nameString + " with experiment " + ExpName[0])
-        except AttributeError:
-            pass
+            # going to export route and edge sub_layers
+            solved_layers = arcpy.mapping.ListLayers(lyr)
+            arcpy.CopyFeatures_management(solved_layers[4], Input_Dataset + "\\" + lyr.name + "_Routes_" + ExpName[0]) #Routes
+            for msg in range(0, arcpy.GetMessageCount()):
+                arcpy.AddReturnMessage(msg)
+            arcpy.CopyFeatures_management(solved_layers[5], Input_Dataset + "\\" + lyr.name + "_EdgeStat_" + ExpName[0]) #EdgeStat
+            for msg in range(0, arcpy.GetMessageCount()):
+                arcpy.AddReturnMessage(msg)
+            del solved_layers
+            arcpy.AddMessage("Solved " + lyr.name + " with experiment " + ExpName[0])
         del desc
-    
+
 del lyrFile
 
+arcpy.SetParameter(5, True)
 arcpy.CheckInExtension("Network")
