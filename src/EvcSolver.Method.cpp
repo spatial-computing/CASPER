@@ -274,7 +274,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		CARMAExtractCounts.pop_back();
 
 		/// TODO figure out how may of paths need to be detached and process again
-		NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
+		// NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
 		carmaSortCriteria = CARMASort::ReverseFinalCost;
 
 	} while (NumberOfEvacueesInIteration > 0);
@@ -360,7 +360,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	// performing pre-process: Here we will mark each vertex/junction with a heuristic value indicating
 	// true distance to closest safe zone using backward traversal and Dijkstra
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyNonHur);	// creating the heap for the dijkstra search
-	NAEdge * currentEdge;
 	NAVertexPtr neighbor;
 	INetworkElementPtr ipElementEdge;
 	VARIANT val;
@@ -500,9 +499,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, adj))) goto END_OF_FUNC;
 
-			for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
+			for (const auto & currentEdge : *adj)
 			{
-				currentEdge = *e;
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, 0))) goto END_OF_FUNC;
 
 				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, solverMethod);
@@ -526,13 +524,13 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 						// Maybe sima khanum bug (issue #8) is from here ... don't change the edge parent until you're sure it's the better parent
 						neighbor = currentEdge->ToVertex;
 						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) goto END_OF_FUNC;
-						// EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID); // == neighbor->GVal ??
 						if (currentEdge->ToVertex->GVal < neighbor->GVal)
 						{
 							closedList->Erase(currentEdge, NAEdgeMapGeneration::NewGen);
 							heap->Insert(currentEdge);
 						}
-						else neighbor->SetBehindEdge(currentEdge);						// undo whatever PrepareUnvisitedVertexForHeap did to currentEdge
+						// undo whatever PrepareUnvisitedVertexForHeap did to currentEdge
+						else neighbor->SetBehindEdge(currentEdge);
 					}
 					else
 					{
