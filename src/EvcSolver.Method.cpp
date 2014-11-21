@@ -10,7 +10,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	FibonacciHeap * heap = new DEBUG_NEW_PLACEMENT FibonacciHeap(&GetHeapKeyHur);
 	NAEdgeMap * closedList = new DEBUG_NEW_PLACEMENT NAEdgeMap();
 	NAEdgeMapTwoGen * carmaClosedList = new DEBUG_NEW_PLACEMENT NAEdgeMapTwoGen();
-	NAEdgePtr currentEdge;
 	std::vector<EvacueePtr>::const_iterator seit;
 	NAVertexPtr neighbor, finalVertex = 0, myVertex;
 	SafeZonePtr BetterSafeZone = 0;
@@ -196,10 +195,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 						if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Forward, adj))) goto END_OF_FUNC;
 
-						for (std::vector<NAEdgePtr>::const_iterator e = adj->begin(); e != adj->end(); ++e)
+						for (const auto & currentEdge : *adj)
 						{
-							// if edge has already been discovered then no need to heap it
-							currentEdge = *e; // ecache->New(ipCurrentEdge, false);
 							if (closedList->Exist(currentEdge)) continue;
 
 							newCost = myVertex->GVal + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
@@ -274,7 +271,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		CARMAExtractCounts.pop_back();
 
 		/// TODO figure out how may of paths need to be detached and process again
-		// NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
+		NumberOfEvacueesInIteration = 0; // FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
 		carmaSortCriteria = CARMASort::ReverseFinalCost;
 
 	} while (NumberOfEvacueesInIteration > 0);

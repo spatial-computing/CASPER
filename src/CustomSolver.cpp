@@ -35,9 +35,9 @@ public:
 			 // Initialize once for each new process.
 			 // Return FALSE to fail DLL load.
 			 // set program start for memory leak detection (DEBUG Mode)
-			    _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+				_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_EVERY_1024_DF);
 				break;
-/*
+
 			case DLL_THREAD_ATTACH:
 			 // Do thread-specific initialization.
 				break;
@@ -50,7 +50,6 @@ public:
 			 // Perform any necessary cleanup.
 				_ASSERT_EXPR(_CrtDumpMemoryLeaks() == FALSE, L"EvcSolver memory leak detected");
 				break;
-*/
 		}
 		return TRUE;  // Successful DLL_PROCESS_ATTACH.
 	}
