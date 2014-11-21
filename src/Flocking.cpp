@@ -27,7 +27,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	speedLimit = 0.0;
 
 	// build the path iterator and upcoming vertices
-	if (FAILED(hr = myPath->Front()->pline->get_FromPoint(&MyLocation)))
+	if (FAILED(hr = myPath->front()->pline->get_FromPoint(&MyLocation)))
 	{
 		OutputDebugString(L"FlockingObject - get_FromPoint: failed to get start point.");
 	}
@@ -65,7 +65,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 
 	// finish line construction
 	IPointPtr point;
-	IPointCollectionPtr pcollect = myPath->Back()->pline;
+	IPointCollectionPtr pcollect = myPath->back()->pline;
 	long pointCount = 0;
 
 	if (FAILED(hr = pcollect->get_PointCount(&pointCount)))
@@ -101,7 +101,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	bool possibleCollision = true;
 	IPointPtr p = 0;
 	double x2, y2, step = myVehicle->radius() * 4.0;
-	((IPointCollectionPtr)(myPath->Front()->pline))->get_Point(1, &p);
+	((IPointCollectionPtr)(myPath->front()->pline))->get_Point(1, &p);
 	p->QueryCoords(&x2, &y2);
 
 	OpenSteer::Vec3 loc(x1, y1, 0.0);
@@ -115,7 +115,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 	{
 		// Same group check or share same start edge and near each other
 		if ((wcscmp((*it)->GroupName.bstrVal, GroupName.bstrVal) == 0) ||
-			(myPath->Front()->Edge->EID == (*it)->myPath->Front()->Edge->EID &&
+			(myPath->front()->Edge->EID == (*it)->myPath->front()->Edge->EID &&
 			OpenSteer::Vec3::distance(loc, (*it)->myVehicle->position()) <= myProfile->CloseNeighborDistance))
 			myNeighborVehicles.push_back((*it)->myVehicle);
 	}
@@ -146,14 +146,14 @@ HRESULT FlockingObject::loadNewEdge(void)
 
 		if (initPathIterator)
 		{
-			pathSegIt = myPath->Begin();
+			pathSegIt = myPath->cbegin();
 			initPathIterator = false;
 			MyStatus = FLOCK_OBJ_STAT_MOVE;
 		}
 		else pathSegIt++;
 
 		// check if any edge is left
-		if (pathSegIt == myPath->End())
+		if (pathSegIt == myPath->cend())
 		{
 			MyStatus = FLOCK_OBJ_STAT_END;
 			return S_OK;
@@ -527,7 +527,7 @@ void FlockingEnviroment::GetResult(std::vector<FlockingLocationPtr> ** History, 
 double FlockingEnviroment::PathLength(EvcPathPtr path)
 {
 	double len = 0.0, temp = 0.0;
-	for (EvcPath::const_iterator pathItr = path->Begin(); pathItr != path->End(); pathItr++)
+	for (EvcPath::const_iterator pathItr = path->cbegin(); pathItr != path->cend(); pathItr++)
 	{
 		(*pathItr)->pline->get_Length(&temp);
 		len += temp;

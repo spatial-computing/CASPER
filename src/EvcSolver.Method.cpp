@@ -235,8 +235,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (!BetterSafeZone && foundRestrictedSafezone) ++EvacueesWithRestrictedSafezone;
 
 					// Generate path for this evacuee if any found
-					GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired);
-					MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->back()->GetReserveEvacuationCost());
+					if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))
+						MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->back()->GetReserveEvacuationCost());
 #ifdef DEBUG
 					std::wostringstream os_;
 					os_.precision(3);
@@ -836,7 +836,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdge
 	return hr;
 }
 
-void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
+bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
 {
 	double leftCap, edgePortion;
 	EvcPath * path = NULL;
@@ -895,8 +895,8 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 				}
 
 			// path can be empty if the source and destination are the same vertex
-			PathSegmentPtr lastAdded = path->Front();
-			if (!path->Empty() && IsEqualNAEdgePtr(lastAdded->Edge, finalVertex->GetBehindEdge()))
+			PathSegmentPtr lastAdded = path->front();
+			if (!path->empty() && IsEqualNAEdgePtr(lastAdded->Edge, finalVertex->GetBehindEdge()))
 			{
 				lastAdded->SetFromRatio(1.0 - edgePortion);
 			}
@@ -905,15 +905,15 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 				path->AddSegment(solverMethod, new DEBUG_NEW_PLACEMENT PathSegment(finalVertex->GetBehindEdge(), 1.0 - edgePortion, 1.0));
 			}
 		}
-		if (path->Empty())
+		if (path->empty())
 		{
 			delete path;
 			path = NULL;
 		}
 		else
 		{
+			path->shrink_to_fit();
 			currentEvacuee->Paths->push_front(path);
-			// currentEvacuee->PredictedCost = path->GetEvacuationCost();
 			BetterSafeZone->Reserve(path->GetRoutedPop());
 		}
 	}
@@ -921,6 +921,7 @@ void EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 	{
 		populationLeft = 0.0; // since no path could be found for this evacuee, we assume the rest of the population at this location have no path as well
 	}
+	return path != NULL;
 }
 
 // This is where i figure out what is the smallest population that I should route (or try to route)

@@ -785,7 +785,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		IFeatureCursorPtr ipFeatureCursor;
 		IFeatureBufferPtr ipFeatureBuffer;
 		PathSegment * pathSegment;
-		EvcPath::const_iterator psit;
 		IFeatureClassPtr ipFlocksFC(ipFlocksNAClass);
 		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex, statFieldIndex, ptimeFieldIndex;
 		time_t baseTime = time(NULL), thisTime = 0;
@@ -804,7 +803,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++)
 				{
 					path = *tpit;
-					for (psit = path->Begin(); psit != path->End(); psit++)
+					for (auto psit = path->cbegin(); psit != path->cend(); ++psit)
 					{
 						pathSegment = *psit;
 						if (FAILED(hr = pathSegment->pline->Project(ipNAContextPC))) return hr;
@@ -859,7 +858,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++)
 			{
 				path = *tpit;
-				for (psit = path->Begin(); psit != path->End(); psit++)
+				for (auto psit = path->cbegin(); psit != path->cend(); ++psit)
 				{
 					pathSegment = *psit;
 					if (FAILED(hr = pathSegment->pline->Project(ipNAContextSR))) return hr;

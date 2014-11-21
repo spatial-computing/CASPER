@@ -78,10 +78,10 @@ for ExpName in ExpNames:
 
             # going to export route and edge sub_layers
             solved_layers = arcpy.mapping.ListLayers(lyr)
-            arcpy.CopyFeatures_management(solved_layers[4], Input_Dataset + "\\" + lyr.name + "_Routes_" + ExpName[0]) #Routes
+            arcpy.CopyFeatures_management(solved_layers[4], Input_Dataset + "\\Routes_" + lyr.name + "_" + ExpName[0]) #Routes
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
-            arcpy.CopyFeatures_management(solved_layers[5], Input_Dataset + "\\" + lyr.name + "_EdgeStat_" + ExpName[0]) #EdgeStat
+            arcpy.CopyFeatures_management(solved_layers[5], Input_Dataset + "\\EdgeStat_"+ lyr.name + "_" + ExpName[0]) #EdgeStat
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
             del solved_layers

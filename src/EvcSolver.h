@@ -300,7 +300,7 @@ private:
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, NAEdgeContainer *, NAEdgeContainer *, double, EvcSolverMethod) const;
 	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
 	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, NAEdgeContainer *) const;
-	void    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
+	bool    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	void    UpdatePeakMemoryUsage();
 
 	esriNAOutputLineType	m_outputLineType;

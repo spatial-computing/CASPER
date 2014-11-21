@@ -45,7 +45,7 @@ public:
 typedef PathSegment * PathSegmentPtr;
 class Evacuee;
 
-class EvcPath : private std::list<PathSegmentPtr>
+class EvcPath : private std::deque<PathSegmentPtr>
 {
 private:
 	double  RoutedPop;
@@ -54,20 +54,23 @@ private:
 	double  OrginalCost;
 	int     Order;
 	Evacuee * myEvc;
+	typedef std::deque<PathSegmentPtr> baselist;
 
 public:
-	typedef std::list<PathSegmentPtr>::const_iterator  const_iterator;
-	typedef std::list<PathSegmentPtr>::const_reference const_reference;
+	using baselist::shrink_to_fit;
+	using baselist::front;
+	using baselist::back;
+	using baselist::cbegin;
+	using baselist::cend;
+	using baselist::empty;
+	using baselist::const_iterator;
 
-	const_reference Front()                  const { return this->front();         }
-	const_iterator Begin()                   const { return this->begin();         }
-	const_iterator End()                     const { return this->end();           }
 	inline double GetRoutedPop()             const { return RoutedPop;             }
 	inline double GetReserveEvacuationCost() const { return ReserveEvacuationCost; }
 	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
 	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
 
-	EvcPath(double routedPop, int order, Evacuee * evc) : std::list<PathSegmentPtr>()
+	EvcPath(double routedPop, int order, Evacuee * evc) : baselist()
 	{
 		RoutedPop = routedPop;
 		FinalEvacuationCost = 0.0;
@@ -85,9 +88,6 @@ public:
 	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
 	bool DoesItNeedASecondChance(double ThreasholdForReserveConst, double ThreasholdForPredictionCost, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
 
-	bool           Empty() const { return std::list<PathSegmentPtr>::empty(); }
-	PathSegmentPtr Front()       { return std::list<PathSegmentPtr>::front(); }
-	PathSegmentPtr Back()        { return std::list<PathSegmentPtr>::back();  }
 	inline const int & GetKey()  const { return Order; }
 	friend inline bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
 

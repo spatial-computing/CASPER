@@ -116,6 +116,7 @@ using ATL::CRegistryVirtualMachine;
 #include <Windowsx.h>
 #include <psapi.h>
 #include <vector>
+#include <deque>
 #include <stack>
 #include <unordered_map>
 #include <fstream>
