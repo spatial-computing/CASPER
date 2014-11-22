@@ -1011,7 +1011,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ATL::CString performanceMsg, CARMALoopMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg, iterationMsg;
 	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 
-	initMsg.Format(_T("%d routes are generated from the evacuee point(s) with ArcCASPER version %s."), tempPathList->size(), _T(GIT_DESCRIBE));
+	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList->size());
 
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), countCARMALoops, carmaSec, max(0, mem));
 

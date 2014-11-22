@@ -3,8 +3,8 @@
 # LoadPointsAndSolve.py
 # Author:       Kaveh Shahabi
 # Date:         Nov 14, 2014
-# Usage:        LoadPointsAndSolve <Experiments> <Input_Dataset> <Evacuation_Feature_Class_Prefix> <Safe_Zone_Feature_Class_Prefix> <PubCASPER> 
-# Description:  Iterates over rows of a table (e.g. experiment names), loads the right points from a dataset into the NA layer, then solves all layers.
+# Usage:        LoadPointsAndSolve <scenarios> <Input_Dataset> <Evacuation_Feature_Class_Prefix> <Safe_Zone_Feature_Class_Prefix> <PubCASPER> 
+# Description:  Iterates over rows of a table (e.g. scenario names), loads the right points from a dataset into the NA layer, then solves all layers.
 #               At the end exports the NA sub layers back to the same dataset.
 # ---------------------------------------------------------------------------
 
@@ -24,9 +24,9 @@ else:
 arcpy.env.overwriteOutput = True
 
 # Script arguments
-Experiments = arcpy.GetParameterAsText(0)
-if Experiments == '#' or not Experiments:
-    raise ValueError("Experiments table is missing")
+scenarios = arcpy.GetParameterAsText(0)
+if scenarios == '#' or not scenarios:
+    raise ValueError("scenarios table is missing")
 
 Input_Dataset = arcpy.GetParameterAsText(1)
 if Input_Dataset == '#' or not Input_Dataset:
@@ -47,17 +47,17 @@ if Input_Layer_Location == '#' or not Input_Layer_Location:
 # Set current workspace
 arcpy.env.workspace = Input_Dataset
 
-# laod the experiments table
-ExpNames = arcpy.da.TableToNumPyArray(Experiments, 'ShortName')
+# laod the scenarios table
+ScenarioNames = arcpy.da.TableToNumPyArray(scenarios, 'ShortName')
 
 # load layer file
 lyrFile = arcpy.mapping.Layer(Input_Layer_Location)
-totalSolves = ExpNames.shape[0] * len(arcpy.mapping.ListLayers(lyrFile)) / 8
-arcpy.SetProgressor("step", "Solving {0} experiment(s)".format(ExpNames.shape[0]), 0, totalSolves, 1)
+totalSolves = ScenarioNames.shape[0] * len(arcpy.mapping.ListLayers(lyrFile)) / 8
+arcpy.SetProgressor("step", "Solving {0} experiments(s)".format(ScenarioNames.shape[0]), 0, totalSolves, 1)
 
-# loop over all experiments, import them into each NA layer
-for ExpName in ExpNames:
-    # arcpy.AddMessage("Importing experiment: " + ExpName[0])
+# loop over all scenarios, import them into each NA layer
+for ExpName in ScenarioNames:
+    # arcpy.AddMessage("Importing scenario: " + ExpName[0])
     EVC = Input_Dataset + '\\' + Evacuation_Feature_Class_Prefix + ExpName[0]
     SAFE = Input_Dataset + '\\' + Safe_Zone_Feature_Class_Prefix + ExpName[0]
 
@@ -66,9 +66,9 @@ for ExpName in ExpNames:
         desc = arcpy.Describe(Input_Layer_Location + "\\" + lyr.longName)
         # only solve if the layer is a network analysis layer
         if desc.dataType == "NALayer":
-            arcpy.SetProgressorLabel("Solving " + lyr.name + " with experiment " + ExpName[0] + "...")
+            arcpy.SetProgressorLabel("Solving " + lyr.name + " with scenario " + ExpName[0] + "...")
             # load input locations
-            arcpy.AddMessage("loading input points to " + lyr.name + " from experiment " + ExpName[0])
+            arcpy.AddMessage("loading input points to " + lyr.name + " from scenario " + ExpName[0])
             arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name OBJECTID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
@@ -77,7 +77,7 @@ for ExpName in ExpNames:
                 arcpy.AddReturnMessage(msg)
 
             # solve the layer
-            arcpy.AddMessage("Solving NALayer " + lyr.name + " with experiment " + ExpName[0])
+            arcpy.AddMessage("Solving NALayer " + lyr.name + " with scenario " + ExpName[0])
             arcpy.Solve_na(lyr, "SKIP", "TERMINATE")
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
@@ -91,7 +91,7 @@ for ExpName in ExpNames:
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
             del solved_layers
-            arcpy.AddMessage("Solved " + lyr.name + " with experiment " + ExpName[0])
+            arcpy.AddMessage("Solved " + lyr.name + " with scenario " + ExpName[0])
             arcpy.SetProgressorPosition()
         del desc
 

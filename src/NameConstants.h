@@ -13,6 +13,12 @@
 
 // EvcSolver Names
 
+#ifdef _WIN64
+#define PROJ_ARCH                                   L"x86_64"
+#else
+#define PROJ_ARCH                                   L"x86"
+#endif
+
 #define PROJ_NAME                                   L"CASPER for ArcGIS"
 #define CS_NAME                                     L"Evacuation Solver"
 #define CS_DISPLAY_NAME                             L"Evacuation Routing"
