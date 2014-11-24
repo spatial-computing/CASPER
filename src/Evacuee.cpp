@@ -73,7 +73,7 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveConst, double T
 
 		for (const auto & pair : FreqOfOverlaps)
 		{
-			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > ReserveEvacuationCost)
+			if (pair.first->myEvc->Status == EvacueeStatus::Processed && FinalEvacuationCost / pair.second > ThreasholdForReserveConst)
 			{
 				AffectingList.push_back(pair.first->myEvc);
 				pair.first->myEvc->Status = EvacueeStatus::Unprocessed;
@@ -382,12 +382,27 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 
 void NAEvacueeVertexTable::LoadSortedEvacuees(std::vector<EvacueePtr> * SortedEvacuees) const
 {
+#ifdef TRACE
+	std::ofstream f;
+	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+	f << "List of unreachable evacuees =";
+#endif
 	for (const auto & evc : *this)
 		for (const auto & e : evc.second)
 		{
-			if (e->PredictedCost >= FLT_MAX) e->Status = EvacueeStatus::Unreachable;
+			if (e->PredictedCost >= FLT_MAX)
+			{
+				e->Status = EvacueeStatus::Unreachable;
+#ifdef TRACE
+				f << ' ' << ATL::CW2A(e->Name.bstrVal);
+#endif
+			}
 			else SortedEvacuees->push_back(e);
 		}
+#ifdef TRACE
+	f << std::endl;
+	f.close();
+#endif
 }
 
 SafeZone::~SafeZone() { delete Vertex; }

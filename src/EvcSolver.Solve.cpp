@@ -516,6 +516,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (ipStepProgressor) if (FAILED(hr = ipStepProgressor->Show())) return hr;
 	std::vector<unsigned int> CARMAExtractCounts;
 
+	/// TODO the plan is to move away from manual memory allocations on the heap and
+	/// use c++11 smart pointers. This should give me better RAII and hence relax some of my contrains
+	/// includding problerms with error handleing
+
 	///////////////////////////////////////
 	// this will call the core part of the algorithm.
 	try
@@ -524,8 +528,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		UpdatePeakMemoryUsage();
 		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts, ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration);
 	}
-	catch (std::exception & ex)
+	catch (const std::exception & ex)
 	{
+		/// TODO a better approch is to not catch exceptions at all and let
+		// the caller (ArcObjects) catch it and display the message.
+		// But if that was not possible then we have to somehow backup the exception what() then use it with AtlReportError
+		// hr = ATL::AtlReportError(this->GetObjectCLSID(), _T(ex.what()), IID_INASolver);
 		hr = -1L * abs(ERROR_UNHANDLED_EXCEPTION);
 		(ex);
 		#ifdef TRACE
@@ -544,7 +552,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	if (FAILED(hr))
 	{
-		// it either failed or canceled. clean up and then return.
+		// it either failed, thrown, or canceled. clean up and then return.
 		delete Evacuees;
 
 		// releasing all internal objects

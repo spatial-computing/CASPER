@@ -69,7 +69,7 @@ for ExpName in ScenarioNames:
             arcpy.SetProgressorLabel("Solving " + lyr.name + " with scenario " + ExpName[0] + "...")
             # load input locations
             arcpy.AddMessage("loading input points to " + lyr.name + " from scenario " + ExpName[0])
-            arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name OBJECTID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
+            arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name UID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
             arcpy.AddLocations_na(lyr, "Zones", SAFE, "Name OBJECTID #;Capacity Capacity #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")

@@ -377,6 +377,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	EvacueePairs->InsertReachable(Evacuees, CarmaSortCriteria); // this is very important to be 'CarmaSortCriteria' with capital 'C'
 	SortedEvacuees->clear();
 
+#ifdef TRACE
+	std::ofstream f;
+#endif
+
     if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) goto END_OF_FUNC;
 	ipCurrentJunction = ipJunctionElement;
 
@@ -573,7 +577,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 	ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod); 
 
 #ifdef TRACE
-	std::ofstream f;
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 	f << "CARMA visited edges = " << closedSize << std::endl;
 	f.close();
