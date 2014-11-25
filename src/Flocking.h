@@ -167,7 +167,7 @@ private:
 public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval, double InitDelayCostPerPop);
 	virtual ~FlockingEnviroment(void);
-	void Init(EvacueeList *, INetworkQueryPtr, FlockProfile *, bool TwoWayRoadsShareCap);
+	void Init(std::shared_ptr<EvacueeList>, INetworkQueryPtr, FlockProfile *, bool TwoWayRoadsShareCap);
 	HRESULT RunSimulation(IStepProgressorPtr, ITrackCancelPtr, double predictedCost);
 	void GetResult(std::vector<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft);
 	double static PathLength(EvcPathPtr path);

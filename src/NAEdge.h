@@ -100,6 +100,9 @@ private:
 	NAEdgeTable * cacheAgainst;
 
 public:
+	NAEdgeMap(const NAEdgeMap & that) = delete;
+	NAEdgeMap & operator=(const NAEdgeMap &) = delete;
+
 	NAEdgeMap(void)
 	{
 		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
@@ -223,6 +226,7 @@ public:
 	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop,
 		EvcTrafficModel model, INetworkForwardStarExPtr _ipForwardStar, INetworkForwardStarExPtr _ipBackwardStar, INetworkQueryPtr _ipNetworkQuery, HRESULT & hr)
 	{
+		hr = S_OK;
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
 		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();

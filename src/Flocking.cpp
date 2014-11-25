@@ -378,7 +378,7 @@ FlockingEnviroment::~FlockingEnviroment(void)
 	delete collisions;
 }
 
-void FlockingEnviroment::Init(EvacueeList * evcList, INetworkQueryPtr ipNetworkQuery, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
+void FlockingEnviroment::Init(std::shared_ptr<EvacueeList> evcList, INetworkQueryPtr ipNetworkQuery, FlockProfile * flockProfile, bool TwoWayRoadsShareCap)
 {
 	int i = 0, size = 0, id = 0;
 	double pathLen = 0.0;

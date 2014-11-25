@@ -23,7 +23,7 @@ bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2)
 	return e1->Paths->front()->Order > e2->Paths->front()->Order;
 }
 
-void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::vector<EvcPathPtr> * detachedPaths, NAEdgeMap * touchedEdges)
+void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, NAEdgeMap * touchedEdges)
 {
 	// It's time to clean up the evacuee object and reset it for the next iteration
 	// To do this we first collect all its paths, take away all edge reservations, and then reset some of its fields.
@@ -326,7 +326,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance)
 	shrink_to_fit();
 }
 
-void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir)
+void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir)
 {
 	for(const auto & evc : *list)
 	{
@@ -344,7 +344,7 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 	}
 }
 
-void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, std::vector<EvacueePtr> * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method)
+void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAEdgeContainer> leafs, double pop, EvcSolverMethod method)
 {
 	const auto & pair = find(myVertex->EID);
 	NAVertexPtr foundVertex;
@@ -380,7 +380,7 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 	}
 }
 
-void NAEvacueeVertexTable::LoadSortedEvacuees(std::vector<EvacueePtr> * SortedEvacuees) const
+void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees) const
 {
 #ifdef TRACE
 	std::ofstream f;
@@ -425,7 +425,7 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 	return cost;
 }
 
-HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity)
+HRESULT SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity)
 {
 	HRESULT hr = S_OK;
 	restricted = capacity == 0.0 && costPerDensity > 0.0;
@@ -436,6 +436,41 @@ HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool 
 		restricted = true;
 		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj))) return hr;
 		for (const auto & currentEdge : *adj) if (IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
+	}
+	return hr;
+}
+
+void SafeZoneTable::insert(SafeZonePtr z)
+{
+	auto insertRet = std::unordered_map<long, SafeZonePtr>::insert(std::pair<long, SafeZonePtr>(z->Vertex->EID, z));
+	if (!insertRet.second) delete z;
+}
+HRESULT SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> ecache, NAVertexPtr myVertex, NAEdgePtr myEdge, NAVertexPtr & finalVertex, double & TimeToBeat, SafeZonePtr & BetterSafeZone, double costPerDensity,
+	double population2Route, EvcSolverMethod solverMethod, double & globalDeltaCost, bool & foundRestrictedSafezone) const
+{
+	HRESULT hr = S_OK;
+	bool restricted = false;
+	auto i = find(myVertex->EID);
+
+	if (i != end())
+	{
+		// Handle the last turn restriction here ... and the remaining capacity-aware cost.
+		if (FAILED(hr = i->second->IsRestricted(ecache, myEdge, restricted, costPerDensity))) return hr;
+		if (!restricted)
+		{
+			double costLeft = i->second->SafeZoneCost(population2Route, solverMethod, costPerDensity, &globalDeltaCost);
+			if (TimeToBeat > costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost)
+			{
+				BetterSafeZone = i->second;
+				TimeToBeat = costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost;
+				finalVertex = myVertex;
+			}
+		}
+		else
+		{
+			// found a safe zone but it was restricted
+			foundRestrictedSafezone = true;
+		}
 	}
 	return hr;
 }
