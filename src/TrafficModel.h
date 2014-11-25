@@ -29,7 +29,9 @@ public:
 	double CriticalDensPerCap;
 
 	TrafficModel(EvcTrafficModel Model, double _criticalDensPerCap, double _saturationDensPerCap, double _initDelayCostPerPop);
-	~TrafficModel(void);
+	virtual ~TrafficModel(void);
+	TrafficModel(const TrafficModel & that) = delete;
+	TrafficModel & operator=(const TrafficModel &) = delete;
 	double GetCongestionPercentage(double capacity, double flow);
 	double LeftCapacityOnEdge(double capacity, double reservedFlow, double originalEdgeCost) const;
 	double GetCacheHitPercentage() const { return 100.0 * cacheHit / (cacheHit + cacheMiss); }

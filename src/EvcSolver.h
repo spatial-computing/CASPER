@@ -355,7 +355,7 @@ _COM_SMARTPTR_TYPEDEF(IEvcSolver, __uuidof(IEvcSolver));
 class CancelTrackerHelper
 {
 public:
-	~CancelTrackerHelper()
+	virtual ~CancelTrackerHelper()
 	{
 		if (m_ipTrackCancel && m_ipProgressor)
 		{

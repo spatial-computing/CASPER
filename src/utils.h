@@ -43,8 +43,15 @@ private:
 	inline void check(S index) const { if (index >= mySize || index < ZeroSize) throw std::out_of_range("index is out of range for ArrayList"); }
 
 public:
-	ArrayList(S size = ZeroSize) : mySize(size), data(NULL) { Init(size); }
-	virtual ~ArrayList() { if (data) delete[] data; }
+	ArrayList(S size = ZeroSize) : mySize(size), data(nullptr) { Init(size); }
+	virtual ~ArrayList() { if (data) delete [] data; }
+	ArrayList & operator=(const ArrayList &) = delete;
+
+	ArrayList(const ArrayList & that) : mySize(that.mySize), data(nullptr)
+	{
+		Init(mySize);
+		for (S i = ZeroSize; i < mySize; ++i) data[i] = that.data[i];
+	}
 
 	inline S    size()  const { return mySize; }
 	inline bool empty() const { return mySize == ZeroSize; }
@@ -59,7 +66,7 @@ public:
 	{
 		mySize = size;
 		if (data) delete[] data;
-		if (mySize > ZeroSize) data = new DEBUG_NEW_PLACEMENT T[mySize]; else data = NULL;
+		if (mySize > ZeroSize) data = new DEBUG_NEW_PLACEMENT T[mySize]; else data = nullptr;
 	}
 
 	class Const_Iterator
@@ -116,8 +123,15 @@ protected:
 	}
 
 public:
-	GrowingArrayList(S cap = ZeroSize) : _size(ZeroSize), data(NULL), capacity(ZeroSize) { grow(cap); }
+	GrowingArrayList(S cap = ZeroSize) : _size(ZeroSize), data(nullptr), capacity(ZeroSize) { grow(cap); }
 	virtual ~GrowingArrayList() { if (data) delete[] data; }
+	GrowingArrayList & operator=(const GrowingArrayList &) = delete;
+
+	GrowingArrayList(const GrowingArrayList & that) : _size(that._size), capacity(ZeroSize), data(nullptr)
+	{
+		shrink_or_grow(that.capacity);
+		for (S i = ZeroSize; i < _size; ++i) data[i] = that.data[i];
+	}
 
 	inline S    size()  const { return _size; }
 	inline bool empty() const { return _size == ZeroSize; }

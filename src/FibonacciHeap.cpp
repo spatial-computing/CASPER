@@ -17,27 +17,27 @@ HeapNode::HeapNode(HeapDataType * data, double key)
 {
 	this->data = data;
 	this->key = key;
-	parent = NULL;
-	children = NULL;
-	leftSibling = NULL;
-	rightSibling = NULL;
+	parent = nullptr;
+	children = nullptr;
+	leftSibling = nullptr;
+	rightSibling = nullptr;
 	rank = 0;
 }
 
 HeapNode::HeapNode()
 {
-	this->data = NULL;
+	this->data = nullptr;
 	this->key = 0.0;
-	parent = NULL;
-	children = NULL;
-	leftSibling = NULL;
-	rightSibling = NULL;
+	parent = nullptr;
+	children = nullptr;
+	leftSibling = nullptr;
+	rightSibling = nullptr;
 	rank = 0;
 }
 
 bool HeapNode::addChild(HeapNode * node)
 {
-	if(children != NULL)
+	if(children != nullptr)
 		children->addSibling(node);
 	else
 	{
@@ -52,12 +52,12 @@ bool HeapNode::addChild(HeapNode * node)
 bool HeapNode::addSibling(HeapNode * node)
 {
 	HeapNode * temp = rightMostSibling();
-	if(temp == NULL) return false;
+	if(temp == nullptr) return false;
 
 	temp->rightSibling = node;
 	node->leftSibling = temp;
 	node->parent = this->parent;
-	node->rightSibling = NULL;
+	node->rightSibling = nullptr;
 
 	if(parent) parent->rank++;
 
@@ -71,22 +71,22 @@ bool HeapNode::remove()
 		parent->rank--;
 		if(leftSibling) parent->children = leftSibling;
 		else if(rightSibling) parent->children = rightSibling;
-		else parent->children = NULL;
+		else parent->children = nullptr;
 	}
 
 	if(leftSibling) leftSibling->rightSibling = rightSibling;
 	if(rightSibling) rightSibling->leftSibling = leftSibling;
 
-	leftSibling = NULL;
-	rightSibling = NULL;
-	parent = NULL;
+	leftSibling = nullptr;
+	rightSibling = nullptr;
+	parent = nullptr;
 
 	return true;
 }
 
 HeapNode * HeapNode::leftMostSibling()
 {
-	if(this == NULL) return NULL;
+	if(this == nullptr) return nullptr;
 
 	HeapNode * temp = this;
 	while(temp->leftSibling) temp = temp->leftSibling;
@@ -95,7 +95,7 @@ HeapNode * HeapNode::leftMostSibling()
 
 HeapNode * HeapNode::rightMostSibling()
 {
-	if(this == NULL) return NULL;
+	if(this == nullptr) return nullptr;
 
 	HeapNode * temp = this;
 	while(temp->rightSibling) temp = temp->rightSibling;
@@ -109,7 +109,7 @@ HeapNode * HeapNode::rightMostSibling()
 FibonacciHeap::FibonacciHeap(double (*GetHeapKeyMethod)(const HeapDataType *))
 {
 	this->GetHeapKey = GetHeapKeyMethod;
-	minRoot = NULL;
+	minRoot = nullptr;
 	nodeTable = new DEBUG_NEW_PLACEMENT HeapNodeTable();
 	rootListByRank = new DEBUG_NEW_PLACEMENT HeapNodePtr[100];
 	ResetMaxHeapKey();
@@ -124,12 +124,12 @@ FibonacciHeap::~FibonacciHeap()
 
 bool FibonacciHeap::IsEmpty()
 {
-	return (minRoot == NULL);
+	return (minRoot == nullptr);
 }
 
 bool FibonacciHeap::Insert(HeapDataType * node)
 {
-	if(node == NULL) return false;
+	if(node == nullptr) return false;
 	HeapNode * out = nodeTable->Find(node);
 	if (out)
 	{
@@ -141,7 +141,7 @@ bool FibonacciHeap::Insert(HeapDataType * node)
 		HeapNode * n = new DEBUG_NEW_PLACEMENT HeapNode(node, GetHeapKey(node));
 		maxHeakKeyValue = max(maxHeakKeyValue, n->key);
 
-		if(minRoot == NULL) minRoot = n;
+		if(minRoot == nullptr) minRoot = n;
 		else
 		{
 			minRoot->addSibling(n);
@@ -161,10 +161,10 @@ HeapDataType * FibonacciHeap::FindMin()
 HeapDataType * FibonacciHeap::DeleteMin()
 {
 	HeapNode * temp = minRoot->children->leftMostSibling();
-	HeapNode * nextTemp = NULL;
+	HeapNode * nextTemp = nullptr;
 
 	// Adding Children to root list
-	while(temp != NULL)
+	while(temp != nullptr)
 	{
 		nextTemp = temp->rightSibling; // Save next Sibling
 		temp->remove();
@@ -185,7 +185,7 @@ HeapDataType * FibonacciHeap::DeleteMin()
 			HeapDataType * out = minRoot->data;
 			minRoot->remove();
 			delete minRoot;
-			minRoot = NULL;
+			minRoot = nullptr;
 			nodeTable->Erase(out);
 			return out;
 		}
@@ -197,7 +197,7 @@ HeapDataType * FibonacciHeap::DeleteMin()
 	minRoot = temp;
 
 	// Initialize list of roots
-	for(int i = 0; i < 100; i++) rootListByRank[i] = NULL;
+	for(int i = 0; i < 100; i++) rootListByRank[i] = nullptr;
 
 	while(temp)
 	{
@@ -214,7 +214,7 @@ HeapDataType * FibonacciHeap::DeleteMin()
 bool FibonacciHeap::IsVisited(HeapDataType * vertex)
 {
 	HeapNode * out = nodeTable->Find(vertex);
-	return out != NULL;
+	return out != nullptr;
 }
 
 HRESULT FibonacciHeap::DecreaseKey(HeapDataType * edge)
@@ -229,7 +229,7 @@ HRESULT FibonacciHeap::DecreaseKey(HeapDataType * edge)
 	{
 		node->data = edge;
 		node->key = GetHeapKey(edge);
-		if(node->parent != NULL) // The vertex has a parent
+		if(node->parent != nullptr) // The vertex has a parent
 		{
 			// Remove vertex and add to root list
 			node->remove();
@@ -250,7 +250,7 @@ void FibonacciHeap::Clear()
 bool FibonacciHeap::link(HeapNode * root)
 {
 	// Insert Vertex into root list
-	if(rootListByRank[root->rank] == NULL)
+	if(rootListByRank[root->rank] == nullptr)
 	{
 		rootListByRank[root->rank] = root;
 		return false;
@@ -259,20 +259,20 @@ bool FibonacciHeap::link(HeapNode * root)
 	{
 		// Link the two roots
 		HeapNode * linkVertex = rootListByRank[root->rank];
-		rootListByRank[root->rank] = NULL;
+		rootListByRank[root->rank] = nullptr;
 
 		if((root->key < linkVertex->key) || root == minRoot)
 		{
 			linkVertex->remove();
 			root->addChild(linkVertex);
-			if(rootListByRank[root->rank] != NULL) link(root);
+			if(rootListByRank[root->rank] != nullptr) link(root);
 			else rootListByRank[root->rank] = root;
 		}
 		else
 		{
 			root->remove();
 			linkVertex->addChild(root);
-			if(rootListByRank[linkVertex->rank] != NULL) link(linkVertex);
+			if(rootListByRank[linkVertex->rank] != nullptr) link(linkVertex);
 			else rootListByRank[linkVertex->rank] = linkVertex;
 		}
 		return true;
@@ -297,12 +297,12 @@ void HeapNodeTable::Insert(HeapNodePtr node)
 
 HeapNodePtr HeapNodeTable::Find(HeapDataType * edge) const
 {
-	std::unordered_map<long, HeapNodePtr> * cache = NULL;
+	std::unordered_map<long, HeapNodePtr> * cache = nullptr;
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache  = cacheAgainst;
 
 	std::unordered_map<long, HeapNodePtr>::const_iterator it = cache->find(edge->EID);
-	HeapNodePtr o = NULL;
+	HeapNodePtr o = nullptr;
 	if (it != cache->end()) o = it->second;
 	return o;
 }

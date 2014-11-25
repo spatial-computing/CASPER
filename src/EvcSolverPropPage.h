@@ -37,11 +37,11 @@ public:
     m_dwTitleID = IDS_TITLEEvcSolverPROPPAGE;
     m_dwHelpFileID = IDS_HELPFILEEvcSolverPROPPAGE;
     m_dwDocStringID = IDS_DOCSTRINGEvcSolverPROPPAGE;
-	boldFont = NULL;
-	bigFont = NULL;
+	boldFont = nullptr;
+	bigFont = nullptr;
   }
 
-  ~EvcSolverPropPage()
+  virtual ~EvcSolverPropPage()
   {
 	  if (bigFont)  ::DeleteObject(bigFont);
 	  if (boldFont) ::DeleteObject(boldFont);

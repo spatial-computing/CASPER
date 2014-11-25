@@ -40,7 +40,7 @@ void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 ///////////////////////////////////////////////////////////////////////
 // NAEdge Methods
 
-NAEdge::NAEdge(const NAEdge& cpy)
+NAEdge::NAEdge(const NAEdge& cpy) : TreeNext(cpy.TreeNext), AdjacentForward(cpy.AdjacentForward), AdjacentBackward(cpy.AdjacentBackward)
 {
 	reservations = cpy.reservations;
 	NetEdge = cpy.NetEdge;
@@ -50,24 +50,19 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	ToVertex = cpy.ToVertex;
 	CleanCost = cpy.CleanCost;
 	TreePrevious = cpy.TreePrevious;
-	TreeNext = cpy.TreeNext;
-	AdjacentForward = cpy.AdjacentForward;
-	AdjacentBackward = cpy.AdjacentBackward;
 	myGeometry = cpy.myGeometry;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, const NAEdge * otherEdge, bool twoWayRoadsShareCap, std::list<EdgeReservationsPtr> & ResTable, TrafficModel * model)
 {
-	myGeometry = NULL;
-	TreePrevious = NULL;
+	myGeometry = nullptr;
+	TreePrevious = nullptr;
 	CleanCost = -1.0;
-	ToVertex = NULL;
+	ToVertex = nullptr;
 	this->NetEdge = edge;
 	VARIANT vcost, vcap;
 	float capacity = 1.0;
 	HRESULT hr = S_OK;
-	AdjacentForward = NULL;
-	AdjacentBackward = NULL;
 
 	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)))
 	{
@@ -82,9 +77,9 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, c
 
 	if (FAILED(hr = edge->get_EID(&EID)) ||	FAILED(hr = edge->get_Direction(&Direction)))
 	{
-		_ASSERT(hr == 0);
-		NetEdge = 0;
-		reservations = 0;
+		_ASSERT(hr == S_OK);
+		NetEdge = nullptr;
+		reservations = nullptr;
 		EID = -1;
 		throw std::exception("Something bad happened while looking up a network edge");
 	}
@@ -293,15 +288,15 @@ bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n1->EID =
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
 NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 {
-	NAEdgePtr n = 0;
+	NAEdgePtr n = nullptr;
 	long EID;
-	NAEdgeTable * cache = 0;
+	NAEdgeTable * cache = nullptr;
 	esriNetworkEdgeDirection dir, otherDir;
 	INetworkElementPtr ipEdgeElement;
 	INetworkEdgePtr edgeClone;
 
-	if (FAILED(edge->get_EID(&EID))) return 0;
-	if (FAILED(edge->get_Direction(&dir))) return 0;
+	if (FAILED(edge->get_EID(&EID))) return nullptr;
+	if (FAILED(edge->get_Direction(&dir))) return nullptr;
 
 	if (dir == esriNEDAlongDigitized)
 	{
@@ -320,9 +315,9 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 	{
 		if (!reuseEdgeElement)
 		{
-			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return 0;
+			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return nullptr;
 			edgeClone = ipEdgeElement;
-			if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return 0;
+			if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return nullptr;
 		}
 		else
 		{
@@ -371,7 +366,7 @@ NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
 	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
 	NAEdgeTableItr i = cache->find(eid);
 	if (i != cache->end()) return i->second;
-	else return NULL;
+	else return nullptr;
 }
 
 HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr> ** returnNeighbors)
@@ -380,8 +375,8 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 	long adjacentEdgeCount;
 	double fromPosition, toPosition;
 	INetworkForwardStarExPtr star;
-	ArrayList<NAEdgePtr> * neighbors = NULL;
-	INetworkEdgePtr netEdge = NULL;
+	ArrayList<NAEdgePtr> * neighbors = nullptr;
+	INetworkEdgePtr netEdge = nullptr;
 
 	if (Edge)
 	{
@@ -397,7 +392,7 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 	{
 		star = dir == QueryDirection::Forward ? ipForwardStar: ipBackwardStar;
 
-		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, NULL, ipAdjacencies))) return hr;
+		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, nullptr, ipAdjacencies))) return hr;
 		if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
 		neighbors->Init((UINT8)adjacentEdgeCount);
 		for (long i = 0; i < adjacentEdgeCount; i++)
@@ -415,7 +410,7 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 
 bool NAEdgeMap::Exist(long eid, esriNetworkEdgeDirection dir)
 {
-	NAEdgeTable * cache = 0;
+	NAEdgeTable * cache = nullptr;
 
 	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache = cacheAgainst;
@@ -435,7 +430,7 @@ void NAEdgeMap::GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Rout
 
 void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
 {
-	NAEdgeTable * cache = 0;
+	NAEdgeTable * cache = nullptr;
 	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache = cacheAgainst;
 
@@ -452,7 +447,7 @@ void NAEdgeMap::CallHowDirty(EvcSolverMethod method, double minPop2Route, bool e
 
 HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
 {
-	NAEdgeTable * cache = 0;
+	NAEdgeTable * cache = nullptr;
 
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache = cacheAgainst;
@@ -530,7 +525,7 @@ bool NAEdgeContainer::Exist(INetworkEdgePtr edge)
 	return Exist(eid, dir);
 }
 
-void NAEdgeContainer::Insert(NAEdgeContainer * clone)
+void NAEdgeContainer::Insert(std::shared_ptr<NAEdgeContainer> clone)
 {
 	for (NAEdgeIterator i = clone->cache->begin(); i != clone->cache->end(); i++) cache->insert(NAEdgeContainerPair(i->first, i->second));
 }

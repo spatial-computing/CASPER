@@ -26,7 +26,7 @@ STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, 
 	// load network attributes for later configuration and usage
 	// this will be used to load restriction and also to load proper impedance (cost) value
 
-	INetworkAttribute2Ptr networkAttrib = 0;
+	INetworkAttribute2Ptr networkAttrib = nullptr;
 	long count, i;
 	HRESULT hr = S_OK;
 	esriNetworkAttributeUsageType utype;
@@ -82,7 +82,7 @@ STDMETHODIMP EvcSolver::CreateLayer(INAContext * pContext, INALayer ** ppLayer)
 {
 	if (!ppLayer) return E_POINTER;
 
-	*ppLayer = 0;
+	*ppLayer = nullptr;
 
 	// This is an appropriate place to check if the user is licensed to run
 	// your solver and fail with "E_NOT_LICENSED" or similar.
@@ -123,7 +123,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	if (!contextName || !::wcslen(contextName)) return E_INVALIDARG;
 
 	HRESULT hr;
-	*ppNAContext = 0;
+	*ppNAContext = nullptr;
 
 	// CreateContext() is called by the command that creates the solver and
 	// initializes it.  Below we'll:
@@ -232,8 +232,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	ThreeGenCARMA = VARIANT_TRUE;
 
 	flockingSnapInterval = 0.1f;
-	flockingSimulationInterval = 0.01f;
-	initDelayCostPerPop = 0.01f;
+	flockingSimulationInterval = 0.01;
+	initDelayCostPerPop = 0.01;
 	CARMAPerformanceRatio = 0.1f;
 	selfishRatio = 0.0f;
 	iterativeRatio = 0.0f;
@@ -1140,7 +1140,7 @@ HRESULT EvcSolver::LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, IN
 
 	// Get a cursor on the table to loop through each row
 	ICursorPtr ipCursor;
-	if (FAILED(hr = pTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
+	if (FAILED(hr = pTable->Search(nullptr, VARIANT_TRUE, &ipCursor))) return hr;
 
 	// Create variables for looping through the cursor and setting up barriers
 	IRowESRI * ipRow;

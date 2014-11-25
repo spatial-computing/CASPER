@@ -43,13 +43,15 @@ private:
 	std::unordered_map<long, HeapNodePtr> * cacheAgainst;
 
 public:
+	HeapNodeTable(const HeapNodeTable & that) = delete;
+	HeapNodeTable & operator=(const HeapNodeTable &) = delete;
 	HeapNodeTable(void)
 	{
 		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, HeapNodePtr>();
 		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, HeapNodePtr>();
 	}
 
-	~HeapNodeTable(void)
+	virtual ~HeapNodeTable(void)
 	{
 		Clear();
 		delete cacheAlong;
@@ -80,7 +82,9 @@ public:
 	double GetMaxHeapKey(void) const { return maxHeakKeyValue; }
 	void ResetMaxHeapKey(void)       { maxHeakKeyValue = 0.0;  }
 
-	~FibonacciHeap();
+	virtual ~FibonacciHeap();
+	FibonacciHeap(const FibonacciHeap & that) = delete;
+	FibonacciHeap & operator=(const FibonacciHeap &) = delete;
 
 	bool IsEmpty();
 	void Clear();

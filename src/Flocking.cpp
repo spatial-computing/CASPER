@@ -99,7 +99,7 @@ void FlockingObject::GetMyInitLocation(std::vector<FlockingObject *> * neighbors
 {
 	myNeighborVehicles.clear();
 	bool possibleCollision = true;
-	IPointPtr p = 0;
+	IPointPtr p = nullptr;
 	double x2, y2, step = myVehicle->radius() * 4.0;
 	((IPointCollectionPtr)(myPath->front()->pline))->get_Point(1, &p);
 	p->QueryCoords(&x2, &y2);
@@ -139,9 +139,9 @@ HRESULT FlockingObject::loadNewEdge(void)
 	if (newEdgeRequestFlag)
 	{
 		// convert the path to Steer Library format
-		IPointCollectionPtr pcollect = 0;
+		IPointCollectionPtr pcollect = nullptr;
 		long pointCount = 0, i = 0;
-		IPointPtr p = 0;
+		IPointPtr p = nullptr;
 		double x, y;
 
 		if (initPathIterator)
@@ -184,7 +184,7 @@ HRESULT FlockingObject::loadNewEdge(void)
 		if (FAILED(hr = (*pathSegIt)->pline->get_Length(&speedLimit))) return hr;
 		speedLimit = speedLimit / (*pathSegIt)->Edge->OriginalCost;
 
-		if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(0, nextVertex))) return hr;
+		if (FAILED(hr = (*pathSegIt)->Edge->NetEdge->QueryJunctions(nullptr, nextVertex))) return hr;
 
 		// load new edge points into the steer library
 		myVehiclePath.initialize(pointCount, libpoints, (*pathSegIt)->Edge->OriginalCapacity() * myProfile->Radius * 1.2, false);
@@ -416,7 +416,7 @@ void FlockingEnviroment::Init(std::shared_ptr<EvacueeList> evcList, INetworkQuer
 HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, ITrackCancelPtr pTrackCancel, double predictedCost)
 {
 	movingObjectLeft = true;
-	FlockingObjectPtr fo = NULL;
+	FlockingObjectPtr fo = nullptr;
 	FLOCK_OBJ_STAT newStat, oldStat;
 	double nextSnapshot = 0.0, minDistLeft = maxPathLen + 1.0, maxDistLeft = 0.0, distLeft = 0.0, progressValue = 0.0;
 	long lastReportedProgress = 0l;

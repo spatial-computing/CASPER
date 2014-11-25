@@ -28,12 +28,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	#ifdef TRACE
 	std::ofstream f;
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-	time_t curr = time(0);
+	time_t curr = time(NULL);
 	char timeBuff[50];
 	ctime_s(timeBuff, 50, &curr);
 	f << "Trace start: " << timeBuff << std::endl;
 	f.close();
 	#endif
+
+	_ASSERT_EXPR(NULL == nullptr, L"checking if c++11 nullptr == NULL returns boolean true");
 
 	HRESULT hr = S_OK;
 	double globalEvcCost = -1.0, carmaSec = 0.0;
@@ -41,7 +43,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// init memory usage function and set the base
 	peakMemoryUsage = 0l;
-	hProcessPeakMemoryUsage = NULL;
+	hProcessPeakMemoryUsage = nullptr;
 	UpdatePeakMemoryUsage();
 	SIZE_T baseMemoryUsage = peakMemoryUsage;
 	bool exportEdgeStat = VarExportEdgeStat == VARIANT_TRUE;
@@ -115,17 +117,17 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
 
-	ipUnk = NULL;
+	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
-	bool ExportRouteEdges = ipUnk != NULL;
+	bool ExportRouteEdges = ipUnk != nullptr;
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
 	if (ExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
 
-	ipUnk = NULL;
+	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
 	INAClassPtr ipFlocksNAClass(ipUnk);
-	if (flockingEnabled == VARIANT_TRUE && ipUnk == NULL) flockingEnabled = VARIANT_FALSE;
-	if (ipFlocksNAClass != NULL) { if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr; }
+	if (flockingEnabled == VARIANT_TRUE && ipUnk == nullptr) flockingEnabled = VARIANT_FALSE;
+	if (ipFlocksNAClass != nullptr) { if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr; }
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Setup the Network Forward Star for traversal
@@ -160,7 +162,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipForwardStar))) return hr;
 	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipBackwardStar))) return hr;
 
-	INetworkAttribute2Ptr networkAttrib = 0;
+	INetworkAttribute2Ptr networkAttrib = nullptr;
 	VARIANT_BOOL useRestriction;
 
 	// loading restriction attributes into the forward star. this will enforce all available restrictions.
@@ -217,7 +219,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr)) return hr;
 
 	// Vertex table structures
-	auto safeZoneList = std::shared_ptr<SafeZoneTable>(new DEBUG_NEW_PLACEMENT SafeZoneTable());
+	auto safeZoneList = std::shared_ptr<SafeZoneTable>(new DEBUG_NEW_PLACEMENT SafeZoneTable(100));
 	INetworkEdgePtr ipEdge(ipElement);
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
 	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID, curbSideIndex = -1;
@@ -242,7 +244,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Get a cursor on the zones table to loop through each row
 	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CAP), &capFieldIndex))) return hr;
 	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CURBAPPROACH), &curbSideIndex))) return hr;
-	if (FAILED(hr = ipZonesTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
+	if (FAILED(hr = ipZonesTable->Search(nullptr, VARIANT_TRUE, &ipCursor))) return hr;
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
 		ipNALocationObject = ipRow;
@@ -299,7 +301,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				if (elementType == esriNETJunction)
 				{
 					if (FAILED(hr = ipForwardStar->get_IsRestricted(ipElement, &isRestricted))) return hr;
-					if (!isRestricted) safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipElement, 0, 0, cap));
+					if (!isRestricted) safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipElement, nullptr, 0, cap));
 				}
 
 				// If the element is an edge, then we must check the fromPosition and toPosition
@@ -323,7 +325,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
+							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge, true), posAlong, cap));
 						}
 					}
@@ -340,7 +342,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
+							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 
 							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge, true), toPosition - posAlong, cap));
 						}
@@ -352,8 +354,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Get a cursor on the Evacuee points table to loop through each row
 	long evacueeCount;
-	if (FAILED(hr = ipEvacueePointsTable->Search(NULL, VARIANT_TRUE, &ipCursor))) return hr;
-	if (FAILED(hr = ipEvacueePointsTable->RowCount(NULL, &evacueeCount))) return hr;
+	if (FAILED(hr = ipEvacueePointsTable->Search(nullptr, VARIANT_TRUE, &ipCursor))) return hr;
+	if (FAILED(hr = ipEvacueePointsTable->RowCount(nullptr, &evacueeCount))) return hr;
 	auto Evacuees = std::shared_ptr<EvacueeList>(new DEBUG_NEW_PLACEMENT EvacueeList(evacueeGroupingOption, evacueeCount));
 	Evacuee * currentEvacuee;
 	NAVertexPtr myVertex;
@@ -431,7 +433,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (FAILED(hr = ipForwardStar->get_IsRestricted(ipElement, &isRestricted))) return hr;
 					if (!isRestricted)
 					{
-						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
+						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, nullptr);
 						currentEvacuee->Vertices->push_back(myVertex);
 					}
 				}
@@ -457,7 +459,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
+							if (FAILED(hr = ipEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge, true));
 							myVertex->GVal = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
@@ -477,7 +479,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipOtherEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
+							if (FAILED(hr = ipOtherEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge, true));
 							myVertex->GVal = posAlong * myVertex->GetBehindEdge()->OriginalCost;
@@ -676,9 +678,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// copy all route OIDs to RouteID field
 	if (RIDFieldIndex > -1)
 	{
-		IFeaturePtr routeFeature = NULL;
+		IFeaturePtr routeFeature = nullptr;
 		long routeID = -1;
-		if (FAILED(hr = ipRoutesFC->Update(NULL, VARIANT_TRUE, &ipFeatureCursorU))) return hr;
+		if (FAILED(hr = ipRoutesFC->Update(nullptr, VARIANT_TRUE, &ipFeatureCursorU))) return hr;
 		if (FAILED(hr = ipFeatureCursorU->NextFeature(&routeFeature))) return hr;
 		while (routeFeature)
 		{
@@ -764,8 +766,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// At this stage we create many evacuee points within a flocking simulation environment to validate the calculated results
 	ATL::CString collisionMsg, simulationIncompleteEndingMsg;
-	std::vector<FlockingLocationPtr> * history = 0;
-	std::list<double> * collisionTimes = 0;
+	std::vector<FlockingLocationPtr> * history = nullptr;
+	std::list<double> * collisionTimes = nullptr;
 
 	if (flockingEnabled == VARIANT_TRUE)
 	{

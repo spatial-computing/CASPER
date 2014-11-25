@@ -35,19 +35,19 @@ void NAVertex::Clone(NAVertex * cpy)
 NAVertex::NAVertex(void)
 {
 	EID = -1;
-	Junction = 0;
-	BehindEdge = 0;
-	Previous = 0;
+	Junction = nullptr;
+	BehindEdge = nullptr;
+	Previous = nullptr;
 	GVal = 0.0;
 	GlobalPenaltyCost = 0.0;
-	h = NULL;
+	h = nullptr;
 	isShadowCopy = true;
 	ParentCostIsDecreased = false;
 }
 
 NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 {
-	Previous = 0;
+	Previous = nullptr;
 	ParentCostIsDecreased = false;
 	isShadowCopy = false;
 	GVal = 0.0;
@@ -62,18 +62,18 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 	else
 	{
 		EID = -1;
-		Junction = 0;
+		Junction = nullptr;
 	}
 }
 
 inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 {
-	if (behindEdge == NULL && BehindEdge != NULL) BehindEdge->ToVertex = NULL;
+	if (behindEdge == nullptr && BehindEdge != nullptr) BehindEdge->ToVertex = nullptr;
 	BehindEdge = behindEdge;
-	if (BehindEdge != NULL) BehindEdge->ToVertex = this;
+	if (BehindEdge != nullptr) BehindEdge->ToVertex = this;
 }
 
-void NAVertex::UpdateYourHeuristic()                    { UpdateHeuristic(BehindEdge != NULL ? BehindEdge->EID : -1, GVal); }
+void NAVertex::UpdateYourHeuristic()                    { UpdateHeuristic(BehindEdge != nullptr ? BehindEdge->EID : -1, GVal); }
 void NAVertex::UpdateHeuristic(long edgeid, double hur) { h->InsertOrUpdate(edgeid, hur); }
 
 void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)
@@ -87,26 +87,26 @@ void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)
 
 NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery)
 {
-	NAVertexPtr n = 0;
+	NAVertexPtr n = nullptr;
 	INetworkElementPtr ipJunctionElement;
 	INetworkJunctionPtr junctionClone;
 	long JunctionEID;
-	if (FAILED(junction->get_EID(&JunctionEID))) return 0;
+	if (FAILED(junction->get_EID(&JunctionEID))) return nullptr;
 	NAVertexTableItr it = cache->find(JunctionEID);
 
 	if (it == cache->end())
 	{
 		if (ipNetworkQuery)
 		{
-			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) return 0;
+			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) return nullptr;
 			junctionClone = ipJunctionElement;
-			if (FAILED(ipNetworkQuery->QueryJunction(JunctionEID, junctionClone))) return 0;
+			if (FAILED(ipNetworkQuery->QueryJunction(JunctionEID, junctionClone))) return nullptr;
 		}
 		else
 		{
 			junctionClone = junction;
 		}
-		n = new DEBUG_NEW_PLACEMENT NAVertex(junctionClone, 0);
+		n = new DEBUG_NEW_PLACEMENT NAVertex(junctionClone, nullptr);
 		n->UpdateHeuristic(-1, heuristicForOutsideVertices);
 		cache->insert(NAVertexTablePair(n));
 	}
@@ -119,9 +119,9 @@ NAVertexPtr NAVertexCache::New(INetworkJunctionPtr junction, INetworkQueryPtr ip
 
 NAVertexPtr NAVertexCache::NewFromBucket(NAVertexPtr clone)
 {
-	NAVertex * n = NULL;
-	if (currentBucketIndex >= NAVertexCache_BucketSize) currentBucket = NULL;
-	if (currentBucket == NULL)
+	NAVertex * n = nullptr;
+	if (currentBucketIndex >= NAVertexCache_BucketSize) currentBucket = nullptr;
+	if (currentBucket == nullptr)
 	{
 		currentBucket = new DEBUG_NEW_PLACEMENT NAVertex[NAVertexCache_BucketSize];
 		currentBucketIndex = 0;
@@ -138,13 +138,13 @@ NAVertexPtr NAVertexCache::NewFromBucket(NAVertexPtr clone)
 NAVertexPtr NAVertexCache::Get(INetworkJunctionPtr junction)
 {
 	long JunctionEID;
-	if (FAILED(junction->get_EID(&JunctionEID))) return 0;
+	if (FAILED(junction->get_EID(&JunctionEID))) return nullptr;
 	return Get(JunctionEID);
 }
 
 NAVertexPtr NAVertexCache::Get(long eid)
 {
-	NAVertexPtr n = 0;
+	NAVertexPtr n = nullptr;
 	NAVertexTableItr it = cache->find(eid);
 	if (it != cache->end()) n = it->second;
 	return n;
@@ -171,22 +171,22 @@ void NAVertexCache::PrintVertexHeuristicFeq()
 void NAVertexCache::CollectAndRelease()
 {
 	int count = 0;
-	NAVertexPtr temp = NULL;
+	NAVertexPtr temp = nullptr;
 	size_t j = 0;
 	for(std::vector<NAVertexPtr>::const_iterator i = bucketCache->begin(); i != bucketCache->end(); i++)
 	{
 		temp = (*i);
-		for(j = 0; j < NAVertexCache_BucketSize; ++j) temp[j].SetBehindEdge(0);
+		for (j = 0; j < NAVertexCache_BucketSize; ++j) temp[j].SetBehindEdge(nullptr);
 		delete [] temp;
 		count++;
 	}
-	currentBucket = NULL;
+	currentBucket = nullptr;
 	bucketCache->clear();
 }
 
 NAVertexPtr NAVertexCollector::New(INetworkJunctionPtr junction)
 {
-	NAVertexPtr n = new DEBUG_NEW_PLACEMENT NAVertex(junction, 0);
+	NAVertexPtr n = new DEBUG_NEW_PLACEMENT NAVertex(junction, nullptr);
 	cache->insert(cache->end(), n);
 	return n;
 }

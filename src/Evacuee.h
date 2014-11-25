@@ -38,7 +38,7 @@ public:
 	    toRatio = ToRatio;
 		_ASSERT(FromRatio < ToRatio);
 	    Edge = edge;
-	    pline = NULL;
+	    pline = nullptr;
     }
 };
 
@@ -83,7 +83,7 @@ public:
 	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
 									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
-	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPath *>> detachedPaths = NULL, NAEdgeMap * touchedEdges = NULL);
+	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr, NAEdgeMap * touchedEdges = nullptr);
 	void ReattachToEvacuee(EvcSolverMethod method);
 	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
 	bool DoesItNeedASecondChance(double ThreasholdForReserveConst, double ThreasholdForPredictionCost, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
@@ -91,11 +91,13 @@ public:
 	inline const int & GetKey()  const { return Order; }
 	friend inline bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
 
-	~EvcPath(void)
+	virtual ~EvcPath(void)
 	{
 		for(const_iterator it = begin(); it != end(); it++) delete (*it);
 		clear();
 	}
+	EvcPath(const EvcPath & that) = delete;
+	EvcPath & operator=(const EvcPath &) = delete;
 
 	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2)
 	{
@@ -126,7 +128,9 @@ public:
 	int                      ProcessOrder;
 
 	Evacuee(VARIANT name, double pop, UINT32 objectID);
-	~Evacuee(void);
+	virtual ~Evacuee(void);
+	Evacuee(const Evacuee & that) = delete;
+	Evacuee & operator=(const Evacuee &) = delete;
 
 	static bool LessThan(const Evacuee * e1, const Evacuee * e2)
 	{
@@ -167,7 +171,10 @@ private:
 
 public:
 	EvacueeList(EvacueeGrouping GroupingOption, size_t capacity = 0) : groupingOption(GroupingOption), DoubleGrowingArrayList<EvacueePtr, size_t>(capacity) { }
-	~EvacueeList();
+	virtual ~EvacueeList();
+	EvacueeList(const EvacueeList & that) = delete;
+	EvacueeList & operator=(const EvacueeList &) = delete;
+
 	void Insert(const EvacueePtr & item) { push_back(item); }
 	void FinilizeGroupings(double OKDistance);
 	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator begin() { return DoubleGrowingArrayList<EvacueePtr, size_t>::begin(); }
@@ -200,10 +207,12 @@ public:
 	inline double getPositionAlong() const { return positionAlong; }
 	inline NAEdge * getBehindEdge()        { return behindEdge;    }
 
-	~SafeZone();
+	SafeZone(const SafeZone & that) = delete;
+	SafeZone & operator=(const SafeZone &) = delete;
+	virtual ~SafeZone();
 	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap);
 	HRESULT IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity);
-	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity, double * globalDeltaCost = NULL);
+	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity, double * globalDeltaCost = nullptr);
 };
 
 typedef SafeZone * SafeZonePtr;
@@ -216,6 +225,9 @@ public:
 	using std::unordered_map<long, SafeZonePtr>::begin;
 	using std::unordered_map<long, SafeZonePtr>::end;
 
+	SafeZoneTable(size_t capacity) :std::unordered_map<long, SafeZonePtr>(capacity) { }
+	SafeZoneTable(const SafeZoneTable & that) = delete;
+	SafeZoneTable & operator=(const SafeZoneTable &) = delete;
 	virtual ~SafeZoneTable() { for (auto z : *this) delete z.second; }
 	virtual void insert(SafeZonePtr z);
 

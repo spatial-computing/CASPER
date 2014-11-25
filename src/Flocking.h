@@ -20,7 +20,7 @@ public:
 	double			ZoneRadius;
 	double			MaxForce;
 
-	~FlockProfile(void) { }
+	virtual ~FlockProfile(void) { }
 
 	FlockProfile(FLOCK_PROFILE profile)
 	{
@@ -79,7 +79,7 @@ public:
 		GTime = -1.0;
 		Traveled = 0.0;
 		Velocity = OpenSteer::Vec3::zero;
-		MyLocation = 0;
+		MyLocation = nullptr;
 		ID = -1;
 		MyStatus = FLOCK_OBJ_STAT_INIT;
 	}
@@ -98,6 +98,7 @@ public:
 		MyStatus = copy.MyStatus;
 	}
 
+	FlockingLocation & operator=(const FlockingLocation &) = delete;
 	virtual ~FlockingLocation(void) { }
 };
 
@@ -139,6 +140,8 @@ public:
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
 	static bool DetectCollisions(std::vector<FlockingObject *> * objects);
 
+	FlockingObject(const FlockingObject & that) = delete;
+	FlockingObject & operator=(const FlockingObject &) = delete;
 	virtual ~FlockingObject(void)
 	{
 		delete [] libpoints;
@@ -167,6 +170,9 @@ private:
 public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval, double InitDelayCostPerPop);
 	virtual ~FlockingEnviroment(void);
+	FlockingEnviroment(const FlockingEnviroment & that) = delete;
+	FlockingEnviroment & operator=(const FlockingEnviroment &) = delete;
+
 	void Init(std::shared_ptr<EvacueeList>, INetworkQueryPtr, FlockProfile *, bool TwoWayRoadsShareCap);
 	HRESULT RunSimulation(IStepProgressorPtr, ITrackCancelPtr, double predictedCost);
 	void GetResult(std::vector<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft);

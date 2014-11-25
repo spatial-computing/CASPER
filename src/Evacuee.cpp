@@ -112,7 +112,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
-	PathSegmentPtr pathSegment = NULL;
+	PathSegmentPtr pathSegment = nullptr;
 	IGeometryPtr ipGeometry;
 	esriGeometryType type;
 	IPointCollectionPtr pcollect;
@@ -238,8 +238,8 @@ Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
 
 Evacuee::~Evacuee(void)
 {
-	for (std::list<EvcPathPtr>::const_iterator it = Paths->begin(); it != Paths->end(); it++) delete (*it);
-	for (std::vector<NAVertexPtr>::const_iterator it = Vertices->begin(); it != Vertices->end(); it++) delete (*it);
+	for (auto & p : *Paths) delete p;
+	for (auto v : *Vertices) delete v;
 	Paths->clear();
 	Vertices->clear();
 	delete Vertices;
@@ -256,10 +256,10 @@ void MergeEvacueeClusters(std::unordered_map<long, std::list<EvacueePtr>> & Edge
 {
 	for (const auto & l : EdgeEvacuee)
 	{
-		EvacueePtr left = NULL;
+		EvacueePtr left = nullptr;
 		for (const auto & i : l.second)
 		{
-			if (left != NULL && abs(i->Vertices->front()->GVal - left->Vertices->front()->GVal) <= OKDistance)
+			if (left != nullptr && abs(i->Vertices->front()->GVal - left->Vertices->front()->GVal) <= OKDistance)
 			{
 				// merge i with left
 				ToErase.push_back(i);
@@ -297,7 +297,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance)
 		{
 			v1 = evc->Vertices->front();
 			e1 = v1->GetBehindEdge();
-			if (e1 == NULL) // evacuee mapped to intersection
+			if (e1 == nullptr) // evacuee mapped to intersection
 			{
 				auto i = VertexEvacuee.find(v1->EID);
 				if (i == VertexEvacuee.end()) VertexEvacuee.insert(std::pair<long, EvacueePtr>(v1->EID, evc));
@@ -355,7 +355,7 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge 
 	{
 		for (const auto & evc : pair->second)
 		{
-			foundVertex = NULL;
+			foundVertex = nullptr;
 			for (const auto & v : *evc->Vertices)
 			{
 				if (v->EID == myVertex->EID)
@@ -429,7 +429,7 @@ HRESULT SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * lea
 {
 	HRESULT hr = S_OK;
 	restricted = capacity == 0.0 && costPerDensity > 0.0;
-	ArrayList<NAEdgePtr> * adj = NULL;
+	ArrayList<NAEdgePtr> * adj = nullptr;
 
 	if (behindEdge && !restricted)
 	{

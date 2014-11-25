@@ -60,7 +60,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 {
   if (!pNAContext || !ppNALayer) return E_POINTER;
 
-  *ppNALayer = 0;
+  *ppNALayer = nullptr;
 
   // Create the main analysis layer
   HRESULT             hr = S_OK;
@@ -115,7 +115,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
-    ipUniqueValuePropertyPageUID = 0;
+    ipUniqueValuePropertyPageUID = nullptr;
   }
 
   if (ipUniqueValuePropertyPageUID)
@@ -220,7 +220,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
-    ipSingleSymbolPropertyPageUIDR = 0;
+	ipSingleSymbolPropertyPageUIDR = nullptr;
   }
 
   if (ipSingleSymbolPropertyPageUIDR)
@@ -259,9 +259,9 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 
   if (FAILED(ipSingleSymbolPropertyPageUIDE->put_Value(ATL::CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
   {
-    // Renderer Property Pages are not installed with Engine. In this
-    // case getting the property page by PROGID is an expected failure.
-    ipSingleSymbolPropertyPageUIDE = 0;
+      // Renderer Property Pages are not installed with Engine. In this
+      // case getting the property page by PROGID is an expected failure.
+	  ipSingleSymbolPropertyPageUIDE = nullptr;
   }
 
   if (ipSingleSymbolPropertyPageUIDE)
@@ -302,7 +302,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   {
 	  // Renderer Property Pages are not installed with Engine. In this
 	  // case getting the property page by PROGID is an expected failure.
-	  ipSingleSymbolPropertyPageUIDRE = 0;
+	  ipSingleSymbolPropertyPageUIDRE = nullptr;
   }
 
   if (ipSingleSymbolPropertyPageUIDRE)
@@ -342,7 +342,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   {
     // Renderer Property Pages are not installed with Engine. In this
     // case getting the property page by PROGID is an expected failure.
-    ipSingleSymbolPropertyPageUID3 = 0;
+	  ipSingleSymbolPropertyPageUID3 = nullptr;
   }
 
   if (ipSingleSymbolPropertyPageUID3)
@@ -477,7 +477,7 @@ HRESULT EvcSolverSymbolizer::CreateRandomColor(IColor** ppColor)
 {
   if (!ppColor) return E_POINTER;
 
-  *ppColor = 0;
+  *ppColor = nullptr;
 
   IHsvColorPtr ipHsvColor(CLSID_HsvColor);
 #pragma warning(suppress: 28159)
@@ -610,11 +610,11 @@ HRESULT EvcSolverSymbolizer::CreateUnlocatedSymbol(ISymbol* pLocatedMarkerSymbol
 {
   if (!ppUnlocatedMarkerSymbol || !pLocatedMarkerSymbol) return E_POINTER;
 
-  if (IMarkerSymbolPtr(pLocatedMarkerSymbol) == NULL) return E_INVALIDARG;
+  if (IMarkerSymbolPtr(pLocatedMarkerSymbol) == nullptr) return E_INVALIDARG;
 
   IMultiLayerMarkerSymbolPtr ipMultiLayerSymbol;
 
-  if (IMultiLayerMarkerSymbolPtr(pLocatedMarkerSymbol) == NULL)
+  if (IMultiLayerMarkerSymbolPtr(pLocatedMarkerSymbol) == nullptr)
   {
     ipMultiLayerSymbol.CreateInstance(CLSID_MultiLayerMarkerSymbol);
 
