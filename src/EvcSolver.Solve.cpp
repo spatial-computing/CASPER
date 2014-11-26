@@ -35,7 +35,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	f.close();
 	#endif
 
-	_ASSERT_EXPR(NULL == nullptr, L"checking if c++11 nullptr == NULL returns boolean true");
+	#ifdef DEBUG
+	void * emptyPtr1 = NULL;
+	void * emptyPtr2 = nullptr;
+	OutputDebugStringW(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1 ? L"c++11 pointer pass" : L"c++11 pointer fail");
+	_ASSERT_EXPR(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1, L"checking if c++11 nullptr == NULL returns boolean true");
+	#endif
 
 	HRESULT hr = S_OK;
 	double globalEvcCost = -1.0, carmaSec = 0.0;
@@ -104,30 +109,31 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// so we can simply clear any features currently present in the "LineData" NAClass.
 	// NOTE: if you have multiple input/output NAClasses to clean up, you can simply loop through all NAClasses,
 	// get their NAClassDefinition, check whether or not each is an input/output class, and reset it accordingly
-	INamedSetPtr ipNAClasses;
+	INamedSetPtr ipNAClasses = nullptr;
 	if (FAILED(hr = pNAContext->get_NAClasses(&ipNAClasses))) return hr;
 
 	// remove any features that might have been created on previous solves
-	IUnknownPtr ipUnk;
+	IUnknownPtr ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipRoutesNAClass(ipUnk);
 	if (FAILED(hr = ipRoutesNAClass->DeleteAllRows())) return hr;
 
+	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_EDGES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
 
 	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
-	bool ExportRouteEdges = ipUnk != nullptr;
+	bool ExportRouteEdges = ipUnk;
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
 	if (ExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
 
 	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
 	INAClassPtr ipFlocksNAClass(ipUnk);
-	if (flockingEnabled == VARIANT_TRUE && ipUnk == nullptr) flockingEnabled = VARIANT_FALSE;
-	if (ipFlocksNAClass != nullptr) { if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr; }
+	if (flockingEnabled == VARIANT_TRUE && !ipUnk) flockingEnabled = VARIANT_FALSE;
+	if (ipFlocksNAClass) { if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr; }
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Setup the Network Forward Star for traversal
@@ -512,46 +518,34 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	///////////////////////////////////////
 	// this will call the core part of the algorithm.
-	try
+	/// try
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts,
-			ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio);
+		if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts,
+			ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio))) return hr;
 	}
-	catch (const std::exception & ex)
-	{
-		/// TODO a better approch is to not catch exceptions at all and let
-		// the caller (ArcObjects) catch it and display the message.
-		// But if that was not possible then we have to somehow backup the exception what() then use it with AtlReportError
-		// hr = ATL::AtlReportError(this->GetObjectCLSID(), _T(ex.what()), IID_INASolver);
-		hr = -1L * abs(ERROR_UNHANDLED_EXCEPTION);
-		(ex);
-		#ifdef TRACE
-		std::ofstream f;
-		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-		f << "Search throws: " << ex.what() << std::endl;
-		f.close();
-		#endif
-		#ifdef DEBUG
-		std::wostringstream os_;
-		os_ << "Search throws: " << ex.what() << std::endl;
-		OutputDebugStringW( os_.str().c_str() );
-		_ASSERT(0);
-		#endif
-	}
-
-	if (FAILED(hr))
-	{
-		#ifdef TRACE
-		std::ofstream f;
-		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-		f << "Search exit: " << hr << std::endl;
-		f.close();
-		#endif
-
-		return hr;
-	}
+	//catch (const std::exception & ex)
+	//{
+	//	/// TODO a better approch is to not catch exceptions at all and let
+	//	// the caller (ArcObjects) catch it and display the message.
+	//	// But if that was not possible then we have to somehow backup the exception what() then use it with AtlReportError
+	//	// hr = ATL::AtlReportError(this->GetObjectCLSID(), _T(ex.what()), IID_INASolver);
+	//	hr = -1L * abs(ERROR_UNHANDLED_EXCEPTION);
+	//	(ex);
+	//	#ifdef TRACE
+	//	std::ofstream f;
+	//	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+	//	f << "Search throws: " << ex.what() << std::endl;
+	//	f.close();
+	//	#endif
+	//	#ifdef DEBUG
+	//	std::wostringstream os_;
+	//	os_ << "Search throws: " << ex.what() << std::endl;
+	//	OutputDebugStringW( os_.str().c_str() );
+	//	_ASSERT(0);
+	//	#endif
+	//}
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);

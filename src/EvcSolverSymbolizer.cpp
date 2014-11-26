@@ -610,11 +610,11 @@ HRESULT EvcSolverSymbolizer::CreateUnlocatedSymbol(ISymbol* pLocatedMarkerSymbol
 {
   if (!ppUnlocatedMarkerSymbol || !pLocatedMarkerSymbol) return E_POINTER;
 
-  if (IMarkerSymbolPtr(pLocatedMarkerSymbol) == nullptr) return E_INVALIDARG;
+  if (!IMarkerSymbolPtr(pLocatedMarkerSymbol)) return E_INVALIDARG;
 
   IMultiLayerMarkerSymbolPtr ipMultiLayerSymbol;
 
-  if (IMultiLayerMarkerSymbolPtr(pLocatedMarkerSymbol) == nullptr)
+  if (!IMultiLayerMarkerSymbolPtr(pLocatedMarkerSymbol))
   {
     ipMultiLayerSymbol.CreateInstance(CLSID_MultiLayerMarkerSymbol);
 

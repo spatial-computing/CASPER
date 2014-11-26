@@ -259,7 +259,7 @@ void MergeEvacueeClusters(std::unordered_map<long, std::list<EvacueePtr>> & Edge
 		EvacueePtr left = nullptr;
 		for (const auto & i : l.second)
 		{
-			if (left != nullptr && abs(i->Vertices->front()->GVal - left->Vertices->front()->GVal) <= OKDistance)
+			if (left && abs(i->Vertices->front()->GVal - left->Vertices->front()->GVal) <= OKDistance)
 			{
 				// merge i with left
 				ToErase.push_back(i);
@@ -297,7 +297,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance)
 		{
 			v1 = evc->Vertices->front();
 			e1 = v1->GetBehindEdge();
-			if (e1 == nullptr) // evacuee mapped to intersection
+			if (!e1) // evacuee mapped to intersection
 			{
 				auto i = VertexEvacuee.find(v1->EID);
 				if (i == VertexEvacuee.end()) VertexEvacuee.insert(std::pair<long, EvacueePtr>(v1->EID, evc));
@@ -435,7 +435,7 @@ HRESULT SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * lea
 	{
 		restricted = true;
 		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj))) return hr;
-		for (const auto & currentEdge : *adj) if (IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
+		for (const auto & currentEdge : *adj) if (NAEdge::IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
 	}
 	return hr;
 }

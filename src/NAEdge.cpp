@@ -279,9 +279,9 @@ void NAEdge::RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool del
 	if (!delayedDirtyState) HowDirty(method);
 }
 
-double GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
-double GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
-bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
+double NAEdge::GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
+double NAEdge::GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
+bool   NAEdge::IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
 
 /////////////////////////////////////////////////////////////
 // NAEdgeCache
@@ -416,6 +416,18 @@ bool NAEdgeMap::Exist(long eid, esriNetworkEdgeDirection dir)
 	else cache = cacheAgainst;
 
 	return cache->find(eid) != cache->end();
+}
+
+const NAEdgePtr NAEdgeMap::Find(const NAEdgePtr edge) const
+{
+	std::unordered_map<long, NAEdgePtr> * cache = nullptr;
+	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
+	else cache = cacheAgainst;
+
+	std::unordered_map<long, NAEdgePtr>::const_iterator it = cache->find(edge->EID);
+	NAEdgePtr o = nullptr;
+	if (it != cache->end()) o = it->second;
+	return o;
 }
 
 void NAEdgeMap::GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const

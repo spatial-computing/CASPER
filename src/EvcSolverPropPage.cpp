@@ -248,7 +248,7 @@ STDMETHODIMP EvcSolverPropPage::Apply(void)
 
 STDMETHODIMP EvcSolverPropPage::get_Priority(LONG * pPriority)
 {
-	if (pPriority == nullptr) return E_POINTER;
+	if (!pPriority) return E_POINTER;
 
 	(*pPriority) = 152;
 
@@ -257,7 +257,7 @@ STDMETHODIMP EvcSolverPropPage::get_Priority(LONG * pPriority)
 
 STDMETHODIMP EvcSolverPropPage::Applies(VARIANT unkArray, VARIANT_BOOL* pApplies)
 {
-	if (pApplies == nullptr) return E_INVALIDARG;
+	if (!pApplies) return E_INVALIDARG;
 
 	(*pApplies) = VARIANT_FALSE;
 
@@ -330,7 +330,7 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 	// Try and QI to IEvcSolver
 	IEvcSolverPtr ipSolver(vObject.punkVal);
 	LRESULT size;
-	if (ipSolver != nullptr)
+	if (ipSolver)
 	{
 		// save data from drop boxes
 		LRESULT selectedIndex = ::SendMessage(m_hCapCombo, CB_GETCURSEL, NULL, NULL);
@@ -451,19 +451,19 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 
 STDMETHODIMP EvcSolverPropPage::CreateCompatibleObject(VARIANT kind, VARIANT* pNewObject)
 {
-	if (pNewObject == nullptr) return E_POINTER;
+	if (!pNewObject) return E_POINTER;
 	return E_NOTIMPL;
 }
 
 STDMETHODIMP EvcSolverPropPage::GetHelpFile(LONG controlID, BSTR* pHelpFile)
 {
-	if (pHelpFile == nullptr) return E_POINTER;
+	if (!pHelpFile) return E_POINTER;
 	return E_NOTIMPL;
 }
 
 STDMETHODIMP EvcSolverPropPage::GetHelpId(LONG controlID, LONG* pHelpID)
 {
-	if (pHelpID == nullptr) return E_POINTER;
+	if (!pHelpID) return E_POINTER;
 	return E_NOTIMPL;
 }
 

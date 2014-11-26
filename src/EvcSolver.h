@@ -16,6 +16,7 @@
 #include "NAEdge.h"
 #include "NAVertex.h"
 #include "Flocking.h"
+#include "FibonacciHeap.h"
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -382,12 +383,9 @@ private:
 // Utility functions
 double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);
 
-// incomplete type def for the heap... I'm really out of options
-class FibonacciHeap;
-
 HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> & readyEdges, double pop,
 							   EvcSolverMethod solverMethod, double selfishRatio, double MaxEvacueeCostSoFar, QueryDirection dir);
-HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, FibonacciHeap & heap, std::shared_ptr<NAEdgeContainer> leafs
+HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap, std::shared_ptr<NAEdgeContainer> leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod
 								#endif

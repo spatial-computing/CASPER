@@ -68,12 +68,12 @@ NAVertex::NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge)
 
 inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 {
-	if (behindEdge == nullptr && BehindEdge != nullptr) BehindEdge->ToVertex = nullptr;
+	if (!behindEdge && BehindEdge) BehindEdge->ToVertex = nullptr;
 	BehindEdge = behindEdge;
-	if (BehindEdge != nullptr) BehindEdge->ToVertex = this;
+	if (BehindEdge) BehindEdge->ToVertex = this;
 }
 
-void NAVertex::UpdateYourHeuristic()                    { UpdateHeuristic(BehindEdge != nullptr ? BehindEdge->EID : -1, GVal); }
+void NAVertex::UpdateYourHeuristic()                    { UpdateHeuristic(BehindEdge ? BehindEdge->EID : -1, GVal); }
 void NAVertex::UpdateHeuristic(long edgeid, double hur) { h->InsertOrUpdate(edgeid, hur); }
 
 void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)
@@ -121,7 +121,7 @@ NAVertexPtr NAVertexCache::NewFromBucket(NAVertexPtr clone)
 {
 	NAVertex * n = nullptr;
 	if (currentBucketIndex >= NAVertexCache_BucketSize) currentBucket = nullptr;
-	if (currentBucket == nullptr)
+	if (!currentBucket)
 	{
 		currentBucket = new DEBUG_NEW_PLACEMENT NAVertex[NAVertexCache_BucketSize];
 		currentBucketIndex = 0;

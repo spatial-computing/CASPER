@@ -8,20 +8,20 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone, std::vector<double> & GlobalEvcCostAtIteration, std::vector<double> & EffectiveIterationRatio)
 {
 	// creating the heap for the Dijkstra search
-	FibonacciHeap heap(&GetHeapKeyHur);
+	FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> heap(NAEdge::GetHeapKeyHur);
 	NAEdgeMap closedList;
 	auto carmaClosedList = std::shared_ptr<NAEdgeMapTwoGen>(new DEBUG_NEW_PLACEMENT NAEdgeMapTwoGen());
 	std::vector<EvacueePtr>::const_iterator seit;
-	NAVertexPtr neighbor, finalVertex = nullptr, myVertex;
+	NAVertexPtr neighbor = nullptr, finalVertex = nullptr, myVertex = nullptr;
 	SafeZonePtr BetterSafeZone = nullptr;
-	NAEdgePtr myEdge;
+	NAEdgePtr myEdge = nullptr;
 	HRESULT hr = S_OK;
-	EvacueePtr currentEvacuee;
+	EvacueePtr currentEvacuee = nullptr;
 	VARIANT_BOOL keepGoing;
 	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, MaxPathCostSoFar = 0.0, addedCostAsPenalty = 0.0;
 	std::vector<NAVertexPtr>::const_iterator vit;
-	INetworkJunctionPtr ipCurrentJunction;
-	INetworkElementPtr ipJunctionElement;
+	INetworkJunctionPtr ipCurrentJunction = nullptr;
+	INetworkElementPtr ipJunctionElement = nullptr;
 	bool separationRequired, foundRestrictedSafezone;
 	auto sortedEvacuees = std::shared_ptr<std::vector<EvacueePtr>>(new DEBUG_NEW_PLACEMENT std::vector<EvacueePtr>());
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
@@ -202,7 +202,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 								neighbor->Previous = myVertex;
 
 								// Termination Condition: If the new vertex does have a chance to beat the already discovered safe node then add it to the heap.
-								if (GetHeapKeyHur(currentEdge) <= TimeToBeat) heap.Insert(currentEdge);
+								if (NAEdge::GetHeapKeyHur(currentEdge) <= TimeToBeat) heap.Insert(currentEdge);
 							}
 						}
 					}
@@ -259,6 +259,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 END_OF_FUNC:
 
 	_ASSERT(hr >= 0);
+	#ifdef TRACE
+	std::ofstream f;
+	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+	f << "Search exit: " << hr << std::endl;
+	f.close();
+	#endif
 	carmaSec = carmaSec / 10000000.0;
 	return hr;
 }
@@ -329,17 +335,17 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 
 	// performing pre-process: Here we will mark each vertex/junction with a heuristic value indicating
 	// true distance to closest safe zone using backward traversal and Dijkstra
-	FibonacciHeap heap(&GetHeapKeyNonHur);	// creating the heap for the dijkstra search
-	NAVertexPtr neighbor;
-	INetworkElementPtr ipElementEdge;
+	FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> heap(NAEdge::GetHeapKeyNonHur);	// creating the heap for the dijkstra search
+	NAVertexPtr neighbor = nullptr;
+	INetworkElementPtr ipElementEdge = nullptr;
 	VARIANT val;
 	val.vt = VT_R8; // double variant value
-	NAVertexPtr myVertex;
-	NAEdgePtr myEdge;
-	INetworkElementPtr ipJunctionElement;
+	NAVertexPtr myVertex = nullptr;
+	NAEdgePtr myEdge = nullptr;
+	INetworkElementPtr ipJunctionElement = nullptr;
 	double newCost, EdgeCostToBeat, SearchRadius = 0.0;
 	VARIANT_BOOL keepGoing;
-	INetworkJunctionPtr ipCurrentJunction;
+	INetworkJunctionPtr ipCurrentJunction = nullptr;
 	std::vector<NAEdgePtr> readyEdges;
 	readyEdges.reserve(safeZoneList->size());
 	unsigned int CARMAExtractCount = 0;
@@ -420,14 +426,14 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		{
 			// Remove the next junction EID from the top of the queue
 			myEdge = heap.DeleteMin();
-			myVertex = myEdge->ToVertex;
-			_ASSERT(!closedList->Exist(myEdge));         // closedList violation happened
+			_ASSERT_EXPR(!closedList->Exist(myEdge), L"closedList violation happened");
 			if (FAILED(hr = closedList->Insert(myEdge)))
 			{
 				// closedList violation happened
 				pMessages->AddError(-myEdge->EID, ATL::CComBSTR(L"ClosedList Violation Error."));
 				return ATL::AtlReportError(this->GetObjectCLSID(), _T("ClosedList Violation Error."), IID_INASolver);
 			}
+			myVertex = myEdge->ToVertex;
 
 			// Check to see if the user wishes to continue or cancel the solve
 			if (pTrackCancel)
@@ -443,7 +449,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			// Code to build the CARMA Tree
 			if (myVertex->Previous)
 			{
-				if (myEdge->TreePrevious) myEdge->TreePrevious->TreeNext.unordered_erase(myEdge, IsEqualNAEdgePtr);
+				if (myEdge->TreePrevious) myEdge->TreePrevious->TreeNext.unordered_erase(myEdge, NAEdge::IsEqualNAEdgePtr);
 				myEdge->TreePrevious = myVertex->Previous->GetBehindEdge();
 				myEdge->TreePrevious->TreeNext.push_back(myEdge);
 			}
@@ -632,7 +638,7 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 	}
 }
 
-HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, FibonacciHeap & heap, NAEdge * leaf
+HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap, NAEdge * leaf
 							#ifdef DEBUG
 							, double minPop2Route, EvcSolverMethod solverMethod
 							#endif
@@ -666,7 +672,8 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NA
 	return hr;
 }
 
-HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, FibonacciHeap & heap, std::shared_ptr<NAEdgeContainer> leafs
+HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap,
+	                            std::shared_ptr<NAEdgeContainer> leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod
 								#endif
@@ -721,7 +728,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 		for (const auto & tempEdge : *adj)
 		{
 			if (!closedList->Exist(tempEdge, NAEdgeMapGeneration::OldGen)) continue; // it has to be present in closed list from previous CARMA loop
-			if (IsEqualNAEdgePtr(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
+			if (NAEdge::IsEqualNAEdgePtr(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
 
 			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
 			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
@@ -866,7 +873,7 @@ bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 
 			// path can be empty if the source and destination are the same vertex
 			PathSegmentPtr lastAdded = path->front();
-			if (!path->empty() && IsEqualNAEdgePtr(lastAdded->Edge, finalVertex->GetBehindEdge()))
+			if (!path->empty() && NAEdge::IsEqualNAEdgePtr(lastAdded->Edge, finalVertex->GetBehindEdge()))
 			{
 				lastAdded->SetFromRatio(1.0 - edgePortion);
 			}

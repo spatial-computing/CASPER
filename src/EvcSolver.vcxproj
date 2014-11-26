@@ -473,7 +473,6 @@ exit 0</Command>
     <ClCompile Include="EvcSolver.Solve.cpp" />
     <ClCompile Include="EvcSolverPropPage.cpp" />
     <ClCompile Include="EvcSolverSymbolizer.cpp" />
-    <ClCompile Include="FibonacciHeap.cpp" />
     <ClCompile Include="Flocking.cpp" />
     <ClCompile Include="NAEdge.cpp" />
     <ClCompile Include="NAVertex.cpp" />

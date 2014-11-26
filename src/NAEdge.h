@@ -83,13 +83,26 @@ public:
 	{
 		return e1->GetTrafficSpeedRatio(e1->reservations->ReservedPop, method) > e2->GetTrafficSpeedRatio(e2->reservations->ReservedPop, method);
 	}
+
+	static double GetHeapKeyHur(const NAEdge * e);
+	static double GetHeapKeyNonHur(const NAEdge * e);
+	static bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2);
 };
 
-double GetHeapKeyHur   (const NAEdge * e);
-double GetHeapKeyNonHur(const NAEdge * e);
-bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2);
-
 typedef NAEdge * NAEdgePtr;
+
+// hash functor for NAEdgePtr
+struct NAEdgePtrHasher : public std::unary_function<NAEdgePtr, size_t>
+{
+	size_t operator()(const NAEdgePtr & edge) const { return edge->EID; }
+};
+
+// equal functor for NAEdgePtr
+struct NAEdgePtrEqual : public std::binary_function<NAEdgePtr, NAEdgePtr, bool>
+{
+	size_t operator()(const NAEdgePtr & left, const NAEdgePtr & right) const { return left->EID == right->EID && left->Direction == right->Direction; }
+};
+
 typedef public std::unordered_map<long, NAEdgePtr> NAEdgeTable;
 typedef std::unordered_map<long, NAEdgePtr>::const_iterator NAEdgeTableItr;
 typedef std::pair<long, NAEdgePtr> _NAEdgeTablePair;
@@ -128,6 +141,7 @@ public:
 	HRESULT Insert(NAEdgeMap * edges);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
 	void Erase(long eid, esriNetworkEdgeDirection dir);
+	const NAEdgePtr Find(const NAEdgePtr edge) const;
 };
 
 class NAEdgeMapTwoGen
