@@ -43,11 +43,11 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 	myEvc->Paths->push_back(this);
 }
 
-bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveConst, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
+bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
 	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost ) / ThisIterationMaxCost;
 	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
-	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveConst;
+	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveCost;
 
 	if (NeedsAChance && myEvc->Status == EvacueeStatus::Processed)
 	{
@@ -56,7 +56,7 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveConst, double T
 		myEvc->Status = EvacueeStatus::Unprocessed;
 	}
 
-	if (EvacuationCostRatio > ThreasholdForReserveConst)
+	if (EvacuationCostRatio > ThreasholdForReserveCost)
 	{
 		// we have to add the affecting list to be re-routed as well
 		// we do this by selecxting the highly congestied and most costly path segment and then extract all the evacuees that share the same segments (edges)
@@ -73,7 +73,7 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveConst, double T
 
 		for (const auto & pair : FreqOfOverlaps)
 		{
-			if (pair.first->myEvc->Status == EvacueeStatus::Processed && FinalEvacuationCost / pair.second > ThreasholdForReserveConst)
+			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second / FinalEvacuationCost > ThreasholdForReserveCost)
 			{
 				AffectingList.push_back(pair.first->myEvc);
 				pair.first->myEvc->Status = EvacueeStatus::Unprocessed;

@@ -271,7 +271,7 @@ public:
 
 	void WeightedAdd(const T & item, double weight)
 	{
-		if (map::find(item) == map::end()) map::insert(std::pair<T, double>(item, weight));
+		if (map::find(item) == map::end()) map::insert(std::pair<T, double>(item, 0.0));
 		double & newWeight = map::at(item);
 		newWeight += weight;
 		minWeight = min(minWeight, newWeight);

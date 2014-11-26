@@ -252,7 +252,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		if (NumberOfEvacueesInIteration > 0)
 		{
 			carmaSortCriteria = CARMASort::ReverseFinalCost;
-			EffectiveIterationRatio.push_back(double(NumberOfEvacueesInIteration) / AllEvacuees->size());
+			EffectiveIterationRatio.push_back(pow(double(NumberOfEvacueesInIteration) / AllEvacuees->size(), 1.0 / GlobalEvcCostAtIteration.size()));
 		}
 	} while (NumberOfEvacueesInIteration > 0);
 
@@ -316,7 +316,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	for (const auto & path : allPaths)
 	{
 		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;
-		if (!path->DoesItNeedASecondChance(0.15, 0.1, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod)) break;
+		if (!path->DoesItNeedASecondChance(0.15, 0.10, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod)) break;
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
