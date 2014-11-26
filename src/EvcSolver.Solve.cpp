@@ -38,8 +38,45 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	#ifdef DEBUG
 	void * emptyPtr1 = NULL;
 	void * emptyPtr2 = nullptr;
-	OutputDebugStringW(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1 ? L"c++11 pointer pass" : L"c++11 pointer fail");
-	_ASSERT_EXPR(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1, L"checking if c++11 nullptr == NULL returns boolean true");
+	OutputDebugStringW(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1 ? L"c++11 pointer test pass" : L"c++11 pointer test fail");
+	_ASSERT_EXPR(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1, L"c++11 pointer test fail");
+
+	// heap validity test case
+	{
+		struct HeapNode
+		{
+			size_t value;
+			double key;
+			HeapNode(size_t _value = 0, double _key = 0.0) : value(_value), key(_key) { }
+			operator double() const { return key; }
+			bool operator==(const HeapNode & right) const { return value == right.value; }
+			struct HeapNodeHasher : public std::unary_function<HeapNode, size_t> { size_t operator()(const HeapNode & e) const { return e.value; } };
+		};
+
+		FibonacciHeap<HeapNode, HeapNode::HeapNodeHasher> testHeap;
+		srand(unsigned int(time(0)));
+		HeapNode data[10000];
+		HeapNode min1, min2;
+
+		for (size_t i = 0; i < 10000; ++i) data[i] = HeapNode(i, rand());
+		for (size_t i = 0; i < 5000; ++i) testHeap.Insert(data[i]);
+		for (size_t i = 0; i < 5000; i += 20)
+		{
+			data[i].key -= 100;
+			testHeap.DecreaseKey(data[i]);
+		}
+		for (size_t i = 5000; i < 10000; ++i) testHeap.Insert(data[i]);
+		min1 = testHeap.DeleteMin();
+		bool minHeapTestPass = true;
+		while (!testHeap.IsEmpty())
+		{
+			min2 = testHeap.DeleteMin();
+			_ASSERT_EXPR(min1.key <= min2.key, L"Heap property violation");
+			minHeapTestPass &= min1.key <= min2.key;
+			min1 = min2;
+		}
+		OutputDebugStringW(minHeapTestPass ? L"heap property test pass" : L"heap property test fail");
+	}
 	#endif
 
 	HRESULT hr = S_OK;

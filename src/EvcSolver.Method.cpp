@@ -188,7 +188,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 									neighbor->GVal = newCost;
 									neighbor->GlobalPenaltyCost = myVertex->GlobalPenaltyCost + addedCostAsPenalty;
 									neighbor->Previous = myVertex;
-									if (FAILED(hr = heap.DecreaseKey(currentEdge))) goto END_OF_FUNC;
+									heap.DecreaseKey(currentEdge);
 								}
 							}
 							else // unvisited edge. create new and insert in heap
@@ -524,7 +524,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 								neighbor->GVal = newCost;
 								neighbor->Previous = myVertex;
 								neighbor->ParentCostIsDecreased = myVertex->ParentCostIsDecreased;
-								if (FAILED(hr = heap.DecreaseKey(currentEdge))) return hr;
+								heap.DecreaseKey(currentEdge);
 							}
 						}
 						else // unvisited vertex. create new and insert into heap

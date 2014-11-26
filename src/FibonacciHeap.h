@@ -103,6 +103,8 @@ public:
 	}
 };
 
+template <class T> double DefaultGetHeapKey(const T & value) { return (double)value; }
+
 template<class T, typename Hasher = std::hash<T>, typename TEq = std::equal_to<T>>
 class FibonacciHeap
 {
@@ -158,7 +160,7 @@ public:
 	FibonacciHeap(const FibonacciHeap<T, Hasher, TEq> & that) = delete;
 	FibonacciHeap<T, Hasher, TEq> & operator=(const FibonacciHeap<T, Hasher, TEq> &) = delete;
 
-	FibonacciHeap(const std::function<double(const T &)> & _getHeapKey) : GetHeapKey(_getHeapKey)
+	FibonacciHeap(const std::function<double(const T &)> & _getHeapKey = DefaultGetHeapKey<T>) : GetHeapKey(_getHeapKey)
 	{
 		minRoot = nullptr;
 		nodeTable = new DEBUG_NEW_PLACEMENT table();
@@ -179,15 +181,10 @@ public:
 		nodeTable->clear();
 	}
 
-	bool Insert(const T & value)
+	void Insert(const T & value)
 	{
 		auto i = nodeTable->find(value);
-		if (i != nodeTable->end())
-		{
-			auto out = i->second;
-			if (GetHeapKey(value) < out->key) return DecreaseKey(value);
-			else return false;
-		}
+		if (i != nodeTable->end()) throw std::logic_error("node already exists in heap");
 		else
 		{
 			auto node = new DEBUG_NEW_PLACEMENT HeapNode<T>(value, GetHeapKey(value));
@@ -201,14 +198,13 @@ public:
 			}
 
 			nodeTable->insert(std::pair<T, HeapNode<T> *>(value, node));
-			return true;
 		}
 	}
 
-	bool DecreaseKey(const T & value)
+	void DecreaseKey(const T & value)
 	{
 		auto i = nodeTable->find(value);
-		if (i == nodeTable->end()) return Insert(value);
+		if (i == nodeTable->end()) throw std::logic_error("node does not exist in heap");
 		else
 		{
 			auto node = i->second;
@@ -222,7 +218,6 @@ public:
 			}
 			// Check if key is smaller than the key of minRoot
 			if (node->key < minRoot->key) minRoot = node;
-			return true;
 		}
 	}
 
