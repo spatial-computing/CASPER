@@ -38,7 +38,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	#ifdef DEBUG
 	void * emptyPtr1 = NULL;
 	void * emptyPtr2 = nullptr;
-	OutputDebugStringW(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1 ? L"c++11 pointer test pass" : L"c++11 pointer test fail");
+	OutputDebugStringW(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1 ? L"c++11 pointer test pass\n" : L"c++11 pointer test fail\n");
 	_ASSERT_EXPR(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1, L"c++11 pointer test fail");
 
 	// heap validity test case
@@ -75,7 +75,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			minHeapTestPass &= min1.key <= min2.key;
 			min1 = min2;
 		}
-		OutputDebugStringW(minHeapTestPass ? L"heap property test pass" : L"heap property test fail");
+		OutputDebugStringW(minHeapTestPass ? L"heap property test pass\n" : L"heap property test fail\n");
 	}
 	#endif
 
@@ -255,11 +255,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// This cache will maintain a list of all created vertices/edges. You can retrieve
 	// them later using EID. The benefit of using this cache is that we
 	// can maintain one-to-one relationship between network junctions and vertices.
-	// This will particularly be helpful with the heuristic calculator part of the algorithm.	
-	auto vcache = std::shared_ptr<NAVertexCache>(new DEBUG_NEW_PLACEMENT NAVertexCache());
+	// This will particularly be helpful with the heuristic calculator part of the algorithm.
 	auto ecache = std::shared_ptr<NAEdgeCache>(new DEBUG_NEW_PLACEMENT NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE,
-		initDelayCostPerPop, trafficModel, ipForwardStar, ipBackwardStar, ipNetworkQuery, hr));
+		                                                                           initDelayCostPerPop, trafficModel, ipForwardStar, ipBackwardStar, ipNetworkQuery, hr));
 	if (FAILED(hr)) return hr;
+
+	// since some vertices inside the cache will point to edges, it's safer to create this object last so that it gets destroyed (pop out of function stack) before ecache
+	auto vcache = std::shared_ptr<NAVertexCache>(new DEBUG_NEW_PLACEMENT NAVertexCache());
 
 	// Vertex table structures
 	auto safeZoneList = std::shared_ptr<SafeZoneTable>(new DEBUG_NEW_PLACEMENT SafeZoneTable(100));
@@ -562,27 +564,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts,
 			ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio))) return hr;
 	}
-	//catch (const std::exception & ex)
-	//{
-	//	/// TODO a better approch is to not catch exceptions at all and let
-	//	// the caller (ArcObjects) catch it and display the message.
-	//	// But if that was not possible then we have to somehow backup the exception what() then use it with AtlReportError
-	//	// hr = ATL::AtlReportError(this->GetObjectCLSID(), _T(ex.what()), IID_INASolver);
-	//	hr = -1L * abs(ERROR_UNHANDLED_EXCEPTION);
-	//	(ex);
-	//	#ifdef TRACE
-	//	std::ofstream f;
-	//	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-	//	f << "Search throws: " << ex.what() << std::endl;
-	//	f.close();
-	//	#endif
-	//	#ifdef DEBUG
-	//	std::wostringstream os_;
-	//	os_ << "Search throws: " << ex.what() << std::endl;
-	//	OutputDebugStringW( os_.str().c_str() );
-	//	_ASSERT(0);
-	//	#endif
-	//}
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -1072,6 +1053,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		collisionMsg.Insert(0, _T("Some collisions have been reported at the following intervals: "));
 		pMessages->AddWarning(ATL::CComBSTR(collisionMsg));
 	}
+
+	// since vertices inside the cache are still pointing to some edges it's safer to clean them first
+	vcache = nullptr;
+	ecache = nullptr;
 	
 	return hr;
 }

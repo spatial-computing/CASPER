@@ -6,26 +6,13 @@
 ///////////////////////////////////////////////
 // NAVertex methods
 
-NAVertex::NAVertex(const NAVertex& cpy)
-{
-	GVal = cpy.GVal;
-	GlobalPenaltyCost = cpy.GlobalPenaltyCost;
-	h = cpy.h;
-	Junction = cpy.Junction;
-	BehindEdge = cpy.BehindEdge;
-	Previous = cpy.Previous;
-	EID = cpy.EID;
-	isShadowCopy = true;
-	ParentCostIsDecreased = cpy.ParentCostIsDecreased;
-}
-
 void NAVertex::Clone(NAVertex * cpy)
 {
 	GVal = cpy->GVal;
 	GlobalPenaltyCost = cpy->GlobalPenaltyCost;
 	h = cpy->h;
 	Junction = cpy->Junction;
-	BehindEdge = cpy->BehindEdge;
+	BehindEdge = nullptr; // cpy->BehindEdge;
 	Previous = cpy->Previous;
 	EID = cpy->EID;
 	isShadowCopy = true;
@@ -73,7 +60,7 @@ inline void NAVertex::SetBehindEdge(NAEdge * behindEdge)
 	if (BehindEdge) BehindEdge->ToVertex = this;
 }
 
-void NAVertex::UpdateYourHeuristic()                    { UpdateHeuristic(BehindEdge ? BehindEdge->EID : -1, GVal); }
+void NAVertex::UpdateYourHeuristic() { UpdateHeuristic(BehindEdge ? BehindEdge->EID : -1, GVal); }
 void NAVertex::UpdateHeuristic(long edgeid, double hur) { h->InsertOrUpdate(edgeid, hur); }
 
 void NAVertexCache::UpdateHeuristicForOutsideVertices(double hur, bool goDeep)

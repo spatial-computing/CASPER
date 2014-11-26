@@ -57,11 +57,11 @@ public:
 	void UpdateYourHeuristic();
 
 	inline void Clone (NAVertex * cpy);
-	NAVertex   (void);
-	NAVertex(const NAVertex& cpy);
+	NAVertex(void);
+	NAVertex(const NAVertex& cpy) = delete;
 	NAVertex & operator=(const NAVertex &) = delete;
-	NAVertex   (INetworkJunctionPtr junction, NAEdge * behindEdge);
-	virtual ~NAVertex  (void) { if (!isShadowCopy) delete h; }
+	NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge);
+	virtual ~NAVertex(void) { if (!isShadowCopy) delete h; }
 };
 
 typedef NAVertex * NAVertexPtr;
