@@ -17,6 +17,8 @@
 #include "NAVertex.h"
 #include "Flocking.h"
 
+enum class EvacueeGrouping : unsigned char { None = 0x0, Merge = 0x1, Separate = 0x2, MergeSeperate = 0x3 };
+
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
 #endif
@@ -143,7 +145,7 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(5),
+		  c_version(7),
 		  c_featureRetrievalInterval(500)
 	  {
 	  }
@@ -326,10 +328,12 @@ private:
 	FLOCK_PROFILE			flockingProfile;
 	float                   CARMAPerformanceRatio;
 	float                   selfishRatio;
+	float                   iterativeRatio;
 	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
 	CARMASort               CarmaSortCriteria;
+	EvacueeGrouping         evacueeGroupingOption;
 
 	VARIANT_BOOL twoWayShareCapacity;
 	VARIANT_BOOL ThreeGenCARMA;

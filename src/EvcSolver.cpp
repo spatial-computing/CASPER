@@ -291,7 +291,17 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	if (FAILED(hr = pStm->Read(&m_PreserveFirstStop, sizeof(m_PreserveFirstStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_PreserveLastStop, sizeof(m_PreserveLastStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Read(&separable, sizeof(separable), &numBytes))) return hr;
+	
+	if (savedVersion < 7)
+	{
+		evacueeGroupingOption = EvacueeGrouping::None;
+		if (FAILED(hr = pStm->Read(&separable, sizeof(separable), &numBytes))) return hr;
+	}
+	else
+	{
+		if (FAILED(hr = pStm->Read(&evacueeGroupingOption, sizeof(evacueeGroupingOption), &numBytes))) return hr;
+		separable =evacueeGroupingOption == EvacueeGrouping::MergeSeperate || evacueeGroupingOption == EvacueeGrouping::Separate ? VARIANT_TRUE : VARIANT_FALSE;
+	}
 	if (FAILED(hr = pStm->Read(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&backtrack, sizeof(backtrack), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Read(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
@@ -335,9 +345,19 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 		CarmaSortCriteria = BWCont;
 		savedVersion = 5;
 	}
-
+	//version 6
+	if (savedVersion >= 6)
+	{
+		if (FAILED(hr = pStm->Read(&iterativeRatio, sizeof(iterativeRatio), &numBytes))) return hr;
+	}
+	else
+	{
+		iterativeRatio = 0.0f;
+		savedVersion = 6;
+	}
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
 	selfishRatio = min(max(selfishRatio, 0.0f), 1.0f);
+	iterativeRatio = min(max(iterativeRatio, 0.0f), 1.0f);
 	m_bPersistDirty = false;
 
 	return S_OK;
@@ -366,7 +386,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&m_PreserveFirstStop, sizeof(m_PreserveFirstStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_PreserveLastStop, sizeof(m_PreserveLastStop), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&m_UseTimeWindows, sizeof(m_UseTimeWindows), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&separable, sizeof(separable), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&evacueeGroupingOption, sizeof(evacueeGroupingOption), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&exportEdgeStat, sizeof(exportEdgeStat), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&backtrack, sizeof(backtrack), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&costPerDensity, sizeof(costPerDensity), &numBytes))) return hr;
@@ -380,6 +400,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&selfishRatio, sizeof(selfishRatio), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CarmaSortCriteria, sizeof(CarmaSortCriteria), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&iterativeRatio, sizeof(iterativeRatio), &numBytes))) return hr;
 
 	return S_OK;
 }

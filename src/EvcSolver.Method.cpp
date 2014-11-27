@@ -488,7 +488,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
 			// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
 			// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/ArcCASPER/issues/8
-			if (EvacueePairs->Empty() && removedDirty->IsEmpty() && myVertex->GVal > SearchRadius)
+			if (EvacueePairs->Empty() && removedDirty->IsEmpty()/* && myVertex->GVal > SearchRadius*/)
 			{
 				leafs->Insert(myEdge);
 				continue;
