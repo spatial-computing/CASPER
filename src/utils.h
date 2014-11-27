@@ -256,7 +256,6 @@ private:
 	typedef std::unordered_map<T, double, _Hasher, _Keyeq, _Alloc> map;
 
 public:
-	double minWeight;
 	double maxWeight;
 
 	using map::size;
@@ -265,7 +264,7 @@ public:
 	using map::cbegin;
 	using map::cend;
 
-	Histogram(size_t capacity = 0) : map(capacity), minWeight(FLT_MAX), maxWeight(-FLT_MAX) { }
+	Histogram(size_t capacity = 0) : map(capacity), maxWeight(-FLT_MAX) { }
 	void WeightedAdd(const std::vector<T> & list, double weight) { for (const auto & i : list) WeightedAdd(i, weight); }
 	virtual ~Histogram() { }
 
@@ -274,7 +273,6 @@ public:
 		if (map::find(item) == map::end()) map::insert(std::pair<T, double>(item, 0.0));
 		double & newWeight = map::at(item);
 		newWeight += weight;
-		minWeight = min(minWeight, newWeight);
 		maxWeight = max(maxWeight, newWeight);
 	}
 };

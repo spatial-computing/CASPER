@@ -21,6 +21,7 @@ public:
     IPolylinePtr pline;
 
     double GetEdgePortion() const { return toRatio - fromRatio; }
+	double GetCurrentCost(EvcSolverMethod method);
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 
     void SetFromRatio(double FromRatio)
@@ -89,7 +90,8 @@ public:
 	bool DoesItNeedASecondChance(double ThreasholdForReserveConst, double ThreasholdForPredictionCost, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
 
 	inline const int & GetKey()  const { return Order; }
-	friend inline bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
+	friend bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
+	friend bool operator!=(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order != rhs.Order; }
 
 	virtual ~EvcPath(void)
 	{

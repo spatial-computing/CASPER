@@ -24589,3 +24589,22 @@ Compressing  Visual C++ Redistributable.url
 
 Everything is Ok
  > Uploading "ArcCASPER-v10.2.3-50-gb780ab3-nightly.zip" to "/ArcCASPER-v10.2.3-50-gb780ab3-nightly.zip"... DONE
+
+
+
+This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox
+Time: Wed, Nov 26, 2014  8:00:01 AM
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/master'.
+Already up-to-date.
+repo is ready for build on branch master
+There are no new changes to be built
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/dev'.
+Already up-to-date.
+repo is ready for build on branch dev
+There are no new changes to be built

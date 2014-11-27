@@ -182,10 +182,6 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 	return hr;
 }
 
-// Special function for CCRP: to check how much capacity is left on this edge.
-// Will be used to get max capacity available on a path
-double NAEdge::LeftCapacity() const { return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost); }
-
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
@@ -196,11 +192,6 @@ double NAEdge::GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const
 	else if (method == EvcSolverMethod::CCRPSolver) speedPercent = allPop > reservations->myTrafficModel->CriticalDensPerCap * reservations->Capacity ? 0.0 : 1.0;
 	speedPercent = min(1.0, max(0.0001, speedPercent));
 	return speedPercent;
-}
-
-double NAEdge::GetCurrentCost(EvcSolverMethod method) const
-{
-	return OriginalCost / GetTrafficSpeedRatio(reservations->ReservedPop, method);
 }
 
 double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost) const
@@ -278,6 +269,22 @@ void NAEdge::RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool del
 	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
 	if (!delayedDirtyState) HowDirty(method);
 }
+
+void NAEdge::GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cleanVectorFirst)
+{
+	if (cleanVectorFirst) crossings.clear();
+	crossings.push_back(reservations->front());
+	for (const auto & p : *reservations)
+	{
+		if (*p != *crossings.back()) crossings.push_back(p);
+		_ASSERT_EXPR(!EvcPath::LessThanOrder(p, crossings.back()), L"Path reservations are not in increasing order");
+	}
+}
+
+// Special function for CCRP: to check how much capacity is left on this edge.
+// Will be used to get max capacity available on a path
+double NAEdge::LeftCapacity() const { return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost); }
+double NAEdge::GetCurrentCost(EvcSolverMethod method) const { return OriginalCost / GetTrafficSpeedRatio(reservations->ReservedPop, method); }
 
 double NAEdge::GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
 double NAEdge::GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }

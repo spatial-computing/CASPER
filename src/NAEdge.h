@@ -68,7 +68,7 @@ public:
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
-	void GetCrossingPaths(std::vector<EvcPathPtr> & crossings) { for (const auto & p : *reservations) crossings.push_back(p); }
+	void GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cleanVectorFirst = false);
 	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const;
 	HRESULT InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,

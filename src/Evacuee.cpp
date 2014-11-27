@@ -18,10 +18,8 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
-bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2)
-{
-	return e1->Paths->front()->Order > e2->Paths->front()->Order;
-}
+double PathSegment::GetCurrentCost(EvcSolverMethod method) { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
+bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
 
 void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, NAEdgeMap * touchedEdges)
 {
@@ -61,26 +59,25 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double Th
 		// we have to add the affecting list to be re-routed as well
 		// we do this by selecxting the highly congestied and most costly path segment and then extract all the evacuees that share the same segments (edges)
 		std::vector<EvcPathPtr> crossing;
-		crossing.reserve(50);
 		Histogram<EvcPathPtr> FreqOfOverlaps;
+		crossing.reserve(50);
 
 		for (const auto & seg : *this)
 		{
-			crossing.clear();
-			seg->Edge->GetCrossingPaths(crossing);
-			FreqOfOverlaps.WeightedAdd(crossing, seg->Edge->GetCurrentCost(method));
+			seg->Edge->GetUniqeCrossingPaths(crossing, true);
+			FreqOfOverlaps.WeightedAdd(crossing, seg->GetCurrentCost(method));
 		}
 
+		double cutOffWeight = ThreasholdForReserveCost * FreqOfOverlaps.maxWeight;
 		for (const auto & pair : FreqOfOverlaps)
 		{
-			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second / FinalEvacuationCost > ThreasholdForReserveCost)
+			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > cutOffWeight)
 			{
 				AffectingList.push_back(pair.first->myEvc);
 				pair.first->myEvc->Status = EvacueeStatus::Unprocessed;
 			}
 		}
 	}
-
 	return NeedsAChance;
 }
 
@@ -96,7 +93,7 @@ void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
 void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method)
 {
 	FinalEvacuationCost = 0.0;
-	for (const auto & pathSegment : *this) FinalEvacuationCost += pathSegment->Edge->GetCurrentCost(method) * abs(pathSegment->GetEdgePortion());
+	for (const auto & pathSegment : *this) FinalEvacuationCost += pathSegment->GetCurrentCost(method);
 	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
 	myEvc->FinalCost = max(myEvc->FinalCost, FinalEvacuationCost);
 }
