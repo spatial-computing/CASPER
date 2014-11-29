@@ -541,6 +541,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		os2 << "CARMA Extract Count = " << CARMAExtractCount << std::endl;
 		OutputDebugStringW(os2.str().c_str());
 		#endif
+
+		_ASSERT_EXPR(EvacueePairs->Empty() && removedDirty->IsEmpty(), L"Carma loop ended after scanning all the graph");
 	}
 
 	// set new default heuristic value
