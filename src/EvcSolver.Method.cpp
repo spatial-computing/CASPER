@@ -343,7 +343,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	NAVertexPtr myVertex = nullptr;
 	NAEdgePtr myEdge = nullptr;
 	INetworkElementPtr ipJunctionElement = nullptr;
-	double newCost, EdgeCostToBeat, SearchRadius = 0.0;
+	double newCost, EdgeCostToBeat, SearchRadius;
 	VARIANT_BOOL keepGoing;
 	INetworkJunctionPtr ipCurrentJunction = nullptr;
 	std::vector<NAEdgePtr> readyEdges;
@@ -368,7 +368,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	ipCurrentJunction = ipJunctionElement;
 
 	// if this list is not empty, it means we are going to have another CARMA loop
-	if (!EvacueePairs.Empty())
+	if (!EvacueePairs.empty())
 	{
 		if (ipStepProgressor)
 		{
@@ -418,7 +418,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 
 		// we're done with all these leafs. let's clean up and collect new ones for the next round.
 		leafs->Clear();
-		heap.ResetMaxHeapKey();
+		SearchRadius = FLT_MAX;
 
 		// Continue traversing the network while the heap has remaining junctions in it
 		// this is the actual Dijkstra code with backward network traversal. it will only update h value.
@@ -463,17 +463,14 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			// check if all removed dirty edges have been discovered again
 			removedDirty->Remove(myEdge->EID, myEdge->Direction);
 
-			// this is my new termination condition. let's hope it works.
-			// basically i stop inserting new edges if they are above search radius.
-			if (EvacueePairs.Empty() && removedDirty->IsEmpty() && SearchRadius <= 0.0) SearchRadius = heap.GetMaxHeapKey();
-
 			// termination condition and evacuee discovery
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
 			// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
 			// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/ArcCASPER/issues/8
-			if (EvacueePairs.Empty() && removedDirty->IsEmpty() && myVertex->GVal > SearchRadius)
+			if (EvacueePairs.empty() && removedDirty->IsEmpty())
 			{
 				leafs->Insert(myEdge);
+				SearchRadius = min(SearchRadius, myVertex->GVal);
 				continue;
 			}
 
@@ -542,12 +539,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		OutputDebugStringW(os2.str().c_str());
 		#endif
 
-		_ASSERT_EXPR(EvacueePairs->Empty() && removedDirty->IsEmpty(), L"Carma loop ended after scanning all the graph");
-	}
+		_ASSERT_EXPR(EvacueePairs.empty() && removedDirty->IsEmpty(), L"Carma loop ended after scanning all the graph");
 
-	// set new default heuristic value
-	vcache->UpdateHeuristicForOutsideVertices(SearchRadius, countCARMALoops == 1);
-	CARMAExtractCounts.push_back(CARMAExtractCount);
+		// set new default heuristic value
+		vcache->UpdateHeuristicForOutsideVertices(SearchRadius, countCARMALoops == 1);
+		CARMAExtractCounts.push_back(CARMAExtractCount);
+	}
 
 	// load discovered evacuees into sorted list
 	EvacueePairs.LoadSortedEvacuees(SortedEvacuees);
@@ -596,11 +593,13 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 		if ((j->second & 1) && closedList->Exist(j->first, esriNEDAlongDigitized))
 		{
 			closedList->Erase(j->first, esriNEDAlongDigitized);
+			removedDirty->Insert(j->first, esriNEDAlongDigitized);
 			tempLeafs->Insert(j->first, esriNEDAlongDigitized);
 		}
 		if ((j->second & 2) && closedList->Exist(j->first, esriNEDAgainstDigitized))
 		{
 			closedList->Erase(j->first, esriNEDAgainstDigitized);
+			removedDirty->Insert(j->first, esriNEDAgainstDigitized);
 			tempLeafs->Insert(j->first, esriNEDAgainstDigitized);
 		}
 	}

@@ -111,7 +111,6 @@ class FibonacciHeap
 private:
 	typedef std::unordered_map<T, HeapNode<T> *, Hasher, TEq> table;
 
-	double maxHeakKeyValue;
 	HeapNode<T> ** rootListByRank;
 	HeapNode<T> * minRoot;
 	table * nodeTable;
@@ -151,8 +150,6 @@ private:
 
 public:
 	bool IsVisited(const T & node)   { return nodeTable->find(node) != nodeTable->end(); }
-	double GetMaxHeapKey(void) const { return maxHeakKeyValue; }
-	void ResetMaxHeapKey(void)       { maxHeakKeyValue = 0.0;  }
 	bool IsEmpty()                   { return (minRoot == nullptr); }
 	size_t Size() const              { return nodeTable->size(); }
 	T FindMin()                      { return minRoot->data; }
@@ -165,7 +162,6 @@ public:
 		minRoot = nullptr;
 		nodeTable = new DEBUG_NEW_PLACEMENT table();
 		rootListByRank = new DEBUG_NEW_PLACEMENT HeapNode<T>*[100];
-		ResetMaxHeapKey();
 	}
 
 	virtual ~FibonacciHeap()
@@ -188,7 +184,6 @@ public:
 		else
 		{
 			auto node = new DEBUG_NEW_PLACEMENT HeapNode<T>(value, GetHeapKey(value));
-			maxHeakKeyValue = max(maxHeakKeyValue, node->key);
 
 			if (!minRoot) minRoot = node;
 			else

@@ -187,9 +187,10 @@ public:
 class NAEvacueeVertexTable : protected std::unordered_map<long, std::vector<EvacueePtr>>
 {
 public:
+	using std::unordered_map<long, std::vector<EvacueePtr>>::empty;
+
 	void InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir);
 	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAEdgeContainer> leafs, double pop, EvcSolverMethod method);
-	bool Empty() const { return empty(); }
 	void LoadSortedEvacuees(std::shared_ptr<std::vector<EvacueePtr>>) const;
 };
 
