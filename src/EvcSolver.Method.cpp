@@ -271,7 +271,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		CARMAExtractCounts.pop_back();
 
 		/// TODO figure out how may of paths need to be detached and process again
-		NumberOfEvacueesInIteration = 0; // FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
+		NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
 		carmaSortCriteria = CARMASort::ReverseFinalCost;
 
 	} while (NumberOfEvacueesInIteration > 0);
@@ -314,7 +314,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(EvacueeList * AllEva
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
 	int Iteration = GlobalEvcCostAtIteration.size();
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (0x1 << Iteration));
+	size_t MaxEvacueesInIteration = 0; // size_t(AllEvacuees->size() / (0x1 << Iteration));
 
 	if (Iteration > 1)
 	{
@@ -482,7 +482,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 
 			// this is my new termination condition. let's hope it works.
 			// basically i stop inserting new edges if they are above search radius.
-			if (EvacueePairs->Empty() && removedDirty->IsEmpty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxHeapKey();
+			//if (EvacueePairs->Empty() && removedDirty->IsEmpty() && SearchRadius <= 0.0) SearchRadius = heap->GetMaxHeapKey();
 
 			// termination condition and evacuee discovery
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
@@ -557,6 +557,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMess
 		os2 << "CARMA Extract Count = " << CARMAExtractCount << std::endl;
 		OutputDebugStringW(os2.str().c_str());
 		#endif
+
+		_ASSERT_EXPR(EvacueePairs->Empty() && removedDirty->IsEmpty(), L"Carma loop ended after scanning all the graph");
 	}
 
 	// set new default heuristic value
@@ -620,11 +622,13 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, NAEdgeContaine
 		if ((j->second & 1) && closedList->Exist(j->first, esriNEDAlongDigitized))
 		{
 			closedList->Erase(j->first, esriNEDAlongDigitized);
+			removedDirty->Insert(j->first, esriNEDAlongDigitized);
 			tempLeafs->Insert(j->first, esriNEDAlongDigitized);
 		}
 		if ((j->second & 2) && closedList->Exist(j->first, esriNEDAgainstDigitized))
 		{
 			closedList->Erase(j->first, esriNEDAgainstDigitized);
+			removedDirty->Insert(j->first, esriNEDAgainstDigitized);
 			tempLeafs->Insert(j->first, esriNEDAgainstDigitized);
 		}
 	}
