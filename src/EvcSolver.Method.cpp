@@ -281,7 +281,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 			evc->FinalCost = 0.0;
 			for (const auto & path : *evc->Paths)
 			{
-				path->CalculateFinalEvacuationCost(initDelayCostPerPop, solverMethod);
+				path->CalculateFinalEvacuationCost(initDelayCostPerPop, EvcSolverMethod::CASPERSolver);
 				allPaths.push_back(path);
 			}
 		}
