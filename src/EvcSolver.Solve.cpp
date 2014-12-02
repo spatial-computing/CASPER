@@ -995,7 +995,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList.size());
 
-	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), countCARMALoops, carmaSec, max(0, mem));
+	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), CARMAExtractCounts.size(), carmaSec, max(0, mem));
 
 	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
@@ -1005,14 +1005,16 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	std::stringstream ss;
 	ss.imbue(std::locale(""));
-	CARMAExtractsMsg.Format(_T("The following is the number of CARMA heap extracts in each loop: "));
-	for (std::vector<unsigned int>::size_type i = 0; i < CARMAExtractCounts.size(); i++)
+	if (CARMAExtractCounts.size() > 0)
 	{
-		if (i == 0) ss << CARMAExtractCounts[0];
-		else        ss << " | " << CARMAExtractCounts[i];
+		CARMAExtractsMsg.Format(_T("The following is the number of CARMA heap extracts in each loop: "));
+		for (std::vector<unsigned int>::size_type i = 0; i < CARMAExtractCounts.size(); ++i)
+		{
+			if (i == 0) ss << CARMAExtractCounts[0];
+			else        ss << " | " << CARMAExtractCounts[i];
+		}
+		CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
 	}
-	CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
-
 	if (GlobalEvcCostAtIteration.size() == 1)
 	{
 		iterationMsg1.Format(_T("The program ran for 1 iteration. Evacuation cost at the end is: %.2f"), GlobalEvcCostAtIteration[0]);
@@ -1031,7 +1033,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	pMessages->AddMessage(ATL::CComBSTR(initMsg));
 	pMessages->AddMessage(ATL::CComBSTR(performanceMsg));
 	pMessages->AddMessage(ATL::CComBSTR(CARMALoopMsg));
-	pMessages->AddMessage(ATL::CComBSTR(CARMAExtractsMsg));
+	if (!CARMAExtractsMsg.IsEmpty()) pMessages->AddMessage(ATL::CComBSTR(CARMAExtractsMsg));
 	pMessages->AddMessage(ATL::CComBSTR(iterationMsg1));
 	if (!iterationMsg2.IsEmpty()) pMessages->AddMessage(ATL::CComBSTR(iterationMsg2));
 	if (ecache->GetCacheHitPercentage() < 80.0) pMessages->AddMessage(ATL::CComBSTR(CacheHitMsg));

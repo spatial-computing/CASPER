@@ -322,7 +322,6 @@ private:
 	float                   CARMAPerformanceRatio;
 	float                   selfishRatio;
 	float                   iterativeRatio;
-	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
 	CARMASort               CarmaSortCriteria;

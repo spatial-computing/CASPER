@@ -27,7 +27,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
 	int pathGenerationCount = -1, EvacueeProcessOrder = -1;
 	size_t CARMAClosedSize = 0, sumVisitedEdge = 0, NumberOfEvacueesInIteration = 0;
-	countCARMALoops = 0;
 	auto leafs = std::shared_ptr<NAEdgeContainer>(new DEBUG_NEW_PLACEMENT NAEdgeContainer(200));
 	std::vector<NAEdgePtr> readyEdges;
 	HANDLE proc = GetCurrentProcess();
@@ -37,6 +36,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	ATL::CString statusMsg, AlgName;
 	CARMASort carmaSortCriteria = this->CarmaSortCriteria;
 	auto detachedPaths = std::shared_ptr<std::vector<EvcPathPtr>>(new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>());
+	CARMAExtractCounts.clear();
 
 	switch (solverMethod)
 	{
@@ -245,7 +245,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		} while (!sortedEvacuees->empty());
 
 		UpdatePeakMemoryUsage();
-		CARMAExtractCounts.pop_back();
 
 		// figure out how may of paths need to be detached and process again
 		NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
@@ -372,7 +371,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	{
 		if (ipStepProgressor)
 		{
-			statusMsg.Format(_T("CARMA Loop %d"), ++countCARMALoops);
+			statusMsg.Format(_T("CARMA Loop %d"), CARMAExtractCounts.size());
 			if (FAILED(hr = ipStepProgressor->put_Message(ATL::CComBSTR(statusMsg)))) return hr;
 		}
 		#ifdef DEBUG
@@ -542,7 +541,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		_ASSERT_EXPR(EvacueePairs.empty() && removedDirty->IsEmpty(), L"Carma loop ended after scanning all the graph");
 
 		// set new default heuristic value
-		vcache->UpdateHeuristicForOutsideVertices(SearchRadius, countCARMALoops == 1);
+		vcache->UpdateHeuristicForOutsideVertices(SearchRadius, CARMAExtractCounts.empty());
 		CARMAExtractCounts.push_back(CARMAExtractCount);
 	}
 
