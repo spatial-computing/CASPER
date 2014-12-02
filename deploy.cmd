@@ -30,7 +30,7 @@ git pull
 
 :: get hash of head
 for /f %%i in ('git describe') do set revi=%%i
-set "out=ArcCASPER-%revi%-%2%.zip"
+set "out=CASPER4GIS-%revi%-%2%.zip"
 
 :: TODO create changle.log from 'git shortlog --no-merges %1 --not v10.1'
 
