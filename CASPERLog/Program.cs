@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace ArcCASPERLog
+namespace CASPERLog
 {
     class Program
     {
@@ -12,7 +12,7 @@ namespace ArcCASPERLog
         {
             if (args.Length < 1)
             {
-                Console.WriteLine("Usage: ArcCASPERLog logfilename.log [outputsheet.csv]");
+                Console.WriteLine("Usage: CASPERLog logfilename.log [outputsheet.csv]");
                 return 1;
             }
 

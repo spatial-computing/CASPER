@@ -510,7 +510,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	// release date label
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
 	wchar_t compileDateBuff[500];
-	swprintf_s(compileDateBuff, 500, L"Release: %s  |  <a href=\"http://facebook.com/arccasper\">Like</a>  |  <a href=\"http://esri.com/arccasper\">Info</a>  |  <a href=\"https://www.dropbox.com/sh/b01zkyb6ka56xiv/oOjJBINPIr\">Download</a>", _T(__DATE__));
+	swprintf_s(compileDateBuff, 500, L"Release: %s  |  <a href=\"http://facebook.com/casper4gis\">Like</a>  |  <a href=\"http://esri.com/arccasper\">Info</a>  |  <a href=\"https://www.dropbox.com/sh/b01zkyb6ka56xiv/oOjJBINPIr\">Download</a>", _T(__DATE__));
 	::SendMessage(m_hlblRelease, WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
 	swprintf_s(compileDateBuff, 500, L"%s %s", PROJ_NAME, _T(GIT_DESCRIBE));
 	::SendMessage(GetDlgItem(IDC_STATIC_Title), WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
