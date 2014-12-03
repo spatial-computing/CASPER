@@ -2,9 +2,9 @@
 
 :: setup my variables
 set OLDDIR=%CD%
-SET dir=d:\Archive\arccasperdeploy
-SET cydir=d:/Archive/arccasperdeploy
-SET url=git@github.com:kaveh096/ArcCASPER.git
+SET dir=d:\Archive\casperdeploy
+SET cydir=d:/Archive/casperdeploy
+SET url=git@github.com:kaveh096/CASPER.git
 set PATH=%PATH%;D:\cygwin64\bin
 
 :: clean enviroment

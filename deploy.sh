@@ -5,7 +5,7 @@ echo "Time: `date`"
 if [ $# -ne 3 ]; then
   # usage:
   echo "Usage: $0 RepoName TempDir branches"
-  echo "Example: $0 CASPER d:/Archive/arccasperdeploy 'master dev'"
+  echo "Example: $0 CASPER d:/Archive/casperdeploy 'master dev'"
   exit -1
 fi
 

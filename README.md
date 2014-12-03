@@ -22,7 +22,7 @@ CASPER (Capacity-Aware Shortest Path Evacuation Routing) is a custom Network Ana
  - (Optional) Background Geoprocessing (64-bit)
 
 ####Using the Code
-The project can be compiled with VS2013 or later. You need a post-commit and a post-checkout git hook to generate an extra header file. Use the following sample:
+The project can be compiled with VS2013 or later. You need to install ArcGIS Desktop C++ SDK. You also need a post-commit and a post-checkout git hook to generate an extra header file. Use the following sample:
 
 ```bash
 #!/bin/bash
