@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ArcCASPERLog")]
+[assembly: AssemblyTitle("CASPERLog")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Southern California")]
-[assembly: AssemblyProduct("ArcCASPERLog")]
+[assembly: AssemblyProduct("CASPERLog")]
 [assembly: AssemblyCopyright("Copyright © University of Southern California 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

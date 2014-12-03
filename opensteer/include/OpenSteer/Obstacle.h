@@ -158,7 +158,7 @@ namespace OpenSteer {
     };
 
 } // namespace OpenSteer
-    
-    
+
+
 // ----------------------------------------------------------------------------
 #endif // OPENSTEER_OBSTACLE_H

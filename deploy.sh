@@ -5,12 +5,13 @@ echo "Time: `date`"
 if [ $# -ne 3 ]; then
   # usage:
   echo "Usage: $0 RepoName TempDir branches"
-  echo "Example: $0 ArcCASPER d:/Archive/arccasperdeploy 'master dev'"
+  echo "Example: $0 CASPER d:/Archive/casperdeploy 'master dev'"
   exit -1
 fi
 
 # define some vars
-curdir="`pwd`"
+curDir="`pwd`"
+scriptDir="`dirname $0`"
 tempdir="`cygpath $2`"
 repo=$1
 branches=$3
@@ -45,7 +46,7 @@ do
     out=$repo-$revi-nightly.zip
   fi
 
-  if [ `$curdir/dropbox_uploader.sh list | grep $out | wc -l` -ge 1 ]; then
+  if [ `$scriptDir/dropbox_uploader.sh list | grep $out | wc -l` -ge 1 ]; then
     echo "There are no new changes to be built"
   else
     echo "The $branch branch has new commits"
@@ -58,8 +59,8 @@ do
 
     # cleanup then rebuild
     rm -f Package/EvcSolver32.* Package/EvcSolver64.* Package/opensteer32.* Package/opensteer64.* Package/README.md
-    "/cygdrive/c/Program Files (x86)/MSBuild/12.0/Bin/MSBuild.exe" /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 /p:NOREG=1 ArcCASPER.sln
-    "/cygdrive/c/Program Files (x86)/MSBuild/12.0/Bin/MSBuild.exe" /m /target:rebuild /p:Configuration=Release /p:Platform=x64 /p:NOREG=1 ArcCASPER.sln
+    "/cygdrive/c/Program Files (x86)/MSBuild/12.0/Bin/MSBuild.exe" /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 /p:NOREG=1 CASPER.sln
+    "/cygdrive/c/Program Files (x86)/MSBuild/12.0/Bin/MSBuild.exe" /m /target:rebuild /p:Configuration=Release /p:Platform=x64 /p:NOREG=1 CASPER.sln
 
     # Generate readme file
     sed -e "s/REV/$revi/g" README.md > Package/README.md
@@ -70,10 +71,10 @@ do
     cd Package
     "/cygdrive/c/Program Files/7-Zip/7z.exe" a $out -i@file.list
     if [ $? -eq 0 ]; then
-      $curdir/dropbox_uploader.sh upload $out $out
+      $scriptDir/dropbox_uploader.sh upload $out $out
     else
       echo "Some files are missing so we do not upload the zip file"
     fi
   fi
 done
-cd $curdir
+cd $curDir

@@ -54,7 +54,7 @@
 //   LocalSpace:          a concrete object (can be instantiated)
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 06-05-02 cwr: created 
+// 06-05-02 cwr: created
 //
 //
 // ----------------------------------------------------------------------------

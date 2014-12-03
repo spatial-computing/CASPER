@@ -11,7 +11,7 @@ EdgeReservations::EdgeReservations(float capacity, TrafficModel * trafficModel)
 	ReservedPop = 0.0;
 	Capacity = capacity;
 	myTrafficModel = trafficModel;
-	isDirty = true;
+	dirtyState = EdgeDirtyState::CostIncreased;
 }
 
 EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
@@ -19,19 +19,28 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 	ReservedPop = cpy.ReservedPop;
 	Capacity = cpy.Capacity;
 	myTrafficModel = cpy.myTrafficModel;
-	isDirty = cpy.isDirty;
+	dirtyState = cpy.dirtyState;
 }
 
 void EdgeReservations::AddReservation(double newFlow, EvcPathPtr path)
 {
-	this->insert(this->end(), path);
+	push_back(path);
 	ReservedPop += (float)newFlow;
+}
+
+void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
+{
+	int i, last = (int)size() - 1;
+	for (i = last; i >= 0; --i) if (*path == *at(i)) break;
+	if (i < 0) throw std::out_of_range("Path not found in edge reservation");
+	erase(begin() + i);
+	ReservedPop -= (float)flow;
 }
 
 ///////////////////////////////////////////////////////////////////////
 // NAEdge Methods
 
-NAEdge::NAEdge(const NAEdge& cpy)
+NAEdge::NAEdge(const NAEdge& cpy) : TreeNext(cpy.TreeNext), AdjacentForward(cpy.AdjacentForward), AdjacentBackward(cpy.AdjacentBackward)
 {
 	reservations = cpy.reservations;
 	NetEdge = cpy.NetEdge;
@@ -39,29 +48,22 @@ NAEdge::NAEdge(const NAEdge& cpy)
 	Direction = cpy.Direction;
 	EID = cpy.EID;
 	ToVertex = cpy.ToVertex;
-	//LastExteriorEdge = cpy.LastExteriorEdge;
 	CleanCost = cpy.CleanCost;
 	TreePrevious = cpy.TreePrevious;
-	TreeNext = cpy.TreeNext;
-	AdjacentForward = cpy.AdjacentForward;
-	AdjacentBackward = cpy.AdjacentBackward;
 	myGeometry = cpy.myGeometry;
 }
 
-NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model)
+NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, const NAEdge * otherEdge, bool twoWayRoadsShareCap, std::list<EdgeReservationsPtr> & ResTable, TrafficModel * model)
 {
-	myGeometry = NULL;
-	TreePrevious = NULL;
+	myGeometry = nullptr;
+	TreePrevious = nullptr;
 	CleanCost = -1.0;
-	ToVertex = 0;
+	ToVertex = nullptr;
 	this->NetEdge = edge;
-	//LastExteriorEdge = 0;
 	VARIANT vcost, vcap;
 	float capacity = 1.0;
-	HRESULT hr = 0;
-	AdjacentForward = NULL;
-	AdjacentBackward = NULL;
-	
+	HRESULT hr = S_OK;
+
 	if (FAILED(hr = edge->get_AttributeValue(capacityAttribID, &vcap)))
 	{
 		vcap.vt = VT_R8;
@@ -75,29 +77,26 @@ NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, N
 
 	if (FAILED(hr = edge->get_EID(&EID)) ||	FAILED(hr = edge->get_Direction(&Direction)))
 	{
-		_ASSERT(hr == 0);
-		NetEdge = 0;
-		reservations = 0;
+		_ASSERT(hr == S_OK);
+		NetEdge = nullptr;
+		reservations = nullptr;
 		EID = -1;
 		throw std::exception("Something bad happened while looking up a network edge");
 	}
 	else
 	{
 		_ASSERT(vcost.dblVal >= 0.0);
-		OriginalCost = max(0.0, vcost.dblVal);
+		OriginalCost = max(FLT_MIN, vcost.dblVal);
 		if (vcap.vt == VT_R8) capacity = max(1.0f, (float)(vcap.dblVal));
 		else if (vcap.vt == VT_I4) capacity = max(1.0f, (float)(vcap.intVal));
 
-		NAResTableItr it = resTable->find(EID);
-		if (it == resTable->end())
-		{
-			reservations = new DEBUG_NEW_PLACEMENT EdgeReservations(capacity, model);
-			resTable->insert(NAResTablePair(EID, reservations));
-		}
+		// now deal with reservation list
+		if (twoWayRoadsShareCap && otherEdge) reservations = otherEdge->reservations;
 		else
 		{
-			reservations = it->second;
-		}		
+			reservations = new DEBUG_NEW_PLACEMENT EdgeReservations(capacity, model);
+			ResTable.push_back(reservations);
+		}
 	}
 }
 
@@ -120,7 +119,7 @@ HRESULT NAEdge::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassCo
 	IFeatureClassPtr ipNetworkSourceFC;
 	IFeaturePtr ipSourceFeature;
 	ICurvePtr ipSubCurve;
-	
+
 	if (!myGeometry)
 	{
 		// retrieve street shape for this edge
@@ -154,7 +153,7 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 										   long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag)
 {
 	HRESULT hr = S_OK;
-	CComVariant featureID(0);
+	ATL::CComVariant featureID(0);
 	long sourceOID, sourceID;
 	double fromPosition, toPosition;
 	IGeometryPtr ipGeometry;
@@ -169,25 +168,18 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 
 	// Store the feature values on the feature buffer
 	if (FAILED(hr = ipFeatureBuffer->putref_Shape(ipGeometry))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, CComVariant(EID)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceIDFieldIndex, CComVariant(sourceID)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, CComVariant(sourceOID)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, CComVariant(dir)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, CComVariant(resPop)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, CComVariant(GetCurrentCost())))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, CComVariant(OriginalCost)))) return hr;
-	if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, CComVariant(GetCurrentCost() / OriginalCost)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(eidFieldIndex, ATL::CComVariant(EID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceIDFieldIndex, ATL::CComVariant(sourceID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(sourceOIDFieldIndex, ATL::CComVariant(sourceOID)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(dirFieldIndex, ATL::CComVariant(dir)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(resPopFieldIndex, ATL::CComVariant(resPop)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(travCostFieldIndex, ATL::CComVariant(GetCurrentCost())))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(orgCostFieldIndex, ATL::CComVariant(OriginalCost)))) return hr;
+	if (FAILED(hr = ipFeatureBuffer->put_Value(congestionFieldIndex, ATL::CComVariant(GetCurrentCost() / OriginalCost)))) return hr;
 
 	// Insert the feature buffer in the insert cursor
 	if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;
 	return hr;
-}
-
-// Special function for CCRP: to check how much capacity is left on this edge.
-// Will be used to get max capacity available on a path
-double NAEdge::LeftCapacity() const
-{
-	return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost);
 }
 
 // This is where the actual capacity aware part is happening:
@@ -196,15 +188,10 @@ double NAEdge::LeftCapacity() const
 double NAEdge::GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const
 {
 	double speedPercent = 1.0;
-	if (method == CASPERSolver) speedPercent = reservations->myTrafficModel->GetCongestionPercentage(reservations->Capacity, allPop);
-	else if (method == CCRPSolver) speedPercent = allPop > reservations->myTrafficModel->CriticalDensPerCap * reservations->Capacity ? 0.0 : 1.0;
+	if (method == EvcSolverMethod::CASPERSolver) speedPercent = reservations->myTrafficModel->GetCongestionPercentage(reservations->Capacity, allPop);
+	else if (method == EvcSolverMethod::CCRPSolver) speedPercent = allPop > reservations->myTrafficModel->CriticalDensPerCap * reservations->Capacity ? 0.0 : 1.0;
 	speedPercent = min(1.0, max(0.0001, speedPercent));
 	return speedPercent;
-}
-
-double NAEdge::GetCurrentCost(EvcSolverMethod method) const
-{
-	return OriginalCost / GetTrafficSpeedRatio(reservations->ReservedPop, method);
 }
 
 double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost) const
@@ -212,9 +199,9 @@ double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDel
 	double speedPercent = 1.0;
 	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);
 	newPop += reservations->ReservedPop;
-	
+
 	speedPercent = GetTrafficSpeedRatio(newPop, method);
-	
+
 	// this extra output tells CASPER how much will this edge reservation affects the cost according to the traffic model
 	if (globalDeltaCost)
 	{
@@ -232,115 +219,131 @@ double NAEdge::MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow,
 	double cutoffCost = max(longestPathSoFar, currentPathSoFar);
 
 	if (deltaCostOfNewFlow > 0.0 && selfishRatio > 0.0)
-		for(std::vector<EvcPathPtr>::const_iterator pi = reservations->begin(); pi != reservations->end(); ++pi)
-		{
-			AddedGlobalCost = max(AddedGlobalCost, (*pi)->GetEvacuationCost() + deltaCostOfNewFlow - cutoffCost);
-		}
+		for(const auto & p: *reservations) AddedGlobalCost = max(AddedGlobalCost, p->GetReserveEvacuationCost() + deltaCostOfNewFlow - cutoffCost);		
 	else return 0.0;
 
 	return selfishRatio * min(AddedGlobalCost, deltaCostOfNewFlow);
 }
 
 // this function has to cache the answer and it has to be consistent.
-bool NAEdge::IsDirty(double minPop2Route, EvcSolverMethod method)
+EdgeDirtyState NAEdge::HowDirty(EvcSolverMethod method, double minPop2Route, bool exhaustive)
 {
-	reservations->isDirty |= CleanCost < this->GetCost(minPop2Route, method) * 0.95;
-	return reservations->isDirty;
+	if (CleanCost <= 0.0) reservations->dirtyState = EdgeDirtyState::CostIncreased;
+	else
+	{
+		if (exhaustive || reservations->dirtyState == EdgeDirtyState::CleanState)
+		{
+			reservations->dirtyState = EdgeDirtyState::CleanState;
+			double costchange = (GetCost(minPop2Route, method) / CleanCost) - 1.0;
+			if (costchange > 0.02) reservations->dirtyState = EdgeDirtyState::CostIncreased;
+			if (costchange < -FLT_EPSILON) reservations->dirtyState = EdgeDirtyState::CostDecreased;
+		}
+	}
+	return reservations->dirtyState;
 }
 
-void NAEdge::SetClean(double minPop2Route, EvcSolverMethod method)
+void NAEdge::SetClean(EvcSolverMethod method, double minPop2Route)
 {
 	CleanCost = this->GetCost(minPop2Route, method);
-	reservations->isDirty = false;
+	reservations->dirtyState = EdgeDirtyState::CleanState;
 }
 
 // this function adds the reservation also determines if the new added population makes the edge dirty.
 // if this new reservation made the edge change from clean to dirty then the return is true otherwise returns false.
-void NAEdge::AddReservation(EvcPath * path, double population, EvcSolverMethod method)
-{	
+void NAEdge::AddReservation(EvcPath * path, EvcSolverMethod method, bool delayedDirtyState)
+{
 	// actual reservation code
-	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) population = min(population, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);	
+	double population = path->GetRoutedPop();
+	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) population = min(population, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);
 	reservations->AddReservation(population, path);
 
 	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
-	IsDirty(1.0, method);
+	if (!delayedDirtyState) HowDirty(method);
 }
 
-void NAEdge::TreeNextEraseFirst(NAEdge * child)
+void NAEdge::RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState)
 {
-	if (child)
+	double flow = path->GetRoutedPop();
+	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) flow = min(flow, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);
+	reservations->RemoveReservation(flow, path);
+	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
+	if (!delayedDirtyState) HowDirty(method);
+}
+
+void NAEdge::GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cleanVectorFirst)
+{
+	if (cleanVectorFirst) crossings.clear();
+	crossings.push_back(reservations->front());
+	for (const auto & p : *reservations)
 	{
-		std::vector<NAEdge *>::size_type j = TreeNext.size();
-		for(std::vector<NAEdge *>::size_type i = 0; i < TreeNext.size(); i++)		
-			if (IsEqual(TreeNext[i], child))
-			{
-				j = i;
-				break;
-			}
-		_ASSERT(j < TreeNext.size());
-		if (j < TreeNext.size()) TreeNext.erase(TreeNext.begin() + j);
+		if (*p != *crossings.back()) crossings.push_back(p);
+		_ASSERT_EXPR(!EvcPath::LessThanOrder(p, crossings.back()), L"Path reservations are not in increasing order");
 	}
 }
 
-double GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
-double GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
-bool   IsEqual         (const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
+// Special function for CCRP: to check how much capacity is left on this edge.
+// Will be used to get max capacity available on a path
+double NAEdge::LeftCapacity() const { return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost); }
+double NAEdge::GetCurrentCost(EvcSolverMethod method) const { return OriginalCost / GetTrafficSpeedRatio(reservations->ReservedPop, method); }
+
+double NAEdge::GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
+double NAEdge::GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
+bool   NAEdge::IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
 
 /////////////////////////////////////////////////////////////
 // NAEdgeCache
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
 NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 {
-	NAEdgePtr n = 0;
+	NAEdgePtr n = nullptr;
 	long EID;
-	NAEdgeTable * cache = 0;
-	NAResTable  * resTable = 0;
-	esriNetworkEdgeDirection dir;
+	NAEdgeTable * cache = nullptr;
+	esriNetworkEdgeDirection dir, otherDir;
 	INetworkElementPtr ipEdgeElement;
 	INetworkEdgePtr edgeClone;
 
-	if (FAILED(edge->get_EID(&EID))) return 0;
-	if (FAILED(edge->get_Direction(&dir))) return 0;
+	if (FAILED(edge->get_EID(&EID))) return nullptr;
+	if (FAILED(edge->get_Direction(&dir))) return nullptr;
 
 	if (dir == esriNEDAlongDigitized)
 	{
 		cache = cacheAlong;
-		resTable = resTableAlong;
+		otherDir = esriNEDAgainstDigitized;
 	}
 	else
 	{
 		cache = cacheAgainst;
-		resTable = resTableAgainst;
+		otherDir = esriNEDAlongDigitized;
 	}
 
-	stdext::hash_map<long, NAEdgePtr>::const_iterator it = cache->find(EID);
+	std::unordered_map<long, NAEdgePtr>::const_iterator it = cache->find(EID);
 
 	if (it == cache->end())
 	{
 		if (!reuseEdgeElement)
 		{
-			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return 0;
+			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return nullptr;
 			edgeClone = ipEdgeElement;
-			if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return 0;			
+			if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return nullptr;
 		}
-		else 
+		else
 		{
 			edgeClone = edge;
 		}
-		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, resTable, myTrafficModel);
+		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, Get(EID, otherDir), twoWayRoadsShareCap, ResTable, myTrafficModel);
 		cache->insert(NAEdgeTablePair(n));
 	}
 	else
-	{		
+	{
 		n = it->second;
 	}
 	return n;
 }
-	
+
 void NAEdgeCache::CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver)
 {
-	for(NAEdgeTableItr cit = cacheAlong->begin();   cit != cacheAlong->end();   cit++) cit->second->SetClean(minPop2Route, solver);
-	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean(minPop2Route, solver);
+	for (NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) cit->second->SetClean(solver, minPop2Route);
+	for (NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean(solver, minPop2Route);
 }
 
 void NAEdgeCache::Clear()
@@ -348,76 +351,64 @@ void NAEdgeCache::Clear()
 	for(NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++)
 	{
 		NAEdgePtr e = (*cit).second;
-		if (e->AdjacentForward) delete e->AdjacentForward;
-		if (e->AdjacentBackward) delete e->AdjacentBackward;
 		delete e;
 	}
 	for(NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++)
 	{
 		NAEdgePtr e = (*cit).second;
-		if (e->AdjacentForward) delete e->AdjacentForward;
-		if (e->AdjacentBackward) delete e->AdjacentBackward;
 		delete e;
 	}
-	for(NAResTableItr ires = resTableAlong->begin(); ires != resTableAlong->end(); ires++) delete (*ires).second;
+	for (auto r : ResTable) delete r;
+	for (auto n : GarbageNeighborList) delete n;
 
+	GarbageNeighborList.clear();
 	cacheAlong->clear();
 	cacheAgainst->clear();
-	resTableAlong->clear();
-
-	if (!twoWayRoadsShareCap)
-	{
-		for(NAResTableItr ires = resTableAgainst->begin(); ires != resTableAgainst->end(); ires++) delete (*ires).second;
-		resTableAgainst->clear();
-	}
+	ResTable.clear();
 }
 
 NAEdgePtr NAEdgeCache::Get(long eid, esriNetworkEdgeDirection dir) const
 {
 	NAEdgeTable * cache = cacheAgainst;
-	if (dir == esriNEDAlongDigitized) cache = cacheAlong;	
+	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
 	NAEdgeTableItr i = cache->find(eid);
 	if (i != cache->end()) return i->second;
-	else return NULL;
+	else return nullptr;
 }
 
-HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, vector_NAEdgePtr_Ptr & neighbors)
+HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr> ** returnNeighbors)
 {
 	HRESULT hr = S_OK;
 	long adjacentEdgeCount;
 	double fromPosition, toPosition;
 	INetworkForwardStarExPtr star;
-	neighbors = NULL;
-	INetworkEdgePtr netEdge = NULL;
+	ArrayList<NAEdgePtr> * neighbors = nullptr;
+	INetworkEdgePtr netEdge = nullptr;
 
 	if (Edge)
 	{
-		neighbors = dir == QueryDirection::Forward ? Edge->AdjacentForward : Edge->AdjacentBackward;
+		neighbors = dir == QueryDirection::Forward ? &Edge->AdjacentForward : &Edge->AdjacentBackward;
 		netEdge = Edge->NetEdge;
 	}
-	if (neighbors) return hr;
-	neighbors = new DEBUG_NEW_PLACEMENT std::vector<NAEdgePtr>();
+	else
+	{
+		neighbors = new DEBUG_NEW_PLACEMENT ArrayList<NAEdgePtr>();
+		GarbageNeighborList.push_back(neighbors);
+	}
+	if (neighbors->empty())
+	{
+		star = dir == QueryDirection::Forward ? ipForwardStar: ipBackwardStar;
 
-	if (dir == QueryDirection::Forward)
-	{
-		star = ipForwardStar;
-		if (Edge) Edge->AdjacentForward = neighbors;
+		if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, nullptr, ipAdjacencies))) return hr;
+		if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;
+		neighbors->Init((UINT8)adjacentEdgeCount);
+		for (long i = 0; i < adjacentEdgeCount; i++)
+		{
+			if (FAILED(hr = ipAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
+			neighbors->at((UINT8)i, this->New(ipCurrentEdge, false));
+		}
 	}
-	else 
-	{
-		star = ipBackwardStar;
-		if (Edge) Edge->AdjacentBackward = neighbors;
-	}
-
-	if (FAILED(hr = star->QueryAdjacencies(ToVertex->Junction, netEdge, 0 /*lastExteriorEdge*/, ipAdjacencies))) return hr;
-	if (FAILED(hr = ipAdjacencies->get_Count(&adjacentEdgeCount))) return hr;	
-	neighbors->reserve(adjacentEdgeCount);
-	for (long i = 0; i < adjacentEdgeCount; i++)
-	{
-		if (FAILED(hr = ipAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-		neighbors->push_back(this->New(ipCurrentEdge, false));
-	}
-	
+	*returnNeighbors = neighbors;
 	return hr;
 }
 
@@ -426,7 +417,7 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 
 bool NAEdgeMap::Exist(long eid, esriNetworkEdgeDirection dir)
 {
-	NAEdgeTable * cache = 0;
+	NAEdgeTable * cache = nullptr;
 
 	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache = cacheAgainst;
@@ -434,19 +425,31 @@ bool NAEdgeMap::Exist(long eid, esriNetworkEdgeDirection dir)
 	return cache->find(eid) != cache->end();
 }
 
+const NAEdgePtr NAEdgeMap::Find(const NAEdgePtr edge) const
+{
+	std::unordered_map<long, NAEdgePtr> * cache = nullptr;
+	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
+	else cache = cacheAgainst;
+
+	std::unordered_map<long, NAEdgePtr>::const_iterator it = cache->find(edge->EID);
+	NAEdgePtr o = nullptr;
+	if (it != cache->end()) o = it->second;
+	return o;
+}
+
 void NAEdgeMap::GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const
 {
 	NAEdgeTableItr i;
 	if(dirty)
 	{
-		for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->IsDirty(minPop2Route, method)) dirty->push_back(i->second);
-		for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->IsDirty(minPop2Route, method)) dirty->push_back(i->second);
+		for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) dirty->push_back(i->second);
+		for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) dirty->push_back(i->second);
 	}
 }
 
 void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
 {
-	NAEdgeTable * cache = 0;
+	NAEdgeTable * cache = nullptr;
 	if (dir == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache = cacheAgainst;
 
@@ -454,9 +457,16 @@ void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
 	if (i != cache->end()) cache->erase(i);
 }
 
+void NAEdgeMap::CallHowDirty(EvcSolverMethod method, double minPop2Route, bool exhaustive)
+{
+	NAEdgeTableItr i;
+	for (i = cacheAlong->begin(); i != cacheAlong->end(); i++) i->second->HowDirty(method, minPop2Route, exhaustive);
+	for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) i->second->HowDirty(method, minPop2Route, exhaustive);
+}
+
 HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
 {
-	NAEdgeTable * cache = 0;
+	NAEdgeTable * cache = nullptr;
 
 	if (edge->Direction == esriNEDAlongDigitized) cache = cacheAlong;
 	else cache = cacheAgainst;
@@ -470,10 +480,10 @@ HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
 HRESULT NAEdgeMap::Insert(NAEdgeMap * edges)
 {
 	NAEdgeTableItr i;
-	for(i = edges->cacheAlong->begin(); i != edges->cacheAlong->end(); i++)	
+	for(i = edges->cacheAlong->begin(); i != edges->cacheAlong->end(); i++)
 		if (cacheAlong->find(i->first) == cacheAlong->end()) cacheAlong->insert(NAEdgeTablePair(i->second));
-	for(i = edges->cacheAgainst->begin(); i != edges->cacheAgainst->end(); i++)	
-		if (cacheAgainst->find(i->first) == cacheAgainst->end()) cacheAgainst->insert(NAEdgeTablePair(i->second));	
+	for(i = edges->cacheAgainst->begin(); i != edges->cacheAgainst->end(); i++)
+		if (cacheAgainst->find(i->first) == cacheAgainst->end()) cacheAgainst->insert(NAEdgeTablePair(i->second));
 	return S_OK;
 }
 
@@ -486,40 +496,40 @@ void NAEdgeMapTwoGen::MarkAllAsOldGen()
 	newGen->Clear();
 }
 
-void NAEdgeMapTwoGen::Clear(UCHAR gen)
+void NAEdgeMapTwoGen::Clear(NAEdgeMapGeneration gen)
 {
-	if ((gen & NAEdgeMap_OLDGEN) != 0) oldGen->Clear();
-	if ((gen & NAEdgeMap_NEWGEN) != 0) newGen->Clear();
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) oldGen->Clear();
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) newGen->Clear();
 }
 
-size_t NAEdgeMapTwoGen::Size(UCHAR gen)
+size_t NAEdgeMapTwoGen::Size(NAEdgeMapGeneration gen)
 {
 	size_t t = 0;
-	if ((gen & NAEdgeMap_OLDGEN) != 0) t += oldGen->Size();
-	if ((gen & NAEdgeMap_NEWGEN) != 0) t += newGen->Size();
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) t += oldGen->Size();
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) t += newGen->Size();
 	return t;
 }
 
-HRESULT NAEdgeMapTwoGen::Insert(NAEdgePtr edge, UCHAR gen)
+HRESULT NAEdgeMapTwoGen::Insert(NAEdgePtr edge, NAEdgeMapGeneration gen)
 {
 	HRESULT hr = S_OK;
-	if ((gen & NAEdgeMap_OLDGEN) != 0) if (FAILED(hr = oldGen->Insert(edge))) return hr;
-	if ((gen & NAEdgeMap_NEWGEN) != 0) if (FAILED(hr = newGen->Insert(edge))) return hr;
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) if (FAILED(hr = oldGen->Insert(edge))) return hr;
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) if (FAILED(hr = newGen->Insert(edge))) return hr;
 	return hr;
 }
 
-bool NAEdgeMapTwoGen::Exist(long eid, esriNetworkEdgeDirection dir, UCHAR gen)
+bool NAEdgeMapTwoGen::Exist(long eid, esriNetworkEdgeDirection dir, NAEdgeMapGeneration gen)
 {
 	bool e = false;
-	if ((gen & NAEdgeMap_OLDGEN) != 0) e |= oldGen->Exist(eid, dir);
-	if ((gen & NAEdgeMap_NEWGEN) != 0) e |= newGen->Exist(eid, dir);
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) e |= oldGen->Exist(eid, dir);
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) e |= newGen->Exist(eid, dir);
 	return e;
 }
 
-void NAEdgeMapTwoGen::Erase(NAEdgePtr edge, UCHAR gen)
+void NAEdgeMapTwoGen::Erase(NAEdgePtr edge, NAEdgeMapGeneration gen)
 {
-	if ((gen & NAEdgeMap_OLDGEN) != 0) oldGen->Erase(edge);
-	if ((gen & NAEdgeMap_NEWGEN) != 0) newGen->Erase(edge);
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) oldGen->Erase(edge);
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) newGen->Erase(edge);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -534,6 +544,11 @@ bool NAEdgeContainer::Exist(INetworkEdgePtr edge)
 	return Exist(eid, dir);
 }
 
+void NAEdgeContainer::Insert(std::shared_ptr<NAEdgeContainer> clone)
+{
+	for (NAEdgeIterator i = clone->cache->begin(); i != clone->cache->end(); i++) cache->insert(NAEdgeContainerPair(i->first, i->second));
+}
+
 HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 {
 	esriNetworkEdgeDirection dir;
@@ -544,25 +559,52 @@ HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 	return Insert(eid, dir);
 }
 
-void NAEdgeContainer::Insert(NAEdgeContainer * clone)
+HRESULT NAEdgeContainer::Insert(long eid, unsigned char dir)
 {
-	for(NAEdgeIterator i = clone->cache->begin(); i != clone->cache->end(); i++) cache->insert(NAEdgeContainerPair(i->first, i->second));
-}
-
-bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
-{
-	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
-	bool ret = false;
-	unsigned char d = (unsigned char)dir;
-	if (i != cache->end() && i->second != 0) ret = (i->second & d) != 0;	
-	return ret;
+	std::unordered_map<long, unsigned char>::iterator i = cache->find(eid);
+	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, dir));
+	else i->second |= dir;
+	return S_OK;
 }
 
 HRESULT NAEdgeContainer::Insert(long eid, esriNetworkEdgeDirection dir)
 {
 	unsigned char d = (unsigned char)dir;
-	stdext::hash_map<long, unsigned char>::iterator i = cache->find(eid);
-	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, d));
-	else i->second |= d;
+	return Insert(eid, d);
+}
+
+bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
+{
+	std::unordered_map<long, unsigned char>::const_iterator i = cache->find(eid);
+	bool ret = false;
+	unsigned char d = (unsigned char)dir;
+	if (i != cache->end() && i->second != 0) ret = (i->second & d) != 0;
+	return ret;
+}
+
+HRESULT NAEdgeContainer::Remove(INetworkEdgePtr edge)
+{
+	esriNetworkEdgeDirection dir;
+	long eid;
+	HRESULT hr;
+	if (FAILED(hr = edge->get_EID(&eid))) return hr;
+	if (FAILED(hr = edge->get_Direction(&dir))) return hr;
+	return Remove(eid, dir);
+}
+
+HRESULT NAEdgeContainer::Remove(long eid, unsigned char dir)
+{
+	std::unordered_map<long, unsigned char>::iterator i = cache->find(eid);
+	if (i != cache->end())
+	{
+		i->second &= ~dir;
+		if (i->second == 0) cache->erase(i->first);
+	}
 	return S_OK;
+}
+
+HRESULT NAEdgeContainer::Remove(long eid, esriNetworkEdgeDirection dir)
+{
+	unsigned char d = (unsigned char)dir;
+	return Remove(eid, d);
 }

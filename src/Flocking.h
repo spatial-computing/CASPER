@@ -4,21 +4,8 @@
 #include "NAVertex.h"
 #include "NAedge.h"
 #include "SimpleVehicle.h"
+#include "utils.h"
 
-#define FLOCK_OBJ_STAT char
-#define FLOCK_OBJ_STAT_INIT		0x0
-#define FLOCK_OBJ_STAT_MOVE		0x1
-#define FLOCK_OBJ_STAT_STOP		0x2
-#define FLOCK_OBJ_STAT_COLLID	0x3
-#define FLOCK_OBJ_STAT_END		0x4
-
-#define FLOCK_PROFILE char
-#define FLOCK_PROFILE_CAR		0x0
-#define FLOCK_PROFILE_PERSON	0x1
-#define FLOCK_PROFILE_BIKE		0x2
-
-// utility functions
-#define DoubleRangedRand(range_min, range_max)	((double)(rand()) * ((range_max) - (range_min)) / (RAND_MAX + 1.0) + (range_min))
 double PointToLineDistance(OpenSteer::Vec3 point, OpenSteer::Vec3 line[2], bool shouldRotateLine, bool DirAsSign);
 
 class FlockProfile
@@ -33,7 +20,7 @@ public:
 	double			ZoneRadius;
 	double			MaxForce;
 
-	~FlockProfile(void) { }
+	virtual ~FlockProfile(void) { }
 
 	FlockProfile(FLOCK_PROFILE profile)
 	{
@@ -92,7 +79,7 @@ public:
 		GTime = -1.0;
 		Traveled = 0.0;
 		Velocity = OpenSteer::Vec3::zero;
-		MyLocation = 0;
+		MyLocation = nullptr;
 		ID = -1;
 		MyStatus = FLOCK_OBJ_STAT_INIT;
 	}
@@ -111,6 +98,7 @@ public:
 		MyStatus = copy.MyStatus;
 	}
 
+	FlockingLocation & operator=(const FlockingLocation &) = delete;
 	virtual ~FlockingLocation(void) { }
 };
 
@@ -147,11 +135,13 @@ public:
 	double          PathLen;
 
 	// methods
-	
+
 	FlockingObject(int id, EvcPathPtr, double startTime, VARIANT groupName, INetworkQueryPtr, FlockProfile *, bool TwoWayRoadsShareCap, std::vector<FlockingObject *> * neighbors, double pathLen);
 	HRESULT Move(std::vector<FlockingObject *> * objects, double deltatime);
 	static bool DetectCollisions(std::vector<FlockingObject *> * objects);
 
+	FlockingObject(const FlockingObject & that) = delete;
+	FlockingObject & operator=(const FlockingObject &) = delete;
 	virtual ~FlockingObject(void)
 	{
 		delete [] libpoints;
@@ -161,8 +151,8 @@ public:
 
 typedef FlockingObject * FlockingObjectPtr;
 typedef FlockingLocation * FlockingLocationPtr;
-typedef std::vector<FlockingObjectPtr>::iterator FlockingObjectItr;
-typedef std::vector<FlockingLocationPtr>::iterator FlockingLocationItr;
+typedef std::vector<FlockingObjectPtr>::const_iterator FlockingObjectItr;
+typedef std::vector<FlockingLocationPtr>::const_iterator FlockingLocationItr;
 
 class FlockingEnviroment
 {
@@ -180,7 +170,10 @@ private:
 public:
 	FlockingEnviroment(double SnapshotInterval, double SimulationInterval, double InitDelayCostPerPop);
 	virtual ~FlockingEnviroment(void);
-	void Init(EvacueeList *, INetworkQueryPtr, FlockProfile *, bool TwoWayRoadsShareCap);
+	FlockingEnviroment(const FlockingEnviroment & that) = delete;
+	FlockingEnviroment & operator=(const FlockingEnviroment &) = delete;
+
+	void Init(std::shared_ptr<EvacueeList>, INetworkQueryPtr, FlockProfile *, bool TwoWayRoadsShareCap);
 	HRESULT RunSimulation(IStepProgressorPtr, ITrackCancelPtr, double predictedCost);
 	void GetResult(std::vector<FlockingLocationPtr> ** History, std::list<double> ** collisionTimes, bool * MovingObjectLeft);
 	double static PathLength(EvcPathPtr path);

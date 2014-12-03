@@ -1,18 +1,25 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
+//
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #pragma once
 
 // EvcSolver Names
 
+#ifdef _WIN64
+#define PROJ_ARCH                                   L"x86_64"
+#else
+#define PROJ_ARCH                                   L"x86"
+#endif
+
+#define PROJ_NAME                                   L"CASPER for ArcGIS"
 #define CS_NAME                                     L"Evacuation Solver"
 #define CS_DISPLAY_NAME                             L"Evacuation Routing"
 

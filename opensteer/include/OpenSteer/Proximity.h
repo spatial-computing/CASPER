@@ -28,7 +28,7 @@
 // ----------------------------------------------------------------------------
 //
 //
-// Proximity 
+// Proximity
 //
 // Data structures for accelerating proximity/locality/neighborhood queries
 //
@@ -178,7 +178,7 @@ namespace OpenSteer {
         };
 
         typedef std::vector<tokenType*> tokenVector;
-        typedef typename tokenVector::const_iterator tokenIterator;    
+        typedef typename tokenVector::const_iterator tokenIterator;
 
         // allocate a token to represent a given client object in this database
         tokenType* allocateToken (ContentType parentObject)
@@ -191,7 +191,7 @@ namespace OpenSteer {
         {
             return group.size();
         }
-        
+
     private:
         // STL vector containing all tokens in database
         tokenVector group;
@@ -215,8 +215,8 @@ namespace OpenSteer {
             const Vec3 halfsize (dimensions * 0.5);
             const Vec3 origin (center - halfsize);
 
-            lq = lqCreateDatabase (origin.x, origin.y, origin.z, 
-                                   dimensions.x, dimensions.y, dimensions.z,  
+            lq = lqCreateDatabase (origin.x, origin.y, origin.z,
+                                   dimensions.x, dimensions.y, dimensions.z,
                                    (int) round (divisions.x),
                                    (int) round (divisions.y),
                                    (int) round (divisions.z));
@@ -258,7 +258,7 @@ namespace OpenSteer {
                                 const double radius,
                                 std::vector<ContentType>& results)
             {
-                lqMapOverAllObjectsInLocality (lq, 
+                lqMapOverAllObjectsInLocality (lq,
                                                center.x, center.y, center.z,
                                                radius,
                                                perNeighborCallBackFunction,
@@ -297,7 +297,7 @@ namespace OpenSteer {
             lqMapOverAllObjects (lq, counterCallBackFunction, &count);
             return count;
         }
-        
+
         // (parameter names commented out to prevent compiler warning from "-W")
         static void counterCallBackFunction  (void* /*clientObject*/,
                                               double /*distanceSquared*/,

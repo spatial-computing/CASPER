@@ -1,17 +1,17 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
+//
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #pragma once
 
-#include "resource.h"                                           // main symbols
+#include "resource.h"             // main symbols
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 #include "EvcSolver.h"
 
@@ -27,9 +27,9 @@
   helpstring("EvcSolverPropPage Class")
 ]
 class ATL_NO_VTABLE EvcSolverPropPage :
-  public IPropertyPageImpl<EvcSolverPropPage>,
-  public CDialogImpl<EvcSolverPropPage>,
-  public IPropertyPageContext
+	public ATL::IPropertyPageImpl<EvcSolverPropPage>,
+    public ATL::CDialogImpl<EvcSolverPropPage>,
+    public IPropertyPageContext
 {
 public:
   EvcSolverPropPage()
@@ -37,6 +37,14 @@ public:
     m_dwTitleID = IDS_TITLEEvcSolverPROPPAGE;
     m_dwHelpFileID = IDS_HELPFILEEvcSolverPROPPAGE;
     m_dwDocStringID = IDS_DOCSTRINGEvcSolverPROPPAGE;
+	boldFont = nullptr;
+	bigFont = nullptr;
+  }
+
+  virtual ~EvcSolverPropPage()
+  {
+	  if (bigFont)  ::DeleteObject(bigFont);
+	  if (boldFont) ::DeleteObject(boldFont);
   }
 
   DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -68,8 +76,8 @@ public:
 	COMMAND_HANDLER(IDC_CHECK_SHARECAP, BN_CLICKED, OnBnClickedCheckSharecap)
 	COMMAND_HANDLER(IDC_COMBO_PROFILE, CBN_SELCHANGE, OnCbnSelchangeComboProfile)
 	COMMAND_HANDLER(IDC_EDIT_CARMA, EN_CHANGE, OnEnChangeEditCARMA)
-	CHAIN_MSG_MAP(IPropertyPageImpl<EvcSolverPropPage>)
-	MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)	
+	CHAIN_MSG_MAP(ATL::IPropertyPageImpl<EvcSolverPropPage>)
+	MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 	COMMAND_HANDLER(IDC_EDIT_SAT, EN_CHANGE, OnEnChangeEditSat)
 	COMMAND_HANDLER(IDC_EDIT_Critical, EN_CHANGE, OnEnChangeEditCritical)
 	COMMAND_HANDLER(IDC_COMBO_METHOD, CBN_SELCHANGE, OnCbnSelchangeComboMethod)
@@ -83,21 +91,16 @@ public:
 	NOTIFY_HANDLER(IDC_RELEASE, NM_CLICK, OnNMClickRelease)
 	COMMAND_HANDLER(IDL_CHECK_CARMAGEN, BN_CLICKED, OnBnClickedCheckCarmagen)
 	COMMAND_HANDLER(IDC_EDIT_SELFISH, EN_CHANGE, OnEnChangeEditSelfish)
+	COMMAND_HANDLER(IDC_EDIT_Iterative, EN_CHANGE, OnEnChangeEditIterative)
+	COMMAND_HANDLER(IDC_CMB_GroupOption, CBN_SELCHANGE, OnCbnSelchangeComboEvcOption)
   END_MSG_MAP()
 
-  // Handler prototypes:
-  //  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-  //  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-  //  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
-
   // IPropertyPage
-
   STDMETHOD(Apply)(void);
   STDMETHOD(Show)(UINT nCmdShow);
   STDMETHOD(SetObjects)(ULONG nObjects, IUnknown** ppUnk);
 
   // IPropertyPageContext
-
   STDMETHOD(get_Priority)(LONG* pPriority);
   STDMETHOD(Applies)(VARIANT unkArray, VARIANT_BOOL* pApplies);
   STDMETHOD(CreateCompatibleObject)(VARIANT kind, VARIANT* pNewObject);
@@ -107,7 +110,6 @@ public:
   STDMETHOD(Cancel)();
 
   // Dialog
-
   LRESULT OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
   LRESULT OnBnClickedRadioConnected(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
   LRESULT OnBnClickedRadioDisconnected(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -116,7 +118,7 @@ public:
 private:
   INALayerPtr             m_ipNALayer;
   IEvcSolverPtr			  m_ipEvcSolver;
-  IDENetworkDatasetPtr    m_ipDENet;  
+  IDENetworkDatasetPtr    m_ipDENet;
 
   HWND                    m_hCapCombo;
   HWND                    m_hUTurnCombo;
@@ -138,6 +140,11 @@ private:
   HWND					  m_heditCARMA;
   HWND					  m_hThreeGenCARMA;
   HWND					  m_heditSelfish;
+  HWND					  m_heditIterative;
+  HWND					  m_hcmbEvcOptions;
+
+  HFONT                   boldFont;
+  HFONT                   bigFont;
 
   void SetFlockingEnabled();
 
@@ -169,4 +176,6 @@ public:
 	LRESULT OnBnClickedCheckCarmagen(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnStnClickedLablecarma2(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnEnChangeEditIterative(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCbnSelchangeComboEvcOption(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };

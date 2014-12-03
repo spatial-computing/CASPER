@@ -36,9 +36,6 @@
     <ClCompile Include="EvcSolverSymbolizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FibonacciHeap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Flocking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -96,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="gitdescribe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

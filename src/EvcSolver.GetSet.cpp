@@ -7,7 +7,7 @@
 
 STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
 {
-	// This name is locale/language independent and should not be translated. 
+	// This name is locale/language independent and should not be translated.
 	if (!pName) return E_POINTER;
 	*pName = ::SysAllocString(CS_NAME);
 
@@ -17,7 +17,7 @@ STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
 STDMETHODIMP EvcSolver::get_DisplayName(BSTR * pName)
 {
 	// This name should be translated and would typically come from
-	// a string resource. 
+	// a string resource.
 	if (!pName) return E_POINTER;
 	*pName = ::SysAllocString(CS_DISPLAY_NAME);
 
@@ -28,7 +28,7 @@ STDMETHODIMP EvcSolver::get_ClassDefinitions(INamedSet ** ppDefinitions)
 {
 	if (!ppDefinitions) return E_POINTER;
 
-	*ppDefinitions = 0;
+	*ppDefinitions = nullptr;
 
 	// get_ClassDefinitions() will return the default NAClasses that this solver uses.
 	// We will define a NAClass for "Evacuee Points", "Barriers", and "Lines".
@@ -40,8 +40,8 @@ STDMETHODIMP EvcSolver::get_ClassDefinitions(INamedSet ** ppDefinitions)
 	ISpatialReferencePtr ipUnkSR(CLSID_UnknownCoordinateSystem);
 
 	HRESULT hr;
-	if (FAILED(hr = BuildClassDefinitions(ipUnkSR, ppDefinitions, 0)))
-		return AtlReportError(GetObjectCLSID(), _T("Failed to create class definitions."), IID_INASolver, hr);
+	if (FAILED(hr = BuildClassDefinitions(ipUnkSR, ppDefinitions, nullptr)))
+		return ATL::AtlReportError(GetObjectCLSID(), _T("Failed to create class definitions."), IID_INASolver, hr);
 
 	return S_OK;
 }
@@ -183,7 +183,7 @@ STDMETHODIMP EvcSolver::get_Properties(IPropertySet ** ppPropSet)
 	// The use of the property set has been deprecated at 9.2.
 	// Clients should use the accessors and mutators on the solver interfaces.
 
-	*ppPropSet = 0;
+	*ppPropSet = nullptr;
 
 	return E_NOTIMPL;
 }
@@ -232,39 +232,39 @@ STDMETHODIMP EvcSolver::put_TwoWayShareCapacity(VARIANT_BOOL value)
 
 STDMETHODIMP EvcSolver::get_ExportEdgeStat(VARIANT_BOOL * value)
 {
-	*value = exportEdgeStat;
+	*value = VarExportEdgeStat;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_ExportEdgeStat(VARIANT_BOOL value)
 {
-	exportEdgeStat = value;
+	VarExportEdgeStat = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::get_SeparableEvacuee(VARIANT_BOOL * value)
+STDMETHODIMP EvcSolver::get_EvacueeGroupingOption(EvacueeGrouping * value)
 {
-	*value = separable;
+	*value = evacueeGroupingOption;
 	return S_OK;
 }
 
-STDMETHODIMP EvcSolver::put_SeparableEvacuee(VARIANT_BOOL value)
+STDMETHODIMP EvcSolver::put_EvacueeGroupingOption(EvacueeGrouping value)
 {
-	separable = value;
+	evacueeGroupingOption = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::get_CARMASortSetting(CARMASort * value)
 {
-	*value = carmaSortDirection;
+	*value = CarmaSortCriteria;
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_CARMASortSetting(CARMASort value)
 {
-	carmaSortDirection = value;
+	CarmaSortCriteria = value;
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -309,6 +309,24 @@ STDMETHODIMP EvcSolver::put_CARMAPerformanceRatio(BSTR value)
 {
 	swscanf_s(value, L"%f", &CARMAPerformanceRatio);
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
+	m_bPersistDirty = true; 
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::get_IterativeRatio(BSTR * value)
+{
+	if (value)
+	{
+		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
+		swprintf_s(*value, 100, L"%.3f", iterativeRatio);
+	}
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_IterativeRatio(BSTR value)
+{
+	swscanf_s(value, L"%f", &iterativeRatio);
+	iterativeRatio = min(max(iterativeRatio, 0.0f), 1.0f);
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -448,47 +466,29 @@ STDMETHODIMP EvcSolver::put_CostPerZoneDensity(BSTR value)
 
 // returns the name of the heuristic attributes loaded from the network dataset.
 // this will be called from the property page so the user can select.
-STDMETHODIMP EvcSolver::get_CostAttributes(BSTR ** Names)
+STDMETHODIMP EvcSolver::get_CostAttributes(unsigned __int3264 & count, BSTR ** Names)
 {
-	size_t count = costAttribs.size(), i;
+	count = costAttribs.size();
 	HRESULT hr;
 	BSTR * names = new DEBUG_NEW_PLACEMENT BSTR[count];
-
-	for (i = 0; i < count; i++) if (FAILED(hr = costAttribs[i]->get_Name(&(names[i])))) return hr;
-
 	*Names = names;
+
+	for (size_t i = 0; i < count; i++) if (FAILED(hr = costAttribs[i]->get_Name(&(names[i])))) return hr;
 
 	return S_OK;
 }
 
 // returns the name of the heuristic attributes loaded from the network dataset.
 // this will be called from the property page so the user can select.
-STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(BSTR ** Names)
+STDMETHODIMP EvcSolver::get_DiscriptiveAttributes(unsigned __int3264 & count, BSTR ** Names)
 {
-	size_t count = discriptiveAttribs.size(), i;
+	count = discriptiveAttribs.size();
 	HRESULT hr;
 	BSTR * names = new DEBUG_NEW_PLACEMENT BSTR[count];
-
-	for (i = 0; i < count; i++) if (FAILED(hr = discriptiveAttribs[i]->get_Name(&(names[i])))) return hr;
-
 	*Names = names;
 
-	return S_OK;
-}
+	for (size_t i = 0; i < count; i++) if (FAILED(hr = discriptiveAttribs[i]->get_Name(&(names[i])))) return hr;
 
-// returns the count of available heuristic attributes from the network dataset to the property page
-STDMETHODIMP EvcSolver::get_CostAttributesCount(size_t * Count)
-{
-	size_t count = costAttribs.size();
-	*Count = count;
-	return S_OK;
-}
-
-// returns the count of available heuristic attributes from the network dataset to the property page
-STDMETHODIMP EvcSolver::get_DiscriptiveAttributesCount(size_t * Count)
-{
-	size_t count = discriptiveAttribs.size();
-	*Count = count;
 	return S_OK;
 }
 
@@ -553,9 +553,9 @@ STDMETHODIMP EvcSolver::put_CostAttribute(size_t index)
 
 STDMETHODIMP EvcSolver::put_AttributeParameterValue(BSTR AttributeName, BSTR paramName, VARIANT value)
 {
-	INetworkAttribute2Ptr networkAttrib = 0;
-	INetworkAttributeParameterPtr param = 0;
-	IArray * params = 0;
+	INetworkAttribute2Ptr networkAttrib = nullptr;
+	INetworkAttributeParameterPtr param = nullptr;
+	IArray * params = nullptr;
 	long c1, c2, i, j;
 	HRESULT hr;
 	IUnknownPtr unk;
@@ -594,9 +594,9 @@ STDMETHODIMP EvcSolver::put_AttributeParameterValue(BSTR AttributeName, BSTR par
 
 STDMETHODIMP EvcSolver::get_AttributeParameterValue(BSTR AttributeName, BSTR paramName, VARIANT * value)
 {
-	INetworkAttribute2Ptr networkAttrib = 0;
-	INetworkAttributeParameterPtr param = 0;
-	IArray * params = 0;
+	INetworkAttribute2Ptr networkAttrib = nullptr;
+	INetworkAttributeParameterPtr param = nullptr;
+	IArray * params = nullptr;
 	long c1, c2, i, j;
 	HRESULT hr;
 	IUnknownPtr unk;

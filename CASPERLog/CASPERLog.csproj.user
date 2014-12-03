@@ -2,11 +2,11 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartWorkingDirectory>C:\Users\kshahabi\Documents\My Data\ArcCASPER\Logs</StartWorkingDirectory>
-    <StartArguments>"4G CARMA\C0.1_3g vs 4g_S0.0.log"</StartArguments>
+    <StartArguments>"Iterative\nov20.txt"</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <StartWorkingDirectory>C:\Users\kshahabi\Documents\My Data\ArcCASPER\Logs</StartWorkingDirectory>
-    <StartArguments>"4G CARMA\C0.1_3g vs 4g_S0.0.log"</StartArguments>
+    <StartArguments>"Iterative\nov20.txt"</StartArguments>
   </PropertyGroup>
   <PropertyGroup>
     <PublishUrlHistory>publish\</PublishUrlHistory>

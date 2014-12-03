@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BA6137DF-0073-4E81-8A61-302C805B7745}</ProjectGuid>
-    <RootNamespace>USC.GISResearchLab.ArcCASPER</RootNamespace>
+    <RootNamespace>USC.GISResearchLab.CASPER</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoFlock|Win32'" Label="Configuration">
@@ -184,7 +184,7 @@ exit 0</Command>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -194,6 +194,7 @@ exit 0</Command>
       <EnablePREfast>false</EnablePREfast>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <SmallerTypeCheck>true</SmallerTypeCheck>
+      <AdditionalOptions>/Qpar /Qpar-report:1 /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -211,6 +212,7 @@ exit 0</Command>
       </RandomizedBaseAddress>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
@@ -260,7 +262,7 @@ exit 0</Command>
       <PreprocessorDefinitions>WIN64;_WINDOWS;_DEBUG;_USRDLL;_ATL_ATTRIBUTES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -269,6 +271,7 @@ exit 0</Command>
       <EnablePREfast>false</EnablePREfast>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <SmallerTypeCheck>true</SmallerTypeCheck>
+      <AdditionalOptions>/Qpar /Qpar-report:1 /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -285,6 +288,7 @@ exit 0</Command>
       <RandomizedBaseAddress>
       </RandomizedBaseAddress>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
@@ -333,7 +337,7 @@ exit 0</Command>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -356,7 +360,7 @@ exit 0</Command>
       <AdditionalDependencies>Psapi.lib;opensteer32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <MergedIDLBaseFileName>_$(ProjectName)$(PlatformArchitecture).idl</MergedIDLBaseFileName>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -364,6 +368,7 @@ exit 0</Command>
       </RandomizedBaseAddress>
       <TargetMachine>MachineX86</TargetMachine>
       <AssemblyDebug>false</AssemblyDebug>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
@@ -411,7 +416,7 @@ exit 0</Command>
       <PreprocessorDefinitions>WIN64;_WINDOWS;NDEBUG;_USRDLL;_ATL_ATTRIBUTES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <FloatingPointModel>Precise</FloatingPointModel>
+      <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -442,6 +447,7 @@ exit 0</Command>
       </RandomizedBaseAddress>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <AssemblyDebug>false</AssemblyDebug>
+      <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <PostBuildEvent>
       <Message>Performing Custom Post-Build Step</Message>
@@ -467,7 +473,6 @@ exit 0</Command>
     <ClCompile Include="EvcSolver.Solve.cpp" />
     <ClCompile Include="EvcSolverPropPage.cpp" />
     <ClCompile Include="EvcSolverSymbolizer.cpp" />
-    <ClCompile Include="FibonacciHeap.cpp" />
     <ClCompile Include="Flocking.cpp" />
     <ClCompile Include="NAEdge.cpp" />
     <ClCompile Include="NAVertex.cpp" />
@@ -491,6 +496,7 @@ exit 0</Command>
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TrafficModel.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="EvcSolver.rc" />

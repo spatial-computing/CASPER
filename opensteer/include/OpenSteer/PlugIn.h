@@ -35,7 +35,7 @@
 // programmer defining a new "MyPlugIn".
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 11-13-02 cwr: created 
+// 11-13-02 cwr: created
 //
 //
 // ----------------------------------------------------------------------------
@@ -181,8 +181,8 @@ namespace OpenSteer {
         static PlugIn* registry[];
     };
 
-} // namespace OpenSteer    
-    
+} // namespace OpenSteer
+
 
 // ----------------------------------------------------------------------------
 #endif // OPENSTEER_PLUGIN_H

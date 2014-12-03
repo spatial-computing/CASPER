@@ -2,9 +2,9 @@
 
 :: setup my variables
 set OLDDIR=%CD%
-SET dir=d:\Archive\arccasperdeploy
-SET cydir=d:/Archive/arccasperdeploy
-SET url=git@github.com:kaveh096/ArcCASPER.git
+SET dir=d:\Archive\casperdeploy
+SET cydir=d:/Archive/casperdeploy
+SET url=git@github.com:kaveh096/CASPER.git
 set PATH=%PATH%;D:\cygwin64\bin
 
 :: clean enviroment
@@ -30,7 +30,7 @@ git pull
 
 :: get hash of head
 for /f %%i in ('git describe') do set revi=%%i
-set "out=ArcCASPER-%revi%-%2%.zip"
+set "out=CASPER-%revi%-%2%.zip"
 
 :: TODO create changle.log from 'git shortlog --no-merges %1 --not v10.1'
 
@@ -46,8 +46,8 @@ set NOREG=1
 del /Q Package\EvcSolver32.*
 del /Q Package\EvcSolver64.*
 del /Q Package\README.md
-msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 ArcCASPER.sln
-msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=x64   ArcCASPER.sln
+msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=Win32 CASPER.sln
+msbuild.exe /m /target:rebuild /p:Configuration=Release /p:Platform=x64   CASPER.sln
 
 :: Generate readme file
 "c:\Program Files (x86)\GnuWin32\bin\sed.exe" -e "s/REV/%revi%/g" README.md > Package\README.md

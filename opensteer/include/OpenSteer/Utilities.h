@@ -31,7 +31,7 @@
 // Utilities for OpenSteering
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 07-09-02 cwr: created 
+// 07-09-02 cwr: created
 //
 //
 // ----------------------------------------------------------------------------
@@ -62,7 +62,7 @@
 // API export
 #ifdef OPENSTEER_EXPORT
 #define OPENSTEER_API __declspec(dllexport)
-#else 
+#else
 #define OPENSTEER_API __declspec(dllimport)
 #endif
 
@@ -170,7 +170,7 @@ namespace OpenSteer {
     // ----------------------------------------------------------------------------
 
 
-    inline double scalarRandomWalk (const double initial, 
+    inline double scalarRandomWalk (const double initial,
                                    const double walkspeed,
                                    const double min,
                                    const double max)
@@ -315,17 +315,17 @@ namespace OpenSteer {
           return  floorXXX (0.5 + x);
     }
 
-    #else 
-    
+    #else
+
     inline double round( double x )
     {
         return ::round( x );
     }
-    
+
     #endif
 
 } // namespace OpenSteer
-    
-    
+
+
 // ----------------------------------------------------------------------------
 #endif // OPENSTEER_UTILITIES_H

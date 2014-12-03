@@ -1,13 +1,13 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
+//
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #pragma once
 
@@ -16,6 +16,7 @@
 #include "NAEdge.h"
 #include "NAVertex.h"
 #include "Flocking.h"
+#include "FibonacciHeap.h"
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -29,7 +30,7 @@
 	pointer_default(unique)
 ]
 __interface IEvcSolver : IUnknown
-{	
+{
 	[propput, helpstring("Sets the saturation constant per capacity")]
 		HRESULT SaturationPerCap([in] BSTR value);
 	[propget, helpstring("Gets the selected saturation constant per capacity")]
@@ -39,17 +40,15 @@ __interface IEvcSolver : IUnknown
 	[propget, helpstring("Gets the selected critical density per capacity")]
 		HRESULT CriticalDensPerCap([out, retval] BSTR * value);
 	[propget, helpstring("Lists descriptive attributes from the network dataset")]
-		HRESULT DiscriptiveAttributes([out, retval] BSTR ** names);
+		HRESULT DiscriptiveAttributes([out] unsigned __int3264 & count, [out, retval] BSTR ** names);
 	[propput, helpstring("Sets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([in] unsigned __int3264 index);
 	[propget, helpstring("Gets the selected capacity attribute index")]
 		HRESULT CapacityAttribute([out, retval] unsigned __int3264 * index);
-	[propget, helpstring("Counts descriptive attributes from the network dataset")]
-		HRESULT DiscriptiveAttributesCount([out, retval] unsigned __int3264 * Count);
-	[propput, helpstring("Sets the separable evacuee flag")]
-		HRESULT SeparableEvacuee([in] VARIANT_BOOL value);
-	[propget, helpstring("Gets the separable evacuee flag")]
-		HRESULT SeparableEvacuee([out, retval] VARIANT_BOOL * value);
+	[propput, helpstring("Sets the Evacuee Grouping Option flag")]
+		HRESULT EvacueeGroupingOption([in] EvacueeGrouping value);
+	[propget, helpstring("Gets the Evacuee Grouping Option flag")]
+		HRESULT EvacueeGroupingOption([out, retval] EvacueeGrouping * value);
 	[propput, helpstring("Sets the 3rd generation carma flag")]
 		HRESULT ThreeGenCARMA([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the 3rd generation carma flag")]
@@ -106,6 +105,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT SelfishRatio([in] BSTR value);
 	[propget, helpstring("Gets the ratio of selfish routing")]
 		HRESULT SelfishRatio([out, retval] BSTR * value);
+	[propput, helpstring("Sets the ratio of iterative solver")]
+		HRESULT IterativeRatio([in] BSTR value);
+	[propget, helpstring("Gets the ratio of iterative solver")]
+		HRESULT IterativeRatio([out, retval] BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	[propput, helpstring("Sets the selected cost attribute index")]
@@ -113,15 +116,7 @@ __interface IEvcSolver : IUnknown
 	[propget, helpstring("Gets the selected cost attribute index")]
 		HRESULT CostAttribute([out, retval] unsigned __int3264 * index);
 	[propget, helpstring("Lists impedance attributes from the network dataset")]
-		HRESULT CostAttributes([out, retval] BSTR ** names);
-	[propget, helpstring("Counts impedance attributes from the network dataset")]
-		HRESULT CostAttributesCount([out, retval] unsigned __int3264 * count);
-	/*
-	[propput, helpstring("Sets the uturn policy")]
-		HRESULT RestrictUTurns([in] esriNetworkForwardStarBacktrack backtrack);
-	[propget, helpstring("Gets the uturn policy")]
-		HRESULT RestrictUTurns([out, retval] esriNetworkForwardStarBacktrack * backtrack);
-	*/
+		HRESULT CostAttributes([out] unsigned __int3264 & count, [out, retval] BSTR ** names);
 };
 
 // EvcSolver
@@ -137,7 +132,6 @@ __interface IEvcSolver : IUnknown
 ]
 class ATL_NO_VTABLE EvcSolver :
 	public IEvcSolver,
-	// public INARouteSolver,
 	public INASolver,
 	public INASolverSettings,
 	public IPersistStream,
@@ -147,7 +141,7 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(5),
+		  c_version(7),
 		  c_featureRetrievalInterval(500)
 	  {
 	  }
@@ -165,7 +159,7 @@ public:
 		  return S_OK;
 	  }
 
-	  void FinalRelease() 
+	  void FinalRelease()
 	  {
 	  }
 
@@ -175,14 +169,13 @@ public:
 	STDMETHOD(put_OutputGeometryPrecisionUnits)(esriUnits value);
 	STDMETHOD(get_OutputGeometryPrecisionUnits)(esriUnits * value);
 
-	// IEvcSolver	
-	
+	// IEvcSolver
 	STDMETHOD(put_ThreeGenCARMA)(VARIANT_BOOL threeGenCARMA);
 	STDMETHOD(get_ThreeGenCARMA)(VARIANT_BOOL* threeGenCARMA);
 	STDMETHOD(put_ExportEdgeStat)(VARIANT_BOOL   value);
 	STDMETHOD(get_ExportEdgeStat)(VARIANT_BOOL * value);
-	STDMETHOD(put_SeparableEvacuee)(VARIANT_BOOL   value);
-	STDMETHOD(get_SeparableEvacuee)(VARIANT_BOOL * value);
+	STDMETHOD(put_EvacueeGroupingOption)(EvacueeGrouping   value);
+	STDMETHOD(get_EvacueeGroupingOption)(EvacueeGrouping * value);
 	STDMETHOD(put_SolverMethod)(EvcSolverMethod   value);
 	STDMETHOD(get_SolverMethod)(EvcSolverMethod * value);
 	STDMETHOD(put_CARMASortSetting)(CARMASort   value);
@@ -193,8 +186,7 @@ public:
 	STDMETHOD(get_SaturationPerCap)(BSTR * value);
 	STDMETHOD(put_CriticalDensPerCap)(BSTR   value);
 	STDMETHOD(get_CriticalDensPerCap)(BSTR * value);
-	STDMETHOD(get_DiscriptiveAttributes)(BSTR ** names);
-	STDMETHOD(get_DiscriptiveAttributesCount)(unsigned __int3264 * count);
+	STDMETHOD(get_DiscriptiveAttributes)(unsigned __int3264 & count, BSTR ** names);
 	STDMETHOD(put_CapacityAttribute)(unsigned __int3264   index);
 	STDMETHOD(get_CapacityAttribute)(unsigned __int3264 * index);
 	STDMETHOD(get_CostPerZoneDensity)(BSTR * value);
@@ -214,16 +206,16 @@ public:
 	STDMETHOD(put_CARMAPerformanceRatio)(BSTR   value);
 	STDMETHOD(get_CARMAPerformanceRatio)(BSTR * value);
 	STDMETHOD(put_SelfishRatio)(BSTR   value);
-	STDMETHOD(get_SelfishRatio)(BSTR * value);
+	STDMETHOD(get_SelfishRatio)(BSTR * value); 
+	STDMETHOD(put_IterativeRatio)(BSTR   value);
+	STDMETHOD(get_IterativeRatio)(BSTR * value);
 
 	/// replacement for ISolverSetting2 functionality until I found that bug
 	STDMETHOD(put_CostAttribute)(unsigned __int3264 index);
 	STDMETHOD(get_CostAttribute)(unsigned __int3264 * index);
-	STDMETHOD(get_CostAttributes)(BSTR ** names);
-	STDMETHOD(get_CostAttributesCount)(unsigned __int3264 * count);
+	STDMETHOD(get_CostAttributes)(unsigned __int3264 & count, BSTR ** names);
 
 	// INARouteSolver2
-
 	STDMETHOD(get_OutputLines)(esriNAOutputLineType* pVal);
 	STDMETHOD(put_OutputLines)(esriNAOutputLineType newVal);
 	STDMETHOD(get_CreateTraversalResult)(VARIANT_BOOL * Value);
@@ -241,8 +233,7 @@ public:
 	STDMETHOD(get_UseStartTime)(VARIANT_BOOL * Value);
 	STDMETHOD(put_UseStartTime)(VARIANT_BOOL Value);
 
-	// INASolver 
-
+	// INASolver
 	STDMETHOD(get_Name)(BSTR* pName);
 	STDMETHOD(get_DisplayName)(BSTR* pName);
 	STDMETHOD(get_ClassDefinitions)(INamedSet** ppDefinitions);
@@ -257,7 +248,6 @@ public:
 	STDMETHOD(Bind)(INAContext* pContext, IDENetworkDataset* pNetwork, IGPMessages* pMessages);
 
 	// INASolverSettings2
-
 	STDMETHOD(get_AccumulateAttributeNames)(IStringArray** ppAttributeNames);
 	STDMETHOD(putref_AccumulateAttributeNames)(IStringArray* pAttributeNames);
 	STDMETHOD(put_ImpedanceAttributeName)(BSTR attributeName);
@@ -283,8 +273,7 @@ public:
 	STDMETHOD(put_ResetHierarchyRangesOnBind)(VARIANT_BOOL value);
 	STDMETHOD(get_ResetHierarchyRangesOnBind)(VARIANT_BOOL * value);
 
-	// IPersistStream 
-
+	// IPersistStream
 	STDMETHOD(IsDirty)();
 	STDMETHOD(Load)(IStream* pStm);
 	STDMETHOD(Save)(IStream* pstm, BOOL fClearDirty);
@@ -293,10 +282,10 @@ public:
 
 private:
 
-	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-		                VARIANT_BOOL*, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &);
-	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-		              size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, bool);
+	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, std::shared_ptr<EvacueeList>, std::shared_ptr<NAVertexCache>, std::shared_ptr<NAEdgeCache>,
+		    std::shared_ptr<SafeZoneTable>, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &, std::vector<double> &);
+	HRESULT CARMALoop(INetworkQueryPtr, IStepProgressorPtr, IGPMessages*, ITrackCancel*, std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvacueePtr>>, std::shared_ptr<NAVertexCache>,
+		    std::shared_ptr<NAEdgeCache>, std::shared_ptr<SafeZoneTable>, size_t &, std::shared_ptr<NAEdgeMapTwoGen>, std::shared_ptr<NAEdgeContainer>, std::vector<unsigned int> &, double, double &, bool, CARMASort);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -304,21 +293,22 @@ private:
 	HRESULT AddLocationFields(IFieldsEdit* pFieldsEdit, IDENetworkDataset* pDENDS);
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
-	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);	
-	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
-										  NAVertexCache * vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
-	HRESULT DeterminMinimumPop2Route(EvacueeList *, INetworkDatasetPtr, double &, bool &) const;
-	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, NAEdgeContainer *, double, EvcSolverMethod) const;
+	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
+	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, std::shared_ptr<NAEdgeCache> ecache,
+		    std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
+	HRESULT DeterminMinimumPop2Route(std::shared_ptr<EvacueeList>, INetworkDatasetPtr, double &, bool &) const;
+	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &) const;
+	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, std::shared_ptr<NAEdgeContainer>, std::shared_ptr<NAEdgeContainer>, double, EvcSolverMethod) const;
 	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
-	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *) const;
-	void    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
+	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, std::shared_ptr<NAEdgeContainer>) const;
+	bool    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	void    UpdatePeakMemoryUsage();
-	
+
 	esriNAOutputLineType	m_outputLineType;
 	bool					m_bPersistDirty;
 	long					costAttributeID;
 	long					capAttributeID;
-	INAStreetDirectionsAgentPtr pStreetAgent;	
+	INAStreetDirectionsAgentPtr pStreetAgent;
 	float					SaturationPerCap;
 	float					CriticalDensPerCap;
 	EvcSolverMethod		    solverMethod;
@@ -331,15 +321,15 @@ private:
 	FLOCK_PROFILE			flockingProfile;
 	float                   CARMAPerformanceRatio;
 	float                   selfishRatio;
-	unsigned short			countCARMALoops;
-	SIZE_T					peakMemoryUsage;	
+	float                   iterativeRatio;
+	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
-	CARMASort               carmaSortDirection;
+	CARMASort               CarmaSortCriteria;
+	EvacueeGrouping         evacueeGroupingOption;
 
 	VARIANT_BOOL twoWayShareCapacity;
-	VARIANT_BOOL ThreeGenCARMA;	
-	VARIANT_BOOL separable;
-	VARIANT_BOOL exportEdgeStat;
+	VARIANT_BOOL ThreeGenCARMA;
+	VARIANT_BOOL VarExportEdgeStat;
 	VARIANT_BOOL m_CreateTraversalResult;
 	VARIANT_BOOL m_FindBestSequence;
 	VARIANT_BOOL m_PreserveFirstStop;
@@ -365,7 +355,7 @@ _COM_SMARTPTR_TYPEDEF(IEvcSolver, __uuidof(IEvcSolver));
 class CancelTrackerHelper
 {
 public:
-	~CancelTrackerHelper()
+	virtual ~CancelTrackerHelper()
 	{
 		if (m_ipTrackCancel && m_ipProgressor)
 		{
@@ -392,12 +382,9 @@ private:
 // Utility functions
 double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);
 
-// incomplete type def for the heap... I'm really out of options
-class FibonacciHeap;
-
-HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop, 
+HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> & readyEdges, double pop,
 							   EvcSolverMethod solverMethod, double selfishRatio, double MaxEvacueeCostSoFar, QueryDirection dir);
-HRESULT PrepareLeafEdgesForHeap(INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap, std::shared_ptr<NAEdgeContainer> leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod
 								#endif

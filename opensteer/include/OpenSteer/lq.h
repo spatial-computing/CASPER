@@ -167,7 +167,7 @@ void lqDeleteDatabase (lqDB*);
 /* ------------------------------------------------------------------ */
 /* The application needs to call this once on each lqClientProxy at
    setup time to initialize its list pointers and associate the proxy
-   with its client object. */ 
+   with its client object. */
 
 
 void lqInitClientProxy (lqClientProxy* proxy, void* clientObject);
@@ -179,8 +179,8 @@ void lqInitClientProxy (lqClientProxy* proxy, void* clientObject);
    frame for every moving object.  */
 
 
-void lqUpdateForNewLocation (lqDB* lq, 
-			     lqClientProxy* object, 
+void lqUpdateForNewLocation (lqDB* lq,
+			     lqClientProxy* object,
 			     double x, double y, double z);
 
 
@@ -210,7 +210,7 @@ typedef void (* lqCallBackFunction)  (void* clientObject,
 				      void* clientQueryState);
 
 
-void lqMapOverAllObjectsInLocality (lqDB* lq, 
+void lqMapOverAllObjectsInLocality (lqDB* lq,
 				    double x, double y, double z,
 				    double radius,
 				    lqCallBackFunction func,
@@ -233,7 +233,7 @@ void lqMapOverAllObjectsInLocality (lqDB* lq,
    NULL if none is found.  */
 
 
-void* lqFindNearestNeighborWithinRadius (lqDB* lq, 
+void* lqFindNearestNeighborWithinRadius (lqDB* lq,
 					 double x, double y, double z,
 					 double radius,
 					 void* ignoreObject);
@@ -282,7 +282,7 @@ lqClientProxy** lqBinForLocation (lqDB* lq, double x, double y, double z);
    regardless of locality (cf lqMapOverAllObjectsInLocality) */
 
 
-void lqMapOverAllObjects (lqDB* lq, 
+void lqMapOverAllObjects (lqDB* lq,
 			  lqCallBackFunction func,
 			  void* clientQueryState);
 

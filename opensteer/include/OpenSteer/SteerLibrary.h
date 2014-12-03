@@ -309,7 +309,7 @@ namespace OpenSteer {
         }
     };
 
-    
+
 } // namespace OpenSteer
 
 // ----------------------------------------------------------------------------
@@ -448,7 +448,7 @@ steerToFollowPath (const int direction,
 
     // find the point on the path nearest the predicted future position
     // XXX need to improve calling sequence, maybe change to return a
-    // XXX special path-defined object which includes two Vec3s and a 
+    // XXX special path-defined object which includes two Vec3s and a
     // XXX bool (onPath,tangent (ignored), withinPath)
     Vec3 tangent;
     double outside;
@@ -615,7 +615,7 @@ steerToAvoidNeighbors (const double minTimeToCollision,
     {
         AbstractVehicle& other = **i;
         if (&other != this)
-        {	
+        {
             // avoid when future positions are this close (or less)
             const double collisionDangerThreshold = radius() * 2;
 
@@ -768,7 +768,7 @@ steerToAvoidCloseNeighbors (const double minSeparationDistance,
                             const AVGroup& others)
 {
     // for each of the other vehicles...
-    for (AVIterator i = others.begin(); i != others.end(); i++)    
+    for (AVIterator i = others.begin(); i != others.end(); i++)
     {
         AbstractVehicle& other = **i;
         if (&other != this)
@@ -1136,7 +1136,7 @@ findNextIntersectionWithSphere (SphericalObstacle& obs,
 
     // computer line-sphere intersection parameters
     b = -2 * lc.z;
-    c = square (lc.x) + square (lc.y) + square (lc.z) - 
+    c = square (lc.x) + square (lc.y) + square (lc.z) -
         square (obs.radius + radius());
     d = (b * b) - (4 * c);
 
@@ -1151,7 +1151,7 @@ findNextIntersectionWithSphere (SphericalObstacle& obs,
     q = (-b - s) / 2;
 
     // both intersections are behind us, so no potential collisions
-    if ((p < 0) && (q < 0)) return; 
+    if ((p < 0) && (q < 0)) return;
 
     // at least one intersection is in front of us
     intersection.intersect = true;

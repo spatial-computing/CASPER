@@ -1,17 +1,17 @@
 // Copyright 2010 ESRI
-// 
+//
 // All rights reserved under the copyright laws of the United States
 // and applicable international laws, treaties, and conventions.
-// 
+//
 // You may freely redistribute and use this sample code, with or
 // without modification, provided you include the original copyright
 // notice and use restrictions.
-// 
-// See the use restrictions at http://help.arcgis.com/en/sdk/10.1/usageRestrictions.htm
+//
+// See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
 #pragma once
 
-#include "resource.h"                                           // main symbols
+#include "resource.h"             // main symbols
 #include "CatIDs\ArcCATIDs.h"     // component category IDs
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
@@ -53,21 +53,19 @@ public:
     return S_OK;
   }
 
-  void FinalRelease() 
+  void FinalRelease()
   {
   }
 
 public:
 
   // INASymbolizer
-
   STDMETHOD(Applies)(INAContext* pNAContext, VARIANT_BOOL* pFlag);
   STDMETHOD(get_Priority)(long* pPriority);
   STDMETHOD(CreateLayer)(INAContext* pNAContext, INALayer** ppNALayer);
   STDMETHOD(UpdateLayer)(INALayer* pNALayer, VARIANT_BOOL* pUpdated);
-  
-  // INASymbolizer2 methods
 
+  // INASymbolizer2 methods
   STDMETHOD(ResetRenderers)(IColor* pSolverColor, INALayer* pNALayer);
 
 private:
@@ -78,7 +76,7 @@ private:
   HRESULT CreateBarrierRenderer(IColor* pBarrierColor, IFeatureRenderer** ppFRenderer);
   HRESULT CreateLineRenderer(IColor* pLineColor, IFeatureRenderer** ppFeatureRenderer);
   HRESULT CreateUnlocatedSymbol(ISymbol* pLocatedMarkerSymbol, ISymbol** ppUnlocatedMarkerSymbol);
-  HRESULT CreateCharacterMarkerSymbol(CString   fontName,
+  HRESULT CreateCharacterMarkerSymbol(ATL::CString   fontName,
                                       IColor*   pMarkerColor,
                                       IColor*   pMarkerBackgroundColor,
                                       long      characterIndex,
@@ -93,5 +91,3 @@ private:
   const long c_maxAboveBaseRandomColorHSVValue;
   const long c_maxFadedColorHSVSaturation;
 };
-
-

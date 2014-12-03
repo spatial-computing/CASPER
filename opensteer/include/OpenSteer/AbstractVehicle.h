@@ -31,7 +31,7 @@
 // AbstractVehicle: pure virtual base class for generic steerable vehicles
 //
 // 10-04-04 bk:  put everything into the OpenSteer namespace
-// 01-30-03 cwr: created 
+// 01-30-03 cwr: created
 //
 //
 // ----------------------------------------------------------------------------
@@ -52,7 +52,7 @@
 namespace OpenSteer {
 
 
-    class AbstractVehicle : public AbstractLocalSpace 
+    class AbstractVehicle : public AbstractLocalSpace
     {
     public:
 
@@ -73,7 +73,7 @@ namespace OpenSteer {
 
         // groups of (pointers to) abstract vehicles, and iterators over them
         typedef std::vector<AbstractVehicle*> group;
-        typedef group::const_iterator iterator;    
+        typedef group::const_iterator iterator;
 
         // predict position of this vehicle at some time in the future
         // (assumes velocity remains constant)

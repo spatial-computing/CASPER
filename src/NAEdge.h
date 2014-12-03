@@ -1,47 +1,29 @@
 #pragma once
 
-#include <hash_map>
+#include "StdAfx.h"
 #include "Evacuee.h"
 #include "TrafficModel.h"
+#include "utils.h"
 
-struct EdgeReservation
-{
-public:
-	double FromCost;
-	double ToCost;
-	Evacuee * Who;
-
-	EdgeReservation(Evacuee * who, double fromCost, double toCost)
-	{
-		Who = who;
-		FromCost = fromCost;
-		ToCost = toCost;
-	}
-};
-
-// enum EdgeDirtyFlagEnum { EdgeFlagClean = 0x0, EdgeFlagMaybe = 0x1, EdgeFlagDirty = 0x2 };
-
-class EdgeReservations : std::vector<EvcPathPtr>
+class EdgeReservations : private std::vector<EvcPathPtr>
 {
 private:
-	float  ReservedPop;
-	float  Capacity;
-	bool   isDirty;
-	TrafficModel * myTrafficModel;
+	float          ReservedPop;
+	float          Capacity;
+	EdgeDirtyState dirtyState;
+	TrafficModel   * myTrafficModel;
 
 public:
 	EdgeReservations(float capacity, TrafficModel * trafficModel);
 	EdgeReservations(const EdgeReservations& cpy);
+	EdgeReservations & operator=(const EdgeReservations &) = delete;
 	void AddReservation(double newFlow, EvcPathPtr path);
-	
+	void RemoveReservation(double flow, EvcPathPtr path);
+
 	friend class NAEdge;
 };
 
-// EdgeReservations hash map
 typedef EdgeReservations * EdgeReservationsPtr;
-typedef public stdext::hash_map<long, EdgeReservationsPtr> NAResTable;
-typedef stdext::hash_map<long, EdgeReservationsPtr>::iterator NAResTableItr;
-typedef std::pair<long, EdgeReservationsPtr> NAResTablePair;
 
 // The NAEdge class is what sits on top of the INetworkEdge interface and holds extra
 // information about each edge which are helpful for CASPER algorithm.
@@ -61,45 +43,68 @@ public:
 	esriNetworkEdgeDirection Direction;
 	NAVertex * ToVertex;
 	NAEdge * TreePrevious;
-	std::vector<NAEdge *> TreeNext;
+	GrowingArrayList<NAEdge *> TreeNext;
 	INetworkEdgePtr NetEdge;
-	// INetworkEdgePtr LastExteriorEdge;	
 	long EID;
-	std::vector<NAEdge *> * AdjacentForward;
-	std::vector<NAEdge *> * AdjacentBackward;
+	ArrayList<NAEdge *> AdjacentForward;
+	ArrayList<NAEdge *> AdjacentBackward;
 
-	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = NULL) const;
-	double GetCurrentCost(EvcSolverMethod method = CASPERSolver) const;
+	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = nullptr) const;
+	double GetCurrentCost(EvcSolverMethod method = EvcSolverMethod::CASPERSolver) const;
 	double LeftCapacity() const;
 
 	// Special function for Flocking: to check how much capacity the edge had originally
 	double OriginalCapacity() const { return reservations->Capacity; }
 
-	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;	
-	void AddReservation(EvcPath * path, double population, EvcSolverMethod method);
-	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, NAResTable * resTable, TrafficModel * model);
-	NAEdge(const NAEdge& cpy);
-	
-	inline void SetDirty() { reservations->isDirty = true; }
-	inline bool IsDirty (double minPop2Route, EvcSolverMethod method);
-	inline void SetClean(double minPop2Route, EvcSolverMethod method);
+	HRESULT QuerySourceStuff(long * sourceOID, long * sourceID, double * fromPosition, double * toPosition) const;
+	void AddReservation(EvcPath * path, EvcSolverMethod method, bool delayedDirtyState = false);
+	NAEdge(INetworkEdgePtr, long capacityAttribID, long costAttribID, const NAEdge * otherEdge, bool twoWayRoadsShareCap, std::list<EdgeReservationsPtr> & ResTable, TrafficModel * model);
+	NAEdge(const NAEdge & cpy);
+	NAEdge & operator=(const NAEdge &) = delete;
+
+	EdgeDirtyState HowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
+	inline void SetClean(EvcSolverMethod method, double minPop2Route);
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
-	void TreeNextEraseFirst(NAEdge * child);
+	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
+	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
+	void GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cleanVectorFirst = false);
 	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const;
 	HRESULT InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
 									  long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag);
-	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
+
+	static bool CostLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
+	{
+		return e1->GetCurrentCost(method) < e2->GetCurrentCost(method);
+	}
+
+	static bool CongestionLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
+	{
+		return e1->GetTrafficSpeedRatio(e1->reservations->ReservedPop, method) > e2->GetTrafficSpeedRatio(e2->reservations->ReservedPop, method);
+	}
+
+	static double GetHeapKeyHur(const NAEdge * e);
+	static double GetHeapKeyNonHur(const NAEdge * e);
+	static bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2);
 };
 
-double GetHeapKeyHur   (const NAEdge * e);
-double GetHeapKeyNonHur(const NAEdge * e);
-bool   IsEqual         (const NAEdge * n1, const NAEdge * n2);
-
 typedef NAEdge * NAEdgePtr;
-typedef public stdext::hash_map<long, NAEdgePtr> NAEdgeTable;
-typedef stdext::hash_map<long, NAEdgePtr>::iterator NAEdgeTableItr;
+
+// hash functor for NAEdgePtr
+struct NAEdgePtrHasher : public std::unary_function<NAEdgePtr, size_t>
+{
+	size_t operator()(const NAEdgePtr & edge) const { return edge->EID; }
+};
+
+// equal functor for NAEdgePtr
+struct NAEdgePtrEqual : public std::binary_function<NAEdgePtr, NAEdgePtr, bool>
+{
+	size_t operator()(const NAEdgePtr & left, const NAEdgePtr & right) const { return left->EID == right->EID && left->Direction == right->Direction; }
+};
+
+typedef public std::unordered_map<long, NAEdgePtr> NAEdgeTable;
+typedef std::unordered_map<long, NAEdgePtr>::const_iterator NAEdgeTableItr;
 typedef std::pair<long, NAEdgePtr> _NAEdgeTablePair;
 #define NAEdgeTablePair(a) _NAEdgeTablePair(a->EID, a)
 
@@ -110,34 +115,34 @@ private:
 	NAEdgeTable * cacheAgainst;
 
 public:
+	NAEdgeMap(const NAEdgeMap & that) = delete;
+	NAEdgeMap & operator=(const NAEdgeMap &) = delete;
+
 	NAEdgeMap(void)
-	{ 
-		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
-		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
+	{
+		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
 	}
 
-	~NAEdgeMap(void) 
+	virtual ~NAEdgeMap(void)
 	{
 		Clear();
-		delete cacheAlong; 
-		delete cacheAgainst; 
+		delete cacheAlong;
+		delete cacheAgainst;
 	}
-
+	
+	void CallHowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
 	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const;
 	void Erase(NAEdgePtr edge) {        Erase(edge->EID, edge->Direction)  ; }
 	bool Exist(NAEdgePtr edge) { return Exist(edge->EID, edge->Direction)  ; }
 	void Clear()               { cacheAlong->clear(); cacheAgainst->clear(); }
-	size_t Size()              { return cacheAlong->size() + cacheAgainst->size(); }	
-	HRESULT Insert(NAEdgePtr edge);
+	size_t Size()              { return cacheAlong->size() + cacheAgainst->size(); }
+	HRESULT Insert(NAEdgePtr   edge );
 	HRESULT Insert(NAEdgeMap * edges);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
 	void Erase(long eid, esriNetworkEdgeDirection dir);
+	const NAEdgePtr Find(const NAEdgePtr edge) const;
 };
-
-#define NAEdgeMap_NOGEN   0x0
-#define NAEdgeMap_OLDGEN  0x1
-#define NAEdgeMap_NEWGEN  0x2
-#define NAEdgeMap_ALLGENS 0x3
 
 class NAEdgeMapTwoGen
 {
@@ -145,17 +150,20 @@ public:
 	NAEdgeMap * oldGen;
 	NAEdgeMap * newGen;
 
+	NAEdgeMapTwoGen(const NAEdgeMapTwoGen & that) = delete;
+	NAEdgeMapTwoGen & operator=(const NAEdgeMapTwoGen &) = delete;
+
 	NAEdgeMapTwoGen(void)
-	{ 
+	{
 		oldGen = new DEBUG_NEW_PLACEMENT NAEdgeMap();
 		newGen = new DEBUG_NEW_PLACEMENT NAEdgeMap();
 	}
 
-	~NAEdgeMapTwoGen(void) 
+	virtual ~NAEdgeMapTwoGen(void)
 	{
-		Clear(NAEdgeMap_ALLGENS);
-		delete oldGen; 
-		delete newGen; 
+		Clear(NAEdgeMapGeneration::AllGens);
+		delete oldGen;
+		delete newGen;
 	}
 
 	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const
@@ -165,32 +173,35 @@ public:
 	}
 
 	void MarkAllAsOldGen();
-	bool Exist(NAEdgePtr edge, UCHAR gen = NAEdgeMap_ALLGENS) { return Exist(edge->EID, edge->Direction, gen)  ; }
-	void Erase(NAEdgePtr edge, UCHAR gen = NAEdgeMap_ALLGENS);
-	void Clear(UCHAR gen);
-	size_t Size(UCHAR gen = NAEdgeMap_NEWGEN);
-	HRESULT Insert(NAEdgePtr edge, UCHAR gen = NAEdgeMap_NEWGEN);
-	bool Exist(long eid, esriNetworkEdgeDirection dir, UCHAR gen = NAEdgeMap_ALLGENS);
+	bool Exist(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens) { return Exist(edge->EID, edge->Direction, gen); }
+	void Erase(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens);
+	void Clear(NAEdgeMapGeneration gen);
+	size_t Size(NAEdgeMapGeneration gen = NAEdgeMapGeneration::NewGen);
+	HRESULT Insert(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::NewGen);
+	bool Exist(long eid, esriNetworkEdgeDirection dir, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens);
 };
 
 typedef std::pair<long, unsigned char> NAEdgeContainerPair;
-typedef stdext::hash_map<long, unsigned char>::iterator NAEdgeIterator;
+typedef std::unordered_map<long, unsigned char>::const_iterator NAEdgeIterator;
 
 class NAEdgeContainer
 {
 private:
-	stdext::hash_map<long, unsigned char> * cache;
+	std::unordered_map<long, unsigned char> * cache;
 
 public:
-	NAEdgeContainer(void)
-	{ 
-		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, unsigned char>();
+	NAEdgeContainer(const NAEdgeContainer & that) = delete;
+	NAEdgeContainer & operator=(const NAEdgeContainer &) = delete;
+
+	NAEdgeContainer(size_t capacity)
+	{
+		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, unsigned char>(capacity);
 	}
 
-	~NAEdgeContainer(void) 
+	virtual ~NAEdgeContainer(void)
 	{
 		Clear();
-		delete cache; 
+		delete cache;
 	}
 
 	inline  NAEdgeIterator begin() { return cache->begin(); }
@@ -199,13 +210,15 @@ public:
 	inline void Clear() { cache->clear(); }
 	HRESULT Insert(INetworkEdgePtr edge);
 	HRESULT Insert(long eid, esriNetworkEdgeDirection dir);
-	void    Insert(NAEdgeContainer * clone);
+	HRESULT Insert(long eid, unsigned char dir);
+	HRESULT Remove(INetworkEdgePtr edge);
+	HRESULT Remove(long eid, esriNetworkEdgeDirection dir);
+	HRESULT Remove(long eid, unsigned char dir);
+	void    Insert(std::shared_ptr<NAEdgeContainer> clone);
 	bool Exist(INetworkEdgePtr edge);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
+	bool IsEmpty() const { return cache->empty(); }
 };
-
-enum QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };
-typedef std::vector<NAEdgePtr> * vector_NAEdgePtr_Ptr;
 
 // This collection object has two jobs:
 // it makes sure that there exist only one copy of an edge in it that is connected to each INetworkEdge.
@@ -221,8 +234,8 @@ private:
 	bool			twoWayRoadsShareCap;
 	NAEdgeTable		* cacheAlong;
 	NAEdgeTable		* cacheAgainst;
-	NAResTable		* resTableAlong;
-	NAResTable		* resTableAgainst;
+	std::list<ArrayList<NAEdgePtr> *> GarbageNeighborList;
+	std::list<EdgeReservationsPtr> ResTable;
 	TrafficModel    * myTrafficModel;
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkQueryPtr                  ipNetworkQuery;
@@ -235,18 +248,15 @@ public:
 	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop,
 		EvcTrafficModel model, INetworkForwardStarExPtr _ipForwardStar, INetworkForwardStarExPtr _ipBackwardStar, INetworkQueryPtr _ipNetworkQuery, HRESULT & hr)
 	{
+		hr = S_OK;
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
-		cacheAlong = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
-		cacheAgainst = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAEdgePtr>();
-		myTrafficModel = new DEBUG_NEW_PLACEMENT TrafficModel(model, CriticalDensPerCap, SaturationPerCap, InitDelayCostPerPop);	
+		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
+		cacheAgainst = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
+		myTrafficModel = new DEBUG_NEW_PLACEMENT TrafficModel(model, CriticalDensPerCap, SaturationPerCap, InitDelayCostPerPop);
 		twoWayRoadsShareCap = TwoWayRoadsShareCap;
 
-		resTableAlong = new DEBUG_NEW_PLACEMENT NAResTable();
-		if (twoWayRoadsShareCap) resTableAgainst = resTableAlong;
-		else resTableAgainst = new DEBUG_NEW_PLACEMENT NAResTable();
-
-		// network variables init		
+		// network variables init
 		INetworkElementPtr ipEdgeElement;
 		ipNetworkQuery = _ipNetworkQuery;
 		ipForwardStar = _ipForwardStar;
@@ -255,16 +265,17 @@ public:
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return;
 		ipCurrentEdge = ipEdgeElement;
 	}
-	
-	~NAEdgeCache(void) 
+
+	virtual ~NAEdgeCache(void)
 	{
 		Clear();
 		delete myTrafficModel;
-		delete cacheAlong; 
+		delete cacheAlong;
 		delete cacheAgainst;
-		delete resTableAlong;
-		if (!twoWayRoadsShareCap) delete resTableAgainst;
 	}
+
+	NAEdgeCache(const NAEdgeCache & that) = delete;
+	NAEdgeCache & operator=(const NAEdgeCache &) = delete;
 
 	NAEdgePtr New(INetworkEdgePtr edge, bool reuseEdgeElement);
 
@@ -274,8 +285,8 @@ public:
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
 	NAEdgePtr Get(long eid, esriNetworkEdgeDirection dir) const;
 	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
-	void Clear();	
+	void Clear();
 	void CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver);
 	double GetCacheHitPercentage() const { return myTrafficModel->GetCacheHitPercentage(); }
-	HRESULT QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, vector_NAEdgePtr_Ptr & neighbors);
+	HRESULT QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, QueryDirection dir, ArrayList<NAEdgePtr> ** neighbors);
 };

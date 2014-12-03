@@ -58,7 +58,7 @@ OpenSteer::PolylinePathway::PolylinePathway (const int _pointCount,
 // utility for constructors
 
 
-void 
+void
 OpenSteer::PolylinePathway::initialize (const int _pointCount,
                                         const Vec3 _points[],
                                         const double _radius,
@@ -120,7 +120,7 @@ OpenSteer::PolylinePathway::initialize (const int _pointCount,
 // that a negative distance indicates A is inside the Pathway.
 
 
-OpenSteer::Vec3 
+OpenSteer::Vec3
 OpenSteer::PolylinePathway::mapPointToPath (const Vec3& point,
                                             Vec3& tangent,
                                             double& outside)
@@ -155,7 +155,7 @@ OpenSteer::PolylinePathway::mapPointToPath (const Vec3& point,
 // given an arbitrary point, convert it to a distance along the path
 
 
-double 
+double
 OpenSteer::PolylinePathway::mapPointToPathDistance (const Vec3& point)
 {
     double d;
@@ -185,7 +185,7 @@ OpenSteer::PolylinePathway::mapPointToPathDistance (const Vec3& point)
 // given a distance along the path, convert it to a point on the path
 
 
-OpenSteer::Vec3 
+OpenSteer::Vec3
 OpenSteer::PolylinePathway::mapPathDistanceToPoint (double pathDistance)
 {
     // clip or wrap given path distance according to cyclic flag
@@ -223,13 +223,13 @@ OpenSteer::PolylinePathway::mapPathDistanceToPoint (double pathDistance)
 
 
 // ----------------------------------------------------------------------------
-// computes distance from a point to a line segment 
+// computes distance from a point to a line segment
 //
 // (I considered moving this to the vector library, but its too
 // tangled up with the internal state of the PolylinePathway instance)
 
 
-double 
+double
 OpenSteer::PolylinePathway::pointToSegmentDistance (const Vec3& point,
                                                     const Vec3& ep0,
                                                     const Vec3& ep1)

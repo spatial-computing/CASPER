@@ -317,7 +317,7 @@ namespace OpenSteer {
 	OPENSTEER_API inline Vec3 limitMinDeviationAngle(const Vec3& source,
                                         const double cosineOfConeAngle,
                                         const Vec3& basis)
-    {    
+    {
         return vecLimitDeviationAngleUtility (false, // force source OUTSIDE cone
                                               source,
                                               cosineOfConeAngle,
@@ -363,9 +363,9 @@ namespace OpenSteer {
     //distance template
     //inline double distance (const Vec3& a, const Vec3& b) {return (a-b).length();}
 
-    
+
 } // namespace OpenSteer
-    
+
 
 // ----------------------------------------------------------------------------
 #endif // OPENSTEER_VEC3_H

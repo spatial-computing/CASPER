@@ -1,6 +1,7 @@
 #pragma once
 
-#include <hash_map>
+#include "StdAfx.h"
+#include "utils.h"
 
 class Evacuee;
 class NAEdge;
@@ -17,13 +18,11 @@ struct HValue
 public:
 	double   Value;
 	long     EdgeID;
-	unsigned short CarmaLoop;
-	
-	HValue(long edgeID, double value, unsigned short carmaLoop)
+
+	HValue(long edgeID, double value)
 	{
 		EdgeID = edgeID;
 		Value = value;
-		CarmaLoop = carmaLoop;
 	}
 
 	static inline bool LessThan(HValue & a, HValue & b)
@@ -36,7 +35,7 @@ class NAVertex
 {
 private:
 	NAEdge * BehindEdge;
-	std::vector<HValue> * h;
+	MinimumArrayList<long, double> * h;
 	bool     isShadowCopy;
 
 public:
@@ -45,44 +44,32 @@ public:
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
+	bool ParentCostIsDecreased;
+
+	double GetMinHOrZero() const { return h->GetMinValueOrDefault(0.0); }
+	double GetH(long eid) const { return h->GetByKey(eid); }
 	size_t HCount() const { return h->size(); }
-
-	double GetH(long eid) const
-	{
-		for(std::vector<HValue>::iterator i = h->begin(); i != h->end(); i++) if (i->EdgeID == eid) return i->Value;
-		return FLT_MAX;
-	}
-
-	double GetMinHOrZero() const
-	{		
-		if (h->empty()) return 0.0;
-		else return h->front().Value;
-	}
 
 	inline void SetBehindEdge(NAEdge * behindEdge);
 	NAEdge * GetBehindEdge() { return BehindEdge; }
-	void ResetHValues(void)  { h->clear(); }
 	inline bool IsHEmpty()   const { return h->empty(); }
-	bool UpdateHeuristic     (long edgeid, double hur, unsigned short carmaLoop);
-	
+	void UpdateHeuristic(long edgeid, double hur);
+	void UpdateYourHeuristic();
+
 	inline void Clone (NAVertex * cpy);
-	NAVertex   (void);
-	NAVertex   (const NAVertex& cpy);
-	NAVertex   (INetworkJunctionPtr junction, NAEdge * behindEdge);
-	~NAVertex  (void) { if (!isShadowCopy) delete h; }
+	NAVertex(void);
+	NAVertex(const NAVertex& cpy) = delete;
+	NAVertex & operator=(const NAVertex &) = delete;
+	NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge);
+	virtual ~NAVertex(void) { if (!isShadowCopy) delete h; }
 };
 
 typedef NAVertex * NAVertexPtr;
-typedef stdext::hash_map<long, NAVertexPtr> NAVertexTable;
-typedef stdext::hash_map<long, NAVertexPtr>::_Pairib NAVertexTableInsertReturn;
-typedef stdext::hash_map<long, NAVertexPtr>::iterator NAVertexTableItr;
+typedef std::unordered_map<long, NAVertexPtr> NAVertexTable;
+typedef std::unordered_map<long, NAVertexPtr>::_Pairib NAVertexTableInsertReturn;
+typedef std::unordered_map<long, NAVertexPtr>::const_iterator NAVertexTableItr;
 typedef std::pair<long, NAVertexPtr> _NAVertexTablePair;
 #define NAVertexTablePair(a) _NAVertexTablePair(a->EID, a)
-
-typedef stdext::hash_map<int, std::list<long> *> NAVertexLoopCountList;
-typedef NAVertexLoopCountList::_Pairib NAVertexLoopCountListReturn;
-typedef NAVertexLoopCountList::iterator NAVertexLoopCountListItr;
-typedef std::pair<int, std::list<long> *> NAVertexLoopCountListPair;
 
 // This collection object has two jobs:
 // it makes sure that there exist only one copy of a vertex in it that is connected to each INetworkJunction.
@@ -103,26 +90,28 @@ private:
 	double heuristicForOutsideVertices;
 
 public:
+	NAVertexCache(const NAVertexCache & that) = delete;
+	NAVertexCache & operator=(const NAVertexCache &) = delete;
+
 	NAVertexCache(void)
 	{
-		cache = new DEBUG_NEW_PLACEMENT stdext::hash_map<long, NAVertexPtr>();
+		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAVertexPtr>();
 		bucketCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
 		heuristicForOutsideVertices = 0.0;
-		currentBucket = NULL;
+		currentBucket = nullptr;
 		currentBucketIndex = 0;
 	}
 
-	~NAVertexCache(void) 
+	virtual ~NAVertexCache(void)
 	{
 		Clear();
 		delete cache;
 		delete bucketCache;
 	}
 
-	void PrintVertexHeuristicFeq();	
-	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = 0);
-	void UpdateHeuristicForOutsideVertices(double hur, unsigned short carmaLoop);
-	bool UpdateHeuristic(long edgeid, NAVertex * n, unsigned short carmaLoop);
+	void PrintVertexHeuristicFeq();
+	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = nullptr);
+	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
 	NAVertexPtr Get(long eid);
 	NAVertexPtr Get(INetworkJunctionPtr junction);
 	NAVertexPtr NewFromBucket(NAVertexPtr clone);
@@ -136,17 +125,20 @@ private:
 	std::vector<NAVertexPtr> * cache;
 
 public:
+	NAVertexCollector(const NAVertexCollector & that) = delete;
+	NAVertexCollector & operator=(const NAVertexCollector &) = delete;
+
 	NAVertexCollector(void)
 	{
 		cache = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 	}
 
-	~NAVertexCollector(void) 
+	virtual ~NAVertexCollector(void)
 	{
 		Clear();
 		delete cache;
 	}
-	
+
 	NAVertexPtr New(INetworkJunctionPtr junction);
 	size_t Size() { return cache->size(); }
 	void Clear();

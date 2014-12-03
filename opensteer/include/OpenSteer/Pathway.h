@@ -164,7 +164,7 @@ namespace OpenSteer {
     };
 
 } // namespace OpenSteer
-    
-    
+
+
 // ----------------------------------------------------------------------------
 #endif // OPENSTEER_PATHWAY_H

@@ -8,8 +8,8 @@
     <ProjectGuid>{133C4B26-54C8-40F8-AE06-604A251BCA5F}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ArcCASPERLog</RootNamespace>
-    <AssemblyName>ArcCASPERLog</AssemblyName>
+    <RootNamespace>CASPERLog</RootNamespace>
+    <AssemblyName>CASPERLog</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -31,7 +31,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>ArcCASPERLog.Program</StartupObject>
+    <StartupObject>CASPERLog.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
