@@ -6,6 +6,7 @@ glut32.dll
 glut64.dll
 Manual.pdf
 README.md
+license.txt
 install.cmd
 uninstall.cmd
 Visual C++ Redistributable.url

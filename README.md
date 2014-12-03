@@ -43,8 +43,7 @@ In order to install, first unzip the downloaded file.  Next, execute the "instal
 I would like to thank Esri [Application Prototype Lab (APL)](https://maps.esri.com/), the Esri Network Analyst team, and USC [Spatial Sciences Institute (SSI)](http://spatial.usc.edu/) for their support during the development of this tool. The programing of this tool started when I was a summer intern at Esri in 2011. I worked at APL during that summer and also received tremendous support from the Network Analyst team. After Esri, I continued as a PhD student and research assistant at USC SSI. Thanks to SSI support, I'm still actively developing the CASPER algorithm to improve the future of public safety.
 
 ####Copyright / Permission
-CASPER is released as a free open-source tool under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0).
-If you decided to use our tool in your work, we would ask that you cite it as:
+CASPER is released as a free open-source tool under [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0). For a complete copy take a look at `license.txt`. If you decided to use our tool in your work, we would ask that you cite it as:
 
 K. Shahabi and J. P. Wilson, “CASPER: Intelligent capacity-aware evacuation routing,” Computers, Environment and Urban Systems, vol. 46, pp. 12–24, Apr. 2014
 
