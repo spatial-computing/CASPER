@@ -16,6 +16,7 @@
 #include "NAEdge.h"
 #include "NAVertex.h"
 #include "Flocking.h"
+#include "FibonacciHeap.h"
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -281,10 +282,10 @@ public:
 
 private:
 
-	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, EvacueeList *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-						double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &);
-	HRESULT CARMALoop(INetworkQueryPtr, IGPMessages*, ITrackCancel*, EvacueeList *, std::vector<EvacueePtr> *, NAVertexCache *, NAEdgeCache *, SafeZoneTable *,
-				      size_t &, NAEdgeMapTwoGen *, NAEdgeContainer *, std::vector<unsigned int> &, double, double &, bool, CARMASort);
+	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, std::shared_ptr<EvacueeList>, std::shared_ptr<NAVertexCache>, std::shared_ptr<NAEdgeCache>,
+		    std::shared_ptr<SafeZoneTable>, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &, std::vector<double> &);
+	HRESULT CARMALoop(INetworkQueryPtr, IStepProgressorPtr, IGPMessages*, ITrackCancel*, std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvacueePtr>>, std::shared_ptr<NAVertexCache>,
+		    std::shared_ptr<NAEdgeCache>, std::shared_ptr<SafeZoneTable>, size_t &, std::shared_ptr<NAEdgeMapTwoGen>, std::shared_ptr<NAEdgeContainer>, std::vector<unsigned int> &, double, double &, bool, CARMASort);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
@@ -293,13 +294,13 @@ private:
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
-	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, NAEdgeCache * ecache, NAEdgeMapTwoGen * closedList,
-										  NAVertexCache * vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
-	HRESULT DeterminMinimumPop2Route(EvacueeList *, INetworkDatasetPtr, double &, bool &) const;
-	size_t  FindPathsThatNeedToBeProcessedInIteration(EvacueeList *, std::vector<EvcPathPtr> *, std::vector<double> &) const;
-	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, NAEdgeContainer *, NAEdgeContainer *, double, EvcSolverMethod) const;
+	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, std::shared_ptr<NAEdgeCache> ecache,
+		    std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
+	HRESULT DeterminMinimumPop2Route(std::shared_ptr<EvacueeList>, INetworkDatasetPtr, double &, bool &) const;
+	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &) const;
+	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, std::shared_ptr<NAEdgeContainer>, std::shared_ptr<NAEdgeContainer>, double, EvcSolverMethod) const;
 	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
-	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, NAEdgeContainer *) const;
+	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, std::shared_ptr<NAEdgeContainer>) const;
 	bool    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	void    UpdatePeakMemoryUsage();
 
@@ -321,7 +322,6 @@ private:
 	float                   CARMAPerformanceRatio;
 	float                   selfishRatio;
 	float                   iterativeRatio;
-	unsigned short			countCARMALoops;
 	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
 	CARMASort               CarmaSortCriteria;
@@ -355,7 +355,7 @@ _COM_SMARTPTR_TYPEDEF(IEvcSolver, __uuidof(IEvcSolver));
 class CancelTrackerHelper
 {
 public:
-	~CancelTrackerHelper()
+	virtual ~CancelTrackerHelper()
 	{
 		if (m_ipTrackCancel && m_ipProgressor)
 		{
@@ -382,12 +382,9 @@ private:
 // Utility functions
 double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);
 
-// incomplete type def for the heap... I'm really out of options
-class FibonacciHeap;
-
-HRESULT PrepareVerticesForHeap(NAVertexPtr point, NAVertexCache * vcache, NAEdgeCache * ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> * readyEdges, double pop,
+HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> & readyEdges, double pop,
 							   EvcSolverMethod solverMethod, double selfishRatio, double MaxEvacueeCostSoFar, QueryDirection dir);
-HRESULT InsertLeafEdgesToHeap (INetworkQueryPtr ipNetworkQuery, NAVertexCache * vcache, NAEdgeCache * ecache, FibonacciHeap * heap, NAEdgeContainer * leafs
+HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap, std::shared_ptr<NAEdgeContainer> leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod
 								#endif

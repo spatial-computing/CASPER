@@ -9,7 +9,7 @@ enum class QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };
 
 [export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC")] enum class EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
 [export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948")] enum class EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3, EXPModel = 0x4 };
-[export, uuid("C46A6356-07A6-473A-B39F-FBB74469201D")] enum class EvacueeGrouping : unsigned char { None = 0x0, Merge = 0x1, Separate = 0x2, MergeSeperate = 0x3 };
+[export, uuid("C46A6356-07A6-473A-B39F-FBB74469201D")] enum class EvacueeGrouping : unsigned char { None = 0x0, Merge = 0x1, Separate = 0x2, MergeSeparate = 0x3 };
 
 // enum for carma sort setting
 [export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char
@@ -43,8 +43,15 @@ private:
 	inline void check(S index) const { if (index >= mySize || index < ZeroSize) throw std::out_of_range("index is out of range for ArrayList"); }
 
 public:
-	ArrayList(S size = ZeroSize) : mySize(size), data(NULL) { Init(size); }
-	virtual ~ArrayList() { if (data) delete[] data; }
+	ArrayList(S size = ZeroSize) : mySize(size), data(nullptr) { Init(size); }
+	virtual ~ArrayList() { if (data) delete [] data; }
+	ArrayList & operator=(const ArrayList &) = delete;
+
+	ArrayList(const ArrayList & that) : mySize(that.mySize), data(nullptr)
+	{
+		Init(mySize);
+		for (S i = ZeroSize; i < mySize; ++i) data[i] = that.data[i];
+	}
 
 	inline S    size()  const { return mySize; }
 	inline bool empty() const { return mySize == ZeroSize; }
@@ -59,7 +66,7 @@ public:
 	{
 		mySize = size;
 		if (data) delete[] data;
-		if (mySize > ZeroSize) data = new DEBUG_NEW_PLACEMENT T[mySize]; else data = NULL;
+		if (mySize > ZeroSize) data = new DEBUG_NEW_PLACEMENT T[mySize]; else data = nullptr;
 	}
 
 	class Const_Iterator
@@ -116,8 +123,15 @@ protected:
 	}
 
 public:
-	GrowingArrayList(S cap = ZeroSize) : _size(ZeroSize), data(NULL), capacity(ZeroSize) { grow(cap); }
+	GrowingArrayList(S cap = ZeroSize) : _size(ZeroSize), data(nullptr), capacity(ZeroSize) { grow(cap); }
 	virtual ~GrowingArrayList() { if (data) delete[] data; }
+	GrowingArrayList & operator=(const GrowingArrayList &) = delete;
+
+	GrowingArrayList(const GrowingArrayList & that) : _size(that._size), capacity(ZeroSize), data(nullptr)
+	{
+		shrink_or_grow(that.capacity);
+		for (S i = ZeroSize; i < _size; ++i) data[i] = that.data[i];
+	}
 
 	inline S    size()  const { return _size; }
 	inline bool empty() const { return _size == ZeroSize; }
@@ -242,7 +256,6 @@ private:
 	typedef std::unordered_map<T, double, _Hasher, _Keyeq, _Alloc> map;
 
 public:
-	double minWeight;
 	double maxWeight;
 
 	using map::size;
@@ -251,16 +264,15 @@ public:
 	using map::cbegin;
 	using map::cend;
 
-	Histogram(size_t capacity = 0) : map(capacity), minWeight(FLT_MAX), maxWeight(-FLT_MAX) { }
+	Histogram(size_t capacity = 0) : map(capacity), maxWeight(-FLT_MAX) { }
 	void WeightedAdd(const std::vector<T> & list, double weight) { for (const auto & i : list) WeightedAdd(i, weight); }
 	virtual ~Histogram() { }
 
 	void WeightedAdd(const T & item, double weight)
 	{
-		if (map::find(item) == map::end()) map::insert(std::pair<T, double>(item, weight));
+		if (map::find(item) == map::end()) map::insert(std::pair<T, double>(item, 0.0));
 		double & newWeight = map::at(item);
 		newWeight += weight;
-		minWeight = min(minWeight, newWeight);
 		maxWeight = max(maxWeight, newWeight);
 	}
 };

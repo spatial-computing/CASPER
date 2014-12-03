@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EvcSolver", "src\EvcSolver.vcxproj", "{BA6137DF-0073-4E81-8A61-302C805B7745}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -10,7 +10,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EvcSolver", "src\EvcSolver.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opensteer", "opensteer\win32\opensteer.vcxproj", "{2FCB5399-059F-405F-A19B-3ACBE92057A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArcCASPERLog", "ArcCASPERLog\ArcCASPERLog.csproj", "{133C4B26-54C8-40F8-AE06-604A251BCA5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CASPERLog", "CASPERLog\CASPERLog.csproj", "{133C4B26-54C8-40F8-AE06-604A251BCA5F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,8 +46,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_IncrementBeforeBuild = True
-		BuildVersion_UpdateAssemblyVersion = True
 		BuildVersion_BuildVersioningStyle = None.None.Increment.None
+		BuildVersion_UpdateAssemblyVersion = True
+		BuildVersion_IncrementBeforeBuild = True
 	EndGlobalSection
 EndGlobal

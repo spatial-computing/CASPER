@@ -28,11 +28,55 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	#ifdef TRACE
 	std::ofstream f;
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-	time_t curr = time(0);
+	time_t curr = time(NULL);
 	char timeBuff[50];
 	ctime_s(timeBuff, 50, &curr);
 	f << "Trace start: " << timeBuff << std::endl;
 	f.close();
+	#endif
+
+	#ifdef DEBUG
+	void * emptyPtr1 = NULL;
+	void * emptyPtr2 = nullptr;
+	OutputDebugStringW(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1 ? L"c++11 pointer test pass\n" : L"c++11 pointer test fail\n");
+	_ASSERT_EXPR(emptyPtr1 == emptyPtr2 && emptyPtr2 == emptyPtr1, L"c++11 pointer test fail");
+
+	// heap validity test case
+	{
+		struct HeapNode
+		{
+			size_t value;
+			double key;
+			HeapNode(size_t _value = 0, double _key = 0.0) : value(_value), key(_key) { }
+			operator double() const { return key; }
+			bool operator==(const HeapNode & right) const { return value == right.value; }
+			struct HeapNodeHasher : public std::unary_function<HeapNode, size_t> { size_t operator()(const HeapNode & e) const { return e.value; } };
+		};
+
+		FibonacciHeap<HeapNode, HeapNode::HeapNodeHasher> testHeap;
+		srand(unsigned int(time(0)));
+		HeapNode data[10000];
+		HeapNode min1, min2;
+
+		for (size_t i = 0; i < 10000; ++i) data[i] = HeapNode(i, rand());
+		for (size_t i = 0; i < 5000; ++i) testHeap.Insert(data[i]);
+		for (size_t i = 0; i < 5000; i += 20)
+		{
+			data[i].key -= 100;
+			testHeap.DecreaseKey(data[i]);
+		}
+		for (size_t i = 5000; i < 10000; ++i) testHeap.Insert(data[i]);
+		min1 = testHeap.DeleteMin();
+		bool minHeapTestPass = true;
+		while (!testHeap.IsEmpty())
+		{
+			min2 = testHeap.DeleteMin();
+			_ASSERT_EXPR(min1.key <= min2.key, L"Heap property violation");
+			minHeapTestPass &= min1.key <= min2.key;
+			min1 = min2;
+		}
+		OutputDebugStringW(minHeapTestPass ? L"heap property test pass\n" : L"heap property test fail\n");
+	}
 	#endif
 
 	HRESULT hr = S_OK;
@@ -41,7 +85,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// init memory usage function and set the base
 	peakMemoryUsage = 0l;
-	hProcessPeakMemoryUsage = NULL;
+	hProcessPeakMemoryUsage = nullptr;
 	UpdatePeakMemoryUsage();
 	SIZE_T baseMemoryUsage = peakMemoryUsage;
 	bool exportEdgeStat = VarExportEdgeStat == VARIANT_TRUE;
@@ -102,30 +146,31 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// so we can simply clear any features currently present in the "LineData" NAClass.
 	// NOTE: if you have multiple input/output NAClasses to clean up, you can simply loop through all NAClasses,
 	// get their NAClassDefinition, check whether or not each is an input/output class, and reset it accordingly
-	INamedSetPtr ipNAClasses;
+	INamedSetPtr ipNAClasses = nullptr;
 	if (FAILED(hr = pNAContext->get_NAClasses(&ipNAClasses))) return hr;
 
 	// remove any features that might have been created on previous solves
-	IUnknownPtr ipUnk;
+	IUnknownPtr ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipRoutesNAClass(ipUnk);
 	if (FAILED(hr = ipRoutesNAClass->DeleteAllRows())) return hr;
 
+	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_EDGES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
 
-	ipUnk = NULL;
+	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
-	bool ExportRouteEdges = ipUnk != NULL;
+	bool ExportRouteEdges = ipUnk;
 	INAClassPtr ipRouteEdgesNAClass(ipUnk);
 	if (ExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
 
-	ipUnk = NULL;
+	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
 	INAClassPtr ipFlocksNAClass(ipUnk);
-	if (flockingEnabled == VARIANT_TRUE && ipUnk == NULL) flockingEnabled = VARIANT_FALSE;
-	if (ipFlocksNAClass != NULL) { if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr; }
+	if (flockingEnabled == VARIANT_TRUE && !ipUnk) flockingEnabled = VARIANT_FALSE;
+	if (ipFlocksNAClass) { if (FAILED(hr = ipFlocksNAClass->DeleteAllRows())) return hr; }
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Setup the Network Forward Star for traversal
@@ -160,7 +205,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipForwardStar))) return hr;
 	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipBackwardStar))) return hr;
 
-	INetworkAttribute2Ptr networkAttrib = 0;
+	INetworkAttribute2Ptr networkAttrib = nullptr;
 	VARIANT_BOOL useRestriction;
 
 	// loading restriction attributes into the forward star. this will enforce all available restrictions.
@@ -189,7 +234,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INALocationObjectPtr ipNALocationObject;
 	INALocationPtr ipNALocation(CLSID_NALocation);
 	IEnumNetworkElementPtr ipEnumNetworkElement;
-	std::vector<double> GlobalEvcCostAtIteration;
+	std::vector<double> GlobalEvcCostAtIteration, EffectiveIterationRatio;
 
 	INetworkEdgePtr ipCurrentEdge;
 	INetworkJunctionPtr ipCurrentJunction;
@@ -204,22 +249,22 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	double posAlong, fromPosition, toPosition;
 	VARIANT_BOOL keepGoing, isLocated, isRestricted;
 	esriNetworkElementType elementType;
-	SafeZonePtr safePoint;
 	esriNAEdgeSideType side;
 
 	// Initialize Caches
 	// This cache will maintain a list of all created vertices/edges. You can retrieve
 	// them later using EID. The benefit of using this cache is that we
 	// can maintain one-to-one relationship between network junctions and vertices.
-	// This will particularly be helpful with the heuristic calculator part of the algorithm.	
-	NAVertexCache * vcache = new DEBUG_NEW_PLACEMENT NAVertexCache();
-	NAEdgeCache   * ecache = new DEBUG_NEW_PLACEMENT NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE,
-		initDelayCostPerPop, trafficModel, ipForwardStar, ipBackwardStar, ipNetworkQuery, hr);
+	// This will particularly be helpful with the heuristic calculator part of the algorithm.
+	auto ecache = std::shared_ptr<NAEdgeCache>(new DEBUG_NEW_PLACEMENT NAEdgeCache(capAttributeID, costAttributeID, SaturationPerCap, CriticalDensPerCap, twoWayShareCapacity == VARIANT_TRUE,
+		                                                                           initDelayCostPerPop, trafficModel, ipForwardStar, ipBackwardStar, ipNetworkQuery, hr));
 	if (FAILED(hr)) return hr;
 
+	// since some vertices inside the cache will point to edges, it's safer to create this object last so that it gets destroyed (pop out of function stack) before ecache
+	auto vcache = std::shared_ptr<NAVertexCache>(new DEBUG_NEW_PLACEMENT NAVertexCache());
+
 	// Vertex table structures
-	SafeZoneTable * safeZoneList = new DEBUG_NEW_PLACEMENT SafeZoneTable();
-	SafeZoneTableInsertReturn insertRet;
+	auto safeZoneList = std::shared_ptr<SafeZoneTable>(new DEBUG_NEW_PLACEMENT SafeZoneTable(100));
 	INetworkEdgePtr ipEdge(ipElement);
 	INetworkEdgePtr ipOtherEdge(ipOtherElement);
 	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID, curbSideIndex = -1;
@@ -244,7 +289,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Get a cursor on the zones table to loop through each row
 	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CAP), &capFieldIndex))) return hr;
 	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CURBAPPROACH), &curbSideIndex))) return hr;
-	if (FAILED(hr = ipZonesTable->Search(0, VARIANT_TRUE, &ipCursor))) return hr;
+	if (FAILED(hr = ipZonesTable->Search(nullptr, VARIANT_TRUE, &ipCursor))) return hr;
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
 		ipNALocationObject = ipRow;
@@ -301,12 +346,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				if (elementType == esriNETJunction)
 				{
 					if (FAILED(hr = ipForwardStar->get_IsRestricted(ipElement, &isRestricted))) return hr;
-					if (!isRestricted)
-					{
-						safePoint = new DEBUG_NEW_PLACEMENT SafeZone(ipElement, 0, 0, cap);
-						insertRet = safeZoneList->insert(SafeZoneTablePair(safePoint));
-						if (!insertRet.second) delete safePoint;
-					}
+					if (!isRestricted) safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipElement, nullptr, 0, cap));
 				}
 
 				// If the element is an edge, then we must check the fromPosition and toPosition
@@ -330,11 +370,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
-
-							safePoint = new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge, true), posAlong, cap);
-							insertRet = safeZoneList->insert(SafeZoneTablePair(safePoint));
-							if (!insertRet.second) delete safePoint;
+							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
+							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge, true), posAlong, cap));
 						}
 					}
 
@@ -350,11 +387,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, 0))) return hr;
+							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 
-							safePoint = new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge, true), toPosition - posAlong, cap);
-							insertRet = safeZoneList->insert(SafeZoneTablePair(safePoint));
-							if (!insertRet.second) delete safePoint;
+							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge, true), toPosition - posAlong, cap));
 						}
 					}
 				}
@@ -364,9 +399,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Get a cursor on the Evacuee points table to loop through each row
 	long evacueeCount;
-	if (FAILED(hr = ipEvacueePointsTable->Search(NULL, VARIANT_TRUE, &ipCursor))) return hr;
-	if (FAILED(hr = ipEvacueePointsTable->RowCount(NULL, &evacueeCount))) return hr;
-	EvacueeList * Evacuees = new DEBUG_NEW_PLACEMENT EvacueeList(evacueeGroupingOption, evacueeCount);
+	if (FAILED(hr = ipEvacueePointsTable->Search(nullptr, VARIANT_TRUE, &ipCursor))) return hr;
+	if (FAILED(hr = ipEvacueePointsTable->RowCount(nullptr, &evacueeCount))) return hr;
+	auto Evacuees = std::shared_ptr<EvacueeList>(new DEBUG_NEW_PLACEMENT EvacueeList(evacueeGroupingOption, evacueeCount));
 	Evacuee * currentEvacuee;
 	NAVertexPtr myVertex;
 
@@ -443,7 +478,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (FAILED(hr = ipForwardStar->get_IsRestricted(ipElement, &isRestricted))) return hr;
 					if (!isRestricted)
 					{
-						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, 0);
+						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, nullptr);
 						currentEvacuee->Vertices->push_back(myVertex);
 					}
 				}
@@ -469,7 +504,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
+							if (FAILED(hr = ipEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge, true));
 							myVertex->GVal = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
@@ -489,7 +524,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
-							if (FAILED(hr = ipOtherEdge->QueryJunctions(0, ipCurrentJunction))) return hr;
+							if (FAILED(hr = ipOtherEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge, true));
 							myVertex->GVal = posAlong * myVertex->GetBehindEdge()->OriginalCost;
@@ -522,53 +557,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	///////////////////////////////////////
 	// this will call the core part of the algorithm.
-	try
+	/// try
 	{
 		hr = S_OK;
 		UpdatePeakMemoryUsage();
-		hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts, ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration);
-	}
-	catch (const std::exception & ex)
-	{
-		/// TODO a better approch is to not catch exceptions at all and let
-		// the caller (ArcObjects) catch it and display the message.
-		// But if that was not possible then we have to somehow backup the exception what() then use it with AtlReportError
-		// hr = ATL::AtlReportError(this->GetObjectCLSID(), _T(ex.what()), IID_INASolver);
-		hr = -1L * abs(ERROR_UNHANDLED_EXCEPTION);
-		(ex);
-		#ifdef TRACE
-		std::ofstream f;
-		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-		f << "Search throws: " << ex.what() << std::endl;
-		f.close();
-		#endif
-		#ifdef DEBUG
-		std::wostringstream os_;
-		os_ << "Search throws: " << ex.what() << std::endl;
-		OutputDebugStringW( os_.str().c_str() );
-		_ASSERT(0);
-		#endif
-	}
-
-	if (FAILED(hr))
-	{
-		// it either failed, thrown, or canceled. clean up and then return.
-		delete Evacuees;
-
-		// releasing all internal objects
-		delete vcache;
-		delete ecache;
-		for (SafeZoneTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
-		delete safeZoneList;
-
-		#ifdef TRACE
-		std::ofstream f;
-		f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
-		f << "Search exit: " << hr << std::endl;
-		f.close();
-		#endif
-
-		return hr;
+		if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts,
+			ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio))) return hr;
 	}
 
 	// timing
@@ -602,8 +596,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ISpatialReferenceFactoryPtr pSpatRefFact = ISpatialReferenceFactoryPtr(CLSID_SpatialReferenceEnvironment);
 	if (FAILED(hr = pSpatRefFact->CreateProjectedCoordinateSystem(esriSRProjCS_WGS1984WorldMercator, &ipNAContextPC))) return hr;
 	ISpatialReferencePtr ipSpatialRef = ipNAContextPC;
-	std::vector<EvcPathPtr> * tempPathList = new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>(Evacuees->size());
-	tempPathList->clear();
+	std::vector<EvcPathPtr> tempPathList(Evacuees->size());
+	tempPathList.clear();
 
 	for (const auto & currentEvacuee : *Evacuees)
 	{
@@ -614,7 +608,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}
 		else
 		{
-			for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++) tempPathList->push_back(*tpit);
+			for (tpit = currentEvacuee->Paths->begin(); tpit != currentEvacuee->Paths->end(); tpit++) tempPathList.push_back(*tpit);
 		}
 	}
 
@@ -626,17 +620,17 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;
 		if (exportEdgeStat)
 		{
-			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ecache->Size() + tempPathList->size())))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(ecache->Size() + tempPathList.size())))) return hr;
 		}
 		else
 		{
-			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(tempPathList->size())))) return hr;
+			if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(tempPathList.size())))) return hr;
 		}
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) return hr;
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
 
-	std::sort(tempPathList->begin(), tempPathList->end(), EvcPath::LessThanOrder);
+	std::sort(tempPathList.begin(), tempPathList.end(), EvcPath::LessThanOrder);
 
 	// Get the "Routes" NAClass feature class
 	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
@@ -682,9 +676,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	os_ << "PathID,PredictedCost,EvacuationCost,FinalCost" << std::endl;
 	OutputDebugStringW(os_.str().c_str());
 #endif
-	for (pit = tempPathList->begin(); pit != tempPathList->end(); pit++)
+	for (const auto & p : tempPathList)
 	{
-		if (FAILED(hr = (*pit)->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
+		if (FAILED(hr = p->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
 			ipFeatureBufferE, ipFeatureCursorR, ipFeatureCursorE, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, EREdgeDirFieldIndex, ERSeqFieldIndex,
 			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex, ExportRouteEdges))) return hr;
 	}
@@ -696,9 +690,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// copy all route OIDs to RouteID field
 	if (RIDFieldIndex > -1)
 	{
-		IFeaturePtr routeFeature = NULL;
+		IFeaturePtr routeFeature = nullptr;
 		long routeID = -1;
-		if (FAILED(hr = ipRoutesFC->Update(NULL, VARIANT_TRUE, &ipFeatureCursorU))) return hr;
+		if (FAILED(hr = ipRoutesFC->Update(nullptr, VARIANT_TRUE, &ipFeatureCursorU))) return hr;
 		if (FAILED(hr = ipFeatureCursorU->NextFeature(&routeFeature))) return hr;
 		while (routeFeature)
 		{
@@ -784,8 +778,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// At this stage we create many evacuee points within a flocking simulation environment to validate the calculated results
 	ATL::CString collisionMsg, simulationIncompleteEndingMsg;
-	std::vector<FlockingLocationPtr> * history = 0;
-	std::list<double> * collisionTimes = 0;
+	std::vector<FlockingLocationPtr> * history = nullptr;
+	std::list<double> * collisionTimes = nullptr;
 
 	if (flockingEnabled == VARIANT_TRUE)
 	{
@@ -797,7 +791,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		long nameFieldIndex, timeFieldIndex, traveledFieldIndex, speedXFieldIndex, speedYFieldIndex, idFieldIndex, speedFieldIndex, costFieldIndex, statFieldIndex, ptimeFieldIndex;
 		time_t baseTime = time(NULL), thisTime = 0;
 		bool movingObjectLeft;
-		wchar_t * thisTimeBuf = new DEBUG_NEW_PLACEMENT wchar_t[25];
+		wchar_t thisTimeBuf[25];
 		tm local;
 		ATL::CComVariant featureID(0);
 		EvcPathPtr path;
@@ -823,16 +817,16 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		// init
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 		if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Initializing flocking environment"));
-		FlockingEnviroment * flock = new DEBUG_NEW_PLACEMENT FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, initDelayCostPerPop);
+		auto flock = std::shared_ptr<FlockingEnviroment>(new DEBUG_NEW_PLACEMENT FlockingEnviroment(flockingSnapInterval, flockingSimulationInterval, initDelayCostPerPop));
 
 		// run simulation
 		try
 		{
 			flock->Init(Evacuees, ipNetworkQuery, &flockProfile, twoWayShareCapacity == VARIANT_TRUE);
 			if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Running flocking simulation"));
-			hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, globalEvcCost);
+			if (FAILED(hr = flock->RunSimulation(ipStepProgressor, pTrackCancel, globalEvcCost))) return hr;
 		}
-		catch(std::exception& e)
+		catch(const std::exception & e)
 		{
 			ATL::CComBSTR ccombstrErr("Critical error during flocking simulation: ");
 			hr = ccombstrErr.Append(e.what());
@@ -841,24 +835,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// retrieve results even if it's empty or error
 		flock->GetResult(&history, &collisionTimes, &movingObjectLeft);
-
-		if (FAILED(hr))
-		{
-			// the flocking is canceled or failed. clean up and return.
-			delete flock;
-			delete [] thisTimeBuf;
-
-			// clear and release evacuees and their paths
-			delete Evacuees;
-
-			// releasing all internal objects
-			delete vcache;
-			delete ecache;
-			for (SafeZoneTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
-			delete safeZoneList;
-
-			return hr;
-		}
 
 		// project back to analysis coordinate system
 		for (const auto & currentEvacuee : *Evacuees)
@@ -1003,8 +979,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 		// flush the insert buffer and release
 		ipFeatureCursor->Flush();
-		delete flock;
-		delete [] thisTimeBuf;
 	}
 
 	// timing
@@ -1016,12 +990,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// Close it and clean it
-	ATL::CString performanceMsg, CARMALoopMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg, iterationMsg;
+	ATL::CString performanceMsg, CARMALoopMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg, iterationMsg1, iterationMsg2;
 	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 
-	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList->size());
+	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList.size());
 
-	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), countCARMALoops, carmaSec, max(0, mem));
+	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), CARMAExtractCounts.size(), carmaSec, max(0, mem));
 
 	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
@@ -1031,29 +1005,37 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	std::stringstream ss;
 	ss.imbue(std::locale(""));
-	CARMAExtractsMsg.Format(_T("The following is the number of CARMA heap extracts in each loop: "));
-	for (std::vector<unsigned int>::size_type i = 0; i < CARMAExtractCounts.size(); i++)
+	if (CARMAExtractCounts.size() > 0)
 	{
-		if (i == 0) ss << CARMAExtractCounts[0];
-		else        ss << " | " << CARMAExtractCounts[i];
+		CARMAExtractsMsg.Format(_T("The following is the number of CARMA heap extracts in each loop: "));
+		for (std::vector<unsigned int>::size_type i = 0; i < CARMAExtractCounts.size(); ++i)
+		{
+			if (i == 0) ss << CARMAExtractCounts[0];
+			else        ss << " | " << CARMAExtractCounts[i];
+		}
+		CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
 	}
-	CARMAExtractsMsg.Append(ATL::CString(ss.str().c_str()));
-
 	if (GlobalEvcCostAtIteration.size() == 1)
 	{
-		iterationMsg.Format(_T("The program ran for 1 iteration. Evacuation cost at the end is: %.2f"), GlobalEvcCostAtIteration[0]);
+		iterationMsg1.Format(_T("The program ran for 1 iteration. Evacuation cost at the end is: %.2f"), GlobalEvcCostAtIteration[0]);
 	}
 	else if (GlobalEvcCostAtIteration.size() > 1)
 	{
-		iterationMsg.Format(_T("The program ran for %d iterations. Evacuation costs at each iteration are: %.2f"), GlobalEvcCostAtIteration.size(), GlobalEvcCostAtIteration[0]);
-		for (size_t i = 1; i < GlobalEvcCostAtIteration.size(); ++i) iterationMsg.AppendFormat(_T(", %.2f"), GlobalEvcCostAtIteration[i]);
+		iterationMsg1.Format(_T("The program ran for %d iterations. Evacuation costs at each iteration are: %.2f"), GlobalEvcCostAtIteration.size(), GlobalEvcCostAtIteration[0]);
+		for (size_t i = 1; i < GlobalEvcCostAtIteration.size(); ++i) iterationMsg1.AppendFormat(_T(", %.2f"), GlobalEvcCostAtIteration[i]);
+		if (!EffectiveIterationRatio.empty())
+		{
+			iterationMsg2.Format(_T("The effective iteration ratio at each pass: %.3f"), EffectiveIterationRatio[0]);
+			for (size_t i = 1; i < EffectiveIterationRatio.size(); ++i) iterationMsg2.AppendFormat(_T(", %.3f"), EffectiveIterationRatio[i]);
+		}
 	}
 
 	pMessages->AddMessage(ATL::CComBSTR(initMsg));
 	pMessages->AddMessage(ATL::CComBSTR(performanceMsg));
 	pMessages->AddMessage(ATL::CComBSTR(CARMALoopMsg));
-	pMessages->AddMessage(ATL::CComBSTR(CARMAExtractsMsg));
-	pMessages->AddMessage(ATL::CComBSTR(iterationMsg));
+	if (!CARMAExtractsMsg.IsEmpty()) pMessages->AddMessage(ATL::CComBSTR(CARMAExtractsMsg));
+	pMessages->AddMessage(ATL::CComBSTR(iterationMsg1));
+	if (!iterationMsg2.IsEmpty()) pMessages->AddMessage(ATL::CComBSTR(iterationMsg2));
 	if (ecache->GetCacheHitPercentage() < 80.0) pMessages->AddMessage(ATL::CComBSTR(CacheHitMsg));
 
 	// check version lock: if the evclayer is too old to be solved then add a warning
@@ -1074,16 +1056,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		pMessages->AddWarning(ATL::CComBSTR(collisionMsg));
 	}
 
-	// clear and release evacuees and their paths
-	delete Evacuees;
-
-	// releasing all internal objects
-	delete vcache;
-	delete ecache;
-	for (SafeZoneTableItr it = safeZoneList->begin(); it != safeZoneList->end(); it++) delete it->second;
-	delete safeZoneList;
-	delete tempPathList;
-
+	// since vertices inside the cache are still pointing to some edges it's safer to clean them first
+	vcache = nullptr;
+	ecache = nullptr;
+	
 	return hr;
 }
 

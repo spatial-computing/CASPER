@@ -18,12 +18,10 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
-bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2)
-{
-	return e1->Paths->front()->Order > e2->Paths->front()->Order;
-}
+double PathSegment::GetCurrentCost(EvcSolverMethod method) { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
+bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
 
-void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::vector<EvcPathPtr> * detachedPaths, NAEdgeMap * touchedEdges)
+void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, NAEdgeMap * touchedEdges)
 {
 	// It's time to clean up the evacuee object and reset it for the next iteration
 	// To do this we first collect all its paths, take away all edge reservations, and then reset some of its fields.
@@ -43,11 +41,11 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 	myEvc->Paths->push_back(this);
 }
 
-bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveConst, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
+bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
 	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost ) / ThisIterationMaxCost;
 	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
-	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveConst;
+	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveCost;
 
 	if (NeedsAChance && myEvc->Status == EvacueeStatus::Processed)
 	{
@@ -56,31 +54,30 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveConst, double T
 		myEvc->Status = EvacueeStatus::Unprocessed;
 	}
 
-	if (EvacuationCostRatio > ThreasholdForReserveConst)
+	if (EvacuationCostRatio > ThreasholdForReserveCost)
 	{
 		// we have to add the affecting list to be re-routed as well
 		// we do this by selecxting the highly congestied and most costly path segment and then extract all the evacuees that share the same segments (edges)
 		std::vector<EvcPathPtr> crossing;
-		crossing.reserve(50);
 		Histogram<EvcPathPtr> FreqOfOverlaps;
+		crossing.reserve(50);
 
 		for (const auto & seg : *this)
 		{
-			crossing.clear();
-			seg->Edge->GetCrossingPaths(crossing);
-			FreqOfOverlaps.WeightedAdd(crossing, seg->Edge->GetCurrentCost(method));
+			seg->Edge->GetUniqeCrossingPaths(crossing, true);
+			FreqOfOverlaps.WeightedAdd(crossing, seg->GetCurrentCost(method));
 		}
 
+		double cutOffWeight = ThreasholdForReserveCost * FreqOfOverlaps.maxWeight;
 		for (const auto & pair : FreqOfOverlaps)
 		{
-			if (pair.first->myEvc->Status == EvacueeStatus::Processed && FinalEvacuationCost / pair.second > ThreasholdForReserveConst)
+			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > cutOffWeight)
 			{
 				AffectingList.push_back(pair.first->myEvc);
 				pair.first->myEvc->Status = EvacueeStatus::Unprocessed;
 			}
 		}
 	}
-
 	return NeedsAChance;
 }
 
@@ -96,7 +93,7 @@ void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
 void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method)
 {
 	FinalEvacuationCost = 0.0;
-	for (const auto & pathSegment : *this) FinalEvacuationCost += pathSegment->Edge->GetCurrentCost(method) * abs(pathSegment->GetEdgePortion());
+	for (const auto & pathSegment : *this) FinalEvacuationCost += pathSegment->GetCurrentCost(method);
 	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
 	myEvc->FinalCost = max(myEvc->FinalCost, FinalEvacuationCost);
 }
@@ -112,7 +109,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
-	PathSegmentPtr pathSegment = NULL;
+	PathSegmentPtr pathSegment = nullptr;
 	IGeometryPtr ipGeometry;
 	esriGeometryType type;
 	IPointCollectionPtr pcollect;
@@ -238,8 +235,8 @@ Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
 
 Evacuee::~Evacuee(void)
 {
-	for (std::list<EvcPathPtr>::const_iterator it = Paths->begin(); it != Paths->end(); it++) delete (*it);
-	for (std::vector<NAVertexPtr>::const_iterator it = Vertices->begin(); it != Vertices->end(); it++) delete (*it);
+	for (auto & p : *Paths) delete p;
+	for (auto v : *Vertices) delete v;
 	Paths->clear();
 	Vertices->clear();
 	delete Vertices;
@@ -256,10 +253,10 @@ void MergeEvacueeClusters(std::unordered_map<long, std::list<EvacueePtr>> & Edge
 {
 	for (const auto & l : EdgeEvacuee)
 	{
-		EvacueePtr left = NULL;
+		EvacueePtr left = nullptr;
 		for (const auto & i : l.second)
 		{
-			if (left != NULL && abs(i->Vertices->front()->GVal - left->Vertices->front()->GVal) <= OKDistance)
+			if (left && abs(i->Vertices->front()->GVal - left->Vertices->front()->GVal) <= OKDistance)
 			{
 				// merge i with left
 				ToErase.push_back(i);
@@ -297,7 +294,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance)
 		{
 			v1 = evc->Vertices->front();
 			e1 = v1->GetBehindEdge();
-			if (e1 == NULL) // evacuee mapped to intersection
+			if (!e1) // evacuee mapped to intersection
 			{
 				auto i = VertexEvacuee.find(v1->EID);
 				if (i == VertexEvacuee.end()) VertexEvacuee.insert(std::pair<long, EvacueePtr>(v1->EID, evc));
@@ -326,7 +323,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance)
 	shrink_to_fit();
 }
 
-void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir)
+void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir)
 {
 	for(const auto & evc : *list)
 	{
@@ -344,7 +341,7 @@ void NAEvacueeVertexTable::InsertReachable(EvacueeList * list, CARMASort sortDir
 	}
 }
 
-void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, std::vector<EvacueePtr> * SortedEvacuees, NAEdgeContainer * leafs, double pop, EvcSolverMethod method)
+void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAEdgeContainer> leafs, double pop, EvcSolverMethod method)
 {
 	const auto & pair = find(myVertex->EID);
 	NAVertexPtr foundVertex;
@@ -355,7 +352,7 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 	{
 		for (const auto & evc : pair->second)
 		{
-			foundVertex = NULL;
+			foundVertex = nullptr;
 			for (const auto & v : *evc->Vertices)
 			{
 				if (v->EID == myVertex->EID)
@@ -380,7 +377,7 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 	}
 }
 
-void NAEvacueeVertexTable::LoadSortedEvacuees(std::vector<EvacueePtr> * SortedEvacuees) const
+void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees) const
 {
 #ifdef TRACE
 	std::ofstream f;
@@ -425,17 +422,52 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 	return cost;
 }
 
-HRESULT SafeZone::IsRestricted(NAEdgeCache * ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity)
+HRESULT SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity)
 {
 	HRESULT hr = S_OK;
 	restricted = capacity == 0.0 && costPerDensity > 0.0;
-	ArrayList<NAEdgePtr> * adj = NULL;
+	ArrayList<NAEdgePtr> * adj = nullptr;
 
 	if (behindEdge && !restricted)
 	{
 		restricted = true;
 		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj))) return hr;
-		for (const auto & currentEdge : *adj) if (IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
+		for (const auto & currentEdge : *adj) if (NAEdge::IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
+	}
+	return hr;
+}
+
+void SafeZoneTable::insert(SafeZonePtr z)
+{
+	auto insertRet = std::unordered_map<long, SafeZonePtr>::insert(std::pair<long, SafeZonePtr>(z->Vertex->EID, z));
+	if (!insertRet.second) delete z;
+}
+HRESULT SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> ecache, NAVertexPtr myVertex, NAEdgePtr myEdge, NAVertexPtr & finalVertex, double & TimeToBeat, SafeZonePtr & BetterSafeZone, double costPerDensity,
+	double population2Route, EvcSolverMethod solverMethod, double & globalDeltaCost, bool & foundRestrictedSafezone) const
+{
+	HRESULT hr = S_OK;
+	bool restricted = false;
+	auto i = find(myVertex->EID);
+
+	if (i != end())
+	{
+		// Handle the last turn restriction here ... and the remaining capacity-aware cost.
+		if (FAILED(hr = i->second->IsRestricted(ecache, myEdge, restricted, costPerDensity))) return hr;
+		if (!restricted)
+		{
+			double costLeft = i->second->SafeZoneCost(population2Route, solverMethod, costPerDensity, &globalDeltaCost);
+			if (TimeToBeat > costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost)
+			{
+				BetterSafeZone = i->second;
+				TimeToBeat = costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost;
+				finalVertex = myVertex;
+			}
+		}
+		else
+		{
+			// found a safe zone but it was restricted
+			foundRestrictedSafezone = true;
+		}
 	}
 	return hr;
 }

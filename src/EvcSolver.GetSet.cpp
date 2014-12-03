@@ -28,7 +28,7 @@ STDMETHODIMP EvcSolver::get_ClassDefinitions(INamedSet ** ppDefinitions)
 {
 	if (!ppDefinitions) return E_POINTER;
 
-	*ppDefinitions = 0;
+	*ppDefinitions = nullptr;
 
 	// get_ClassDefinitions() will return the default NAClasses that this solver uses.
 	// We will define a NAClass for "Evacuee Points", "Barriers", and "Lines".
@@ -40,7 +40,7 @@ STDMETHODIMP EvcSolver::get_ClassDefinitions(INamedSet ** ppDefinitions)
 	ISpatialReferencePtr ipUnkSR(CLSID_UnknownCoordinateSystem);
 
 	HRESULT hr;
-	if (FAILED(hr = BuildClassDefinitions(ipUnkSR, ppDefinitions, 0)))
+	if (FAILED(hr = BuildClassDefinitions(ipUnkSR, ppDefinitions, nullptr)))
 		return ATL::AtlReportError(GetObjectCLSID(), _T("Failed to create class definitions."), IID_INASolver, hr);
 
 	return S_OK;
@@ -183,7 +183,7 @@ STDMETHODIMP EvcSolver::get_Properties(IPropertySet ** ppPropSet)
 	// The use of the property set has been deprecated at 9.2.
 	// Clients should use the accessors and mutators on the solver interfaces.
 
-	*ppPropSet = 0;
+	*ppPropSet = nullptr;
 
 	return E_NOTIMPL;
 }
@@ -553,9 +553,9 @@ STDMETHODIMP EvcSolver::put_CostAttribute(size_t index)
 
 STDMETHODIMP EvcSolver::put_AttributeParameterValue(BSTR AttributeName, BSTR paramName, VARIANT value)
 {
-	INetworkAttribute2Ptr networkAttrib = 0;
-	INetworkAttributeParameterPtr param = 0;
-	IArray * params = 0;
+	INetworkAttribute2Ptr networkAttrib = nullptr;
+	INetworkAttributeParameterPtr param = nullptr;
+	IArray * params = nullptr;
 	long c1, c2, i, j;
 	HRESULT hr;
 	IUnknownPtr unk;
@@ -594,9 +594,9 @@ STDMETHODIMP EvcSolver::put_AttributeParameterValue(BSTR AttributeName, BSTR par
 
 STDMETHODIMP EvcSolver::get_AttributeParameterValue(BSTR AttributeName, BSTR paramName, VARIANT * value)
 {
-	INetworkAttribute2Ptr networkAttrib = 0;
-	INetworkAttributeParameterPtr param = 0;
-	IArray * params = 0;
+	INetworkAttribute2Ptr networkAttrib = nullptr;
+	INetworkAttributeParameterPtr param = nullptr;
+	IArray * params = nullptr;
 	long c1, c2, i, j;
 	HRESULT hr;
 	IUnknownPtr unk;

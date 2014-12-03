@@ -36,9 +36,6 @@
     <ClCompile Include="EvcSolverSymbolizer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FibonacciHeap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Flocking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

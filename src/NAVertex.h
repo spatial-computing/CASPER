@@ -57,10 +57,11 @@ public:
 	void UpdateYourHeuristic();
 
 	inline void Clone (NAVertex * cpy);
-	NAVertex   (void);
-	NAVertex   (const NAVertex& cpy);
-	NAVertex   (INetworkJunctionPtr junction, NAEdge * behindEdge);
-	~NAVertex  (void) { if (!isShadowCopy) delete h; }
+	NAVertex(void);
+	NAVertex(const NAVertex& cpy) = delete;
+	NAVertex & operator=(const NAVertex &) = delete;
+	NAVertex(INetworkJunctionPtr junction, NAEdge * behindEdge);
+	virtual ~NAVertex(void) { if (!isShadowCopy) delete h; }
 };
 
 typedef NAVertex * NAVertexPtr;
@@ -89,16 +90,19 @@ private:
 	double heuristicForOutsideVertices;
 
 public:
+	NAVertexCache(const NAVertexCache & that) = delete;
+	NAVertexCache & operator=(const NAVertexCache &) = delete;
+
 	NAVertexCache(void)
 	{
 		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAVertexPtr>();
 		bucketCache = new DEBUG_NEW_PLACEMENT std::vector<NAVertex *>();
 		heuristicForOutsideVertices = 0.0;
-		currentBucket = NULL;
+		currentBucket = nullptr;
 		currentBucketIndex = 0;
 	}
 
-	~NAVertexCache(void)
+	virtual ~NAVertexCache(void)
 	{
 		Clear();
 		delete cache;
@@ -106,7 +110,7 @@ public:
 	}
 
 	void PrintVertexHeuristicFeq();
-	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = NULL);
+	NAVertexPtr New(INetworkJunctionPtr junction, INetworkQueryPtr ipNetworkQuery = nullptr);
 	void UpdateHeuristicForOutsideVertices(double hur, bool goDeep);
 	NAVertexPtr Get(long eid);
 	NAVertexPtr Get(INetworkJunctionPtr junction);
@@ -121,12 +125,15 @@ private:
 	std::vector<NAVertexPtr> * cache;
 
 public:
+	NAVertexCollector(const NAVertexCollector & that) = delete;
+	NAVertexCollector & operator=(const NAVertexCollector &) = delete;
+
 	NAVertexCollector(void)
 	{
 		cache = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 	}
 
-	~NAVertexCollector(void)
+	virtual ~NAVertexCollector(void)
 	{
 		Clear();
 		delete cache;
