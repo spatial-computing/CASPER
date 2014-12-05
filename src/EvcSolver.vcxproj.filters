@@ -68,9 +68,6 @@
     <ClInclude Include="EvcSolverSymbolizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FibonacciHeap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Flocking.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -96,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FibonacciHeap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

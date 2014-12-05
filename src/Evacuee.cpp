@@ -1,3 +1,15 @@
+// ===============================================================================================
+// Evacuation Solver: Evacuee class Implementation
+// Description: Contains code for evacuee, evacuee path, evacuee path segment (which wrappes graph
+// edge) and other useful container types.
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
+
 #include "StdAfx.h"
 #include "Evacuee.h"
 #include "NAVertex.h"
@@ -43,8 +55,8 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 
 bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
-	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost ) / ThisIterationMaxCost;
-	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost ) / FinalEvacuationCost;
+	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / FinalEvacuationCost;
 	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveCost;
 
 	if (NeedsAChance && myEvc->Status == EvacueeStatus::Processed)

@@ -1,3 +1,14 @@
+// ===============================================================================================
+// Evacuation Solver: Traffic model class definition
+// Description:
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
+
 #pragma once
 
 #include "StdAfx.h"

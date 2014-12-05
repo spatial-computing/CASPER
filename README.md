@@ -24,7 +24,7 @@ CASPER (Capacity-Aware Shortest Path Evacuation Routing) is a custom Network Ana
 
 
 ####Using the Code
-The project can be compiled with VS2013 or later. You need to install ArcGIS Desktop C++ SDK. You also need a post-commit and a post-checkout git hook to generate an extra header file. Use the following sample:
+The project can be compiled with VS2013 or later. You need to install ArcGIS Desktop C++ SDK and [Boost libraries](http://www.boost.org/). download the latest version, extract it on your PC, then add its path to VS C++ project include directories ([more info](http://msdn.microsoft.com/en-us/library/73f9s62w.aspx)). You also need a post-commit and a post-checkout git hook to generate an extra header file. Use the following sample:
 
 ```bash
 #!/bin/bash
@@ -50,7 +50,7 @@ K. Shahabi and J. P. Wilson, “CASPER: Intelligent capacity-aware evacuation ro
 NO WARRANTIES.  The SOFTWARE PRODUCT and any related documentation is provided “as is” without warranty of any kind, either express or implied, including, without limitation, the implied warranties or merchantability, fitness for a particular purpose, or non-infringement. The entire risk arising out of use or performance of the SOFTWARE PRODUCT remains with you.
 
 ####Fibonacci Heap
-For the heap data structure, the Fibonacci Heap implementation by [Max Winkler](http://www.codeproject.com/KB/recipes/Dijkstras_Algorithm.aspx) has been utilized with some modifications. The modifications allowed us to use it both in CASPER and CARMA loops. The original source code is released under the [Code Project Open License](http://www.codeproject.com/info/cpol10.aspx).
+For the heap data structure, the Fibonacci Heap implementation by [Tim Blechmann](http://www.boost.org/doc/libs/1_57_0/doc/html/boost/heap/fibonacci_heap.html) from the [Boost libraries](http://www.boost.org/) has been utilized. The original source code is available under the [Boost License](http://www.boost.org/users/license.html).
 
 ####OpenSteer Library
 This tool utilizes [OpenSteer](http://opensteer.sourceforge.net/) library to run evacuation simulations. The library is released under [MIT license](http://opensource.org/licenses/mit-license.php).

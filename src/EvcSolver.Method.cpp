@@ -1,3 +1,14 @@
+// ===============================================================================================
+// Evacuation Solver: CASPER implementation
+// Description :Core of the CASPER algorithm implementation
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
+
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "EvcSolver.h"
@@ -8,7 +19,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone, std::vector<double> & GlobalEvcCostAtIteration, std::vector<double> & EffectiveIterationRatio)
 {
 	// creating the heap for the Dijkstra search
-	FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> heap(NAEdge::GetHeapKeyHur);
+	MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> heap(NAEdge::GetHeapKeyHur);
 	NAEdgeMap closedList;
 	auto carmaClosedList = std::shared_ptr<NAEdgeMapTwoGen>(new DEBUG_NEW_PLACEMENT NAEdgeMapTwoGen());
 	std::vector<EvacueePtr>::const_iterator seit;
@@ -148,7 +159,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 					// Continue traversing the network while the heap has remaining junctions in it
 					// this is the actual Dijkstra code with the Fibonacci Heap
-					while (!heap.IsEmpty())
+					while (!heap.empty())
 					{
 						// Remove the next junction EID from the top of the stack
 						myEdge = heap.DeleteMin();
@@ -188,7 +199,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 									neighbor->GVal = newCost;
 									neighbor->GlobalPenaltyCost = myVertex->GlobalPenaltyCost + addedCostAsPenalty;
 									neighbor->Previous = myVertex;
-									heap.DecreaseKey(currentEdge);
+									heap.UpdateKey(currentEdge);
 								}
 							}
 							else // unvisited edge. create new and insert in heap
@@ -211,7 +222,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					sumVisitedEdge += closedList.Size();
 
 					/// Find a path despite the fact that a safe zone (restricted) was found
-					/// Address issue number 4: https://github.com/kaveh096/CASPER/issues/4
+					/// Address issue number 4: http://github.com/spatial-computing/CASPER/issues/4
 					if (!BetterSafeZone && foundRestrictedSafezone) ++EvacueesWithRestrictedSafezone;
 
 					// Generate path for this evacuee if any found
@@ -291,13 +302,13 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
 	size_t Iteration = GlobalEvcCostAtIteration.size();
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / iterativeRatio, Iteration)));
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / 1.0/*iterativeRatio*/, Iteration)));
 
 	if (Iteration > 1)
 	{
 		// check if it got worse and then undo it
 		if (GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2] ||
-			((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && iterativeRatio >= 1.0f))
+			((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && 1.0f/*iterativeRatio*/ >= 1.0f))
 		{
 			for (const auto & path : *detachedPaths) path->CleanYourEvacueePaths(solverMethod);
 			for (const auto & path : *detachedPaths) path->ReattachToEvacuee(solverMethod);
@@ -316,7 +327,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	for (const auto & path : allPaths)
 	{
 		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;
-		path->DoesItNeedASecondChance(0.15, 0.10, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
+		path->DoesItNeedASecondChance(iterativeRatio, 0.1, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
@@ -335,7 +346,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 
 	// performing pre-process: Here we will mark each vertex/junction with a heuristic value indicating
 	// true distance to closest safe zone using backward traversal and Dijkstra
-	FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> heap(NAEdge::GetHeapKeyNonHur);	// creating the heap for the dijkstra search
+	MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> heap(NAEdge::GetHeapKeyNonHur);	// creating the heap for the dijkstra search
 	NAVertexPtr neighbor = nullptr;
 	INetworkElementPtr ipElementEdge = nullptr;
 	VARIANT val;
@@ -377,7 +388,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		}
 		#ifdef DEBUG
 		std::wostringstream os_;
-		os_ << "CARMALoop #" << countCARMALoops << std::endl;
+		os_ << "CARMALoop #" << CARMAExtractCounts.size() << std::endl;
 		OutputDebugStringW( os_.str().c_str() );
 		#endif
 
@@ -422,7 +433,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 
 		// Continue traversing the network while the heap has remaining junctions in it
 		// this is the actual Dijkstra code with backward network traversal. it will only update h value.
-		while (!heap.IsEmpty())
+		while (!heap.empty())
 		{
 			// Remove the next junction EID from the top of the queue
 			myEdge = heap.DeleteMin();
@@ -466,7 +477,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			// termination condition and evacuee discovery
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
 			// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
-			// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/CASPER/issues/8
+			// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: http://github.com/spatial-computing/CASPER/issues/8
 			if (EvacueePairs.empty() && removedDirty->IsEmpty())
 			{
 				leafs->Insert(myEdge);
@@ -521,7 +532,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 								neighbor->GVal = newCost;
 								neighbor->Previous = myVertex;
 								neighbor->ParentCostIsDecreased = myVertex->ParentCostIsDecreased;
-								heap.DecreaseKey(currentEdge);
+								heap.UpdateKey(currentEdge);
 							}
 						}
 						else // unvisited vertex. create new and insert into heap
@@ -639,7 +650,7 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 	}
 }
 
-HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap, NAEdge * leaf
+HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap, NAEdge * leaf
 							#ifdef DEBUG
 							, double minPop2Route, EvcSolverMethod solverMethod
 							#endif
@@ -673,7 +684,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NA
 	return hr;
 }
 
-HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, FibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap,
+HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap,
 	                            std::shared_ptr<NAEdgeContainer> leafs
 								#ifdef DEBUG
 								, double minPop2Route, EvcSolverMethod solverMethod

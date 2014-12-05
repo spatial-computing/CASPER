@@ -9,6 +9,17 @@
 //
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
+// ===============================================================================================
+// Evacuation Solver: Property Panel
+// Description: property page functions
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
+
 #include "stdafx.h"
 #include "EvcSolverPropPage.h"
 #include "NameConstants.h"
@@ -510,7 +521,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	// release date label
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
 	wchar_t compileDateBuff[500];
-	swprintf_s(compileDateBuff, 500, L"Release: %s  |  <a href=\"http://facebook.com/casper4gis\">Like</a>  |  <a href=\"http://esri.com/arccasper\">Info</a>  |  <a href=\"https://www.dropbox.com/sh/b01zkyb6ka56xiv/oOjJBINPIr\">Download</a>", _T(__DATE__));
+	swprintf_s(compileDateBuff, 500, L"Release: %s  |  <a href=\"http://facebook.com/casper4gis\">Like</a>  |  <a href=\"http://uscssi.maps.arcgis.com/home/item.html?id=5f44a6e361634508bda0214b5066c671\">Info</a>  |  <a href=\"https://www.dropbox.com/sh/b01zkyb6ka56xiv/oOjJBINPIr\">Download</a>", _T(__DATE__));
 	::SendMessage(m_hlblRelease, WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));
 	swprintf_s(compileDateBuff, 500, L"%s %s", PROJ_NAME, _T(GIT_DESCRIBE));
 	::SendMessage(GetDlgItem(IDC_STATIC_Title), WM_SETTEXT, NULL, (LPARAM)(compileDateBuff));

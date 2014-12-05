@@ -1,3 +1,15 @@
+// ===============================================================================================
+// Evacuation Solver: Solve function
+// Description: After solve is called, the program load all inuts, calls the right optimizer, then
+// writes the outputs.
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
+
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "EvcSolver.h"
@@ -53,7 +65,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			struct HeapNodeHasher : public std::unary_function<HeapNode, size_t> { size_t operator()(const HeapNode & e) const { return e.value; } };
 		};
 
-		FibonacciHeap<HeapNode, HeapNode::HeapNodeHasher> testHeap;
+		MyFibonacciHeap<HeapNode, HeapNode::HeapNodeHasher> testHeap;
 		srand(unsigned int(time(0)));
 		HeapNode data[10000];
 		HeapNode min1, min2;
@@ -63,12 +75,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		for (size_t i = 0; i < 5000; i += 20)
 		{
 			data[i].key -= 100;
-			testHeap.DecreaseKey(data[i]);
+			testHeap.UpdateKey(data[i]);
 		}
 		for (size_t i = 5000; i < 10000; ++i) testHeap.Insert(data[i]);
 		min1 = testHeap.DeleteMin();
 		bool minHeapTestPass = true;
-		while (!testHeap.IsEmpty())
+		while (!testHeap.empty())
 		{
 			min2 = testHeap.DeleteMin();
 			_ASSERT_EXPR(min1.key <= min2.key, L"Heap property violation");
