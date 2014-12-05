@@ -18,7 +18,9 @@ struct FibNode
 
 	FibNode(const T & _data, double _key) : data(_data), key(_key) { }
 	FibNode(const FibNode<T> & that) : data(that.data), key(that.key) { }
-	bool operator<(const FibNode<T> & rhs) const { return key < rhs.key; }
+
+	// very important that we return greater than so that the hap act like a min heap. Internally it's designed to be a max heap
+	bool operator<(const FibNode<T> & rhs) const { return key > rhs.key; }
 	
 	FibNode<T> & operator=(const FibNode<T> & rhs)
 	{
