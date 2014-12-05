@@ -134,8 +134,13 @@ using ATL::CRegistryVirtualMachine;
 #include <functional>
 #include <memory>
 
+#pragma warning(push)
+#pragma warning(disable : 4521) /* Ignore warning for boost::heap multiple copy constructors  */
+
 // boost includes
 #include <boost\heap\fibonacci_heap.hpp>
+
+#pragma warning(pop)
 
 // memory leak detection in DEBUG mode
 // ref: http://msdn.microsoft.com/en-us/library/e5ewb1h3%28v=vs.80%29.aspx
