@@ -62,6 +62,12 @@ namespace CASPERLog
                     {
                         SetupName = m.Groups[1].Captures[0].ToString();
                         ScenarioName = m.Groups[2].Captures[0].ToString();
+                        int DIndex = SetupName.LastIndexOf('D'), init = 0;
+                        if (DIndex > 0 && int.TryParse(SetupName.Substring(DIndex + 1), out init))
+                        {
+                            ScenarioName += "_" + SetupName.Substring(DIndex);
+                            SetupName = SetupName.Substring(0, DIndex);
+                        }
                     }
                     else
                     {

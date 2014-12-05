@@ -123,6 +123,9 @@ using ATL::CRegistryVirtualMachine;
 #include <functional>
 #include <memory>
 
+// boost includes
+#include <boost\heap\fibonacci_heap.hpp>
+
 // memory leak detection in DEBUG mode
 // ref: http://msdn.microsoft.com/en-us/library/e5ewb1h3%28v=vs.80%29.aspx
 #include <stdlib.h>
