@@ -1,10 +1,13 @@
-// ====================================================================
+// ===============================================================================================
+// Evacuation Solver: Fibonacci Heap
+// Description: a wrapper class around the Boost heap
 //
-//	Description
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
 //
-//	Written by: Kaveh Shahabi
-//  URL
-// ====================================================================
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
 
 #pragma once
 

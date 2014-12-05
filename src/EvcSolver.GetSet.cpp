@@ -1,3 +1,14 @@
+// ===============================================================================================
+// Evacuation Solver: Get / Set functions
+// Description: All the requiered get / set functions for the defined interfaces for EvcSolver class
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
+
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "EvcSolver.h"

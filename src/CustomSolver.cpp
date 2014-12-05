@@ -9,7 +9,16 @@
 //
 // See the use restrictions at http://help.arcgis.com/en/sdk/10.0/usageRestrictions.htm
 
-// CustomSolver.cpp : Implementation of DLL Exports.
+// ===============================================================================================
+// Evacuation Solver: DDL entry implementation
+// Description: Implementation of DLL Exports.
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
 
 #include "stdafx.h"
 #include "resource.h"

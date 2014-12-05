@@ -1,3 +1,14 @@
+// ===============================================================================================
+// Evacuation Solver: CASPER implementation
+// Description :Core of the CASPER algorithm implementation
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
+
 #include "stdafx.h"
 #include "NameConstants.h"
 #include "EvcSolver.h"
@@ -211,7 +222,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					sumVisitedEdge += closedList.Size();
 
 					/// Find a path despite the fact that a safe zone (restricted) was found
-					/// Address issue number 4: https://github.com/kaveh096/CASPER/issues/4
+					/// Address issue number 4: http://github.com/spatial-computing/CASPER/issues/4
 					if (!BetterSafeZone && foundRestrictedSafezone) ++EvacueesWithRestrictedSafezone;
 
 					// Generate path for this evacuee if any found
@@ -466,7 +477,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			// termination condition and evacuee discovery
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
 			// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
-			// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: https://github.com/kaveh096/CASPER/issues/8
+			// future carma loops and can cause problems / inconsistancies. This is an attempt to solve the bug in issue 8: http://github.com/spatial-computing/CASPER/issues/8
 			if (EvacueePairs.empty() && removedDirty->IsEmpty())
 			{
 				leafs->Insert(myEdge);

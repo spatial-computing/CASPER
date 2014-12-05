@@ -1,3 +1,15 @@
+// ===============================================================================================
+// Evacuation Solver: Evacuee class Implementation
+// Description: Contains code for evacuee, evacuee path, evacuee path segment (which wrappes graph
+// edge) and other useful container types.
+//
+// Copyright (C) 2014 Kaveh Shahabi
+// Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
+//
+// Author: Kaveh Shahabi
+// URL: http://github.com/spatial-computing/CASPER
+// ===============================================================================================
+
 #include "StdAfx.h"
 #include "Evacuee.h"
 #include "NAVertex.h"
