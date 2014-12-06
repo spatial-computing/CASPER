@@ -228,19 +228,21 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					// Generate path for this evacuee if any found
 					if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))
 						MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->back()->GetReserveEvacuationCost());
-#ifdef DEBUG
+
+					#ifdef DEBUG
 					std::wostringstream os_;
 					os_.precision(3);
 					os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ',' << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 					OutputDebugStringW(os_.str().c_str());
-#endif
-#ifdef TRACE
+					#endif
+					#ifdef TRACE
 					std::ofstream f;
 					f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 					f.precision(3);
 					f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ',' << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 					f.close();
-#endif
+					#endif
+
 					// cleanup search heap and closed-list
 					UpdatePeakMemoryUsage();
 					heap.Clear();
@@ -302,13 +304,13 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
 	size_t Iteration = GlobalEvcCostAtIteration.size();
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / 1.0/*iterativeRatio*/, Iteration)));
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / 1.0 /*/// iterativeRatio*/ , Iteration)));
 
 	if (Iteration > 1)
 	{
 		// check if it got worse and then undo it
 		if (GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2] ||
-			((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && 1.0f/*iterativeRatio*/ >= 1.0f))
+			((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && 1.0f /*/// iterativeRatio*/ >= 1.0f))
 		{
 			for (const auto & path : *detachedPaths) path->CleanYourEvacueePaths(solverMethod);
 			for (const auto & path : *detachedPaths) path->ReattachToEvacuee(solverMethod);
@@ -327,7 +329,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	for (const auto & path : allPaths)
 	{
 		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;
-		path->DoesItNeedASecondChance(iterativeRatio, 1.0, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
+		path->DoesItNeedASecondChance(1.0, iterativeRatio /* /// 0.2 */, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
@@ -340,7 +342,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 
 HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr ipStepProgressor, IGPMessages* pMessages, ITrackCancel* pTrackCancel, std::shared_ptr<EvacueeList> Evacuees, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAVertexCache> vcache,
 	std::shared_ptr<NAEdgeCache> ecache, std::shared_ptr<SafeZoneTable> safeZoneList, size_t & closedSize, std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAEdgeContainer> leafs,
-							 std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired, CARMASort carmaSortCriteria)
+	std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired, CARMASort carmaSortCriteria)
 {
 	HRESULT hr = S_OK;
 
