@@ -55,8 +55,8 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 
 bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
-	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost ) / FinalEvacuationCost;
-	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / FinalEvacuationCost;
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / ThisIterationMaxCost;
+	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / ThisIterationMaxCost;
 	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveCost;
 
 	if (NeedsAChance && myEvc->Status == EvacueeStatus::Processed)
