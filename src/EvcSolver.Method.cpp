@@ -329,7 +329,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	for (const auto & path : allPaths)
 	{
 		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;
-		path->DoesItNeedASecondChance(1.0, iterativeRatio /* /// 0.2 */, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
+		path->DoesItNeedASecondChance(iterativeRatio /* /// 0.2 */, 1.0, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
