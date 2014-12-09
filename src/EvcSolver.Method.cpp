@@ -281,11 +281,17 @@ END_OF_FUNC:
 	return hr;
 }
 
-size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
+/// TODO change this function to const later
+size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration)
 {
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
 	NAEdgeMap touchededges;
+
+	/// TODO seting up an experiment to find the best ratios. This is not going to be part of the production code.
+	const double ThreasholdForCost = floor(10.0 * iterativeRatio) / 10.0;
+	const double ThreasholdForPathOverlap = (iterativeRatio - ThreasholdForCost) * 10.0;
+	iterativeRatio = 1.0;
 
 	// Recalculate all path costs and then list them in a sorted manner by descending final cost
 	for (const auto & evc : *AllEvacuees)
@@ -304,13 +310,13 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
 	size_t Iteration = GlobalEvcCostAtIteration.size();
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / 1.0 /*/// iterativeRatio*/ , Iteration)));
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / iterativeRatio , Iteration)));
 
 	if (Iteration > 1)
 	{
 		// check if it got worse and then undo it
 		if (GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2] ||
-			((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && 1.0f /*/// iterativeRatio*/ >= 1.0f))
+			((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && iterativeRatio >= 1.0f))
 		{
 			for (const auto & path : *detachedPaths) path->CleanYourEvacueePaths(solverMethod);
 			for (const auto & path : *detachedPaths) path->ReattachToEvacuee(solverMethod);
@@ -329,7 +335,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	for (const auto & path : allPaths)
 	{
 		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;
-		path->DoesItNeedASecondChance(iterativeRatio /* /// 0.2 */, 0.2, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
+		path->DoesItNeedASecondChance(ThreasholdForCost, ThreasholdForPathOverlap, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.

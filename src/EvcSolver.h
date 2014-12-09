@@ -308,7 +308,7 @@ private:
 	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, std::shared_ptr<NAEdgeCache> ecache,
 		    std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
 	HRESULT DeterminMinimumPop2Route(std::shared_ptr<EvacueeList>, INetworkDatasetPtr, double &, bool &) const;
-	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &) const;
+	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &); /// TODO change this function to const later
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, std::shared_ptr<NAEdgeContainer>, std::shared_ptr<NAEdgeContainer>, double, EvcSolverMethod) const;
 	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
 	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, std::shared_ptr<NAEdgeContainer>) const;

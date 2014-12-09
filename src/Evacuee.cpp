@@ -53,21 +53,20 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 	myEvc->Paths->push_back(this);
 }
 
-bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
+void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
 	double PredictionCostRatio = sqrt((ReserveEvacuationCost - myEvc->PredictedCost) / ThisIterationMaxCost);
 	double EvacuationCostRatio = sqrt((FinalEvacuationCost - ReserveEvacuationCost) / ThisIterationMaxCost);
-	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveCost;
 
-	if (NeedsAChance && myEvc->Status == EvacueeStatus::Processed)
+	if (PredictionCostRatio > ThreasholdForCost || EvacuationCostRatio > ThreasholdForCost)
 	{
-		// since the prediction was bad it probably means the evacuee has more than average vehicles so it should be processed sooner
-		AffectingList.push_back(myEvc);
-		myEvc->Status = EvacueeStatus::Unprocessed;
-	}
+		if (myEvc->Status == EvacueeStatus::Processed)
+		{
+			// since the prediction was bad it probably means the evacuee has more than average vehicles so it should be processed sooner
+			AffectingList.push_back(myEvc);
+			myEvc->Status = EvacueeStatus::Unprocessed;
+		}
 
-	if (EvacuationCostRatio > ThreasholdForReserveCost)
-	{
 		// we have to add the affecting list to be re-routed as well
 		// we do this by selecxting the highly congestied and most costly path segment and then extract all the evacuees that share the same segments (edges)
 		std::vector<EvcPathPtr> crossing;
@@ -80,7 +79,7 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double Th
 			FreqOfOverlaps.WeightedAdd(crossing, seg->GetCurrentCost(method));
 		}
 
-		double cutOffWeight = ThreasholdForReserveCost * FreqOfOverlaps.maxWeight;
+		double cutOffWeight = ThreasholdForPathOverlap * FreqOfOverlaps.maxWeight;
 		for (const auto & pair : FreqOfOverlaps)
 		{
 			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > cutOffWeight)
@@ -90,7 +89,6 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double Th
 			}
 		}
 	}
-	return NeedsAChance;
 }
 
 void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
