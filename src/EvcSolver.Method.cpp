@@ -281,17 +281,16 @@ END_OF_FUNC:
 	return hr;
 }
 
-/// TODO change this function to const later
-size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration)
+size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
 {
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
 	NAEdgeMap touchededges;
 
 	/// TODO seting up an experiment to find the best ratios. This is not going to be part of the production code.
-	const double ThreasholdForCost = floor(10.0 * iterativeRatio) / 10.0;
-	const double ThreasholdForPathOverlap = (iterativeRatio - ThreasholdForCost) * 10.0;
-	iterativeRatio = 1.0;
+	const double ThreasholdForCost = floor(10.0 * iterateRatio) / 10.0;
+	const double ThreasholdForPathOverlap = (iterateRatio - ThreasholdForCost) * 10.0;
+	double localiterativeRatio = 1.0;
 
 	// Recalculate all path costs and then list them in a sorted manner by descending final cost
 	for (const auto & evc : *AllEvacuees)
@@ -310,13 +309,13 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
 	size_t Iteration = GlobalEvcCostAtIteration.size();
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / iterativeRatio , Iteration)));
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / localiterativeRatio, Iteration)));
 
 	if (Iteration > 1)
 	{
 		// check if it got worse and then undo it
 		if (GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2] ||
-			((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && iterativeRatio >= 1.0f))
+			((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && localiterativeRatio >= 1.0f))
 		{
 			for (const auto & path : *detachedPaths) path->CleanYourEvacueePaths(solverMethod);
 			for (const auto & path : *detachedPaths) path->ReattachToEvacuee(solverMethod);
