@@ -29,7 +29,7 @@
 
 // EvcSolverPropPage
 
-/////////////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // IPropertyPage
 
 STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
@@ -254,7 +254,7 @@ STDMETHODIMP EvcSolverPropPage::Apply(void)
 	return hr;
 }
 
-/////////////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // IPropertyPageContext
 
 STDMETHODIMP EvcSolverPropPage::get_Priority(LONG * pPriority)
@@ -478,7 +478,7 @@ STDMETHODIMP EvcSolverPropPage::GetHelpId(LONG controlID, LONG* pHelpID)
 	return E_NOTIMPL;
 }
 
-/////////////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // Dialog
 
 // helper function

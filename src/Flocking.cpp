@@ -12,7 +12,7 @@
 #include "stdafx.h"
 #include "Flocking.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // Flocking object implementation
 
 FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIANT groupName, INetworkQueryPtr ipNetworkQuery,
@@ -64,7 +64,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	// init location
 	double x, y, dx, dy;
 	MyLocation->QueryCoords(&x, &y);
-	GetMyInitLocation(neighbors, x, y, dx, dy); /// good stuff about init location happens here
+	GetMyInitLocation(neighbors, x, y, dx, dy); // good stuff about init location happens here
 	MyLocation->PutCoords(x + dx, y + dy);
 	Velocity = OpenSteer::Vec3(-dx, -dy, 0.0);
 
@@ -362,7 +362,7 @@ bool FlockingObject::DetectCollisions(std::vector<FlockingObjectPtr> * objects)
 	return collided;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // Flocking environment implementation
 
 FlockingEnviroment::FlockingEnviroment(double SnapshotInterval, double SimulationInterval, double InitDelayCostPerPop)

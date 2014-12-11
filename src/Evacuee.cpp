@@ -432,17 +432,19 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 	return cost;
 }
 
-HRESULT SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity)
+bool SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, double costPerDensity)
 {
 	HRESULT hr = S_OK;
-	restricted = capacity == 0.0 && costPerDensity > 0.0;
+	bool restricted = capacity == 0.0 && costPerDensity > 0.0;
 	ArrayList<NAEdgePtr> * adj = nullptr;
 
 	if (behindEdge && !restricted)
 	{
 		restricted = true;
-		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj))) return hr;
-		for (const auto & currentEdge : *adj) if (NAEdge::IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
+		if (SUCCEEDED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj)))
+		{
+			for (const auto & currentEdge : *adj) if (NAEdge::IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
+		}
 	}
 	return hr;
 }
@@ -452,18 +454,17 @@ void SafeZoneTable::insert(SafeZonePtr z)
 	auto insertRet = std::unordered_map<long, SafeZonePtr>::insert(std::pair<long, SafeZonePtr>(z->Vertex->EID, z));
 	if (!insertRet.second) delete z;
 }
-HRESULT SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> ecache, NAVertexPtr myVertex, NAEdgePtr myEdge, NAVertexPtr & finalVertex, double & TimeToBeat, SafeZonePtr & BetterSafeZone, double costPerDensity,
+
+bool SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> ecache, NAVertexPtr myVertex, NAEdgePtr myEdge, NAVertexPtr & finalVertex, double & TimeToBeat, SafeZonePtr & BetterSafeZone, double costPerDensity,
 	double population2Route, EvcSolverMethod solverMethod, double & globalDeltaCost, bool & foundRestrictedSafezone) const
 {
-	HRESULT hr = S_OK;
-	bool restricted = false;
+	bool found = false;
 	auto i = find(myVertex->EID);
 
 	if (i != end())
 	{
 		// Handle the last turn restriction here ... and the remaining capacity-aware cost.
-		if (FAILED(hr = i->second->IsRestricted(ecache, myEdge, restricted, costPerDensity))) return hr;
-		if (!restricted)
+		if (!i->second->IsRestricted(ecache, myEdge, costPerDensity))
 		{
 			double costLeft = i->second->SafeZoneCost(population2Route, solverMethod, costPerDensity, &globalDeltaCost);
 			if (TimeToBeat > costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost)
@@ -478,6 +479,7 @@ HRESULT SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> eca
 			// found a safe zone but it was restricted
 			foundRestrictedSafezone = true;
 		}
+		found = true;
 	}
-	return hr;
+	return found;
 }

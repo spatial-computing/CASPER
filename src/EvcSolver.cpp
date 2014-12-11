@@ -24,7 +24,7 @@
 #include "NameConstants.h"
 #include "EvcSolver.h"
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // INASolver
 
 STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, IGPMessages* pMessages)
@@ -269,7 +269,7 @@ STDMETHODIMP EvcSolver::UpdateContext(INAContext* pNAContext, IDENetworkDataset*
 
 #pragma warning(pop)
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // IPersistStream
 
 STDMETHODIMP EvcSolver::IsDirty()
@@ -437,7 +437,7 @@ STDMETHODIMP EvcSolver::GetClassID(CLSID *pClassID)
 	return S_OK;
 }
 
-//////////////////////////////////////////
+//******************************************************************************************/
 // private methods
 
 HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS)
@@ -498,7 +498,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	IFieldPtr                 ipField;
 	IFieldEditPtr             ipFieldEdit;
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Zones class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -581,7 +581,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// ...and add it to the named set
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_ZONES_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Evacuee Points class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -665,7 +665,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// ...and add it to the named set
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Barriers class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -722,7 +722,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_BARRIERS_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Flocks class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -837,7 +837,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_FLOCKS_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Routes class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -916,7 +916,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_ROUTES_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_ROUTES_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// EdgeStat class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -1017,7 +1017,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_EDGES_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// RouteEdges class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -1110,7 +1110,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_ROUTEEDGES_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_ROUTEEDGES_NAME), (IUnknownPtr)ipClassDef);
 
-	///////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Return the class definitions once we have finished
 	ipClassDefinitions->AddRef();
 	*ppDefinitions = ipClassDefinitions;
