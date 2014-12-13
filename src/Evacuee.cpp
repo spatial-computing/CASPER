@@ -446,7 +446,7 @@ bool SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadin
 			for (const auto & currentEdge : *adj) if (NAEdge::IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
 		}
 	}
-	return hr;
+	return restricted;
 }
 
 void SafeZoneTable::insert(SafeZonePtr z)

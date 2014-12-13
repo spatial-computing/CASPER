@@ -906,32 +906,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipFeatureBuffer->put_Value(speedFieldIndex, ATL::CComVariant((*it)->Velocity.length())))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(timeFieldIndex, ATL::CComVariant(thisTimeBuf)))) return hr;
 			if (FAILED(hr = ipFeatureBuffer->put_Value(ptimeFieldIndex, ATL::CComVariant((*it)->GTime / (costPerSec * 60.0))))) return hr;
-
-			// print out the status
-			if ((*it)->MyStatus == FLOCK_OBJ_STAT_INIT)
-			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("I"))))) return hr;
-			}
-			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_MOVE)
-			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("M"))))) return hr;
-			}
-			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_END)
-			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("E"))))) return hr;
-			}
-			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_STOP)
-			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("S"))))) return hr;
-			}
-			else if ((*it)->MyStatus == FLOCK_OBJ_STAT_COLLID)
-			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T("C"))))) return hr;
-			}
-			else
-			{
-				if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(_T(""))))) return hr;
-			}
+			if (FAILED(hr = ipFeatureBuffer->put_Value(statFieldIndex, ATL::CComVariant(static_cast<unsigned char>((*it)->MyStatus))))) return hr;
 
 			// Insert the feature buffer in the insert cursor
 			if (FAILED(hr = ipFeatureCursor->InsertFeature(ipFeatureBuffer, &featureID))) return hr;

@@ -65,6 +65,7 @@
 #define CS_FIELD_VelocityY                          L"VelocY"
 #define CS_FIELD_SPEED                              L"Speed"
 #define CS_FIELD_COST                               L"Cost"
+#define CS_FIELD_FLOCKING_STATUS                    L"FlockingStatus"
 
 // EdgeStat
 

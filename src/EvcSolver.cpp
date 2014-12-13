@@ -815,6 +815,11 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_STATUS));
 	ipFieldEdit->put_Type(esriFieldTypeString);
 	ipFieldEdit->put_Length(1);
+
+	// set up coded value domains for the the flocking status values
+	ICodedValueDomainPtr    ipCodedValueDomain(CLSID_CodedValueDomain);
+	CreateFlockingCodedValueDomain(ipCodedValueDomain);
+	ipFieldEdit->putref_Domain((IDomainPtr)ipCodedValueDomain);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipClassDefEdit->putref_Fields(ipFields);
@@ -1455,6 +1460,34 @@ HRESULT EvcSolver::CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDo
 
 	value.lVal = esriNAObjectStatusTimeWindowViolation;
 	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Time window violation"));
+
+	return S_OK;
+}
+
+HRESULT EvcSolver::CreateFlockingCodedValueDomain(ICodedValueDomain* pCodedValueDomain)
+{
+	if (!pCodedValueDomain) return E_POINTER;
+
+	IDomainPtr(pCodedValueDomain)->put_Name(ATL::CComBSTR(CS_FIELD_FLOCKING_STATUS));
+	IDomainPtr(pCodedValueDomain)->put_FieldType(esriFieldTypeString);
+
+	ATL::CComVariant value(static_cast<unsigned char>(FlockingStatus::None));
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"None"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::Init);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Init"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::Moving);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Moving"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::Stopped);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Stopped"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::Collided);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Collided"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::End);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"End"));
 
 	return S_OK;
 }

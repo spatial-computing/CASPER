@@ -229,19 +229,19 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))
 						MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->back()->GetReserveEvacuationCost());
 
-#ifdef DEBUG
+					#ifdef DEBUG
 					std::wostringstream os_;
 					os_.precision(3);
 					os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ',' << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 					OutputDebugStringW(os_.str().c_str());
-#endif
-#ifdef TRACE
+					#endif
+					#ifdef TRACE
 					std::ofstream f;
 					f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 					f.precision(3);
 					f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ',' << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 					f.close();
-#endif
+					#endif
 
 					// cleanup search heap and closed-list
 					UpdatePeakMemoryUsage();
@@ -271,12 +271,12 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 END_OF_FUNC:
 
 	_ASSERT_EXPR(hr >= 0 || hr == E_ABORT, L"SolveMethod function exit with error");
-#ifdef TRACE
+	#ifdef TRACE
 	std::ofstream f;
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 	f << "Search exit: " << hr << std::endl;
 	f.close();
-#endif
+	#endif
 	carmaSec = carmaSec / 10000000.0;
 	return hr;
 }
@@ -376,9 +376,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	EvacueePairs.InsertReachable(Evacuees, CarmaSortCriteria); // this is very important to be 'CarmaSortCriteria' with capital 'C'
 	SortedEvacuees->clear();
 
-#ifdef TRACE
+	#ifdef TRACE
 	std::ofstream f;
-#endif
+	#endif
 
 	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipJunctionElement))) return hr;
 	ipCurrentJunction = ipJunctionElement;
@@ -391,11 +391,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			statusMsg.Format(_T("CARMA Loop %d"), CARMAExtractCounts.size());
 			if (FAILED(hr = ipStepProgressor->put_Message(ATL::CComBSTR(statusMsg)))) return hr;
 		}
-#ifdef DEBUG
+		#ifdef DEBUG
 		std::wostringstream os_;
 		os_ << "CARMALoop #" << CARMAExtractCounts.size() << std::endl;
 		OutputDebugStringW(os_.str().c_str());
-#endif
+		#endif
 
 		if (ThreeGenCARMA == VARIANT_TRUE) closedList->MarkAllAsOldGen();
 		else closedList->Clear(NAEdgeMapGeneration::AllGens);
@@ -426,11 +426,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 
 		// Now insert leaf edges in heap like the destination edges
 		// do I have to insert leafs even if DSPT is off? It does not matter cause closedList is cleaned and hence all leafs will be removed anyway.
-#ifdef DEBUG
+		#ifdef DEBUG
 		if (FAILED(hr = InsertLeafEdgesToHeap(ipNetworkQuery, vcache, ecache, heap, leafs, minPop2Route, this->solverMethod))) return hr;
-#else
+		#else
 		if (FAILED(hr = InsertLeafEdgesToHeap(ipNetworkQuery, vcache, ecache, heap, leafs))) return hr;
-#endif
+		#endif
 
 		// we're done with all these leafs. let's clean up and collect new ones for the next round.
 		leafs->Clear();
@@ -550,11 +550,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 				}
 			}
 		}
-#ifdef DEBUG
+		#ifdef DEBUG
 		std::wostringstream os2;
 		os2 << "CARMA Extract Count = " << CARMAExtractCount << std::endl;
 		OutputDebugStringW(os2.str().c_str());
-#endif
+		#endif
 
 		_ASSERT_EXPR(EvacueePairs.empty() && removedDirty->IsEmpty(), L"Carma loop ended after scanning all the graph");
 
@@ -574,11 +574,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	// re-created parts of the tree. This is still OK since we check previous edges are re-discovered again.
 	ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod);
 
-#ifdef TRACE
+	#ifdef TRACE
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 	f << "CARMA visited edges = " << closedSize << std::endl;
 	f.close();
-#endif
+	#endif
 
 	return hr;
 }
@@ -657,9 +657,9 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 }
 
 HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap, NAEdge * leaf
-#ifdef DEBUG
-	, double minPop2Route, EvcSolverMethod solverMethod
-#endif
+							#ifdef DEBUG
+							, double minPop2Route, EvcSolverMethod solverMethod
+							#endif
 	)
 {
 	HRESULT hr = S_OK;
@@ -690,10 +690,10 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NA
 }
 
 HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap,
-	std::shared_ptr<NAEdgeContainer> leafs
-#ifdef DEBUG
-	, double minPop2Route, EvcSolverMethod solverMethod
-#endif
+								std::shared_ptr<NAEdgeContainer> leafs
+								#ifdef DEBUG
+								, double minPop2Route, EvcSolverMethod solverMethod
+								#endif
 	)
 {
 	HRESULT hr = S_OK;
@@ -704,20 +704,20 @@ HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<N
 		if (i->second & 1)
 		{
 			leaf = ecache->Get(i->first, esriNEDAlongDigitized);
-#ifdef DEBUG
+			#ifdef DEBUG
 			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf, minPop2Route, solverMethod))) return hr;
-#else
+			#else
 			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf))) return hr;
-#endif
+			#endif
 		}
 		if (i->second & 2)
 		{
 			leaf = ecache->Get(i->first, esriNEDAgainstDigitized);
-#ifdef DEBUG
+			#ifdef DEBUG
 			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf, minPop2Route, solverMethod))) return hr;
-#else
+			#else
 			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf))) return hr;
-#endif
+			#endif
 		}
 	}
 	return hr;
@@ -755,13 +755,13 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	}
 	if (betterEdge)
 	{
-#ifdef DEBUG
+		#ifdef DEBUG
 		if (!checkOldClosedlist)
 		{
 			double CostToBeat = edge->ToVertex->GetH(edge->EID);
 			_ASSERT(CostToBeat - betterH - edgeCost < FLT_EPSILON);
 		}
-#endif
+		#endif
 
 		betterMyVertex = vcache->New(myVertex->Junction);
 		betterMyVertex->SetBehindEdge(betterEdge);

@@ -29,7 +29,7 @@ FlockingObject::FlockingObject(int id, EvcPathPtr path, double startTime, VARIAN
 	PathLen = pathLen;
 
 	// init object
-	MyStatus = FLOCK_OBJ_STAT_INIT;
+	MyStatus = FlockingStatus::Init;
 	myPath = path;
 	GroupName = groupName;
 	BindVertex = -1l;
@@ -159,14 +159,14 @@ HRESULT FlockingObject::loadNewEdge(void)
 		{
 			pathSegIt = myPath->cbegin();
 			initPathIterator = false;
-			MyStatus = FLOCK_OBJ_STAT_MOVE;
+			MyStatus = FlockingStatus::Moving;
 		}
 		else pathSegIt++;
 
 		// check if any edge is left
 		if (pathSegIt == myPath->cend())
 		{
-			MyStatus = FLOCK_OBJ_STAT_END;
+			MyStatus = FlockingStatus::End;
 			return S_OK;
 		}
 
@@ -210,7 +210,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 	double dist = 0.0;
 	HRESULT hr = S_OK;
 
-	if (MyStatus == FLOCK_OBJ_STAT_END)
+	if (MyStatus == FlockingStatus::End)
 	{
 		for (FlockingObjectItr it = objects->begin(); it != objects->end(); it++)
 		{
@@ -233,7 +233,7 @@ HRESULT FlockingObject::buildNeighborList(std::vector<FlockingObjectPtr> * objec
 			if ((*it)->ID == ID) continue;
 
 			// moving object check
-			if ((*it)->MyStatus == FLOCK_OBJ_STAT_END) continue;
+			if ((*it)->MyStatus == FlockingStatus::End) continue;
 			myNeighborVehicles.push_back((*it)->myVehicle);
 		}
 	}
@@ -249,7 +249,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 	myVehicle->setMaxForce(myProfile->MaxForce);
 	dist = OpenSteer::Vec3::distance(myVehicle->position(), finishPoint);
 
-	if (MyStatus == FLOCK_OBJ_STAT_END)
+	if (MyStatus == FlockingStatus::End)
 	{
 		// check distance to safe zone
 		if (FAILED(hr = buildNeighborList(objects))) return hr;
@@ -267,7 +267,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 	}
 	else
 	{
-		if (dist < myProfile->ZoneRadius) MyStatus = FLOCK_OBJ_STAT_END;
+		if (dist < myProfile->ZoneRadius) MyStatus = FlockingStatus::End;
 		MyTime += dt;
 		dt = min(dt, MyTime);
 
@@ -275,11 +275,11 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 		if (MyTime > 0 && dt > 0)
 		{
 			if (FAILED(hr = loadNewEdge())) return hr;
-			if (MyStatus == FLOCK_OBJ_STAT_END) return S_OK;
+			if (MyStatus == FlockingStatus::End) return S_OK;
 			if (FAILED(hr = buildNeighborList(objects))) return hr;
 
 			myVehicle->setMaxSpeed(speedLimit);
-			if (MyStatus != FLOCK_OBJ_STAT_STOP) myVehicle->setSpeed(speedLimit);
+			if (MyStatus != FlockingStatus::Stopped) myVehicle->setSpeed(speedLimit);
 			else
 			{
 				OpenSteer::Vec3 forward = OpenSteer::RandomVectorInUnitRadiusSphere();
@@ -293,7 +293,7 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 			steer += myVehicle->steerToAvoidNeighbors(dt, myNeighborVehicles);
 
 			// to stay inside the path. if last round we had to stop to avoid collision, this round we only focus on avoid neighbors.
-			if (MyStatus != FLOCK_OBJ_STAT_STOP) steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
+			if (MyStatus != FlockingStatus::Stopped) steer += myVehicle->steerToFollowPath(+1, dt, myVehiclePath);
 
 			// backup the position in case we needed to back off from a collision
 			pos = myVehicle->position();
@@ -304,12 +304,12 @@ HRESULT FlockingObject::Move(std::vector<FlockingObjectPtr> * objects, double dt
 				myVehicle->setPosition(pos);
 				myVehicle->setForward(dir);
 				myVehicle->setSpeed(0.0);
-				MyStatus = FLOCK_OBJ_STAT_STOP;
+				MyStatus = FlockingStatus::Stopped;
 			}
 			else
 			{
 				Traveled += myVehicle->speed() * dt;
-				MyStatus = FLOCK_OBJ_STAT_MOVE;
+				MyStatus = FlockingStatus::Moving;
 			}
 		}
 	}
@@ -352,11 +352,11 @@ bool FlockingObject::DetectCollisions(std::vector<FlockingObjectPtr> * objects)
 	for (i = 0; i < k; i++)
 	{
 		n = objects->at(i);
-		if (n->MyStatus == FLOCK_OBJ_STAT_INIT || n->MyStatus == FLOCK_OBJ_STAT_END) continue;
+		if (n->MyStatus == FlockingStatus::Init || n->MyStatus == FlockingStatus::End) continue;
 		if (n->DetectMyCollision())
 		{
 			collided = true;
-			n->MyStatus = FLOCK_OBJ_STAT_COLLID;
+			n->MyStatus = FlockingStatus::Collided;
 		}
 	}
 	return collided;
@@ -428,7 +428,7 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 {
 	movingObjectLeft = true;
 	FlockingObjectPtr fo = nullptr;
-	FLOCK_OBJ_STAT newStat, oldStat;
+	FlockingStatus newStat, oldStat;
 	double nextSnapshot = 0.0, minDistLeft = maxPathLen + 1.0, maxDistLeft = 0.0, distLeft = 0.0, progressValue = 0.0;
 	long lastReportedProgress = 0l;
 	bool snapshotTaken = false;
@@ -482,18 +482,18 @@ HRESULT FlockingEnviroment::RunSimulation(IStepProgressorPtr ipStepProgressor, I
 			maxDistLeft = max(maxDistLeft, distLeft);
 
 			// Check if we have to take a snapshot of this object
-			if ((oldStat == FLOCK_OBJ_STAT_INIT && newStat != FLOCK_OBJ_STAT_INIT) || // pre-movement snapshot
-				(oldStat != FLOCK_OBJ_STAT_END  && newStat == FLOCK_OBJ_STAT_END)) // post-movement snapshot
+			if ((oldStat == FlockingStatus::Init && newStat != FlockingStatus::Init) || // pre-movement snapshot
+				(oldStat != FlockingStatus::End  && newStat == FlockingStatus::End)) // post-movement snapshot
 			{
 				snapshotTempList->push_back(fo);
 			}
-			else if (newStat != FLOCK_OBJ_STAT_INIT && nextSnapshot <= thetime)
+			else if (newStat != FlockingStatus::Init && nextSnapshot <= thetime)
 			{
 				snapshotTempList->push_back(fo);
 				snapshotTaken = true;
 			}
 
-			movingObjectLeft |= newStat != FLOCK_OBJ_STAT_END;
+			movingObjectLeft |= newStat != FlockingStatus::End;
 		}
 
 		// see if any collisions happened and update status if necessary
