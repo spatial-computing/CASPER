@@ -32,7 +32,7 @@ public:
     IPolylinePtr pline;
 
     double GetEdgePortion() const { return toRatio - fromRatio; }
-	double GetCurrentCost(EvcSolverMethod method);
+	double GetCurrentCost(EvcSolverMethod method) const;
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 
     void SetFromRatio(double FromRatio)

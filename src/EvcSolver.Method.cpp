@@ -328,7 +328,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	}
 
 	// And the next step is to find 'bad' paths and detach them so that the next iteration can find new paths for these evacuees.
-	// If no `bad` paths where found then we leave `EvacueesForNextIteration` as empty so that the solver terminates and returns.
+	// If no `bad` paths where found then we leave `EvacueesForNextIteration` empty so that the solver terminates and returns.
 	for (const auto & path : allPaths)
 	{
 		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;

@@ -30,7 +30,7 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
-double PathSegment::GetCurrentCost(EvcSolverMethod method) { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
+double PathSegment::GetCurrentCost(EvcSolverMethod method) const { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
 bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
 
 void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, NAEdgeMap * touchedEdges)
@@ -67,8 +67,8 @@ void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double Threashol
 			myEvc->Status = EvacueeStatus::Unprocessed;
 		}
 
-		// we have to add the affecting list to be re-routed as well
-		// we do this by selecxting the highly congestied and most costly path segment and then extract all the evacuees that share the same segments (edges)
+		// We have to add the affecting list to be re-routed as well
+		// We do this by selecting the paths that have some overlap
 		std::vector<EvcPathPtr> crossing;
 		Histogram<EvcPathPtr> FreqOfOverlaps;
 		crossing.reserve(50);
@@ -97,7 +97,7 @@ void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
 	segment->Edge->AddReservation(this, method);
 	double p = abs(segment->GetEdgePortion());
 	ReserveEvacuationCost += segment->Edge->GetCurrentCost(method) * p;
-	OrginalCost    += segment->Edge->OriginalCost     * p;
+	OrginalCost += segment->Edge->OriginalCost * p;
 }
 
 void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method)
