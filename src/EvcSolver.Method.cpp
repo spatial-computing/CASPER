@@ -290,7 +290,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	/// TODO seting up an experiment to find the best ratios. This is not going to be part of the production code.
 	const double ThreasholdForCost = floor(10.0 * iterateRatio) / 10.0;
 	const double ThreasholdForPathOverlap = (iterateRatio - ThreasholdForCost) * 10.0;
-	double localiterativeRatio = 1.0;
+	double localiterativeRatio = 0.5;
 
 	// Recalculate all path costs and then list them in a sorted manner by descending final cost
 	for (const auto & evc : *AllEvacuees)
