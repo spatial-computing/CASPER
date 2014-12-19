@@ -25962,3 +25962,98 @@ Your branch is up-to-date with 'origin/dev'.
 Already up-to-date.
 repo is ready for build on branch dev
 There are no new changes to be built
+
+
+
+This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox
+Time: Mon, Dec 15, 2014  8:00:05 AM
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/master'.
+Already up-to-date.
+repo is ready for build on branch master
+There are no new changes to be built
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/dev'.
+Already up-to-date.
+repo is ready for build on branch dev
+There are no new changes to be built
+
+
+
+This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox
+Time: Tue, Dec 16, 2014  8:00:01 AM
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/master'.
+Already up-to-date.
+repo is ready for build on branch master
+There are no new changes to be built
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/dev'.
+Already up-to-date.
+repo is ready for build on branch dev
+There are no new changes to be built
+
+
+
+This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox
+Time: Wed, Dec 17, 2014  8:00:05 AM
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/master'.
+Already up-to-date.
+repo is ready for build on branch master
+There are no new changes to be built
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/dev'.
+Already up-to-date.
+repo is ready for build on branch dev
+There are no new changes to be built
+
+
+
+This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox
+Time: Thu, Dec 18, 2014  8:00:02 AM
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/master'.
+Already up-to-date.
+repo is ready for build on branch master
+There are no new changes to be built
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/dev'.
+Already up-to-date.
+repo is ready for build on branch dev
+There are no new changes to be built
+
+
+
+This scripts reads a GitHub repo, compiles with VS2013 then uploads the package to dropbox
+Time: Fri, Dec 19, 2014  8:00:01 AM
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/master'.
+Already up-to-date.
+repo is ready for build on branch master
+There are no new changes to be built
+
+
+repo already cloned. going to pull.
+Your branch is up-to-date with 'origin/dev'.
+Already up-to-date.
+repo is ready for build on branch dev
+There are no new changes to be built
