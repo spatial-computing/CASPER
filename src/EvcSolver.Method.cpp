@@ -287,11 +287,6 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	std::vector<EvacueePtr> EvacueesForNextIteration;
 	NAEdgeMap touchededges;
 
-	/// TODO seting up an experiment to find the best ratios. This is not going to be part of the production code.
-	const double ThreasholdForCost = iterateRatio; // floor(10.0 * iterateRatio) / 10.0;
-	const double ThreasholdForPathOverlap = 0.4; // (iterateRatio - ThreasholdForCost) * 10.0;
-	double localiterativeRatio = 0.9;
-
 	// Recalculate all path costs and then list them in a sorted manner by descending final cost
 	for (const auto & evc : *AllEvacuees)
 		if (evc->Status != EvacueeStatus::Unreachable)
@@ -305,6 +300,12 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 		}
 
 	std::sort(allPaths.begin(), allPaths.end(), EvcPath::MoreThanFinalCost);
+
+	/// TODO seting up an experiment to find the best ratios. This is not going to be part of the production code.
+	const double ThreasholdForCost = allPaths.front()->GetMinCostRatio(); // floor(10.0 * iterateRatio) / 10.0;
+	const double ThreasholdForPathOverlap = 0.4; // (iterateRatio - ThreasholdForCost) * 10.0;
+	double localiterativeRatio = 0.9;
+	
 
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());

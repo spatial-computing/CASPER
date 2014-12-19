@@ -53,12 +53,19 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 	myEvc->Paths->push_back(this);
 }
 
+double EvcPath::GetMinCostRatio() const
+{
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / FinalEvacuationCost;
+	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / FinalEvacuationCost;
+	return min(PredictionCostRatio, EvacuationCostRatio);
+}
+
 void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
 	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / ThisIterationMaxCost;
 	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / ThisIterationMaxCost;
 
-	if (PredictionCostRatio > ThreasholdForCost || EvacuationCostRatio > ThreasholdForCost)
+	if (PredictionCostRatio >= ThreasholdForCost || EvacuationCostRatio >= ThreasholdForCost)
 	{
 		if (myEvc->Status == EvacueeStatus::Processed)
 		{
@@ -97,7 +104,7 @@ void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
 	segment->Edge->AddReservation(this, method);
 	double p = abs(segment->GetEdgePortion());
 	ReserveEvacuationCost += segment->Edge->GetCurrentCost(method) * p;
-	OrginalCost    += segment->Edge->OriginalCost     * p;
+	OrginalCost += segment->Edge->OriginalCost * p;
 }
 
 void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method)
@@ -119,14 +126,13 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
-	PathSegmentPtr pathSegment = nullptr;
 	IGeometryPtr ipGeometry;
 	esriGeometryType type;
 	IPointCollectionPtr pcollect;
 	IPointPtr p;
 	VARIANT RouteOID, RouteEdgesOID;
 
-	for (const_iterator psit = begin(); psit != end(); ++psit)
+	for (const auto & pathSegment : *this)
 	{
 		// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
 		if (pTrackCancel)
@@ -136,7 +142,6 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 		}
 
 		// take a path segment from the stack
-		pathSegment = *psit;
 		pointCount = -1;
 		_ASSERT(pathSegment->GetEdgePortion() > 0.0);
 		if (FAILED(hr = pathSegment->GetGeometry(ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipGeometry))) return hr;
@@ -187,12 +192,18 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	// Insert the feature buffer in the insert cursor
 	if (FAILED(hr = ipFeatureCursorR->InsertFeature(ipFeatureBufferR, &RouteOID))) return hr;
 
-#ifdef DEBUG
+	#ifdef DEBUG
 	std::wostringstream os_;
 	os_.precision(3);
 	os_ << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << ReserveEvacuationCost << ',' << FinalEvacuationCost << std::endl;
 	OutputDebugStringW(os_.str().c_str());
-#endif
+	#endif
+	#ifdef TRACE
+	std::ofstream f;
+	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+	f << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << ReserveEvacuationCost << ',' << FinalEvacuationCost << std::endl;
+	f.close();
+	#endif
 
 	// now export each path segment into ReouteEdges table
 	long seq = 0;
@@ -200,9 +211,8 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	BSTR dir;
 	if (ExportRouteEdges)
 	{
-		for (const_iterator psit = begin(); psit != end(); ++psit, ++seq)
+		for (const auto & pathSegment : *this)
 		{
-			pathSegment = *psit;
 			segmentCost += pathSegment->Edge->GetCurrentCost() * abs(pathSegment->GetEdgePortion());
 			dir = pathSegment->Edge->Direction == esriNEDAgainstDigitized ? L"Against" : L"Along";
 
