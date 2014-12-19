@@ -53,11 +53,18 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 	myEvc->Paths->push_back(this);
 }
 
-double EvcPath::GetMinCostRatio() const
+double EvcPath::GetMinCostRatio(double MaxEvacuationCost) const
 {
-	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / FinalEvacuationCost;
-	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / FinalEvacuationCost;
+	if (MaxEvacuationCost <= 0.0) MaxEvacuationCost = FinalEvacuationCost;
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / MaxEvacuationCost;
+	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / MaxEvacuationCost;
 	return min(PredictionCostRatio, EvacuationCostRatio);
+}
+
+double EvcPath::GetAvgCostRatio(double MaxEvacuationCost) const
+{
+	if (MaxEvacuationCost <= 0.0) MaxEvacuationCost = FinalEvacuationCost;
+	return (FinalEvacuationCost - myEvc->PredictedCost) / (2.0 * MaxEvacuationCost);
 }
 
 void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
