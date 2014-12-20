@@ -304,7 +304,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	for (const auto & p : allPaths) SumAllCostRatio += p->GetAvgCostRatio(maxFinalCost);
 
 	/// TODO seting up an experiment to find the best ratios. This is not going to be part of the production code.
-	const double ThreasholdForCost = SumAllCostRatio / allPaths.size(); // allPaths.front()->GetMinCostRatio(); // floor(10.0 * iterateRatio) / 10.0;
+	const double ThreasholdForCost = allPaths.front()->GetAvgCostRatio(); // SumAllCostRatio / allPaths.size(); // allPaths.front()->GetMinCostRatio(); // floor(10.0 * iterateRatio) / 10.0;
 	const double ThreasholdForPathOverlap = 0.4; // (iterateRatio - ThreasholdForCost) * 10.0;
 	double localiterativeRatio = 0.9;
 
