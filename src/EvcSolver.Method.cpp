@@ -306,7 +306,6 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	const double minRatioOfLongestPath = allPaths.front()->GetMinCostRatio();
 	const double ThreasholdForCost = max(0.05, minRatioOfLongestPath);
 	const double ThreasholdForPathOverlap = 0.4;
-	const double localiterativeRatio = iterateRatio;
 
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
 	GlobalEvcCostAtIteration.push_back(maxFinalCost);
