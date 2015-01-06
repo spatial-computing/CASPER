@@ -289,7 +289,7 @@ public:
 	NAEdgeCache(const NAEdgeCache & that) = delete;
 	NAEdgeCache & operator=(const NAEdgeCache &) = delete;
 
-	NAEdgePtr New(INetworkEdgePtr edge, bool reuseEdgeElement);
+	NAEdgePtr New(INetworkEdgePtr edge);
 
 	NAEdgeTableItr AlongBegin()   const { return cacheAlong->begin();   }
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }

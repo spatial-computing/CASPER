@@ -27,7 +27,7 @@
 
 // EvcSolverSymbolizer
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // INASymbolizer
 
 STDMETHODIMP EvcSolverSymbolizer::Applies(INAContext* pNAContext, VARIANT_BOOL* pFlag)
@@ -98,7 +98,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   IColorPtr ipSelectionColor(CLSID_RgbColor);
   ipSelectionColor->put_RGBESRI(RGB(0,255,255));
 
-  /////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // Zones layer
 
   // Get the Zone Points NAClass/FeatureClass
@@ -139,7 +139,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Add the new Zone points layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipZonesFeatureLayer);
 
-  /////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // Evacuees layer
 
   // Get the Evacuee Points NAClass/FeatureClass
@@ -171,7 +171,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Add the new Evacuee points layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipEvacueesFeatureLayer);
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // Barriers layer
 
   // Get the Barriers NAClass/FeatureClass
@@ -203,7 +203,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Add the new barriers layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipBarrierFeatureLayer);
 
-  /////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // routes layer
 
   // Get the Routes NAClass/FeatureClass
@@ -244,7 +244,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Add the new routes layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipRoutesFeatureLayer);
 
-  /////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // EdgeStat layer
 
   // Get the EdgeStat NAClass/FeatureClass
@@ -285,7 +285,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Add the new routes layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipEdgesFeatureLayer);
 
-  /////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // RouteEdges layer
 
   // Get the EdgeStat NAClass/FeatureClass
@@ -326,7 +326,7 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
   // Add the new RouteEdges layer as a sub-layer in the new NALayer
   ipNALayer->Add(ipRouteEdgesFeatureLayer);
 
-  /////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // flocks layer
   // Get the flocks NAClass/FeatureClass
   if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnknown))) return hr;
@@ -408,7 +408,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   ILayerPtr ipSubLayer;
   IGeoFeatureLayerPtr ipGeoFeatureLayer;
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // Flocks
   pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipSubLayer);
   if (ipSubLayer)
@@ -418,7 +418,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // Zones
   pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_ZONES_NAME), &ipSubLayer);
   if (ipSubLayer)
@@ -428,7 +428,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // Evacuee Points
   pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_EVACUEES_NAME), &ipSubLayer);
   if (ipSubLayer)
@@ -438,7 +438,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // Barriers
   pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_BARRIERS_NAME), &ipSubLayer);
   if (ipSubLayer)
@@ -448,7 +448,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // Routes
   pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_ROUTES_NAME), &ipSubLayer);
   if (ipSubLayer)
@@ -458,7 +458,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // EdgeStat
   pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_EDGES_NAME), &ipSubLayer);
   if (ipSubLayer)
@@ -468,7 +468,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
     if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //******************************************************************************************/
   // RouteEdges
   pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipSubLayer);
   if (ipSubLayer)
@@ -481,7 +481,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
   return S_OK;
 }
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // private methods
 
 HRESULT EvcSolverSymbolizer::CreateRandomColor(IColor** ppColor)

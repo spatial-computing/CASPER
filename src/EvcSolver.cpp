@@ -24,7 +24,7 @@
 #include "NameConstants.h"
 #include "EvcSolver.h"
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // INASolver
 
 STDMETHODIMP EvcSolver::Bind(INAContext* pContext, IDENetworkDataset* pNetwork, IGPMessages* pMessages)
@@ -247,7 +247,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	initDelayCostPerPop = 0.01;
 	CARMAPerformanceRatio = 0.1f;
 	selfishRatio = 0.0f;
-	iterativeRatio = 0.0f;
+	iterateRatio = 0.0f;
 
 	backtrack = esriNFSBAllowBacktrack;
 	CarmaSortCriteria = CARMASort::BWCont;
@@ -269,7 +269,7 @@ STDMETHODIMP EvcSolver::UpdateContext(INAContext* pNAContext, IDENetworkDataset*
 
 #pragma warning(pop)
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // IPersistStream
 
 STDMETHODIMP EvcSolver::IsDirty()
@@ -361,17 +361,17 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 	//version 6
 	if (savedVersion >= 6)
 	{
-		if (FAILED(hr = pStm->Read(&iterativeRatio, sizeof(iterativeRatio), &numBytes))) return hr;
+		if (FAILED(hr = pStm->Read(&iterateRatio, sizeof(iterateRatio), &numBytes))) return hr;
 	}
 	else
 	{
-		iterativeRatio = 0.0f;
+		iterateRatio = 0.0f;
 		savedVersion = 6;
 	}
 
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
 	selfishRatio = min(max(selfishRatio, 0.0f), 1.0f);
-	iterativeRatio = min(max(iterativeRatio, 0.0f), 1.0f);
+	iterateRatio = min(max(iterateRatio, 0.0f), 1.0f);
 	m_bPersistDirty = false;
 
 	return S_OK;
@@ -414,7 +414,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&ThreeGenCARMA, sizeof(ThreeGenCARMA), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&selfishRatio, sizeof(selfishRatio), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CarmaSortCriteria, sizeof(CarmaSortCriteria), &numBytes))) return hr;
-	if (FAILED(hr = pStm->Write(&iterativeRatio, sizeof(iterativeRatio), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&iterateRatio, sizeof(iterateRatio), &numBytes))) return hr;
 
 	return S_OK;
 }
@@ -437,7 +437,7 @@ STDMETHODIMP EvcSolver::GetClassID(CLSID *pClassID)
 	return S_OK;
 }
 
-//////////////////////////////////////////
+//******************************************************************************************/
 // private methods
 
 HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS)
@@ -498,7 +498,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	IFieldPtr                 ipField;
 	IFieldEditPtr             ipFieldEdit;
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Zones class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -581,7 +581,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// ...and add it to the named set
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_ZONES_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Evacuee Points class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -665,7 +665,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// ...and add it to the named set
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Barriers class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -722,7 +722,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_BARRIERS_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Flocks class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -815,6 +815,11 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_STATUS));
 	ipFieldEdit->put_Type(esriFieldTypeString);
 	ipFieldEdit->put_Length(1);
+
+	// set up coded value domains for the the flocking status values
+	ICodedValueDomainPtr    ipCodedValueDomain(CLSID_CodedValueDomain);
+	CreateFlockingCodedValueDomain(ipCodedValueDomain);
+	ipFieldEdit->putref_Domain((IDomainPtr)ipCodedValueDomain);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipClassDefEdit->putref_Fields(ipFields);
@@ -837,7 +842,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_FLOCKS_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Routes class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -916,7 +921,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_ROUTES_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_ROUTES_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// EdgeStat class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -1017,7 +1022,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_EDGES_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipClassDef);
 
-	//////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// RouteEdges class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
@@ -1110,7 +1115,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_ROUTEEDGES_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_ROUTEEDGES_NAME), (IUnknownPtr)ipClassDef);
 
-	///////////////////////////////////////////////////////////
+	//******************************************************************************************/
 	// Return the class definitions once we have finished
 	ipClassDefinitions->AddRef();
 	*ppDefinitions = ipClassDefinitions;
@@ -1455,6 +1460,34 @@ HRESULT EvcSolver::CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDo
 
 	value.lVal = esriNAObjectStatusTimeWindowViolation;
 	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Time window violation"));
+
+	return S_OK;
+}
+
+HRESULT EvcSolver::CreateFlockingCodedValueDomain(ICodedValueDomain* pCodedValueDomain)
+{
+	if (!pCodedValueDomain) return E_POINTER;
+
+	IDomainPtr(pCodedValueDomain)->put_Name(ATL::CComBSTR(CS_FIELD_FLOCKING_STATUS));
+	IDomainPtr(pCodedValueDomain)->put_FieldType(esriFieldTypeString);
+
+	ATL::CComVariant value(static_cast<unsigned char>(FlockingStatus::None));
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"None"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::Init);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Init"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::Moving);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Moving"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::Stopped);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Stopped"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::Collided);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Collided"));
+
+	value.bVal = static_cast<unsigned char>(FlockingStatus::End);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"End"));
 
 	return S_OK;
 }
