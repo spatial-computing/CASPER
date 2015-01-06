@@ -61,7 +61,7 @@ public:
 	{
 		auto i = nodeTable.find(value);
 		if (i == nodeTable.end()) throw std::logic_error("node does not exist in heap");
-		else baseheap::update_lazy(i->second, FibNode<T>(value, GetHeapKey(value)));
+		else baseheap::update(i->second, FibNode<T>(value, GetHeapKey(value)));
 	}
 
 	T DeleteMin()

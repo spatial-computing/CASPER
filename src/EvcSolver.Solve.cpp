@@ -383,7 +383,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
-							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge, true), posAlong, cap));
+							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge, false), posAlong, cap));
 						}
 					}
 
@@ -401,7 +401,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 
-							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge, true), toPosition - posAlong, cap));
+							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge, false), toPosition - posAlong, cap));
 						}
 					}
 				}
@@ -518,7 +518,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
-							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge, true));
+							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge, false));
 							myVertex->GVal = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->Vertices->push_back(myVertex);
 						}
@@ -538,7 +538,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							ipCurrentJunction = ipOtherElement;
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
-							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge, true));
+							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge, false));
 							myVertex->GVal = posAlong * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->Vertices->push_back(myVertex);
 						}
