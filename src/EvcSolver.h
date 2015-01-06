@@ -301,6 +301,7 @@ private:
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
 	HRESULT CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
+	HRESULT CreateFlockingCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
 	HRESULT AddLocationFields(IFieldsEdit* pFieldsEdit, IDENetworkDataset* pDENDS);
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);

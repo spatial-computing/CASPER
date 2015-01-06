@@ -14,7 +14,7 @@
 #include "NAVertex.h"
 #include "Evacuee.h"
 
-///////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // EdgeReservations Methods
 
 EdgeReservations::EdgeReservations(float capacity, TrafficModel * trafficModel)
@@ -48,7 +48,7 @@ void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 	ReservedPop -= (float)flow;
 }
 
-///////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // NAEdge Methods
 
 NAEdge::NAEdge(const NAEdge& cpy) : TreeNext(cpy.TreeNext), AdjacentForward(cpy.AdjacentForward), AdjacentBackward(cpy.AdjacentBackward)
@@ -301,7 +301,7 @@ double NAEdge::GetHeapKeyHur   (const NAEdge * e)                     { return e
 double NAEdge::GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
 bool   NAEdge::IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n1->EID == n2->EID && n1->Direction == n2->Direction; }
 
-/////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // NAEdgeCache
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
 NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
@@ -417,8 +417,8 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 	return hr;
 }
 
-//////////////////////////////////////////////////////////////////
-//// NAEdgeMap Methods
+//******************************************************************************************/
+// NAEdgeMap Methods
 
 bool NAEdgeMap::Exist(long eid, esriNetworkEdgeDirection dir)
 {
@@ -492,8 +492,8 @@ HRESULT NAEdgeMap::Insert(NAEdgeMap * edges)
 	return S_OK;
 }
 
-//////////////////////////////////////////////////////////////////
-//// NAEdgeMapTwoGen Methods
+//******************************************************************************************/
+// NAEdgeMapTwoGen Methods
 
 void NAEdgeMapTwoGen::MarkAllAsOldGen()
 {
@@ -537,8 +537,8 @@ void NAEdgeMapTwoGen::Erase(NAEdgePtr edge, NAEdgeMapGeneration gen)
 	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) newGen->Erase(edge);
 }
 
-//////////////////////////////////////////////////////////////////
-//// NAEdgeContainer Methods
+//******************************************************************************************/
+// NAEdgeContainer Methods
 
 bool NAEdgeContainer::Exist(INetworkEdgePtr edge)
 {

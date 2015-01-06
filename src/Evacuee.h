@@ -32,7 +32,7 @@ public:
     IPolylinePtr pline;
 
     double GetEdgePortion() const { return toRatio - fromRatio; }
-	double GetCurrentCost(EvcSolverMethod method);
+	double GetCurrentCost(EvcSolverMethod method) const;
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 
     void SetFromRatio(double FromRatio)
@@ -227,7 +227,7 @@ public:
 	SafeZone & operator=(const SafeZone &) = delete;
 	virtual ~SafeZone();
 	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap);
-	HRESULT IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity);
+	bool IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, double costPerDensity);
 	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity, double * globalDeltaCost = nullptr);
 };
 
@@ -247,5 +247,5 @@ public:
 	virtual ~SafeZoneTable() { for (auto z : *this) delete z.second; }
 	virtual bool insert(SafeZonePtr z);
 
-	HRESULT CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache>, NAVertexPtr, NAEdge *, NAVertexPtr &, double &, SafeZonePtr &, double, double, EvcSolverMethod, double &, bool &) const;
+	bool CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache>, NAVertexPtr, NAEdge *, NAVertexPtr &, double &, SafeZonePtr &, double, double, EvcSolverMethod, double &, bool &) const;
 };
