@@ -464,11 +464,13 @@ HRESULT SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * lea
 	return hr;
 }
 
-void SafeZoneTable::insert(SafeZonePtr z)
+bool SafeZoneTable::insert(SafeZonePtr z)
 {
 	auto insertRet = std::unordered_map<long, SafeZonePtr>::insert(std::pair<long, SafeZonePtr>(z->Vertex->EID, z));
 	if (!insertRet.second) delete z;
+	return insertRet.second;
 }
+
 HRESULT SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> ecache, NAVertexPtr myVertex, NAEdgePtr myEdge, NAVertexPtr & finalVertex, double & TimeToBeat, SafeZonePtr & BetterSafeZone, double costPerDensity,
 	double population2Route, EvcSolverMethod solverMethod, double & globalDeltaCost, bool & foundRestrictedSafezone) const
 {

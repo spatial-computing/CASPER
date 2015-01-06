@@ -304,7 +304,7 @@ bool   NAEdge::IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n
 /////////////////////////////////////////////////////////////
 // NAEdgeCache
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
-NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
+NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
 {
 	NAEdgePtr n = nullptr;
 	long EID;
@@ -331,16 +331,10 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge, bool reuseEdgeElement)
 
 	if (it == cache->end())
 	{
-		if (!reuseEdgeElement)
-		{
-			if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return nullptr;
-			edgeClone = ipEdgeElement;
-			if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return nullptr;
-		}
-		else
-		{
-			edgeClone = edge;
-		}
+		if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return nullptr;
+		edgeClone = ipEdgeElement;
+		if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return nullptr;
+		
 		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, Get(EID, otherDir), twoWayRoadsShareCap, ResTable, myTrafficModel);
 		cache->insert(NAEdgeTablePair(n));
 	}
@@ -416,7 +410,7 @@ HRESULT NAEdgeCache::QueryAdjacencies(NAVertexPtr ToVertex, NAEdgePtr Edge, Quer
 		for (long i = 0; i < adjacentEdgeCount; i++)
 		{
 			if (FAILED(hr = ipAdjacencies->QueryEdge(i, ipCurrentEdge, &fromPosition, &toPosition))) return hr;
-			neighbors->at((UINT8)i, this->New(ipCurrentEdge, false));
+			neighbors->at((UINT8)i, this->New(ipCurrentEdge));
 		}
 	}
 	*returnNeighbors = neighbors;

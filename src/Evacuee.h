@@ -245,7 +245,7 @@ public:
 	SafeZoneTable(const SafeZoneTable & that) = delete;
 	SafeZoneTable & operator=(const SafeZoneTable &) = delete;
 	virtual ~SafeZoneTable() { for (auto z : *this) delete z.second; }
-	virtual void insert(SafeZonePtr z);
+	virtual bool insert(SafeZonePtr z);
 
 	HRESULT CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache>, NAVertexPtr, NAEdge *, NAVertexPtr &, double &, SafeZonePtr &, double, double, EvcSolverMethod, double &, bool &) const;
 };

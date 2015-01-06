@@ -100,7 +100,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	hProcessPeakMemoryUsage = nullptr;
 	UpdatePeakMemoryUsage();
 	SIZE_T baseMemoryUsage = peakMemoryUsage;
-	bool exportEdgeStat = VarExportEdgeStat == VARIANT_TRUE;
+	bool exportEdgeStat = VarExportEdgeStat == VARIANT_TRUE, IsSafeZoneMissed = false;
 
 	// Check for null parameter variables (the track cancel variable is typically considered optional)
 	if (!pNAContext || !pMessages) return E_POINTER;
@@ -247,18 +247,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INALocationPtr ipNALocation(CLSID_NALocation);
 	IEnumNetworkElementPtr ipEnumNetworkElement;
 	std::vector<double> GlobalEvcCostAtIteration, EffectiveIterationRatio;
-
-	INetworkEdgePtr ipCurrentEdge;
-	INetworkJunctionPtr ipCurrentJunction;
-
 	INetworkElementPtr ipElement, ipOtherElement;
-	ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipElement);
-	ipCurrentEdge = ipElement;
-	ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipElement);
-	ipCurrentJunction = ipElement;
-
 	long sourceOID, sourceID;
-	double posAlong, fromPosition, toPosition;
+	double posAlong, posAlongEdge, fromPosition, toPosition;
 	VARIANT_BOOL keepGoing, isLocated, isRestricted;
 	esriNetworkElementType elementType;
 	esriNAEdgeSideType side;
@@ -277,8 +268,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Vertex table structures
 	auto safeZoneList = std::shared_ptr<SafeZoneTable>(new DEBUG_NEW_PLACEMENT SafeZoneTable(100));
-	INetworkEdgePtr ipEdge(ipElement);
-	INetworkEdgePtr ipOtherEdge(ipOtherElement);
 	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID, curbSideIndex = -1;
 	VARIANT evName, pop, cap;
 
@@ -364,10 +353,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				// If the element is an edge, then we must check the fromPosition and toPosition
 				if (elementType == esriNETEdge)
 				{
-					if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipOtherElement))) return hr;
-					ipOtherEdge = ipOtherElement;
-					ipEdge = ipElement;
+					INetworkEdgePtr ipEdge(ipElement);
+					
 					if (FAILED(hr = ipEdge->QueryPositions(&fromPosition, &toPosition))) return hr;
+					posAlongEdge = (posAlong - fromPosition) / (toPosition - fromPosition);
 
 					if (fromPosition <= posAlong && posAlong <= toPosition &&
 						(side == esriNAEdgeSideType::esriNAEdgeSideRight && curbApproach != esriNACurbApproachType::esriNALeftSideOfVehicle) ||
@@ -381,16 +370,19 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						if (!isRestricted)
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
-							ipCurrentJunction = ipOtherElement;
+							INetworkJunctionPtr ipCurrentJunction(ipOtherElement);
 							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
-							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge, true), posAlong, cap));
+							IsSafeZoneMissed |= !(safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge), posAlongEdge, cap)));
 						}
 					}
 
+					if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipOtherElement))) return hr;
+					INetworkEdgePtr ipOtherEdge(ipOtherElement);
 					if (FAILED(hr = ipEdge->QueryEdgeInOtherDirection(ipOtherEdge))) return hr;
-					if (FAILED(hr = ipOtherEdge->QueryPositions(&toPosition, &fromPosition))) return hr;
+					if (FAILED(hr = ipOtherEdge->QueryPositions(&fromPosition, &toPosition))) return hr;
+					posAlongEdge = (posAlong - fromPosition) / (toPosition - fromPosition);
 
-					if (fromPosition <= posAlong && posAlong <= toPosition &&
+					if (toPosition <= posAlong && posAlong <= fromPosition &&
 						(side == esriNAEdgeSideType::esriNAEdgeSideRight && curbApproach != esriNACurbApproachType::esriNARightSideOfVehicle) ||
 						(side == esriNAEdgeSideType::esriNAEdgeSideLeft && curbApproach != esriNACurbApproachType::esriNALeftSideOfVehicle))
 					{
@@ -398,10 +390,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						if (!isRestricted)
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
-							ipCurrentJunction = ipOtherElement;
+							INetworkJunctionPtr ipCurrentJunction(ipOtherElement);
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 
-							safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge, true), toPosition - posAlong, cap));
+							IsSafeZoneMissed |= !(safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge), posAlongEdge, cap)));
 						}
 					}
 				}
@@ -498,10 +490,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				// If the element is an edge, then we must check the fromPosition and toPosition to be certain it holds an appropriate starting point
 				if (elementType == esriNETEdge)
 				{
-					if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipOtherElement))) return hr;
-					ipOtherEdge = ipOtherElement;
-					ipEdge = ipElement;
+					INetworkEdgePtr ipEdge(ipElement);
 					if (FAILED(hr = ipEdge->QueryPositions(&fromPosition, &toPosition))) return hr;
+					posAlongEdge = (toPosition - posAlong) / (toPosition - fromPosition);
 
 					if (fromPosition <= posAlong && posAlong <= toPosition &&
 						(side == esriNAEdgeSideType::esriNAEdgeSideRight && curbApproach != esriNACurbApproachType::esriNALeftSideOfVehicle) ||
@@ -515,19 +506,22 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						if (!isRestricted)
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
-							ipCurrentJunction = ipOtherElement;
+							INetworkJunctionPtr ipCurrentJunction(ipOtherElement);
 							if (FAILED(hr = ipEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
-							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge, true));
-							myVertex->GVal = (toPosition - posAlong) * myVertex->GetBehindEdge()->OriginalCost;
+							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
+							myVertex->GVal = posAlongEdge * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->Vertices->push_back(myVertex);
 						}
 					}
 
+					if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipOtherElement))) return hr;
+					INetworkEdgePtr ipOtherEdge(ipOtherElement);
 					if (FAILED(hr = ipEdge->QueryEdgeInOtherDirection(ipOtherEdge))) return hr;
-					if (FAILED(hr = ipOtherEdge->QueryPositions(&toPosition, &fromPosition))) return hr;
+					if (FAILED(hr = ipOtherEdge->QueryPositions(&fromPosition, &toPosition))) return hr;
+					posAlongEdge = (toPosition - posAlong) / (toPosition - fromPosition);
 
-					if (fromPosition <= posAlong && posAlong <= toPosition &&
+					if (toPosition <= posAlong && posAlong <= fromPosition &&
 						(side == esriNAEdgeSideType::esriNAEdgeSideRight && curbApproach != esriNACurbApproachType::esriNARightSideOfVehicle) ||
 						(side == esriNAEdgeSideType::esriNAEdgeSideLeft && curbApproach != esriNACurbApproachType::esriNALeftSideOfVehicle))
 					{
@@ -535,11 +529,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 						if (!isRestricted)
 						{
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
-							ipCurrentJunction = ipOtherElement;
+							INetworkJunctionPtr ipCurrentJunction(ipOtherElement);
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
-							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge, true));
-							myVertex->GVal = posAlong * myVertex->GetBehindEdge()->OriginalCost;
+							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
+							myVertex->GVal = posAlongEdge * myVertex->GetBehindEdge()->OriginalCost;
 							currentEvacuee->Vertices->push_back(myVertex);
 						}
 					}
@@ -1061,6 +1055,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(ATL::CComBSTR(simulationIncompleteEndingMsg));
+	if (IsSafeZoneMissed) pMessages->AddWarning(ATL::CComBSTR(L"One or more safe zones where snapped into the same network junction and hence they were merged into one safe zone. It this is not OK, use a different Network Location setting."));
 
 	if (!(collisionMsg.IsEmpty()))
 	{

@@ -796,43 +796,39 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 	double globalDeltaPenalty = 0.0;
 	ArrayList<NAEdgePtr> * adj = nullptr;
 
-	/// if(readyEdges)
+	temp = vcache->New(point->Junction);
+	temp->SetBehindEdge(point->GetBehindEdge());
+	temp->GVal = point->GVal;
+	temp->GlobalPenaltyCost = point->GlobalPenaltyCost;
+	temp->Junction = point->Junction;
+	temp->Previous = nullptr;
+	edge = temp->GetBehindEdge();
+	
+	// check to see if the edge you're about to insert is not in the closedList
+	/// TODO check if Edge new cost is less than clean cost and in this case we have to set the ParentCostDecreased flag for the vertex
+	if (edge)
 	{
-		temp = vcache->New(point->Junction);
-		temp->SetBehindEdge(point->GetBehindEdge());
-		temp->GVal = point->GVal;
-		temp->GlobalPenaltyCost = point->GlobalPenaltyCost;
-		temp->Junction = point->Junction;
-		temp->Previous = nullptr;
-		edge = temp->GetBehindEdge();
-
-		// check to see if the edge you're about to insert is not in the closedList
-		/// TODO check if Edge new cost is less than clean cost and in this case we have to set the ParentCostDecreased flag for the vertex
-		if (edge)
+		if (!closedList->Exist(edge))
 		{
-			if (!closedList->Exist(edge))
-			{
-				temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) / edge->OriginalCost;
-				temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
-				readyEdges.push_back(edge);
-			}
-			else _ASSERT(1);
+			temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) / edge->OriginalCost;
+			temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
+			readyEdges.push_back(edge);
 		}
-		else
+		else _ASSERT(1);
+	}
+	else
+	{
+		// if the start point was a single junction, then all the adjacent edges can be start edges
+		if (FAILED(hr = ecache->QueryAdjacencies(temp, nullptr, dir, &adj))) return hr;
+		for (const auto & edge : *adj)
 		{
-			// if the start point was a single junction, then all the adjacent edges can be start edges
-			if (FAILED(hr = ecache->QueryAdjacencies(temp, nullptr, dir, &adj))) return hr;
-
-			for (const auto & edge : *adj)
-			{
-				if (closedList->Exist(edge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
-				temp = vcache->New(point->Junction);
-				temp->Previous = nullptr;
-				temp->SetBehindEdge(edge);
-				temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) / edge->OriginalCost;
-				temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
-				readyEdges.push_back(edge);
-			}
+			if (closedList->Exist(edge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
+			temp = vcache->New(point->Junction);
+			temp->Previous = nullptr;
+			temp->SetBehindEdge(edge);
+			temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) / edge->OriginalCost;
+			temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
+			readyEdges.push_back(edge);
 		}
 	}
 	return hr;
