@@ -48,7 +48,7 @@ public:
 	using baseheap::empty;
 
 	MyFibonacciHeap(const std::function<double(const T &)> & _getHeapKey = DefaultGetHeapKey<T>) : GetHeapKey(_getHeapKey) { }
-	bool IsVisited(const T & node) { return nodeTable.find(node) != nodeTable.end(); }
+	bool IsVisited(const T & node) const { return nodeTable.find(node) != nodeTable.end(); }
 	void Clear() { baseheap::clear(); nodeTable.clear(); }
 
 	void Insert(const T & value)
@@ -61,6 +61,9 @@ public:
 	{
 		auto i = nodeTable.find(value);
 		if (i == nodeTable.end()) throw std::logic_error("node does not exist in heap");
+
+		// I was using update_lazy function of the heap but it casused my test to fail so I'm using 'update' function now.
+		// Don't know if update is still amortized constant time or not.
 		else baseheap::update(i->second, FibNode<T>(value, GetHeapKey(value)));
 	}
 

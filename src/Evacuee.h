@@ -32,7 +32,7 @@ public:
     IPolylinePtr pline;
 
     double GetEdgePortion() const { return toRatio - fromRatio; }
-	double GetCurrentCost(EvcSolverMethod method);
+	double GetCurrentCost(EvcSolverMethod method) const;
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 
     void SetFromRatio(double FromRatio)
@@ -92,13 +92,15 @@ public:
 		myEvc = evc;
 	}
 
+	double GetMinCostRatio(double MaxEvacuationCost = 0.0) const;
+	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
 	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
 									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
 	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr, NAEdgeMap * touchedEdges = nullptr);
 	void ReattachToEvacuee(EvcSolverMethod method);
 	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
-	bool DoesItNeedASecondChance(double ThreasholdForReserveConst, double ThreasholdForPredictionCost, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
+	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
 
 	inline const int & GetKey()  const { return Order; }
 	friend bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
@@ -225,7 +227,7 @@ public:
 	SafeZone & operator=(const SafeZone &) = delete;
 	virtual ~SafeZone();
 	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap);
-	HRESULT IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity);
+	bool IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, double costPerDensity);
 	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity, double * globalDeltaCost = nullptr);
 };
 
@@ -243,7 +245,7 @@ public:
 	SafeZoneTable(const SafeZoneTable & that) = delete;
 	SafeZoneTable & operator=(const SafeZoneTable &) = delete;
 	virtual ~SafeZoneTable() { for (auto z : *this) delete z.second; }
-	virtual void insert(SafeZonePtr z);
+	virtual bool insert(SafeZonePtr z);
 
-	HRESULT CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache>, NAVertexPtr, NAEdge *, NAVertexPtr &, double &, SafeZonePtr &, double, double, EvcSolverMethod, double &, bool &) const;
+	bool CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache>, NAVertexPtr, NAEdge *, NAVertexPtr &, double &, SafeZonePtr &, double, double, EvcSolverMethod, double &, bool &) const;
 };

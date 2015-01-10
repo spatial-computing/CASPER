@@ -301,6 +301,7 @@ private:
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
 	HRESULT CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
+	HRESULT CreateFlockingCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
 	HRESULT AddLocationFields(IFieldsEdit* pFieldsEdit, IDENetworkDataset* pDENDS);
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
@@ -332,7 +333,7 @@ private:
 	FLOCK_PROFILE			flockingProfile;
 	float                   CARMAPerformanceRatio;
 	float                   selfishRatio;
-	float                   iterativeRatio;
+	float                   iterateRatio;
 	SIZE_T					peakMemoryUsage;
 	HANDLE					hProcessPeakMemoryUsage;
 	CARMASort               CarmaSortCriteria;

@@ -81,7 +81,7 @@ public:
 	IPointPtr		MyLocation;
 	OpenSteer::Vec3	Velocity;
 	int				ID;
-	FLOCK_OBJ_STAT	MyStatus;
+	FlockingStatus	MyStatus;
 
 	// constructors
 	FlockingLocation(void) throw(...)
@@ -92,7 +92,7 @@ public:
 		Velocity = OpenSteer::Vec3::zero;
 		MyLocation = nullptr;
 		ID = -1;
-		MyStatus = FLOCK_OBJ_STAT_INIT;
+		MyStatus = FlockingStatus::Init;
 	}
 
 	FlockingLocation(const FlockingLocation &copy)

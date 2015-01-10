@@ -17,6 +17,7 @@ enum class EdgeDirtyState : unsigned char { CleanState = 0x0, CostIncreased = 0x
 enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGen = 0x2, AllGens = 0x3 };
 enum class EvacueeStatus : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
 enum class QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };
+enum class FlockingStatus : unsigned char { None = '\0', Init = 'I', Moving = 'M', End = 'E', Stopped = 'S', Collided = 'C' };
 
 [export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC")] enum class EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
 [export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948")] enum class EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3, EXPModel = 0x4 };
@@ -29,14 +30,14 @@ enum class QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };
 DEFINE_ENUM_FLAG_OPERATORS(NAEdgeMapGeneration)
 DEFINE_ENUM_FLAG_OPERATORS(EvacueeGrouping)
 template <class T> inline bool CheckFlag(T var, T flag) { return (var & flag) != T::None; }
-
+/*
 #define FLOCK_OBJ_STAT char
 #define FLOCK_OBJ_STAT_INIT		0x0
 #define FLOCK_OBJ_STAT_MOVE		0x1
 #define FLOCK_OBJ_STAT_STOP		0x2
 #define FLOCK_OBJ_STAT_COLLID	0x3
 #define FLOCK_OBJ_STAT_END		0x4
-
+*/
 #define FLOCK_PROFILE char
 #define FLOCK_PROFILE_CAR		0x0
 #define FLOCK_PROFILE_PERSON	0x1

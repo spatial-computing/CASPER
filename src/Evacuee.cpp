@@ -30,7 +30,7 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
-double PathSegment::GetCurrentCost(EvcSolverMethod method) { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
+double PathSegment::GetCurrentCost(EvcSolverMethod method) const { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
 bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
 
 void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, NAEdgeMap * touchedEdges)
@@ -53,23 +53,36 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
 	myEvc->Paths->push_back(this);
 }
 
-bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double ThreasholdForPredictionCost, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
+double EvcPath::GetMinCostRatio(double MaxEvacuationCost) const
 {
-	double PredictionCostRatio = (ReserveEvacuationCost -  myEvc->PredictedCost) / ThisIterationMaxCost;
-	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
-	bool NeedsAChance = PredictionCostRatio > ThreasholdForPredictionCost || EvacuationCostRatio > ThreasholdForReserveCost;
+	if (MaxEvacuationCost <= 0.0) MaxEvacuationCost = FinalEvacuationCost;
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / MaxEvacuationCost;
+	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / MaxEvacuationCost;
+	return min(PredictionCostRatio, EvacuationCostRatio);
+}
 
-	if (NeedsAChance && myEvc->Status == EvacueeStatus::Processed)
-	{
-		// since the prediction was bad it probably means the evacuee has more than average vehicles so it should be processed sooner
-		AffectingList.push_back(myEvc);
-		myEvc->Status = EvacueeStatus::Unprocessed;
-	}
+double EvcPath::GetAvgCostRatio(double MaxEvacuationCost) const
+{
+	if (MaxEvacuationCost <= 0.0) MaxEvacuationCost = FinalEvacuationCost;
+	return (FinalEvacuationCost - myEvc->PredictedCost) / (2.0 * MaxEvacuationCost);
+}
 
-	if (EvacuationCostRatio > ThreasholdForReserveCost)
+void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
+{
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / ThisIterationMaxCost;
+	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / ThisIterationMaxCost;
+
+	if (PredictionCostRatio >= ThreasholdForCost || EvacuationCostRatio >= ThreasholdForCost)
 	{
-		// we have to add the affecting list to be re-routed as well
-		// we do this by selecxting the highly congestied and most costly path segment and then extract all the evacuees that share the same segments (edges)
+		if (myEvc->Status == EvacueeStatus::Processed)
+		{
+			// since the prediction was bad it probably means the evacuee has more than average vehicles so it should be processed sooner
+			AffectingList.push_back(myEvc);
+			myEvc->Status = EvacueeStatus::Unprocessed;
+		}
+
+		// We have to add the affecting list to be re-routed as well
+		// We do this by selecting the paths that have some overlap
 		std::vector<EvcPathPtr> crossing;
 		Histogram<EvcPathPtr> FreqOfOverlaps;
 		crossing.reserve(50);
@@ -80,7 +93,7 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double Th
 			FreqOfOverlaps.WeightedAdd(crossing, seg->GetCurrentCost(method));
 		}
 
-		double cutOffWeight = ThreasholdForReserveCost * FreqOfOverlaps.maxWeight;
+		double cutOffWeight = ThreasholdForPathOverlap * FreqOfOverlaps.maxWeight;
 		for (const auto & pair : FreqOfOverlaps)
 		{
 			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > cutOffWeight)
@@ -90,7 +103,6 @@ bool EvcPath::DoesItNeedASecondChance(double ThreasholdForReserveCost, double Th
 			}
 		}
 	}
-	return NeedsAChance;
 }
 
 void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
@@ -99,7 +111,7 @@ void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
 	segment->Edge->AddReservation(this, method);
 	double p = abs(segment->GetEdgePortion());
 	ReserveEvacuationCost += segment->Edge->GetCurrentCost(method) * p;
-	OrginalCost    += segment->Edge->OriginalCost     * p;
+	OrginalCost += segment->Edge->OriginalCost * p;
 }
 
 void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method)
@@ -121,14 +133,13 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
-	PathSegmentPtr pathSegment = nullptr;
 	IGeometryPtr ipGeometry;
 	esriGeometryType type;
 	IPointCollectionPtr pcollect;
 	IPointPtr p;
 	VARIANT RouteOID, RouteEdgesOID;
 
-	for (const_iterator psit = begin(); psit != end(); ++psit)
+	for (const auto & pathSegment : *this)
 	{
 		// Check to see if the user wishes to continue or cancel the solve (i.e., check whether or not the user has hit the ESC key to stop processing)
 		if (pTrackCancel)
@@ -138,7 +149,6 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 		}
 
 		// take a path segment from the stack
-		pathSegment = *psit;
 		pointCount = -1;
 		_ASSERT(pathSegment->GetEdgePortion() > 0.0);
 		if (FAILED(hr = pathSegment->GetGeometry(ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipGeometry))) return hr;
@@ -189,12 +199,18 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	// Insert the feature buffer in the insert cursor
 	if (FAILED(hr = ipFeatureCursorR->InsertFeature(ipFeatureBufferR, &RouteOID))) return hr;
 
-#ifdef DEBUG
+	#ifdef DEBUG
 	std::wostringstream os_;
 	os_.precision(3);
 	os_ << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << ReserveEvacuationCost << ',' << FinalEvacuationCost << std::endl;
 	OutputDebugStringW(os_.str().c_str());
-#endif
+	#endif
+	#ifdef TRACE
+	std::ofstream f;
+	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
+	f << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << ReserveEvacuationCost << ',' << FinalEvacuationCost << std::endl;
+	f.close();
+	#endif
 
 	// now export each path segment into ReouteEdges table
 	long seq = 0;
@@ -202,9 +218,8 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	BSTR dir;
 	if (ExportRouteEdges)
 	{
-		for (const_iterator psit = begin(); psit != end(); ++psit, ++seq)
+		for (const auto & pathSegment : *this)
 		{
-			pathSegment = *psit;
 			segmentCost += pathSegment->Edge->GetCurrentCost() * abs(pathSegment->GetEdgePortion());
 			dir = pathSegment->Edge->Direction == esriNEDAgainstDigitized ? L"Against" : L"Along";
 
@@ -391,27 +406,27 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge 
 
 void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees) const
 {
-#ifdef TRACE
+	#ifdef TRACE
 	std::ofstream f;
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 	f << "List of unreachable evacuees =";
-#endif
+	#endif
 	for (const auto & evc : *this)
 		for (const auto & e : evc.second)
 		{
 			if (e->PredictedCost >= FLT_MAX)
 			{
 				e->Status = EvacueeStatus::Unreachable;
-#ifdef TRACE
+				#ifdef TRACE
 				f << ' ' << ATL::CW2A(e->Name.bstrVal);
-#endif
+				#endif
 			}
 			else SortedEvacuees->push_back(e);
 		}
-#ifdef TRACE
+	#ifdef TRACE
 	f << std::endl;
 	f.close();
-#endif
+	#endif
 }
 
 SafeZone::~SafeZone() { delete Vertex; }
@@ -434,38 +449,40 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 	return cost;
 }
 
-HRESULT SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, bool & restricted, double costPerDensity)
+bool SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, double costPerDensity)
 {
 	HRESULT hr = S_OK;
-	restricted = capacity == 0.0 && costPerDensity > 0.0;
+	bool restricted = capacity == 0.0 && costPerDensity > 0.0;
 	ArrayList<NAEdgePtr> * adj = nullptr;
 
 	if (behindEdge && !restricted)
 	{
 		restricted = true;
-		if (FAILED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj))) return hr;
-		for (const auto & currentEdge : *adj) if (NAEdge::IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
+		if (SUCCEEDED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj)))
+		{
+			for (const auto & currentEdge : *adj) if (NAEdge::IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
+		}
 	}
-	return hr;
+	return restricted;
 }
 
-void SafeZoneTable::insert(SafeZonePtr z)
+bool SafeZoneTable::insert(SafeZonePtr z)
 {
 	auto insertRet = std::unordered_map<long, SafeZonePtr>::insert(std::pair<long, SafeZonePtr>(z->Vertex->EID, z));
 	if (!insertRet.second) delete z;
+	return insertRet.second;
 }
-HRESULT SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> ecache, NAVertexPtr myVertex, NAEdgePtr myEdge, NAVertexPtr & finalVertex, double & TimeToBeat, SafeZonePtr & BetterSafeZone, double costPerDensity,
+
+bool SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> ecache, NAVertexPtr myVertex, NAEdgePtr myEdge, NAVertexPtr & finalVertex, double & TimeToBeat, SafeZonePtr & BetterSafeZone, double costPerDensity,
 	double population2Route, EvcSolverMethod solverMethod, double & globalDeltaCost, bool & foundRestrictedSafezone) const
 {
-	HRESULT hr = S_OK;
-	bool restricted = false;
+	bool found = false;
 	auto i = find(myVertex->EID);
 
 	if (i != end())
 	{
 		// Handle the last turn restriction here ... and the remaining capacity-aware cost.
-		if (FAILED(hr = i->second->IsRestricted(ecache, myEdge, restricted, costPerDensity))) return hr;
-		if (!restricted)
+		if (!i->second->IsRestricted(ecache, myEdge, costPerDensity))
 		{
 			double costLeft = i->second->SafeZoneCost(population2Route, solverMethod, costPerDensity, &globalDeltaCost);
 			if (TimeToBeat > costLeft + myVertex->GVal + myVertex->GlobalPenaltyCost + globalDeltaCost)
@@ -480,6 +497,7 @@ HRESULT SafeZoneTable::CheckDiscoveredSafePoint(std::shared_ptr<NAEdgeCache> eca
 			// found a safe zone but it was restricted
 			foundRestrictedSafezone = true;
 		}
+		found = true;
 	}
-	return hr;
+	return found;
 }

@@ -13,7 +13,7 @@
 #include "NameConstants.h"
 #include "EvcSolver.h"
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // INARouteSolver2
 
 STDMETHODIMP EvcSolver::get_Name(BSTR * pName)
@@ -199,7 +199,7 @@ STDMETHODIMP EvcSolver::get_Properties(IPropertySet ** ppPropSet)
 	return E_NOTIMPL;
 }
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // IEvcSolver
 
 STDMETHODIMP EvcSolver::get_FlockingEnabled(VARIANT_BOOL * value)
@@ -329,15 +329,15 @@ STDMETHODIMP EvcSolver::get_IterativeRatio(BSTR * value)
 	if (value)
 	{
 		*value = new DEBUG_NEW_PLACEMENT WCHAR[100];
-		swprintf_s(*value, 100, L"%.3f", iterativeRatio);
+		swprintf_s(*value, 100, L"%.3f", iterateRatio);
 	}
 	return S_OK;
 }
 
 STDMETHODIMP EvcSolver::put_IterativeRatio(BSTR value)
 {
-	swscanf_s(value, L"%f", &iterativeRatio);
-	iterativeRatio = min(max(iterativeRatio, 0.0f), 1.0f);
+	swscanf_s(value, L"%f", &iterateRatio);
+	iterateRatio = min(max(iterateRatio, 0.0f), 1.0f);
 	m_bPersistDirty = true;
 	return S_OK;
 }
@@ -559,7 +559,7 @@ STDMETHODIMP EvcSolver::put_CostAttribute(size_t index)
 	return S_OK;
 }
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // INASolverSettings2
 
 STDMETHODIMP EvcSolver::put_AttributeParameterValue(BSTR AttributeName, BSTR paramName, VARIANT value)
@@ -815,7 +815,7 @@ STDMETHODIMP EvcSolver::get_NumTransitionToHierarchy(long toLevel, long * pValue
 	return E_NOTIMPL; // This solver does not support hierarchy attributes
 }
 
-/////////////////////////////////////////////////////////////////////
+//******************************************************************************************/
 // INASolverOutputGeneralization
 STDMETHODIMP EvcSolver::put_OutputGeometryPrecision(VARIANT value)
 {
