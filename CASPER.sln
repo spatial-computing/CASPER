@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "opensteer", "opensteer\win3
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CASPERLog", "CASPERLog\CASPERLog.csproj", "{133C4B26-54C8-40F8-AE06-604A251BCA5F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CASPERCountQuery", "CASPERCountQuery\CASPERCountQuery.csproj", "{3F8C7FB6-9282-4D2C-9106-6D74E3389A26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -41,6 +43,10 @@ Global
 		{133C4B26-54C8-40F8-AE06-604A251BCA5F}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{133C4B26-54C8-40F8-AE06-604A251BCA5F}.Release|Win32.ActiveCfg = Release|Any CPU
 		{133C4B26-54C8-40F8-AE06-604A251BCA5F}.Release|x64.ActiveCfg = Release|Any CPU
+		{3F8C7FB6-9282-4D2C-9106-6D74E3389A26}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{3F8C7FB6-9282-4D2C-9106-6D74E3389A26}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3F8C7FB6-9282-4D2C-9106-6D74E3389A26}.Release|Win32.ActiveCfg = Release|Any CPU
+		{3F8C7FB6-9282-4D2C-9106-6D74E3389A26}.Release|x64.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
