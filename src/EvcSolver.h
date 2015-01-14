@@ -311,7 +311,6 @@ private:
 	HRESULT DeterminMinimumPop2Route(std::shared_ptr<EvacueeList>, INetworkDatasetPtr, double &, bool &) const;
 	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, std::shared_ptr<NAEdgeContainer>, std::shared_ptr<NAEdgeContainer>, double, EvcSolverMethod) const;
-	void    RecursiveMarkAndRemove   (NAEdgePtr, NAEdgeMap *) const;
 	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, std::shared_ptr<NAEdgeContainer>) const;
 	bool    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	void    UpdatePeakMemoryUsage();

@@ -546,7 +546,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 						}
 						else // unvisited vertex. create new and insert into heap
 						{
-							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery))) return hr;
+							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, removedDirty->Exist(currentEdge)))) return hr;
 							heap.Insert(currentEdge);
 						}
 					}
@@ -625,18 +625,6 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 	}
 	oldLeafs->Clear();
 	oldLeafs->Insert(tempLeafs);
-}
-
-// this recursive call would be better as a loop ... possible stack overflow in feature
-void EvcSolver::RecursiveMarkAndRemove(NAEdgePtr e, NAEdgeMap * closedList) const
-{
-	closedList->Erase(e);
-	for (const auto & i : e->TreeNext)
-	{
-		i->TreePrevious = nullptr;
-		RecursiveMarkAndRemove(i, closedList);
-	}
-	e->TreeNext.clear();
 }
 
 void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList, std::shared_ptr<NAEdgeContainer> removedDirty) const
@@ -737,10 +725,11 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	ArrayList<NAEdgePtr> * adj = nullptr;
 
 	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closed-list
-	tempVertex = vcache->Get(myVertex->EID); // this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
+	// this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
+	tempVertex = vcache->Get(myVertex->EID); 
 	betterH = myVertex->GVal;
 
-	if (checkOldClosedlist && closedList->Size(NAEdgeMapGeneration::OldGen) > 0)
+	if (checkOldClosedlist)
 	{
 		if (FAILED(hr = ecache->QueryAdjacencies(myVertex, edge, QueryDirection::Forward, &adj))) return hr;
 

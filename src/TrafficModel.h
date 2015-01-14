@@ -14,22 +14,45 @@
 #include "StdAfx.h"
 #include "utils.h"
 
-// Hash map for cached calculated congestions
-typedef public std::unordered_map<double, double> FlowCongestionMap;
-typedef std::unordered_map<double, double>::const_iterator FlowCongestionMapItr;
-typedef std::pair<double, double> FlowCongestionMapPair;
+struct TrafficModelCacheNode
+{
+public:
+	double Capacity;
+	double Flow;
+	TrafficModelCacheNode(double capacity, double flow) : Capacity(capacity), Flow(flow) { }
 
-typedef FlowCongestionMap * FlowCongestionMapPtr;
-typedef public std::unordered_map<double, FlowCongestionMapPtr> CapacityFlowsMap;
-typedef std::unordered_map<double, FlowCongestionMapPtr>::const_iterator CapacityFlowsMapItr;
-typedef std::pair<double, FlowCongestionMapPtr> CapacityFlowsMapPair;
+	inline bool friend operator<(const TrafficModelCacheNode& lhs, const TrafficModelCacheNode& rhs)
+	{
+		if (lhs.Capacity == rhs.Capacity) return lhs.Flow < rhs.Flow;
+		else return lhs.Capacity < rhs.Capacity;
+	}
+
+	inline bool friend operator==(const TrafficModelCacheNode& lhs, const TrafficModelCacheNode& rhs)
+	{
+		if (lhs.Capacity == rhs.Capacity) return lhs.Flow == rhs.Flow;
+		else return lhs.Capacity == rhs.Capacity;
+	}
+
+	inline bool friend operator!=(const TrafficModelCacheNode& lhs, const TrafficModelCacheNode& rhs){ return !(lhs == rhs); }
+	inline bool friend operator> (const TrafficModelCacheNode& lhs, const TrafficModelCacheNode& rhs){ return rhs < lhs;     }
+	inline bool friend operator<=(const TrafficModelCacheNode& lhs, const TrafficModelCacheNode& rhs){ return !(lhs > rhs);  }
+	inline bool friend operator>=(const TrafficModelCacheNode& lhs, const TrafficModelCacheNode& rhs){ return !(lhs < rhs);  }
+
+	struct Hasher : public std::hash<double>
+	{
+		size_t operator()(const TrafficModelCacheNode & e) const
+		{
+			return std::hash<double>::operator()(e.Capacity * 100.0 * e.Flow);
+		}
+	};
+};
 
 class TrafficModel
 {
 private:
 	EvcTrafficModel model;
 	double saturationDensPerCap;
-	CapacityFlowsMap * myCache;
+	std::unordered_map<TrafficModelCacheNode, double, TrafficModelCacheNode::Hasher> myCache;
 	unsigned int cacheMiss;
 	unsigned int cacheHit;
 
@@ -40,7 +63,7 @@ public:
 	double CriticalDensPerCap;
 
 	TrafficModel(EvcTrafficModel Model, double _criticalDensPerCap, double _saturationDensPerCap, double _initDelayCostPerPop);
-	virtual ~TrafficModel(void);
+	virtual ~TrafficModel(void) { }
 	TrafficModel(const TrafficModel & that) = delete;
 	TrafficModel & operator=(const TrafficModel &) = delete;
 	double GetCongestionPercentage(double capacity, double flow);

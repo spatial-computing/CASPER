@@ -484,6 +484,8 @@ HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
 
 HRESULT NAEdgeMap::Insert(NAEdgeMap * edges)
 {
+	cacheAlong->rehash(cacheAlong->size() + edges->cacheAlong->size());
+	cacheAgainst->rehash(cacheAgainst->size() + edges->cacheAgainst->size());
 	NAEdgeTableItr i;
 	for(i = edges->cacheAlong->begin(); i != edges->cacheAlong->end(); i++)
 		if (cacheAlong->find(i->first) == cacheAlong->end()) cacheAlong->insert(NAEdgeTablePair(i->second));

@@ -227,6 +227,7 @@ public:
 	HRESULT Remove(long eid, esriNetworkEdgeDirection dir);
 	HRESULT Remove(long eid, unsigned char dir);
 	void    Insert(std::shared_ptr<NAEdgeContainer> clone);
+	bool Exist(NAEdge * edge) { return Exist(edge->EID, edge->Direction); }
 	bool Exist(INetworkEdgePtr edge);
 	bool Exist(long eid, esriNetworkEdgeDirection dir);
 	bool IsEmpty() const { return cache->empty(); }

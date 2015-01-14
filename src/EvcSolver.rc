@@ -72,10 +72,10 @@ BEGIN
             VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
             VALUE "FileVersion", GIT_DESCRIBE
             VALUE "InternalName", "EvcSolver32.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2014"
+            VALUE "LegalCopyright", "Copyright (C) 2015"
             VALUE "OriginalFilename", "EvcSolver32.dll"
-			VALUE "ProductName", PROJ_NAME_S
-			VALUE "ProductVersion", GIT_DESCRIBE
+            VALUE "ProductName", PROJ_NAME_S
+            VALUE "ProductVersion", GIT_DESCRIBE
         END
     END
     BLOCK "VarFileInfo"
@@ -116,8 +116,8 @@ BEGIN
     LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,59,91,8
     COMBOBOX        IDC_COMBO_METHOD,113,57,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Traffic Model:",IDC_STATIC,217,111,84,8
-	COMBOBOX        IDC_COMBO_TRAFFICMODEL, 298, 108, 91, 50, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-	LTEXT           "Population split or group:", IDC_CHECK_SEPARABLE, 19, 201, 91, 12
+    COMBOBOX        IDC_COMBO_TRAFFICMODEL, 298, 108, 91, 50, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Population split or group:", IDC_CHECK_SEPARABLE, 19, 201, 91, 12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,215,115,13
     LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,20,114,95,8

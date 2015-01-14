@@ -16,15 +16,9 @@ TrafficModel::TrafficModel(EvcTrafficModel Model, double _criticalDensPerCap, do
 	: model(Model), CriticalDensPerCap(_criticalDensPerCap), saturationDensPerCap(_saturationDensPerCap), InitDelayCostPerPop(_initDelayCostPerPop)
 {
 	if (saturationDensPerCap <= CriticalDensPerCap) saturationDensPerCap += CriticalDensPerCap;
-	myCache = new DEBUG_NEW_PLACEMENT CapacityFlowsMap();
+	myCache.max_load_factor(0.3);
 	cacheHit = 0;
 	cacheMiss = 0;
-}
-
-TrafficModel::~TrafficModel(void)
-{
-	for(CapacityFlowsMapItr i = myCache->begin(); i != myCache->end(); ++i) delete i->second;
-	delete myCache;
 }
 
 double TrafficModel::LeftCapacityOnEdge(double capacity, double reservedFlow, double originalEdgeCost) const
@@ -42,31 +36,22 @@ double TrafficModel::GetCongestionPercentage(double capacity, double flow)
 	double percentage = 1.0;
 	if (flow > CriticalDensPerCap * capacity)
 	{
-		bool found = false;
-
-		CapacityFlowsMapItr i = myCache->find(capacity);
-		if (i != myCache->end())
+		const auto i = myCache.find(TrafficModelCacheNode(capacity, flow));
+		if (i != myCache.end())
 		{
-			FlowCongestionMapItr j = i->second->find(flow);
-			if (j != i->second->end())
-			{
-				percentage = j->second;
-				found = true;
-				++cacheHit;
-			}
+			percentage = i->second;
+			++cacheHit;
 		}
 		else
 		{
-			myCache->insert(CapacityFlowsMapPair(capacity, new DEBUG_NEW_PLACEMENT FlowCongestionMap()));
-		}
-		if (!found)
-		{
-			percentage = internalGetCongestionPercentage(capacity, flow);
-			myCache->at(capacity)->insert(FlowCongestionMapPair(flow, percentage));
+			myCache.insert(std::pair<TrafficModelCacheNode, double>(TrafficModelCacheNode(capacity, flow), internalGetCongestionPercentage(capacity, flow)));
 			++cacheMiss;
 		}
 	}
-	else ++cacheHit;
+	else
+	{
+		++cacheHit;
+	}
 	return percentage;
 }
 

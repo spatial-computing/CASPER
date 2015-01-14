@@ -47,7 +47,7 @@ public:
 	using baseheap::size;
 	using baseheap::empty;
 
-	MyFibonacciHeap(const std::function<double(const T &)> & _getHeapKey = DefaultGetHeapKey<T>) : GetHeapKey(_getHeapKey) { }
+	MyFibonacciHeap(const std::function<double(const T &)> & _getHeapKey = DefaultGetHeapKey<T>) : GetHeapKey(_getHeapKey) { nodeTable.max_load_factor(0.5); }
 	bool IsVisited(const T & node) const { return nodeTable.find(node) != nodeTable.end(); }
 	void Clear() { baseheap::clear(); nodeTable.clear(); }
 
