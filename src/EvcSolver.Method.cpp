@@ -755,7 +755,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 		}
 		#endif
 
-		betterMyVertex = vcache->New(myVertex->Junction);
+		betterMyVertex = vcache->New(myVertex->Junction, ipNetworkQuery);
 		betterMyVertex->SetBehindEdge(betterEdge);
 		betterMyVertex->Previous = nullptr;
 		betterMyVertex->GVal = betterH;
