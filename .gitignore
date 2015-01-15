@@ -30,7 +30,7 @@ src/gitdescribe.h
 obj/
 bin/
 *.pdb
-reports/ipch/
+ipch/
 *.aps
 *.vsp
 *.vsps

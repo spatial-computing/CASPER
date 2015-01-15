@@ -44,7 +44,8 @@ double TrafficModel::GetCongestionPercentage(double capacity, double flow)
 		}
 		else
 		{
-			myCache.insert(std::pair<TrafficModelCacheNode, double>(TrafficModelCacheNode(capacity, flow), internalGetCongestionPercentage(capacity, flow)));
+			percentage = internalGetCongestionPercentage(capacity, flow);
+			myCache.insert(std::pair<TrafficModelCacheNode, double>(TrafficModelCacheNode(capacity, flow), percentage));
 			++cacheMiss;
 		}
 	}

@@ -542,7 +542,7 @@ void NAEdgeMapTwoGen::Erase(NAEdgePtr edge, NAEdgeMapGeneration gen)
 //******************************************************************************************/
 // NAEdgeContainer Methods
 
-bool NAEdgeContainer::Exist(INetworkEdgePtr edge)
+bool NAEdgeContainer::Exist(INetworkEdgePtr edge) const
 {
 	esriNetworkEdgeDirection dir;
 	long eid;
@@ -569,8 +569,16 @@ HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 HRESULT NAEdgeContainer::Insert(long eid, unsigned char dir)
 {
 	std::unordered_map<long, unsigned char>::iterator i = cache->find(eid);
-	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, dir));
-	else i->second |= dir;
+	if (i == cache->end())
+	{
+		cache->insert(NAEdgeContainerPair(eid, dir));
+		size++;
+	}
+	else if ((i->second & dir) == 0)
+	{
+		size++;
+		i->second |= dir;
+	}
 	return S_OK;
 }
 
@@ -580,12 +588,12 @@ HRESULT NAEdgeContainer::Insert(long eid, esriNetworkEdgeDirection dir)
 	return Insert(eid, d);
 }
 
-bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir)
+bool NAEdgeContainer::Exist(long eid, esriNetworkEdgeDirection dir) const
 {
 	std::unordered_map<long, unsigned char>::const_iterator i = cache->find(eid);
 	bool ret = false;
 	unsigned char d = (unsigned char)dir;
-	if (i != cache->end() && i->second != 0) ret = (i->second & d) != 0;
+	if (i != cache->end()) ret = (i->second & d) != 0;
 	return ret;
 }
 
@@ -602,10 +610,11 @@ HRESULT NAEdgeContainer::Remove(INetworkEdgePtr edge)
 HRESULT NAEdgeContainer::Remove(long eid, unsigned char dir)
 {
 	std::unordered_map<long, unsigned char>::iterator i = cache->find(eid);
-	if (i != cache->end())
+	if ((i != cache->end()) && ((i->second & dir) != 0))
 	{
 		i->second &= ~dir;
 		if (i->second == 0) cache->erase(i->first);
+		size--;
 	}
 	return S_OK;
 }

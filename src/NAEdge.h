@@ -200,14 +200,17 @@ class NAEdgeContainer
 {
 private:
 	std::unordered_map<long, unsigned char> * cache;
+	size_t size;
 
 public:
 	NAEdgeContainer(const NAEdgeContainer & that) = delete;
 	NAEdgeContainer & operator=(const NAEdgeContainer &) = delete;
+	size_t Size() const { return size; }
 
 	NAEdgeContainer(size_t capacity)
 	{
 		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, unsigned char>(capacity);
+		size = 0;
 	}
 
 	virtual ~NAEdgeContainer(void)
@@ -219,7 +222,7 @@ public:
 	inline  NAEdgeIterator begin() { return cache->begin(); }
 	inline  NAEdgeIterator end()   { return cache->end()  ; }
 	HRESULT Insert(NAEdgePtr edge) { return Insert(edge->EID, edge->Direction); }
-	inline void Clear() { cache->clear(); }
+	inline void Clear() { cache->clear(); size = 0; }
 	HRESULT Insert(INetworkEdgePtr edge);
 	HRESULT Insert(long eid, esriNetworkEdgeDirection dir);
 	HRESULT Insert(long eid, unsigned char dir);
@@ -227,9 +230,9 @@ public:
 	HRESULT Remove(long eid, esriNetworkEdgeDirection dir);
 	HRESULT Remove(long eid, unsigned char dir);
 	void    Insert(std::shared_ptr<NAEdgeContainer> clone);
-	bool Exist(NAEdge * edge) { return Exist(edge->EID, edge->Direction); }
-	bool Exist(INetworkEdgePtr edge);
-	bool Exist(long eid, esriNetworkEdgeDirection dir);
+	bool Exist(NAEdge * edge) const { return Exist(edge->EID, edge->Direction); }
+	bool Exist(INetworkEdgePtr edge) const;
+	bool Exist(long eid, esriNetworkEdgeDirection dir) const;
 	bool IsEmpty() const { return cache->empty(); }
 };
 

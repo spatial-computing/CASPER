@@ -607,20 +607,32 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 			tempLeafs->Insert(leaf);
 		}
 
+	// we need to decide right here whether it's a good idea to move forward with DSPT or should we fall back to FullSPT
+	/// TODO this is experimental. work on it!
+	if (removedDirty->Size() >= closedList->Size())
+	{
+		// revert back to FullSPT
+		removedDirty->Clear();
+		closedList->Clear();
+		oldLeafs->Clear();
+	}
+
 	// removing previously identified leafs from closedList
 	for (j = oldLeafs->begin(); j != oldLeafs->end(); j++)
 	{
 		if ((j->second & 1) && closedList->Exist(j->first, esriNEDAlongDigitized))
 		{
 			closedList->Erase(j->first, esriNEDAlongDigitized);
-			removedDirty->Insert(j->first, esriNEDAlongDigitized);
 			tempLeafs->Insert(j->first, esriNEDAlongDigitized);
+			// no need to insert them into dirty list
+			// removedDirty->Insert(j->first, esriNEDAlongDigitized);
 		}
 		if ((j->second & 2) && closedList->Exist(j->first, esriNEDAgainstDigitized))
 		{
 			closedList->Erase(j->first, esriNEDAgainstDigitized);
-			removedDirty->Insert(j->first, esriNEDAgainstDigitized);
 			tempLeafs->Insert(j->first, esriNEDAgainstDigitized);
+			// no need to insert them into dirty list
+			// removedDirty->Insert(j->first, esriNEDAgainstDigitized);
 		}
 	}
 	oldLeafs->Clear();
