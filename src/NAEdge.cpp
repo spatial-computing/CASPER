@@ -494,6 +494,17 @@ HRESULT NAEdgeMap::Insert(NAEdgeMap * edges)
 	return S_OK;
 }
 
+void NAEdgeMap::Clear(bool destroyTreePrevious)
+{
+	if (destroyTreePrevious)
+	{
+		for (auto e : *cacheAlong)   e.second->TreePrevious = nullptr;
+		for (auto e : *cacheAgainst) e.second->TreePrevious = nullptr;
+	}
+	cacheAlong->clear();
+	cacheAgainst->clear();
+}
+
 //******************************************************************************************/
 // NAEdgeMapTwoGen Methods
 
@@ -503,10 +514,10 @@ void NAEdgeMapTwoGen::MarkAllAsOldGen()
 	newGen->Clear();
 }
 
-void NAEdgeMapTwoGen::Clear(NAEdgeMapGeneration gen)
+void NAEdgeMapTwoGen::Clear(NAEdgeMapGeneration gen, bool destroyTreePrevious)
 {
-	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) oldGen->Clear();
-	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) newGen->Clear();
+	if (CheckFlag(gen, NAEdgeMapGeneration::OldGen)) oldGen->Clear(destroyTreePrevious);
+	if (CheckFlag(gen, NAEdgeMapGeneration::NewGen)) newGen->Clear(destroyTreePrevious);
 }
 
 size_t NAEdgeMapTwoGen::Size(NAEdgeMapGeneration gen)

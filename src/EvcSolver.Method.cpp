@@ -477,11 +477,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			// in this 'CARMALoop' round. Only then we can be sure whether to update to min or update absolutely to this new value.
 			myVertex->UpdateYourHeuristic();
 
-			EvacueePairs.RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs, minPop2Route, solverMethod);
-
-			// check if all removed dirty edges have been discovered again
-			removedDirty->Remove(myEdge->EID, myEdge->Direction);
-
 			// termination condition and evacuee discovery
 			// if we've found all evacuees and we're beyond the search radius then instead of adding to the heap, we add it to the leafs list so that the next carma
 			// loop we can use it to expand the rest of the tree ... if this branch was needed. Not adding the edge to the heap will basically render this edge invisible to the
@@ -493,6 +488,11 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 				SearchRadius = min(SearchRadius, myVertex->GVal);
 				continue;
 			}
+
+			EvacueePairs.RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs, minPop2Route, solverMethod);
+
+			// check if all removed dirty edges have been discovered again
+			removedDirty->Remove(myEdge->EID, myEdge->Direction);
 
 			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, &adj))) return hr;
 
@@ -613,7 +613,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 	{
 		// revert back to FullSPT
 		removedDirty->Clear();
-		closedList->Clear();
+		closedList->Clear(true);
 		oldLeafs->Clear();
 	}
 

@@ -147,7 +147,7 @@ public:
 	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const;
 	void Erase(NAEdgePtr edge) {        Erase(edge->EID, edge->Direction)  ; }
 	bool Exist(NAEdgePtr edge) { return Exist(edge->EID, edge->Direction)  ; }
-	void Clear()               { cacheAlong->clear(); cacheAgainst->clear(); }
+	void Clear(bool destroyTreePrevious = false);
 	size_t Size()              { return cacheAlong->size() + cacheAgainst->size(); }
 	HRESULT Insert(NAEdgePtr   edge );
 	HRESULT Insert(NAEdgeMap * edges);
@@ -187,7 +187,7 @@ public:
 	void MarkAllAsOldGen();
 	bool Exist(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens) { return Exist(edge->EID, edge->Direction, gen); }
 	void Erase(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens);
-	void Clear(NAEdgeMapGeneration gen);
+	void Clear(NAEdgeMapGeneration gen, bool destroyTreePrevious = false);
 	size_t Size(NAEdgeMapGeneration gen = NAEdgeMapGeneration::NewGen);
 	HRESULT Insert(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::NewGen);
 	bool Exist(long eid, esriNetworkEdgeDirection dir, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens);
