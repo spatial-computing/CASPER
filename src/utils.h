@@ -234,17 +234,29 @@ public:
 
 	void InsertOrUpdate(const K & key, const V & value)
 	{
-		S i;
-		CompareValue c;
-		KeyEqual q;
-		for (i = ZeroSize; i < this->_size; ++i)
-			if (q(key, this->data[i].first))
+		CompareValue lessThan;
+		KeyEqual keyEqual;
+		bool valueIncreased = false;
+		S insert = this->_size;
+		
+		// insert new or update exisiting pair
+		for (S i = ZeroSize; i < this->_size; ++i)
+			if (keyEqual(key, this->data[i].first))
 			{
-				this->data[i].second = value;
+				insert = i;
+				valueIncreased = lessThan(this->data[i].second, value);
 				break;
 			}
-		if (i == this->_size) baseArray::push_back(std::pair<K, V>(key, value));
-		if (c(value, this->data[minValueIndex].second)) minValueIndex = i;
+		if (insert == this->_size) baseArray::push_back(std::pair<K, V>(key, value));
+		else this->data[insert].second = value;
+
+		// update index of min value
+		if (minValueIndex != insert) minValueIndex = lessThan(value, this->data[minValueIndex].second) ? insert : minValueIndex;
+		else if (valueIncreased)
+		{
+			for (S i = ZeroSize; i < this->_size; ++i)
+				if (lessThan(this->data[i].second, this->data[minValueIndex].second)) minValueIndex = i;
+		}
 	}
 
 	const V & GetByKey(const K & key) const
