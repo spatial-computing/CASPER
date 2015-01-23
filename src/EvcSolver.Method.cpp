@@ -102,8 +102,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 			if (ipStepProgressor) { if (FAILED(hr = ipStepProgressor->put_Message(ATL::CComBSTR(statusMsg)))) goto END_OF_FUNC; }
 			countEvacueesInOneBucket = 0;
-			sumVisitedDirtyEdge = 0;
-			sumVisitedEdge = 0;
+			sumVisitedDirtyEdge      = 0;
+			sumVisitedEdge           = 0;
 
 			for (seit = sortedEvacuees->begin(); seit != sortedEvacuees->end(); seit++)
 			{
@@ -156,6 +156,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					BetterSafeZone = nullptr;
 					finalVertex = nullptr;
 					foundRestrictedSafezone = false;
+
+					// reduce the effect of previous CASPER loop heap extract for the purpose of dirty edge ratio. This will encourage more CARMA loops.
+					sumVisitedDirtyEdge *= 0.9;
+					sumVisitedEdge      *= 0.9;
 
 					// Continue traversing the network while the heap has remaining junctions in it
 					// this is the actual Dijkstra code with the Fibonacci Heap
@@ -264,6 +268,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
 		if (NumberOfEvacueesInIteration > 0)
 		{
+			ShouldCARMACheckForDecreasedCost = true;
 			carmaSortCriteria = CARMASort::ReverseFinalCost;
 			EffectiveIterationRatio.push_back(pow(double(NumberOfEvacueesInIteration) / AllEvacuees->size(), 1.0 / GlobalEvcCostAtIteration.size()));
 		}
@@ -282,7 +287,7 @@ END_OF_FUNC:
 	return hr;
 }
 
-size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration)
+size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
 {
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
@@ -343,7 +348,6 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	std::sort(EvacueesForNextIteration.begin(), EvacueesForNextIteration.end(), EvcPath::MoreThanPathOrder);
 	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, solverMethod, detachedPaths, &touchededges);
 	touchededges.CallHowDirty(solverMethod, 1.0, true);
-	ShouldCARMACheckForDecreasedCost = true;
 
 	return EvacueesForNextIteration.size();
 }
@@ -427,7 +431,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		// prepare and insert safe zone vertices into the heap
 		for (const auto & z : *safeZoneList)
 			if (FAILED(hr = PrepareVerticesForHeap(z.second->Vertex, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, solverMethod, 0.0, 0.0, QueryDirection::Forward))) return hr;
-		for (std::vector<NAEdgePtr>::const_iterator h = readyEdges.begin(); h != readyEdges.end(); h++) heap.Insert(*h);
+		for (const auto & h : readyEdges) heap.Insert(h);
 
 		// Now insert leaf edges in heap like the destination edges
 		// do I have to insert leafs even if DSPT is off? It does not matter cause closedList is cleaned and hence all leafs will be removed anyway.
@@ -464,7 +468,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			}
 
 			// check if this edge decreased its cost
-			/// myVertex->ParentCostIsDecreased |= myEdge->HowDirty(solverMethod, minPop2Route) == EdgeDirtyState::CostDecreased;
 			CARMAExtractCount++;
 
 			// Code to build the CARMA Tree
@@ -612,13 +615,13 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 
 	// we need to decide right here whether it's a good idea to move forward with DSPT or should we fall back to FullSPT
 	/// TODO this is experimental. work on it!
-	//if (removedDirty->Size() >= closedList->Size())
-	//{
-	//	// revert back to FullSPT
-	//	removedDirty->Clear();
-	//	closedList->Clear(true);
-	//	oldLeafs->Clear();
-	//}
+	////if (removedDirty->Size() >= closedList->Size())
+	////{
+	////	// revert back to FullSPT
+	////	removedDirty->Clear();
+	////	closedList->Clear(true);
+	////	oldLeafs->Clear();
+	////}
 
 	// removing previously identified leafs from closedList
 	for (j = oldLeafs->begin(); j != oldLeafs->end(); j++)
