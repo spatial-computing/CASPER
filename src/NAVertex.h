@@ -56,7 +56,7 @@ public:
 	INetworkJunctionPtr Junction;
 	NAVertex * Previous;
 	long EID;
-	bool ParentCostIsDecreased;
+	// bool ParentCostIsDecreased;
 
 	double GetMinHOrZero() const { return h->GetMinValueOrDefault(0.0); }
 	double GetH(long eid) const { return h->GetByKey(eid); }

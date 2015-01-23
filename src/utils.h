@@ -116,7 +116,7 @@ protected:
 
 	void shrink(S newCap)
 	{
-		// check if we can grow
+		// check if we can shrink
 		if (newCap < capacity && newCap >= _size) shrink_or_grow(newCap);
 	}
 

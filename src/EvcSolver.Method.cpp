@@ -48,6 +48,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	CARMASort carmaSortCriteria = this->CarmaSortCriteria;
 	auto detachedPaths = std::shared_ptr<std::vector<EvcPathPtr>>(new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>());
 	CARMAExtractCounts.clear();
+	ShouldCARMACheckForDecreasedCost = false;
 
 	switch (solverMethod)
 	{
@@ -281,7 +282,7 @@ END_OF_FUNC:
 	return hr;
 }
 
-size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
+size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration)
 {
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
@@ -342,6 +343,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	std::sort(EvacueesForNextIteration.begin(), EvacueesForNextIteration.end(), EvcPath::MoreThanPathOrder);
 	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, solverMethod, detachedPaths, &touchededges);
 	touchededges.CallHowDirty(solverMethod, 1.0, true);
+	ShouldCARMACheckForDecreasedCost = true;
 
 	return EvacueesForNextIteration.size();
 }
@@ -462,7 +464,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			}
 
 			// check if this edge decreased its cost
-			myVertex->ParentCostIsDecreased |= myEdge->HowDirty(solverMethod, minPop2Route) == EdgeDirtyState::CostDecreased;
+			/// myVertex->ParentCostIsDecreased |= myEdge->HowDirty(solverMethod, minPop2Route) == EdgeDirtyState::CostDecreased;
 			CARMAExtractCount++;
 
 			// Code to build the CARMA Tree
@@ -491,7 +493,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 
 			EvacueePairs.RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs, minPop2Route, solverMethod);
 
-			// check if all removed dirty edges have been discovered again
+			// to check if all removed dirty edges have been discovered again
 			removedDirty->Remove(myEdge->EID, myEdge->Direction);
 
 			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, &adj))) return hr;
@@ -501,9 +503,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 
 				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, solverMethod);
-				if (closedList->Exist(currentEdge, NAEdgeMapGeneration::OldGen))
+				if (ShouldCARMACheckForDecreasedCost && closedList->Exist(currentEdge, NAEdgeMapGeneration::OldGen))
 				{
-					if (myVertex->ParentCostIsDecreased)
+					/// if (myVertex->ParentCostIsDecreased)
 					{
 						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) return hr;
 						EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
@@ -540,7 +542,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 								neighbor->SetBehindEdge(currentEdge);
 								neighbor->GVal = newCost;
 								neighbor->Previous = myVertex;
-								neighbor->ParentCostIsDecreased = myVertex->ParentCostIsDecreased;
+								/// neighbor->ParentCostIsDecreased = myVertex->ParentCostIsDecreased;
 								heap.UpdateKey(currentEdge);
 							}
 						}
@@ -576,6 +578,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	// Set graph as having all clean edges. Here we set all edges as clean eventhough we only
 	// re-created parts of the tree. This is still OK since we check previous edges are re-discovered again.
 	ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod);
+	ShouldCARMACheckForDecreasedCost = false;
 
 	#ifdef TRACE
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
@@ -609,13 +612,13 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 
 	// we need to decide right here whether it's a good idea to move forward with DSPT or should we fall back to FullSPT
 	/// TODO this is experimental. work on it!
-	if (removedDirty->Size() >= closedList->Size())
-	{
-		// revert back to FullSPT
-		removedDirty->Clear();
-		closedList->Clear(true);
-		oldLeafs->Clear();
-	}
+	//if (removedDirty->Size() >= closedList->Size())
+	//{
+	//	// revert back to FullSPT
+	//	removedDirty->Clear();
+	//	closedList->Clear(true);
+	//	oldLeafs->Clear();
+	//}
 
 	// removing previously identified leafs from closedList
 	for (j = oldLeafs->begin(); j != oldLeafs->end(); j++)
@@ -778,7 +781,7 @@ HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, N
 	neighbor->SetBehindEdge(edge);
 	neighbor->GVal = edgeCost + betterMyVertex->GVal;
 	neighbor->Previous = betterMyVertex;
-	neighbor->ParentCostIsDecreased = betterMyVertex->ParentCostIsDecreased;
+	/// neighbor->ParentCostIsDecreased = betterMyVertex->ParentCostIsDecreased;
 
 	return hr;
 }
