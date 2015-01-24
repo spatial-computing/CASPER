@@ -246,7 +246,7 @@ EdgeDirtyState NAEdge::HowDirty(EvcSolverMethod method, double minPop2Route, boo
 		{
 			reservations->dirtyState = EdgeDirtyState::CleanState;
 			double costchange = (GetCost(minPop2Route, method) / CleanCost) - 1.0;
-			if (costchange > 0.02) reservations->dirtyState = EdgeDirtyState::CostIncreased;
+			if (costchange > 0.01) reservations->dirtyState = EdgeDirtyState::CostIncreased;
 			if (costchange < -FLT_EPSILON) reservations->dirtyState = EdgeDirtyState::CostDecreased;
 		}
 	}
@@ -347,7 +347,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
 
 void NAEdgeCache::CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver)
 {
-	for (NAEdgeTableItr cit = cacheAlong->begin(); cit != cacheAlong->end(); cit++) cit->second->SetClean(solver, minPop2Route);
+	for (NAEdgeTableItr cit = cacheAlong->begin();   cit != cacheAlong->end();   cit++) cit->second->SetClean(solver, minPop2Route);
 	for (NAEdgeTableItr cit = cacheAgainst->begin(); cit != cacheAgainst->end(); cit++) cit->second->SetClean(solver, minPop2Route);
 }
 

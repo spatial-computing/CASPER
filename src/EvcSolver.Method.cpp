@@ -157,10 +157,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					finalVertex = nullptr;
 					foundRestrictedSafezone = false;
 
-					// reduce the effect of previous CASPER loop heap extract for the purpose of dirty edge ratio. This will encourage more CARMA loops.
-					sumVisitedDirtyEdge *= 0.9;
-					sumVisitedEdge      *= 0.9;
-
 					// Continue traversing the network while the heap has remaining junctions in it
 					// this is the actual Dijkstra code with the Fibonacci Heap
 					while (!heap.empty())
@@ -428,10 +424,19 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
 		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, removedDirty, minPop2Route, solverMethod);
 
+		/// TODO idea: would be nice to pre-add dirty edges to heap with their old clean parents instead of checking it during loop
+
 		// prepare and insert safe zone vertices into the heap
 		for (const auto & z : *safeZoneList)
+		{
 			if (FAILED(hr = PrepareVerticesForHeap(z.second->Vertex, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, solverMethod, 0.0, 0.0, QueryDirection::Forward))) return hr;
-		for (const auto & h : readyEdges) heap.Insert(h);
+		}
+		for (const auto & h : readyEdges)
+		{
+			// since this turns out to be a safe zone edge we should force the previous edge to be null in the tree
+			h->TreePrevious = nullptr;
+			heap.Insert(h);
+		}
 
 		// Now insert leaf edges in heap like the destination edges
 		// do I have to insert leafs even if DSPT is off? It does not matter cause closedList is cleaned and hence all leafs will be removed anyway.
@@ -506,9 +511,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 
 				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, solverMethod);
-				if (ShouldCARMACheckForDecreasedCost && closedList->Exist(currentEdge, NAEdgeMapGeneration::OldGen))
+				if (closedList->Exist(currentEdge, NAEdgeMapGeneration::OldGen))
 				{
-					/// if (myVertex->ParentCostIsDecreased)
+					if (ShouldCARMACheckForDecreasedCost)
 					{
 						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) return hr;
 						EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
