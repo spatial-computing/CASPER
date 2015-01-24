@@ -156,6 +156,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 					BetterSafeZone = nullptr;
 					finalVertex = nullptr;
 					foundRestrictedSafezone = false;
+					
+					// reduce the effect of previous CASPER loop heap extract for the purpose of dirty edge ratio. This will encourage more CARMA loops.
+					sumVisitedDirtyEdge = (unsigned int)(sumVisitedDirtyEdge * 0.8);
+					sumVisitedEdge = (size_t)(sumVisitedEdge * 0.8);
 
 					// Continue traversing the network while the heap has remaining junctions in it
 					// this is the actual Dijkstra code with the Fibonacci Heap
@@ -372,7 +376,8 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	unsigned int CARMAExtractCount = 0;
 	ArrayList<NAEdgePtr> * adj = nullptr;
 	ATL::CString statusMsg;
-	auto removedDirty = std::shared_ptr<NAEdgeContainer>(new NAEdgeContainer(1000));
+	auto removedDirty = std::shared_ptr<NAEdgeContainer>(new NAEdgeContainer(10000));
+	std::vector<NAEdgePtr> removedDirtyVector; removedDirtyVector.reserve(10000);
 	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseFinalCost, Evacuee::ReverseEvacuationCost };
 
 	// keeping reachable evacuees in a new hashtable for better access
@@ -422,9 +427,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 
 		// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
 		// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
-		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, removedDirty, minPop2Route, solverMethod);
+		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, removedDirty, removedDirtyVector, minPop2Route, solverMethod);
 
 		/// TODO idea: would be nice to pre-add dirty edges to heap with their old clean parents instead of checking it during loop
+		if (FAILED(hr = FindDirtyEdgesWithACleanParent(ecache, vcache, ipNetworkQuery, closedList, leafs, removedDirtyVector))) return hr;
 
 		// prepare and insert safe zone vertices into the heap
 		for (const auto & z : *safeZoneList)
@@ -456,12 +462,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		{
 			// Remove the next junction EID from the top of the queue
 			myEdge = heap.DeleteMin();
-			_ASSERT_EXPR(!closedList->Exist(myEdge), L"CARMA closedList violation happened");
+			_ASSERT_EXPR(!closedList->Exist(myEdge), L"CARMA closedList violation");
 			if (FAILED(hr = closedList->Insert(myEdge)))
 			{
 				// closedList violation happened
-				pMessages->AddError(-myEdge->EID, ATL::CComBSTR(L"CARMA ClosedList Violation Error."));
-				return ATL::AtlReportError(this->GetObjectCLSID(), _T("CARMA ClosedList Violation Error."), IID_INASolver);
+				pMessages->AddError(-myEdge->EID, ATL::CComBSTR(L"CARMA ClosedList Violation."));
+				return ATL::AtlReportError(this->GetObjectCLSID(), _T("CARMA ClosedList Violation."), IID_INASolver);
 			}
 			myVertex = myEdge->ToVertex;
 
@@ -528,17 +534,17 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 				{
 					if (closedList->Exist(currentEdge, NAEdgeMapGeneration::NewGen))
 					{
-						// Maybe sima khanum bug (issue #8) is from here ... don't change the edge parent until you're sure it's the better parent
-						neighbor = currentEdge->ToVertex;
-						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) return hr;
-						// EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID); // == neighbor->GVal ??
-						if (currentEdge->ToVertex->GVal < neighbor->GVal)
-						{
-							closedList->Erase(currentEdge, NAEdgeMapGeneration::NewGen);
-							heap.Insert(currentEdge);
-						}
-						// undo whatever PrepareUnvisitedVertexForHeap did to currentEdge
-						else neighbor->SetBehindEdge(currentEdge);
+						////// Maybe sima khanum bug (issue #8) is from here ... don't change the edge parent until you're sure it's the better parent
+						////neighbor = currentEdge->ToVertex;
+						////if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) return hr;
+						////// EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID); // == neighbor->GVal ??
+						////if (currentEdge->ToVertex->GVal < neighbor->GVal)
+						////{
+						////	closedList->Erase(currentEdge, NAEdgeMapGeneration::NewGen);
+						////	heap.Insert(currentEdge);
+						////}
+						////// undo whatever PrepareUnvisitedVertexForHeap did to currentEdge
+						////else neighbor->SetBehindEdge(currentEdge);
 					}
 					else
 					{
@@ -556,7 +562,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 						}
 						else // unvisited vertex. create new and insert into heap
 						{
-							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, removedDirty->Exist(currentEdge)))) return hr;
+							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false /*removedDirty->Exist(currentEdge)*/))) return hr;
 							heap.Insert(currentEdge);
 						}
 					}
@@ -597,13 +603,15 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	return hr;
 }
 
-void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_ptr<NAEdgeContainer> oldLeafs, std::shared_ptr<NAEdgeContainer> removedDirty, double minPop2Route, EvcSolverMethod method) const
+void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_ptr<NAEdgeContainer> oldLeafs, std::shared_ptr<NAEdgeContainer> removedDirty, std::vector<NAEdgePtr> & removedDirtyVector,
+	double minPop2Route, EvcSolverMethod method) const
 {
 	std::vector<NAEdgePtr> dirtyVisited;
 	NAEdgeIterator j;
 	dirtyVisited.reserve(closedList->Size());
 	auto tempLeafs = std::shared_ptr<NAEdgeContainer>(new DEBUG_NEW_PLACEMENT NAEdgeContainer(100));
 	removedDirty->Clear();
+	removedDirtyVector.clear();
 
 	closedList->GetDirtyEdges(&dirtyVisited, minPop2Route, method);
 
@@ -611,7 +619,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 		if (closedList->Exist(leaf))
 		{
 			while (leaf->TreePrevious && leaf->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) leaf = leaf->TreePrevious;
-			NonRecursiveMarkAndRemove(leaf, closedList, removedDirty);
+			NonRecursiveMarkAndRemove(leaf, closedList, removedDirty, removedDirtyVector);
 
 			// What is the definition of a leaf edge? An edge that has a previous (so it's not a destination edge) and has at least one dirty child edge.
 			// So the usual for loop is going to insert destination dirty edges and the rest are in the leafs list.
@@ -650,7 +658,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 	oldLeafs->Insert(tempLeafs);
 }
 
-void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList, std::shared_ptr<NAEdgeContainer> removedDirty) const
+void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList, std::shared_ptr<NAEdgeContainer> removedDirty, std::vector<NAEdgePtr> & removedDirtyVector) const
 {
 	NAEdgePtr e = nullptr;
 	std::stack<NAEdgePtr> subtree;
@@ -661,6 +669,7 @@ void EvcSolver::NonRecursiveMarkAndRemove(NAEdgePtr head, NAEdgeMap * closedList
 		subtree.pop();
 		closedList->Erase(e);
 		removedDirty->Insert(e);
+		removedDirtyVector.push_back(e);
 		for (const auto & i : e->TreeNext)
 		{
 			i->TreePrevious = nullptr;
@@ -733,6 +742,45 @@ HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<N
 			if (FAILED(hr = InsertLeafEdgeToHeap(ipNetworkQuery, vcache, heap, leaf))) return hr;
 			#endif
 		}
+	}
+	return hr;
+}
+
+HRESULT FindDirtyEdgesWithACleanParent(std::shared_ptr<NAEdgeCache> ecache, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAEdgeMapTwoGen> closedList,
+	std::shared_ptr<NAEdgeContainer> Leafs, std::vector<NAEdgePtr> & removedDirty)
+{
+	HRESULT hr = S_OK;
+	NAVertexPtr toVertex = nullptr;
+	ArrayList<NAEdgePtr> * adj = nullptr;
+	double betterH, tempH;
+	INetworkElementPtr te;
+	NAEdgePtr betterParent = nullptr;
+
+	if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &te))) return hr;
+	INetworkJunctionPtr t = te;
+
+	for (const auto e : removedDirty)
+	{
+		betterParent = nullptr;
+		betterH = FLT_MAX;
+
+		if (FAILED(hr = e->NetEdge->QueryJunctions(nullptr, t))) return hr;
+		toVertex = vcache->New(t, ipNetworkQuery);
+		if (FAILED(hr = ecache->QueryAdjacencies(toVertex, e, QueryDirection::Forward, &adj))) return hr;
+
+		// Loop through all adjacent edges and update their cost value
+		for (const auto & tempEdge : *adj)
+		{
+			// it has to be present in closed list from previous CARMA loop
+			// it has to have a previous otherwise it cannot be a leaf
+			if (tempEdge->TreePrevious && closedList->Exist(tempEdge, NAEdgeMapGeneration::OldGen))
+			{
+				tempH = toVertex->GetH(tempEdge->EID);
+				if (!betterParent || tempH < betterH) { betterParent = tempEdge; betterH = tempH; }
+			}
+		}
+		// for this border dirty edge we add the best parent it has
+		if (betterParent) Leafs->Insert(betterParent);
 	}
 	return hr;
 }
