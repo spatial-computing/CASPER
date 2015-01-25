@@ -246,7 +246,7 @@ EdgeDirtyState NAEdge::HowDirty(EvcSolverMethod method, double minPop2Route, boo
 		{
 			reservations->dirtyState = EdgeDirtyState::CleanState;
 			double costchange = (GetCost(minPop2Route, method) / CleanCost) - 1.0;
-			if (costchange >    0.01     ) reservations->dirtyState = EdgeDirtyState::CostIncreased;
+			if (costchange >  FLT_EPSILON) reservations->dirtyState = EdgeDirtyState::CostIncreased;
 			if (costchange < -FLT_EPSILON) reservations->dirtyState = EdgeDirtyState::CostDecreased;
 		}
 	}
@@ -269,7 +269,7 @@ void NAEdge::AddReservation(EvcPath * path, EvcSolverMethod method, bool delayed
 	reservations->AddReservation(population, path);
 
 	// this would mark the edge as dirty if only 1 one person changes it's cost (on top of the already reserved pop)
-	if (!delayedDirtyState) HowDirty(method);
+	if (!delayedDirtyState) HowDirty(method, 1.0, true);
 }
 
 void NAEdge::RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState)
@@ -442,14 +442,10 @@ const NAEdgePtr NAEdgeMap::Find(const NAEdgePtr edge) const
 	return o;
 }
 
-void NAEdgeMap::GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const
+void NAEdgeMap::GetDirtyEdges(std::vector<NAEdgePtr> & dirty) const
 {
-	NAEdgeTableItr i;
-	if(dirty)
-	{
-		for (i = cacheAlong->begin();   i != cacheAlong->end();   i++) if (i->second->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) dirty->push_back(i->second);
-		for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) if (i->second->HowDirty(method, minPop2Route) != EdgeDirtyState::CleanState) dirty->push_back(i->second);
-	}
+	for (const auto i : *cacheAlong)   if (i.second->GetDirtyState() != EdgeDirtyState::CleanState) dirty.push_back(i.second);
+	for (const auto i : *cacheAgainst) if (i.second->GetDirtyState() != EdgeDirtyState::CleanState) dirty.push_back(i.second);
 }
 
 void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
@@ -464,9 +460,8 @@ void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
 
 void NAEdgeMap::CallHowDirty(EvcSolverMethod method, double minPop2Route, bool exhaustive)
 {
-	NAEdgeTableItr i;
-	for (i = cacheAlong->begin(); i != cacheAlong->end(); i++) i->second->HowDirty(method, minPop2Route, exhaustive);
-	for (i = cacheAgainst->begin(); i != cacheAgainst->end(); i++) i->second->HowDirty(method, minPop2Route, exhaustive);
+	for (const auto & i : *cacheAlong  ) i.second->HowDirty(method, minPop2Route, exhaustive);
+	for (const auto & i : *cacheAgainst) i.second->HowDirty(method, minPop2Route, exhaustive);
 }
 
 HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
@@ -564,7 +559,8 @@ bool NAEdgeContainer::Exist(INetworkEdgePtr edge) const
 
 void NAEdgeContainer::Insert(std::shared_ptr<NAEdgeContainer> clone)
 {
-	for (NAEdgeIterator i = clone->cache->begin(); i != clone->cache->end(); i++) cache->insert(NAEdgeContainerPair(i->first, i->second));
+	for (const auto & e : *clone) Insert(e.first, e.second);
+	// for (NAEdgeIterator i = clone->cache->begin(); i != clone->cache->end(); i++) cache->insert(NAEdgeContainerPair(i->first, i->second));
 }
 
 HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
@@ -580,16 +576,8 @@ HRESULT NAEdgeContainer::Insert(INetworkEdgePtr edge)
 HRESULT NAEdgeContainer::Insert(long eid, unsigned char dir)
 {
 	std::unordered_map<long, unsigned char>::iterator i = cache->find(eid);
-	if (i == cache->end())
-	{
-		cache->insert(NAEdgeContainerPair(eid, dir));
-		size++;
-	}
-	else if ((i->second & dir) == 0)
-	{
-		size++;
-		i->second |= dir;
-	}
+	if (i == cache->end()) cache->insert(NAEdgeContainerPair(eid, dir));
+	else i->second |= dir;
 	return S_OK;
 }
 
@@ -621,11 +609,10 @@ HRESULT NAEdgeContainer::Remove(INetworkEdgePtr edge)
 HRESULT NAEdgeContainer::Remove(long eid, unsigned char dir)
 {
 	std::unordered_map<long, unsigned char>::iterator i = cache->find(eid);
-	if ((i != cache->end()) && ((i->second & dir) != 0))
+	if (i != cache->end())
 	{
 		i->second &= ~dir;
 		if (i->second == 0) cache->erase(i->first);
-		size--;
 	}
 	return S_OK;
 }

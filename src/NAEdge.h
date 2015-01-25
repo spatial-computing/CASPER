@@ -61,6 +61,7 @@ public:
 	ArrayList<NAEdge *> AdjacentForward;
 	ArrayList<NAEdge *> AdjacentBackward;
 
+	EdgeDirtyState HowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
 	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = nullptr) const;
 	double GetCurrentCost(EvcSolverMethod method = EvcSolverMethod::CASPERSolver) const;
 	double LeftCapacity() const;
@@ -74,7 +75,7 @@ public:
 	NAEdge(const NAEdge & cpy);
 	NAEdge & operator=(const NAEdge &) = delete;
 
-	EdgeDirtyState HowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
+	inline EdgeDirtyState GetDirtyState() const { return reservations->dirtyState; }
 	inline void SetClean(EvcSolverMethod method, double minPop2Route);
 	inline double GetCleanCost() const { return CleanCost; }
 	float GetReservedPop() const { return reservations->ReservedPop; }
@@ -144,7 +145,7 @@ public:
 	}
 	
 	void CallHowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
-	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const;
+	void GetDirtyEdges(std::vector<NAEdgePtr> & dirty) const;
 	void Erase(NAEdgePtr edge) {        Erase(edge->EID, edge->Direction)  ; }
 	bool Exist(NAEdgePtr edge) { return Exist(edge->EID, edge->Direction)  ; }
 	void Clear(bool destroyTreePrevious = false);
@@ -178,12 +179,6 @@ public:
 		delete newGen;
 	}
 
-	void GetDirtyEdges(std::vector<NAEdgePtr> * dirty, double minPop2Route, EvcSolverMethod method) const
-	{
-		oldGen->GetDirtyEdges(dirty, minPop2Route, method);
-		newGen->GetDirtyEdges(dirty, minPop2Route, method);
-	}
-
 	void MarkAllAsOldGen();
 	bool Exist(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens) { return Exist(edge->EID, edge->Direction, gen); }
 	void Erase(NAEdgePtr edge, NAEdgeMapGeneration gen = NAEdgeMapGeneration::AllGens);
@@ -200,17 +195,14 @@ class NAEdgeContainer
 {
 private:
 	std::unordered_map<long, unsigned char> * cache;
-	size_t size;
 
 public:
 	NAEdgeContainer(const NAEdgeContainer & that) = delete;
 	NAEdgeContainer & operator=(const NAEdgeContainer &) = delete;
-	size_t Size() const { return size; }
 
 	NAEdgeContainer(size_t capacity)
 	{
 		cache = new DEBUG_NEW_PLACEMENT std::unordered_map<long, unsigned char>(capacity);
-		size = 0;
 	}
 
 	virtual ~NAEdgeContainer(void)
@@ -222,7 +214,7 @@ public:
 	inline  NAEdgeIterator begin() { return cache->begin(); }
 	inline  NAEdgeIterator end()   { return cache->end()  ; }
 	HRESULT Insert(NAEdgePtr edge) { return Insert(edge->EID, edge->Direction); }
-	inline void Clear() { cache->clear(); size = 0; }
+	inline void Clear() { cache->clear(); }
 	HRESULT Insert(INetworkEdgePtr edge);
 	HRESULT Insert(long eid, esriNetworkEdgeDirection dir);
 	HRESULT Insert(long eid, unsigned char dir);
