@@ -310,14 +310,13 @@ private:
 		    std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
 	HRESULT DeterminMinimumPop2Route(std::shared_ptr<EvacueeList>, INetworkDatasetPtr, double &, bool &) const;
 	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &) const;
-	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, std::shared_ptr<NAEdgeContainer>, std::vector<NAEdgePtr> &) const;
+	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, std::shared_ptr<NAEdgeContainer>, std::vector<NAEdgePtr> &, bool &) const;
 	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, std::vector<NAEdgePtr> &) const;
 	bool    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	void    UpdatePeakMemoryUsage();
 
 	esriNAOutputLineType	m_outputLineType;
 	bool					m_bPersistDirty;
-	bool					ShouldCARMACheckForDecreasedCost;
 	long					costAttributeID;
 	long					capAttributeID;
 	INAStreetDirectionsAgentPtr pStreetAgent;

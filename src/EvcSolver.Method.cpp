@@ -48,7 +48,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	CARMASort carmaSortCriteria = this->CarmaSortCriteria;
 	auto detachedPaths = std::shared_ptr<std::vector<EvcPathPtr>>(new DEBUG_NEW_PLACEMENT std::vector<EvcPathPtr>());
 	CARMAExtractCounts.clear();
-	ShouldCARMACheckForDecreasedCost = false;
 
 	switch (solverMethod)
 	{
@@ -268,7 +267,6 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
 		if (NumberOfEvacueesInIteration > 0)
 		{
-			ShouldCARMACheckForDecreasedCost = true;
 			carmaSortCriteria = CARMASort::ReverseFinalCost;
 			EffectiveIterationRatio.push_back(pow(double(NumberOfEvacueesInIteration) / AllEvacuees->size(), 1.0 / GlobalEvcCostAtIteration.size()));
 		}
@@ -376,6 +374,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	unsigned int CARMAExtractCount = 0;
 	ArrayList<NAEdgePtr> * adj = nullptr;
 	ATL::CString statusMsg;
+	bool ShouldCARMACheckForDecreasedCost = false;
 	std::vector<NAEdgePtr> removedDirty; removedDirty.reserve(10000);
 	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] = { Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseFinalCost, Evacuee::ReverseEvacuationCost };
 
@@ -424,12 +423,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		// generally speaking we use FullSPT if the user wants it or if the mimPop2Route has changed.
 		// if the minPop has changed it means pretty much all edges are dirty and there is no point checking them or do DSPT.
 		// later in the code we also check if there are too many dirty edges and in that case we also revert back to FullSPT.
-		if (ThreeGenCARMA == VARIANT_FALSE || minPop2Route > prevMinPop2Route) closedList->Clear(NAEdgeMapGeneration::AllGens); 
+		if (ThreeGenCARMA == VARIANT_FALSE || minPop2Route != prevMinPop2Route) closedList->Clear(NAEdgeMapGeneration::AllGens); 
 		else closedList->MarkAllAsOldGen(); // DSPT option
 
 		// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
 		// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
-		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, removedDirty);
+		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, removedDirty, ShouldCARMACheckForDecreasedCost);
 
 		/// TODO idea: would be nice to pre-add dirty edges to heap with their old clean parents instead of checking it during loop
 		if (FAILED(hr = FindDirtyEdgesWithACleanParent(ecache, vcache, ipNetworkQuery, closedList, leafs, removedDirty))) return hr;
@@ -460,7 +459,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		{
 			// Remove the next junction EID from the top of the queue
 			myEdge = heap.DeleteMin();
-			_ASSERT_EXPR(!closedList->Exist(myEdge, NAEdgeMapGeneration::NewGen), L"CARMA closedList violation");
+			_ASSERT_EXPR(!closedList->Exist(myEdge), L"CARMA closedList violation");
 			if (FAILED(hr = closedList->Insert(myEdge)))
 			{
 				// closedList violation happened
@@ -574,7 +573,6 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	// re-created parts of the tree. This is still OK since we check previous edges are re-discovered again.
 	/// we do edge cleanup during carma heap extracts now
 	/// ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod);
-	ShouldCARMACheckForDecreasedCost = false;
 
 	#ifdef TRACE
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
@@ -585,7 +583,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	return hr;
 }
 
-void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_ptr<NAEdgeContainer> oldLeafs, std::vector<NAEdgePtr> & removedDirty) const
+void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_ptr<NAEdgeContainer> oldLeafs, std::vector<NAEdgePtr> & removedDirty, bool & ShouldCARMACheckForDecreasedCost) const
 {
 	std::vector<NAEdgePtr> dirtyVisited;
 	NAEdgeIterator j;
@@ -593,12 +591,15 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 	dirtyVisited.reserve(closedList->Size() / 2);
 	auto tempLeafs = std::shared_ptr<NAEdgeContainer>(new DEBUG_NEW_PLACEMENT NAEdgeContainer(1000));
 	removedDirty.clear();
+	ShouldCARMACheckForDecreasedCost = false;
 
 	// the assumption here is that the minPop2Route has not changhes since last carma loop
 	// so only the edges that have recently been used in a path are dirty. so no need for a howdirty call. just a getdirtystate call is enough.
 	closedList->GetDirtyEdges(dirtyVisited);
 
 	for (const auto & d : dirtyVisited)
+	{
+		ShouldCARMACheckForDecreasedCost |= d->GetDirtyState() == EdgeDirtyState::CostDecreased;
 		if (closedList->Exist(d))
 		{
 			leaf = d;
@@ -609,7 +610,7 @@ void EvcSolver::MarkDirtyEdgesAsUnVisited(NAEdgeMap * closedList, std::shared_pt
 			// So the usual for loop is going to insert destination dirty edges and the rest are in the leafs list.
 			tempLeafs->Insert(leaf);
 		}
-
+	}
 	// we need to decide right here whether it's a good idea to move forward with DSPT or should we fall back to FullSPT
 	/// TODO this is experimental. work on it!
 	////if (removedDirty.size() >= 2 * closedList->Size())
@@ -743,7 +744,11 @@ HRESULT FindDirtyEdgesWithACleanParent(std::shared_ptr<NAEdgeCache> ecache, std:
 			}
 		}
 		// for this border dirty edge we add the best parent it has
-		if (betterParent) Leafs->Insert(betterParent);
+		if (betterParent)
+		{
+			Leafs->Insert(betterParent);
+			closedList->Erase(betterParent, NAEdgeMapGeneration::OldGen);
+		}
 	}
 	return hr;
 }
