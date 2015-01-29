@@ -306,8 +306,6 @@ private:
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
-	HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, std::shared_ptr<NAEdgeCache> ecache,
-		    std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist = true) const;
 	HRESULT DeterminMinimumPop2Route(std::shared_ptr<EvacueeList>, INetworkDatasetPtr, double &, bool &) const;
 	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, std::shared_ptr<NAEdgeContainer>, std::vector<NAEdgePtr> &, bool &) const;
@@ -391,10 +389,8 @@ private:
 };
 
 // Utility functions
-HRESULT FindDirtyEdgesWithACleanParent(std::shared_ptr<NAEdgeCache> ecache, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAEdgeMapTwoGen> closedList,
-	std::shared_ptr<NAEdgeContainer> Leafs, std::vector<NAEdgePtr> & removedDirty);
-double GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);
-
-HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, NAEdgeMap * closedList, std::vector<NAEdgePtr> & readyEdges, double pop,
-							   EvcSolverMethod solverMethod, double selfishRatio, double MaxEvacueeCostSoFar, QueryDirection dir);
+HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr, NAEdgePtr edge, NAEdgePtr prevEdge, double, NAVertexPtr, std::shared_ptr<NAEdgeCache>, std::shared_ptr<NAEdgeMapTwoGen>, std::shared_ptr<NAVertexCache>, INetworkQueryPtr, bool checkOldClosedlist = true);
+HRESULT FindDirtyEdgesWithACleanParent(std::shared_ptr<NAEdgeCache>, std::shared_ptr<NAVertexCache>, INetworkQueryPtr, std::shared_ptr<NAEdgeMapTwoGen>, std::shared_ptr<NAEdgeContainer> Leafs, std::vector<NAEdgePtr> & removedDirty);
+double  GetUnitPerDay(esriNetworkAttributeUnits unit, double assumedSpeed);
+HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>, std::shared_ptr<NAEdgeCache>, NAEdgeMap *, std::vector<NAEdgePtr> &, double pop, EvcSolverMethod, double selfishRatio, double MaxEvacueeCostSoFar, QueryDirection);
 HRESULT InsertLeafEdgesToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & heap, std::shared_ptr<NAEdgeContainer> leafs);

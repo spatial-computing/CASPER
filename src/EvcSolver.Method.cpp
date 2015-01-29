@@ -1,6 +1,6 @@
 // ===============================================================================================
 // Evacuation Solver: CASPER implementation
-// Description :Core of the CASPER algorithm implementation
+// Description: Core of the CASPER algorithm implementation
 //
 // Copyright (C) 2014 Kaveh Shahabi
 // Distributed under the Apache Software License, Version 2.0. (See accompanying file LICENSE.txt)
@@ -366,7 +366,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	NAVertexPtr myVertex = nullptr;
 	NAEdgePtr myEdge = nullptr;
 	INetworkElementPtr ipJunctionElement = nullptr;
-	double newCost, EdgeCostToBeat, SearchRadius, prevMinPop2Route = minPop2Route;
+	double newCost, SearchRadius, prevMinPop2Route = minPop2Route;
 	VARIANT_BOOL keepGoing;
 	INetworkJunctionPtr ipCurrentJunction = nullptr;
 	std::vector<NAEdgePtr> readyEdges;
@@ -430,7 +430,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
 		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, removedDirty, ShouldCARMACheckForDecreasedCost);
 
-		/// TODO idea: would be nice to pre-add dirty edges to heap with their old clean parents instead of checking it during loop
+		// pre-add dirty edges to heap with their old clean parents instead of checking it during loop
 		if (FAILED(hr = FindDirtyEdgesWithACleanParent(ecache, vcache, ipNetworkQuery, closedList, leafs, removedDirty))) return hr;
 
 		// prepare and insert safe zone vertices into the heap
@@ -516,10 +516,12 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 				{
 					if (ShouldCARMACheckForDecreasedCost)
 					{
-						if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false))) return hr;
-						EdgeCostToBeat = currentEdge->ToVertex->GetH(currentEdge->EID);
-						if (currentEdge->ToVertex->GVal < EdgeCostToBeat)
+						neighbor = vcache->New(ipCurrentJunction, ipNetworkQuery);
+						if (newCost < neighbor->GetH(currentEdge->EID))
 						{
+							neighbor->SetBehindEdge(currentEdge);
+							neighbor->GVal = newCost;
+							neighbor->Previous = myVertex;
 							closedList->Erase(currentEdge, NAEdgeMapGeneration::OldGen);
 							heap.Insert(currentEdge);
 						}
@@ -542,7 +544,10 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 						}
 						else // unvisited vertex. create new and insert into heap
 						{
-							if (FAILED(hr = PrepareUnvisitedVertexForHeap(ipCurrentJunction, currentEdge, myEdge, newCost - myVertex->GVal, myVertex, ecache, closedList, vcache, ipNetworkQuery, false /*removedDirty->Exist(currentEdge)*/))) return hr;
+							neighbor = vcache->New(ipCurrentJunction, ipNetworkQuery);
+							neighbor->SetBehindEdge(currentEdge);
+							neighbor->GVal = newCost;
+							neighbor->Previous = myVertex;
 							heap.Insert(currentEdge);
 						}
 					}
@@ -568,12 +573,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	std::sort(SortedEvacuees->begin(), SortedEvacuees->end(), SortFunctions[carmaSortCriteria]);
 	UpdatePeakMemoryUsage();
 	closedSize = closedList->Size();
-
-	// Set graph as having all clean edges. Here we set all edges as clean eventhough we only
-	// re-created parts of the tree. This is still OK since we check previous edges are re-discovered again.
-	/// we do edge cleanup during carma heap extracts now
-	/// ecache->CleanAllEdgesAndRelease(minPop2Route, this->solverMethod);
-
+	
 	#ifdef TRACE
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 	f << "CARMA visited edges = " << closedSize << std::endl;
@@ -750,62 +750,6 @@ HRESULT FindDirtyEdgesWithACleanParent(std::shared_ptr<NAEdgeCache> ecache, std:
 			closedList->Erase(betterParent, NAEdgeMapGeneration::OldGen);
 		}
 	}
-	return hr;
-}
-
-HRESULT EvcSolver::PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, std::shared_ptr<NAEdgeCache> ecache,
-	std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist) const
-{
-	HRESULT hr = S_OK;
-	NAVertexPtr betterMyVertex;
-	NAEdgePtr betterEdge = nullptr;
-	double betterH, tempH;
-	NAVertexPtr tempVertex, neighbor;
-	ArrayList<NAEdgePtr> * adj = nullptr;
-
-	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closed-list
-	// this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
-	tempVertex = vcache->Get(myVertex->EID); 
-	betterH = myVertex->GVal;
-
-	if (checkOldClosedlist)
-	{
-		if (FAILED(hr = ecache->QueryAdjacencies(myVertex, edge, QueryDirection::Forward, &adj))) return hr;
-
-		// Loop through all adjacent edges and update their cost value
-		for (const auto & tempEdge : *adj)
-		{
-			if (!closedList->Exist(tempEdge, NAEdgeMapGeneration::OldGen)) continue; // it has to be present in closed list from previous CARMA loop
-			if (NAEdge::IsEqualNAEdgePtr(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
-
-			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
-			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
-			tempH = tempVertex->GetH(tempEdge->EID);
-			if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
-		}
-	}
-	if (betterEdge)
-	{
-		#ifdef DEBUG
-		if (!checkOldClosedlist)
-		{
-			double CostToBeat = edge->ToVertex->GetH(edge->EID);
-			_ASSERT(CostToBeat - betterH - edgeCost < FLT_EPSILON);
-		}
-		#endif
-
-		betterMyVertex = vcache->New(myVertex->Junction, ipNetworkQuery);
-		betterMyVertex->SetBehindEdge(betterEdge);
-		betterMyVertex->Previous = nullptr;
-		betterMyVertex->GVal = betterH;
-	}
-	else betterMyVertex = myVertex;
-
-	neighbor = vcache->New(junction, ipNetworkQuery);
-	neighbor->SetBehindEdge(edge);
-	neighbor->GVal = edgeCost + betterMyVertex->GVal;
-	neighbor->Previous = betterMyVertex;
-
 	return hr;
 }
 
@@ -1001,4 +945,60 @@ void EvcSolver::UpdatePeakMemoryUsage()
 	PROCESS_MEMORY_COUNTERS pmc;
 	if (!hProcessPeakMemoryUsage) hProcessPeakMemoryUsage = GetCurrentProcess();
 	if (GetProcessMemoryInfo(hProcessPeakMemoryUsage, &pmc, sizeof(pmc))) peakMemoryUsage = max(peakMemoryUsage, pmc.PagefileUsage);
+}
+
+HRESULT PrepareUnvisitedVertexForHeap(INetworkJunctionPtr junction, NAEdgePtr edge, NAEdgePtr prevEdge, double edgeCost, NAVertexPtr myVertex, std::shared_ptr<NAEdgeCache> ecache,
+	std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAVertexCache> vcache, INetworkQueryPtr ipNetworkQuery, bool checkOldClosedlist)
+{
+	HRESULT hr = S_OK;
+	NAVertexPtr betterMyVertex;
+	NAEdgePtr betterEdge = nullptr;
+	double betterH, tempH;
+	NAVertexPtr tempVertex, neighbor;
+	ArrayList<NAEdgePtr> * adj = nullptr;
+
+	// Dynamic CARMA: at this step we have to check if there is any better previous edge for this new one in closed-list
+	// this is the vertex at the center of two edges... we have to check its heuristics to see if the new twempEdge is any better.
+	tempVertex = vcache->Get(myVertex->EID);
+	betterH = myVertex->GVal;
+
+	if (checkOldClosedlist)
+	{
+		if (FAILED(hr = ecache->QueryAdjacencies(myVertex, edge, QueryDirection::Forward, &adj))) return hr;
+
+		// Loop through all adjacent edges and update their cost value
+		for (const auto & tempEdge : *adj)
+		{
+			if (!closedList->Exist(tempEdge, NAEdgeMapGeneration::OldGen)) continue; // it has to be present in closed list from previous CARMA loop
+			if (NAEdge::IsEqualNAEdgePtr(tempEdge, prevEdge)) continue; // it cannot be the same parent edge
+
+			// at this point if the new tempEdge satisfied all restrictions and conditions it means it might be a good pick
+			// as a previous edge depending on the cost which we shall obtain from vertices heuristic table
+			tempH = tempVertex->GetH(tempEdge->EID);
+			if (tempH < betterH) { betterEdge = tempEdge; betterH = tempH; }
+		}
+	}
+	if (betterEdge)
+	{
+		#ifdef DEBUG
+		if (!checkOldClosedlist)
+		{
+			double CostToBeat = edge->ToVertex->GetH(edge->EID);
+			_ASSERT(CostToBeat - betterH - edgeCost < FLT_EPSILON);
+		}
+		#endif
+
+		betterMyVertex = vcache->New(myVertex->Junction, ipNetworkQuery);
+		betterMyVertex->SetBehindEdge(betterEdge);
+		betterMyVertex->Previous = nullptr;
+		betterMyVertex->GVal = betterH;
+	}
+	else betterMyVertex = myVertex;
+
+	neighbor = vcache->New(junction, ipNetworkQuery);
+	neighbor->SetBehindEdge(edge);
+	neighbor->GVal = edgeCost + betterMyVertex->GVal;
+	neighbor->Previous = betterMyVertex;
+
+	return hr;
 }
