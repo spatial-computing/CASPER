@@ -476,6 +476,7 @@ exit 0</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CustomSolver.cpp" />
+    <ClCompile Include="Dynamic.cpp" />
     <ClCompile Include="Evacuee.cpp" />
     <ClCompile Include="EvcSolver.cpp" />
     <ClCompile Include="EvcSolver.GetSet.cpp" />
@@ -493,6 +494,7 @@ exit 0</Command>
     <ClCompile Include="TrafficModel.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dynamic.h" />
     <ClInclude Include="Evacuee.h" />
     <ClInclude Include="EvcSolver.h" />
     <ClInclude Include="EvcSolverPropPage.h" />
