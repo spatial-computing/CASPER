@@ -13,15 +13,17 @@
 
 #include "StdAfx.h"
 
-enum class EdgeDirtyState : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
+enum class EdgeDirtyState      : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
 enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGen = 0x2, AllGens = 0x3 };
-enum class EvacueeStatus : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
-enum class QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };
-enum class FlockingStatus : unsigned char { None = '\0', Init = 'I', Moving = 'M', End = 'E', Stopped = 'S', Collided = 'C' };
+enum class EvacueeStatus       : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
+enum class QueryDirection      : unsigned char { Forward = 0x1, Backward = 0x2 };
+enum class FlockingStatus      : unsigned char { None = '\0', Init = 'I', Moving = 'M', End = 'E', Stopped = 'S', Collided = 'C' };
+enum class EdgeDirection       : unsigned char { None = 0x0, Along = 0x1, Against = 0x2, Both = 0x3 };
 
 [export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC")] enum class EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
 [export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948")] enum class EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3, EXPModel = 0x4 };
 [export, uuid("C46A6356-07A6-473A-B39F-FBB74469201D")] enum class EvacueeGrouping : unsigned char { None = 0x0, Merge = 0x1, Separate = 0x2, MergeSeparate = 0x3 };
+[export, uuid("1B84C35A-9585-49DA-9B81-BB4873E8D331")] enum class DynamicMode     : unsigned char { Disabled = 0x0, Full = 0x1, Smart = 0x2 };
 
 // enum for carma sort setting
 [export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char

@@ -19,6 +19,9 @@
 #define PROJ_ARCH                                   L"x86"
 #endif
 
+#ifndef PROJ_NAME_S
+#define PROJ_NAME_S                                 "CASPER for ArcGIS"
+#endif
 #define PROJ_NAME                                   L"CASPER for ArcGIS"
 #define CS_NAME                                     L"Evacuation Solver"
 #define CS_DISPLAY_NAME                             L"Evacuation Routing"
@@ -31,6 +34,7 @@
 #define CS_ROUTES_NAME						        L"Routes"
 #define CS_EDGES_NAME						        L"EdgeStat"
 #define CS_ROUTEEDGES_NAME  				        L"RouteEdges"
+#define CS_DYNCHANGES_NAME  				        L"DynamicChanges"
 #define CS_FLOCKS_NAME						        L"Flocks"
 
 // Generic Class Definition Field Names
@@ -66,6 +70,17 @@
 #define CS_FIELD_SPEED                              L"Speed"
 #define CS_FIELD_COST                               L"Cost"
 #define CS_FIELD_FLOCKING_STATUS                    L"FlockingStatus"
+
+// Dynamic
+
+#define CS_FIELD_DYNCOST    				        L"CostChangeRatio"
+#define CS_FIELD_DYNCAPACITY   				        L"CapacityChangeRatio"
+#define CS_FIELD_DYNSTARTTIME   			        L"StartingCost"
+#define CS_FIELD_DYNENDTIME   				        L"EndingCost"
+#define CS_FIELD_DYNROADDIR   				        L"EdgeDirection"
+#define CS_FIELD_DYNEVCSTUCK   				        L"EvacueesAreStuck"
+#define CS_FIELD_EDGEDIR_STATUS                     L"EdgeDirection"
+#define CS_FIELD_EVCSTUCK_STATUS                    L"EcavueeStatus"
 
 // EdgeStat
 

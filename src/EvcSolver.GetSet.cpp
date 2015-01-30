@@ -267,6 +267,19 @@ STDMETHODIMP EvcSolver::put_EvacueeGroupingOption(EvacueeGrouping value)
 	return S_OK;
 }
 
+STDMETHODIMP EvcSolver::get_DynamicCASPEROption(DynamicMode * value)
+{
+	*value = CASPERDynamicMode;
+	return S_OK;
+}
+
+STDMETHODIMP EvcSolver::put_DynamicCASPEROption(DynamicMode value)
+{
+	CASPERDynamicMode = value;
+	m_bPersistDirty = true;
+	return S_OK;
+}
+
 STDMETHODIMP EvcSolver::get_CARMASortSetting(CARMASort * value)
 {
 	*value = CarmaSortCriteria;

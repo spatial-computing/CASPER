@@ -104,6 +104,7 @@ public:
 	COMMAND_HANDLER(IDC_EDIT_SELFISH, EN_CHANGE, OnEnChangeEditSelfish)
 	COMMAND_HANDLER(IDC_EDIT_Iterative, EN_CHANGE, OnEnChangeEditIterative)
 	COMMAND_HANDLER(IDC_CMB_GroupOption, CBN_SELCHANGE, OnCbnSelchangeComboEvcOption)
+	COMMAND_HANDLER(IDC_COMBO_DYNMODE, CBN_SELCHANGE, OnCbnSelchangeComboDynMode)
   END_MSG_MAP()
 
   // IPropertyPage
@@ -133,6 +134,7 @@ private:
 
   HWND                    m_hCapCombo;
   HWND                    m_hUTurnCombo;
+  HWND                    m_hcmbdynModeOptions;
   HWND                    m_hCostCombo;
   HWND                    m_hComboMethod;
   HWND                    m_hComboTrafficModel;
@@ -189,4 +191,5 @@ public:
 	LRESULT OnEnChangeEditSelfish(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnEnChangeEditIterative(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 	LRESULT OnCbnSelchangeComboEvcOption(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+	LRESULT OnCbnSelchangeComboDynMode(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };

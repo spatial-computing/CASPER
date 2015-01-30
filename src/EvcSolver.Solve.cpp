@@ -546,6 +546,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	Evacuees->FinilizeGroupings(5.0 * costPerSec); // five seconds diameter for clustering
 
+	// load dynamic changes table
+	ipUnk = nullptr;
+	IFeatureClassPtr ipDynamicTable = nullptr;
+	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipUnk))) return hr;
+	bool DynamicTableExist = ipUnk;
+	if (DynamicTableExist) { if (FAILED(hr = GetNAClassFeature(pNAContext, ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipDynamicTable))) return hr; }
+	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, Evacuees, ecache, CASPERDynamicMode));
+
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
 	tenNanoSec64 = (*((__int64 *) &sysTimeE)) - (*((__int64 *) &sysTimeS));
@@ -562,7 +570,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	hr = S_OK;
 	UpdatePeakMemoryUsage();
 	if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts,
-			ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio))) return hr;
+		ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio, disasterTable))) return hr;
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -571,6 +579,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	tenNanoSec64 = (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS));
 	calcSecCpu = tenNanoSec64 / 10000000.0;
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
+
+	disasterTable = nullptr;
 
 	//******************************************************************************************/
 	// Write output
@@ -1029,6 +1039,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		collisionMsg.Insert(0, _T("Some collisions have been reported at the following intervals: "));
 		pMessages->AddWarning(ATL::CComBSTR(collisionMsg));
+	}
+
+	// check if user wants a dynamic CASPER but we don't have the dynamic change table
+	if (!DynamicTableExist && CASPERDynamicMode != DynamicMode::Disabled)
+	{
+		CASPERDynamicMode = DynamicMode::Disabled;
+		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode but the network analysis layer does not have the DynamicChanges feature class.")));
 	}
 
 	// since vertices inside the cache are still pointing to some edges it's safer to clean them first

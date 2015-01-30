@@ -28,6 +28,7 @@
 #include "NAVertex.h"
 #include "Flocking.h"
 #include "FibonacciHeap.h"
+#include "Dynamic.h"
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -60,6 +61,10 @@ __interface IEvcSolver : IUnknown
 		HRESULT EvacueeGroupingOption([in] EvacueeGrouping value);
 	[propget, helpstring("Gets the Evacuee Grouping Option flag")]
 		HRESULT EvacueeGroupingOption([out, retval] EvacueeGrouping * value);
+	[propput, helpstring("Sets the Dynamic CASPER Option flag")]
+		HRESULT DynamicCASPEROption([in] DynamicMode value);
+	[propget, helpstring("Gets the Dynamic CASPER Option flag")]
+		HRESULT DynamicCASPEROption([out, retval] DynamicMode * value);
 	[propput, helpstring("Sets the 3rd generation carma flag")]
 		HRESULT ThreeGenCARMA([in] VARIANT_BOOL value);
 	[propget, helpstring("Gets the 3rd generation carma flag")]
@@ -152,7 +157,7 @@ public:
 	EvcSolver() :
 		  m_outputLineType(esriNAOutputLineTrueShape),
 		  m_bPersistDirty(false),
-		  c_version(7),
+		  c_version(8),
 		  c_featureRetrievalInterval(500)
 	  {
 	  }
@@ -187,6 +192,8 @@ public:
 	STDMETHOD(get_ExportEdgeStat)(VARIANT_BOOL * value);
 	STDMETHOD(put_EvacueeGroupingOption)(EvacueeGrouping   value);
 	STDMETHOD(get_EvacueeGroupingOption)(EvacueeGrouping * value);
+	STDMETHOD(put_DynamicCASPEROption)(DynamicMode   value);
+	STDMETHOD(get_DynamicCASPEROption)(DynamicMode * value);
 	STDMETHOD(put_SolverMethod)(EvcSolverMethod   value);
 	STDMETHOD(get_SolverMethod)(EvcSolverMethod * value);
 	STDMETHOD(put_CARMASortSetting)(CARMASort   value);
@@ -294,7 +301,7 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, std::shared_ptr<EvacueeList>, std::shared_ptr<NAVertexCache>, std::shared_ptr<NAEdgeCache>,
-		    std::shared_ptr<SafeZoneTable>, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &, std::vector<double> &);
+		    std::shared_ptr<SafeZoneTable>, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &, std::vector<double> &, std::shared_ptr<DynamicDisaster>);
 	HRESULT CARMALoop(INetworkQueryPtr, IStepProgressorPtr, IGPMessages*, ITrackCancel*, std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvacueePtr>>, std::shared_ptr<NAVertexCache>,
 		    std::shared_ptr<NAEdgeCache>, std::shared_ptr<SafeZoneTable>, size_t &, std::shared_ptr<NAEdgeMapTwoGen>, std::shared_ptr<NAEdgeContainer>, std::vector<unsigned int> &, double, double &, bool, CARMASort);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
@@ -302,9 +309,12 @@ private:
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);
 	HRESULT CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
 	HRESULT CreateFlockingCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
+	HRESULT CreateEdgeDirCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
+	HRESULT CreateEvcStuckCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
 	HRESULT AddLocationFields(IFieldsEdit* pFieldsEdit, IDENetworkDataset* pDENDS);
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
 	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
+	HRESULT GetNAClassFeature(INAContext* pContext, BSTR className, IFeatureClass** ppTable);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
 	HRESULT DeterminMinimumPop2Route(std::shared_ptr<EvacueeList>, INetworkDatasetPtr, double &, bool &) const;
 	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &) const;
@@ -335,6 +345,7 @@ private:
 	HANDLE					hProcessPeakMemoryUsage;
 	CARMASort               CarmaSortCriteria;
 	EvacueeGrouping         evacueeGroupingOption;
+	DynamicMode             CASPERDynamicMode;
 
 	VARIANT_BOOL twoWayShareCapacity;
 	VARIANT_BOOL ThreeGenCARMA;

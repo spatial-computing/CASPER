@@ -94,6 +94,15 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		::SendMessage(m_hcmbEvcOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Merge and Seperate")));
 		::SendMessage(m_hcmbEvcOptions, CB_SETCURSEL, (WPARAM)evcOption, NULL);
 
+		// set the flocking profile names
+		DynamicMode dynMode;
+		m_ipEvcSolver->get_DynamicCASPEROption(&dynMode);
+		::SendMessage(m_hcmbdynModeOptions, CB_RESETCONTENT, NULL, NULL);
+		::SendMessage(m_hcmbdynModeOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Disable")));
+		::SendMessage(m_hcmbdynModeOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Full")));
+		::SendMessage(m_hcmbdynModeOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Smart")));
+		::SendMessage(m_hcmbdynModeOptions, CB_SETCURSEL, (WPARAM)dynMode, NULL);
+
 		// set flags
 		VARIANT_BOOL val;
 		m_ipEvcSolver->get_ExportEdgeStat(&val);
@@ -358,6 +367,8 @@ STDMETHODIMP EvcSolverPropPage::QueryObject(VARIANT theObject)
 		if (selectedIndex > -1) ipSolver->put_CARMASortSetting((CARMASort)selectedIndex);
 		selectedIndex = ::SendMessage(m_hcmbEvcOptions, CB_GETCURSEL, NULL, NULL);
 		if (selectedIndex > -1) ipSolver->put_EvacueeGroupingOption((EvacueeGrouping)selectedIndex);
+		selectedIndex = ::SendMessage(m_hcmbdynModeOptions, CB_GETCURSEL, NULL, NULL);
+		if (selectedIndex > -1) ipSolver->put_DynamicCASPEROption((DynamicMode)selectedIndex);
 
 		if ((INASolverSettingsPtr)m_ipEvcSolver)
 		{
@@ -517,6 +528,7 @@ LRESULT EvcSolverPropPage::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam,
 	m_hCmbCarmaSort = GetDlgItem(IDC_COMBO_CarmaSort);
 	m_hcmbEvcOptions = GetDlgItem(IDC_CMB_GroupOption);
 	m_hUTurnCombo = GetDlgItem(IDC_COMBO_UTurn);
+	m_hcmbdynModeOptions = GetDlgItem(IDC_COMBO_DYNMODE);
 
 	// release date label
 	HWND m_hlblRelease = GetDlgItem(IDC_RELEASE);
@@ -732,6 +744,14 @@ LRESULT EvcSolverPropPage::OnCbnSelchangeComboUTurn(WORD /*wNotifyCode*/, WORD /
 }
 
 LRESULT EvcSolverPropPage::OnCbnSelchangeComboEvcOption(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+	SetDirty(TRUE);
+	//refresh property sheet
+	//m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	return S_OK;
+}
+
+LRESULT EvcSolverPropPage::OnCbnSelchangeComboDynMode(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
 	SetDirty(TRUE);
 	//refresh property sheet

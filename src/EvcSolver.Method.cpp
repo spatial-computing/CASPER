@@ -16,7 +16,8 @@
 
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, std::shared_ptr<EvacueeList> AllEvacuees,
 	std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, std::shared_ptr<SafeZoneTable> safeZoneList, double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts,
-	INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone, std::vector<double> & GlobalEvcCostAtIteration, std::vector<double> & EffectiveIterationRatio)
+	INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone, std::vector<double> & GlobalEvcCostAtIteration,
+	std::vector<double> & EffectiveIterationRatio, std::shared_ptr<DynamicDisaster> dynamicDisasters)
 {
 	// creating the heap for the Dijkstra search
 	MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> heap(NAEdge::GetHeapKeyHur);

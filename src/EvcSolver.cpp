@@ -236,6 +236,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	m_PreserveLastStop = VARIANT_FALSE;
 	m_UseTimeWindows = VARIANT_FALSE;
 	evacueeGroupingOption = EvacueeGrouping::None;
+	CASPERDynamicMode = DynamicMode::Smart;
 	VarExportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
@@ -369,6 +370,17 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 		savedVersion = 6;
 	}
 
+	//version 6
+	if (savedVersion >= 8)
+	{
+		if (FAILED(hr = pStm->Read(&CASPERDynamicMode, sizeof(CASPERDynamicMode), &numBytes))) return hr;
+	}
+	else
+	{
+		CASPERDynamicMode = DynamicMode::Disabled;
+		savedVersion = 8;
+	}
+	
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
 	selfishRatio = min(max(selfishRatio, 0.0f), 1.0f);
 	iterateRatio = min(max(iterateRatio, 0.0f), 1.0f);
@@ -415,6 +427,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&selfishRatio, sizeof(selfishRatio), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CarmaSortCriteria, sizeof(CarmaSortCriteria), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&iterateRatio, sizeof(iterateRatio), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&CASPERDynamicMode, sizeof(CASPERDynamicMode), &numBytes))) return hr;
 
 	return S_OK;
 }
@@ -721,6 +734,106 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_BARRIERS_NAME));
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipClassDef);
+
+	//******************************************************************************************/
+	// DynamicChanges class definition
+
+	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
+	ipClassDefEdit = ipClassDef;
+	ipIUID.CreateInstance(CLSID_UID);
+	if (FAILED(hr = ipIUID->put_Value(ATL::CComVariant(L"esriGeoDatabase.Feature")))) return hr;
+	if (FAILED(hr = ipClassDefEdit->putref_ClassCLSID(ipIUID))) return hr;
+
+	// set up coded value domains for the the dynamic changes status values
+	ICodedValueDomainPtr ipCodedValueDomainEdgeDir(CLSID_CodedValueDomain), ipCodedValueDomainEvcStuck(CLSID_CodedValueDomain);
+	CreateEdgeDirCodedValueDomain(ipCodedValueDomainEdgeDir);
+	CreateEvcStuckCodedValueDomain(ipCodedValueDomainEvcStuck);
+
+	ipFields.CreateInstance(CLSID_Fields);
+	ipFieldsEdit = ipFields;
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_OID));
+	ipFieldEdit->put_Type(esriFieldTypeOID);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	{
+		IGeometryDefEditPtr  ipGeoDef(CLSID_GeometryDef);
+
+		ipGeoDef->put_GeometryType(esriGeometryPolygon);
+		ipGeoDef->put_HasM(VARIANT_FALSE);
+		ipGeoDef->put_HasZ(VARIANT_FALSE);
+		ipGeoDef->putref_SpatialReference(pSpatialRef);
+		ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_SHAPE));
+		ipFieldEdit->put_IsNullable(VARIANT_TRUE);
+		ipFieldEdit->put_Type(esriFieldTypeGeometry);
+		ipFieldEdit->putref_GeometryDef(ipGeoDef);
+	}
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNROADDIR));
+	ipFieldEdit->put_Type(esriFieldTypeInteger);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(static_cast<long>(EdgeDirection::Both)));
+	ipFieldEdit->putref_Domain((IDomainPtr)ipCodedValueDomainEdgeDir);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNSTARTTIME));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(0.0));
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNENDTIME));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(-1.0));
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNCOST));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(0.0));
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNCAPACITY));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(0.0));
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNEVCSTUCK));
+	ipFieldEdit->put_Type(esriFieldTypeInteger);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(long(1)));
+	ipFieldEdit->putref_Domain((IDomainPtr)ipCodedValueDomainEvcStuck);
+	ipFieldsEdit->AddField(ipFieldEdit);
+	
+	ipClassDefEdit->putref_Fields(ipFields);
+
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_OID), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeInput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNROADDIR), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNSTARTTIME), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNENDTIME), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNCOST), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNCAPACITY), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNEVCSTUCK), esriNAFieldTypeInput);
+
+	ipClassDefEdit->put_IsInput(VARIANT_TRUE);
+	ipClassDefEdit->put_IsOutput(VARIANT_FALSE);
+
+	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_DYNCHANGES_NAME));
+	ipClassDefinitions->Add(ATL::CComBSTR(CS_DYNCHANGES_NAME), (IUnknownPtr)ipClassDef);
 
 	//******************************************************************************************/
 	// Flocks class definition
@@ -1123,6 +1236,28 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	return hr;
 }
 
+HRESULT EvcSolver::GetNAClassFeature(INAContext* pContext, BSTR className, IFeatureClass** ppTable)
+{
+	if (!pContext || !ppTable) return E_POINTER;
+
+	HRESULT hr;
+	INamedSetPtr ipNamedSet;
+
+	if (FAILED(hr = pContext->get_NAClasses(&ipNamedSet))) return hr;
+
+	IUnknownPtr ipUnk;
+	if (FAILED(hr = ipNamedSet->get_ItemByName(className, &ipUnk))) return hr;
+
+	IFeatureClassPtr ipTable(ipUnk);
+
+	if (!ipTable) return ATL::AtlReportError(GetObjectCLSID(), _T("Context has an invalid NAClass."), IID_INASolver);
+
+	ipTable->AddRef();
+	*ppTable = ipTable;
+
+	return S_OK;
+}
+
 HRESULT EvcSolver::GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable)
 {
 	if (!pContext || !ppTable) return E_POINTER;
@@ -1460,6 +1595,44 @@ HRESULT EvcSolver::CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDo
 
 	value.lVal = esriNAObjectStatusTimeWindowViolation;
 	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Time window violation"));
+
+	return S_OK;
+}
+
+HRESULT EvcSolver::CreateEdgeDirCodedValueDomain(ICodedValueDomain* pCodedValueDomain)
+{
+	if (!pCodedValueDomain) return E_POINTER;
+
+	IDomainPtr(pCodedValueDomain)->put_Name(ATL::CComBSTR(CS_FIELD_EDGEDIR_STATUS));
+	IDomainPtr(pCodedValueDomain)->put_FieldType(esriFieldTypeInteger);
+
+	ATL::CComVariant value(static_cast<long>(EdgeDirection::None));
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"None"));
+
+	value.lVal = static_cast<long>(EdgeDirection::Along);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Along Edge"));
+
+	value.lVal = static_cast<long>(EdgeDirection::Against);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Against Edge"));
+
+	value.lVal = static_cast<long>(EdgeDirection::Both);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Both Directions"));
+
+	return S_OK;
+}
+
+HRESULT EvcSolver::CreateEvcStuckCodedValueDomain(ICodedValueDomain* pCodedValueDomain)
+{
+	if (!pCodedValueDomain) return E_POINTER;
+
+	IDomainPtr(pCodedValueDomain)->put_Name(ATL::CComBSTR(CS_FIELD_EVCSTUCK_STATUS));
+	IDomainPtr(pCodedValueDomain)->put_FieldType(esriFieldTypeInteger);
+
+	ATL::CComVariant value(static_cast<long>(0));
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Keep Moving"));
+
+	value.lVal = static_cast<long>(1);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Stuck"));
 
 	return S_OK;
 }
