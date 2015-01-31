@@ -272,11 +272,26 @@ public:
 		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipAdjacencies))) return;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return;
 		ipCurrentEdge = ipEdgeElement;
+
+		// create cache in network dataset object
+		long SourceCount = 0, sourceID = 0;
+		INetworkDataset2Ptr network(_ipNetworkQuery);
+		INetworkSourcePtr source = nullptr;
+		if (SUCCEEDED(hr = network->get_SourceCount(&SourceCount)))
+		{
+			for (long i = 0; i < SourceCount; ++i)
+			{
+				if (FAILED(hr = network->get_Source(i, &source))) continue;
+				if (FAILED(hr = source->get_ID(&sourceID))) continue;
+				ipNetworkQuery->PopulateIDCache(sourceID);
+			}
+		}
 	}
 
 	virtual ~NAEdgeCache(void)
 	{
 		Clear();
+		ipNetworkQuery->ClearIDCache();
 		delete myTrafficModel;
 		delete cacheAlong;
 		delete cacheAgainst;

@@ -544,15 +544,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		}
 	}
 
-	Evacuees->FinilizeGroupings(5.0 * costPerSec); // five seconds diameter for clustering
-
 	// load dynamic changes table
 	ipUnk = nullptr;
-	IFeatureClassPtr ipDynamicTable = nullptr;
+	ITablePtr ipDynamicTable = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipUnk))) return hr;
 	bool DynamicTableExist = ipUnk;
-	if (DynamicTableExist) { if (FAILED(hr = GetNAClassFeature(pNAContext, ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipDynamicTable))) return hr; }
-	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, Evacuees, ecache, CASPERDynamicMode));
+	if (DynamicTableExist) { if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipDynamicTable))) return hr; }
+	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, CASPERDynamicMode));
+
+	Evacuees->FinilizeGroupings(5.0 * costPerSec, disasterTable->Enabled()); // five seconds diameter for clustering
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -1046,6 +1046,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		CASPERDynamicMode = DynamicMode::Disabled;
 		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode but the network analysis layer does not have the DynamicChanges feature class.")));
+	}
+
+	if (Evacuees->IsSeperationDisabledForDynamicCASPER())
+	{
+		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and evacuee seperation feature. They are not compatible so evacuee seperation has been temporarily disabled.")));
 	}
 
 	// since vertices inside the cache are still pointing to some edges it's safer to clean them first

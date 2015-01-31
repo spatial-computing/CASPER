@@ -130,6 +130,7 @@ using ATL::CRegistryVirtualMachine;
 #include <deque>
 #include <stack>
 #include <unordered_map>
+#include <unordered_set>
 #include <fstream>
 #include <functional>
 #include <memory>

@@ -14,22 +14,26 @@
 #include "Dynamic.h"
 #include "NameConstants.h"
 
-DynamicDisaster::DynamicDisaster(IFeatureClassPtr DynamicChangesTable, std::shared_ptr<EvacueeList> Evacuees, std::shared_ptr<NAEdgeCache> ecache, DynamicMode dynamicMode) :
+DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dynamicMode) :
 	myDynamicMode(dynamicMode), currentTime(0.0)
 {
 	HRESULT hr = S_OK;
 	long count, EdgeDirIndex, StartTimeIndex, EndTimeIndex, CostIndex, CapacityIndex, EvcIndex;
-	IFeatureCursorPtr ipCursor = nullptr;
-	IFeaturePtr ipRow = nullptr;
+	ICursorPtr ipCursor = nullptr;
+	IRowESRI * ipRow = nullptr;
 	VARIANT var;
-	esriGeometryType geoType;
+	INALocationRangesPtr range = nullptr;
+	DynamicChange * item = nullptr;
+	long EdgeCount, JunctionCount, EID, JID;
+	esriNetworkEdgeDirection dir;
+	double fromPosition, toPosition;
 
 	if (!DynamicChangesTable)
 	{
 		hr = E_POINTER;
 		goto END_OF_FUNC;
 	}
-	
+
 	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNROADDIR, &EdgeDirIndex))) goto END_OF_FUNC;
 	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNSTARTTIME, &StartTimeIndex))) goto END_OF_FUNC;
 	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNENDTIME, &EndTimeIndex))) goto END_OF_FUNC;
@@ -37,49 +41,54 @@ DynamicDisaster::DynamicDisaster(IFeatureClassPtr DynamicChangesTable, std::shar
 	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNCAPACITY, &CapacityIndex))) goto END_OF_FUNC;
 	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNEVCSTUCK, &EvcIndex))) goto END_OF_FUNC;
 	if (FAILED(hr = DynamicChangesTable->Search(nullptr, VARIANT_TRUE, &ipCursor))) goto END_OF_FUNC;
-	if (FAILED(hr = DynamicChangesTable->FeatureCount(nullptr, &count))) goto END_OF_FUNC;
+	if (FAILED(hr = DynamicChangesTable->RowCount(nullptr, &count))) goto END_OF_FUNC;
 	allChanges.reserve(count);
 
-	while (ipCursor->NextFeature(&ipRow) == S_OK)
+	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
-		DynamicChange item;
-		IGeometryPtr shape;
+		item = new DEBUG_NEW_PLACEMENT DynamicChange();
 		
 		if (FAILED(hr = ipRow->get_Value(EdgeDirIndex, &var))) goto END_OF_FUNC;
-		item.DisasterDirection = EdgeDirection(var.lVal);
+		item->DisasterDirection = EdgeDirection(var.lVal);
 		if (FAILED(hr = ipRow->get_Value(StartTimeIndex, &var))) goto END_OF_FUNC;
-		item.StartTime = var.dblVal;
+		item->StartTime = var.dblVal;
 		if (FAILED(hr = ipRow->get_Value(EndTimeIndex, &var))) goto END_OF_FUNC;
-		item.EndTime = var.dblVal;
+		item->EndTime = var.dblVal;
 		if (FAILED(hr = ipRow->get_Value(CostIndex, &var))) goto END_OF_FUNC;
-		item.AffectedCostPercentage = var.dblVal;
+		item->AffectedCostPercentage = var.dblVal;
 		if (FAILED(hr = ipRow->get_Value(CapacityIndex, &var))) goto END_OF_FUNC;
-		item.AffectedCapacityPercentage = var.dblVal;
+		item->AffectedCapacityPercentage = var.dblVal;
 		if (FAILED(hr = ipRow->get_Value(EvcIndex, &var))) goto END_OF_FUNC;
-		item.EvacueesAreStuck = var.lVal == 1l;
+		item->EvacueesAreStuck = var.lVal == 1l;
 
-		if (FAILED(hr = ipRow->get_ShapeCopy(&shape))) goto END_OF_FUNC;
-		if (FAILED(hr = shape->get_GeometryType(&geoType))) goto END_OF_FUNC;
-		if (geoType != esriGeometryType::esriGeometryPolygon)
+		// load associated edge and junctions
+		INALocationRangesObjectPtr blob(ipRow);
+		if (!blob) continue; // we only want valid location objects
+		if (FAILED(hr = blob->get_NALocationRanges(&range))) goto END_OF_FUNC;
+		if (FAILED(hr = range->get_EdgeRangeCount(&EdgeCount))) goto END_OF_FUNC;
+		if (FAILED(hr = range->get_JunctionCount(&JunctionCount))) goto END_OF_FUNC;
+		for (long i = 0; i < EdgeCount; ++i)
 		{
-			hr = E_POINTER;
-			goto END_OF_FUNC;
+			if (FAILED(hr = range->QueryEdgeRange(i, &EID, &dir, &fromPosition, &toPosition))) continue;
+			item->EnclosedEdges.insert(std::pair<long, esriNetworkEdgeDirection>(EID, dir));
 		}
-		item.MyGeometry = shape;
-		allChanges.push_back(item);
-	}
+		for (long i = 0; i < JunctionCount; ++i)
+		{
+			if (FAILED(hr = range->QueryJunction(i, &JID))) continue;
+			item->EnclosedVertices.insert(JID);
+		}
 
-	for (auto & item : allChanges) LoadAffectedGraph(item, Evacuees, ecache);
+		// we're done with this item and no error happened. we'll push it to the set and continue to the other one
+		allChanges.push_back(item);
+		item = nullptr;
+	}
 
 END_OF_FUNC:
 	if (FAILED(hr))
 	{
+		if (item) delete item;
+		for (auto p : allChanges) delete p;
 		allChanges.clear();
 		myDynamicMode = DynamicMode::Disabled;
 	}
-}
-
-void DynamicDisaster::LoadAffectedGraph(DynamicChange & item, std::shared_ptr<EvacueeList> Evacuees, std::shared_ptr<NAEdgeCache> ecache)
-{
-
 }

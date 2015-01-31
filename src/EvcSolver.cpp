@@ -156,7 +156,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	IUnknownPtr           ipUnknown;
 	INamedSetPtr          ipNAClassDefinitions;
-	INAClassDefinitionPtr ipEvacueePointsClassDef, ipBarriersClassDef, ipRoutesClassDef, ipZonesClassDef, ipEdgeStatClassDef, ipFlocksClassDef, ipRouteEdgesClassDef;
+	INAClassDefinitionPtr ipEvacueePointsClassDef, ipBarriersClassDef, ipRoutesClassDef, ipZonesClassDef, ipEdgeStatClassDef, ipFlocksClassDef, ipRouteEdgesClassDef, ipDynamicChangeClassDef;
 
 	// Build the class definitions
 	if (FAILED(hr = BuildClassDefinitions(ipNAContextSR, &ipNAClassDefinitions, pNetwork))) return hr;
@@ -169,6 +169,9 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_BARRIERS_NAME), &ipUnknown);
 	ipBarriersClassDef = ipUnknown;
+
+	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipUnknown);
+	ipDynamicChangeClassDef = ipUnknown;
 
 	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_ROUTES_NAME), &ipUnknown);
 	ipRoutesClassDef = ipUnknown;
@@ -199,6 +202,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipBarriersClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipNAClass))) return hr;
+	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipDynamicChangeClassDef, &ipNAClass))) return hr;
+	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_DYNCHANGES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipRoutesClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_ROUTES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipEdgeStatClassDef, &ipNAClass))) return hr;
@@ -741,7 +746,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
 	ipClassDefEdit = ipClassDef;
 	ipIUID.CreateInstance(CLSID_UID);
-	if (FAILED(hr = ipIUID->put_Value(ATL::CComVariant(L"esriGeoDatabase.Feature")))) return hr;
+	if (FAILED(hr = ipIUID->put_Value(ATL::CComVariant(L"esriNetworkAnalyst.NALocationRangesFeature")))) return hr;
 	if (FAILED(hr = ipClassDefEdit->putref_ClassCLSID(ipIUID))) return hr;
 
 	// set up coded value domains for the the dynamic changes status values
@@ -772,6 +777,13 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 		ipFieldEdit->put_Type(esriFieldTypeGeometry);
 		ipFieldEdit->putref_GeometryDef(ipGeoDef);
 	}
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(L"Locations"));
+	ipFieldEdit->put_Type(esriFieldTypeBlob);
+	ipFieldEdit->put_Required(VARIANT_TRUE);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipField.CreateInstance(CLSID_Field);
@@ -822,6 +834,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_OID), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeInput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(L"Locations"), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNROADDIR), esriNAFieldTypeInput);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNSTARTTIME), esriNAFieldTypeInput);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNENDTIME), esriNAFieldTypeInput);
@@ -1234,28 +1247,6 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	*ppDefinitions = ipClassDefinitions;
 
 	return hr;
-}
-
-HRESULT EvcSolver::GetNAClassFeature(INAContext* pContext, BSTR className, IFeatureClass** ppTable)
-{
-	if (!pContext || !ppTable) return E_POINTER;
-
-	HRESULT hr;
-	INamedSetPtr ipNamedSet;
-
-	if (FAILED(hr = pContext->get_NAClasses(&ipNamedSet))) return hr;
-
-	IUnknownPtr ipUnk;
-	if (FAILED(hr = ipNamedSet->get_ItemByName(className, &ipUnk))) return hr;
-
-	IFeatureClassPtr ipTable(ipUnk);
-
-	if (!ipTable) return ATL::AtlReportError(GetObjectCLSID(), _T("Context has an invalid NAClass."), IID_INASolver);
-
-	ipTable->AddRef();
-	*ppTable = ipTable;
-
-	return S_OK;
 }
 
 HRESULT EvcSolver::GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable)

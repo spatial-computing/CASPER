@@ -899,7 +899,7 @@ HRESULT EvcSolver::DeterminMinimumPop2Route(std::shared_ptr<EvacueeList> Evacuee
 	esriNetworkAttributeUnits unit;
 	size_t count = 0;
 	globalMinPop2Route = 0.0;
-	separationRequired = CheckFlag(evacueeGroupingOption, EvacueeGrouping::Separate);
+	separationRequired = Evacuees->IsSeperable();
 
 	if (separationRequired && this->solverMethod == EvcSolverMethod::CASPERSolver)
 	{

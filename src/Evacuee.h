@@ -183,17 +183,21 @@ class EvacueeList : private DoubleGrowingArrayList<EvacueePtr, size_t>
 {
 private:
 	EvacueeGrouping groupingOption;
+	bool SeperationDisabledForDynamicCASPER;
 
 public:
-	EvacueeList(EvacueeGrouping GroupingOption, size_t capacity = 0) : groupingOption(GroupingOption), DoubleGrowingArrayList<EvacueePtr, size_t>(capacity) { }
+	EvacueeList(EvacueeGrouping GroupingOption, size_t capacity = 0) : groupingOption(GroupingOption), SeperationDisabledForDynamicCASPER(false), DoubleGrowingArrayList<EvacueePtr, size_t>(capacity) { }
 	virtual ~EvacueeList();
+	void FinilizeGroupings(double OKDistance, bool DynamicCASPEREnabled);
+
 	EvacueeList(const EvacueeList & that) = delete;
 	EvacueeList & operator=(const EvacueeList &) = delete;
 
+	bool IsSeperable() const { return CheckFlag(groupingOption, EvacueeGrouping::Separate); }
+	bool IsSeperationDisabledForDynamicCASPER() const { return SeperationDisabledForDynamicCASPER; }
 	void Insert(const EvacueePtr & item) { push_back(item); }
-	void FinilizeGroupings(double OKDistance);
-	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator begin() { return DoubleGrowingArrayList<EvacueePtr, size_t>::begin(); }
-	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator end() { return DoubleGrowingArrayList<EvacueePtr, size_t>::end(); }
+	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator begin() const { return DoubleGrowingArrayList<EvacueePtr, size_t>::begin(); }
+	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator end()   const { return DoubleGrowingArrayList<EvacueePtr, size_t>::end();   }
 	size_t size() const { return DoubleGrowingArrayList<EvacueePtr, size_t, 0>::size(); }
 };
 

@@ -307,8 +307,15 @@ void SortedInsertIntoMapOfLists(std::unordered_map<long, std::list<EvacueePtr>> 
 	i->second.insert(j, evc);
 }
 
-void EvacueeList::FinilizeGroupings(double OKDistance)
+void EvacueeList::FinilizeGroupings(double OKDistance, bool DynamicCASPEREnabled)
 {
+	// turn off seperation flag is dynamic capser is enabled
+	if (DynamicCASPEREnabled)
+	{
+		SeperationDisabledForDynamicCASPER = CheckFlag(groupingOption, EvacueeGrouping::Separate);
+		groupingOption &= ~EvacueeGrouping::Separate;
+	}
+
 	if (CheckFlag(groupingOption, EvacueeGrouping::Merge))
 	{
 		std::unordered_map<long, EvacueePtr> VertexEvacuee;
