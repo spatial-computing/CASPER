@@ -28,7 +28,7 @@
 
 // NAClass SubLayer Names
 
-#define CS_BARRIERS_NAME					        L"Barriers"
+#define CS_OldBARRIERS_NAME					        L"Barriers"
 #define CS_EVACUEES_NAME							L"Evacuees"
 #define CS_ZONES_NAME						        L"Zones"
 #define CS_ROUTES_NAME						        L"Routes"

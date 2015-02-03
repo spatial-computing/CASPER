@@ -58,9 +58,9 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 		if (FAILED(hr = ipRow->get_Value(EndTimeIndex, &var))) goto END_OF_FUNC;
 		item->EndTime = var.dblVal;
 		if (FAILED(hr = ipRow->get_Value(CostIndex, &var))) goto END_OF_FUNC;
-		item->AffectedCostPercentage = var.dblVal;
+		item->AffectedCostRate = var.dblVal;
 		if (FAILED(hr = ipRow->get_Value(CapacityIndex, &var))) goto END_OF_FUNC;
-		item->AffectedCapacityPercentage = var.dblVal;
+		item->AffectedCapacityRate = var.dblVal;
 		if (FAILED(hr = ipRow->get_Value(EvcIndex, &var))) goto END_OF_FUNC;
 		item->EvacueesAreStuck = var.lVal == 1l;
 
@@ -82,6 +82,7 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 		}
 
 		// we're done with this item and no error happened. we'll push it to the set and continue to the other one
+		item->check();
 		allChanges.push_back(item);
 		item = nullptr;
 	}

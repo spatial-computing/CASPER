@@ -24,17 +24,20 @@ struct SingleDynamicChange
 	EdgeDirection DisasterDirection;
 	double      StartTime;
 	double      EndTime;
-	double      AffectedCostPercentage;
-	double      AffectedCapacityPercentage;
+	double      AffectedCostRate;
+	double      AffectedCapacityRate;
 	bool        EvacueesAreStuck;
 
 	std::unordered_set<std::pair<long, esriNetworkEdgeDirection>, NAedgePairHasher, NAedgePairEqual> EnclosedEdges;
 	std::unordered_set<long> EnclosedVertices;
 
-	SingleDynamicChange() : DisasterDirection(EdgeDirection::None), StartTime(0.0), EndTime(-1.0), AffectedCostPercentage(0.0), AffectedCapacityPercentage(0.0), EvacueesAreStuck(true) { }
-	SingleDynamicChange(EdgeDirection disasterDirection, double startTime, double endTime, double affectedCostPercentage, double affectedCapacityPercentage, bool evacueesAreStuck) :
-		DisasterDirection(disasterDirection),  StartTime(startTime), EndTime(endTime), AffectedCostPercentage(affectedCostPercentage), AffectedCapacityPercentage(affectedCapacityPercentage),
-		EvacueesAreStuck(evacueesAreStuck) { }
+	SingleDynamicChange() : DisasterDirection(EdgeDirection::None), StartTime(0.0), EndTime(-1.0), AffectedCostRate(0.0), AffectedCapacityRate(0.0), EvacueesAreStuck(true) { }
+
+	void check()
+	{
+		AffectedCostRate = min(max(AffectedCostRate, 0.0001), 10000.0);
+		AffectedCapacityRate = min(max(AffectedCapacityRate, 0.0001), 10000.0);
+	}
 };
 
 typedef SingleDynamicChange * SingleDynamicChangePtr;
@@ -70,9 +73,5 @@ public:
 	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode);
 	void ResetDynamicChanges();
 	bool NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache);
-
-	virtual ~DynamicDisaster()
-	{ 
-		for (auto p : allChanges) delete p;
-	}
+	virtual ~DynamicDisaster() { for (auto p : allChanges) delete p; }
 };

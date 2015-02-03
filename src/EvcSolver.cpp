@@ -156,7 +156,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	IUnknownPtr           ipUnknown;
 	INamedSetPtr          ipNAClassDefinitions;
-	INAClassDefinitionPtr ipEvacueePointsClassDef, ipBarriersClassDef, ipRoutesClassDef, ipZonesClassDef, ipEdgeStatClassDef, ipFlocksClassDef, ipRouteEdgesClassDef, ipDynamicChangeClassDef;
+	INAClassDefinitionPtr ipEvacueePointsClassDef, ipRoutesClassDef, ipZonesClassDef, ipEdgeStatClassDef, ipFlocksClassDef, ipRouteEdgesClassDef, ipDynamicChangeClassDef;
 
 	// Build the class definitions
 	if (FAILED(hr = BuildClassDefinitions(ipNAContextSR, &ipNAClassDefinitions, pNetwork))) return hr;
@@ -166,9 +166,6 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_ZONES_NAME), &ipUnknown);
 	ipZonesClassDef = ipUnknown;
-
-	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_BARRIERS_NAME), &ipUnknown);
-	ipBarriersClassDef = ipUnknown;
 
 	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipUnknown);
 	ipDynamicChangeClassDef = ipUnknown;
@@ -200,8 +197,6 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_ZONES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipEvacueePointsClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipNAClass))) return hr;
-	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipBarriersClassDef, &ipNAClass))) return hr;
-	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipDynamicChangeClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_DYNCHANGES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipRoutesClassDef, &ipNAClass))) return hr;
@@ -479,12 +474,6 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// - Population					  number of un-seperatable people/cars at this location
 	// - (NALocation fields)
 
-	// Barriers (input)               Barriers restrict network edges from being
-	// - OID                          traversable
-	// - Shape
-	// - Name
-	// - (NALocation fields)
-
 	// Routes (output)                Evacuation routes
 	// - OID
 	// - Shape                        evacuation route (polyline)
@@ -682,63 +671,6 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	// ...and add it to the named set
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipClassDef);
-
-	//******************************************************************************************/
-	// Barriers class definition
-
-	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
-	ipClassDefEdit = ipClassDef;
-	ipIUID.CreateInstance(CLSID_UID);
-	if (FAILED(hr = ipIUID->put_Value(ATL::CComVariant(L"esriNetworkAnalyst.NALocationFeature")))) return hr;
-	ipClassDefEdit->putref_ClassCLSID(ipIUID);
-
-	ipFields.CreateInstance(CLSID_Fields);
-	ipFieldsEdit = ipFields;
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_OID));
-	ipFieldEdit->put_Type(esriFieldTypeOID);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	{
-		IGeometryDefEditPtr  ipGeoDef(CLSID_GeometryDef);
-
-		ipGeoDef->put_GeometryType(esriGeometryPoint);
-		ipGeoDef->put_HasM(VARIANT_FALSE);
-		ipGeoDef->put_HasZ(VARIANT_FALSE);
-		ipGeoDef->putref_SpatialReference(pSpatialRef);
-		ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_SHAPE));
-		ipFieldEdit->put_IsNullable(VARIANT_TRUE);
-		ipFieldEdit->put_Type(esriFieldTypeGeometry);
-		ipFieldEdit->putref_GeometryDef(ipGeoDef);
-	}
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_NAME));
-	ipFieldEdit->put_Type(esriFieldTypeString);
-	ipFieldEdit->put_Length(128);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	AddLocationFields(ipFieldsEdit, pDENDS);
-
-	ipClassDefEdit->putref_Fields(ipFields);
-
-	AddLocationFieldTypes(ipClassDefEdit);
-
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_OID), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeInput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_NAME), esriNAFieldTypeInput);
-
-	ipClassDefEdit->put_IsInput(VARIANT_TRUE);
-	ipClassDefEdit->put_IsOutput(VARIANT_FALSE);
-
-	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_BARRIERS_NAME));
-	ipClassDefinitions->Add(ATL::CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipClassDef);
 
 	//******************************************************************************************/
 	// DynamicChanges class definition

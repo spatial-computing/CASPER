@@ -210,13 +210,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipBackwardStar->put_BacktrackPolicy(backtrack))) return hr;
 
 	// Get the "Barriers" NAClass table (we need the NALocation objects from this NAClass to push barriers into the Forward Star)
-	ITablePtr ipBarriersTable;
-	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_BARRIERS_NAME), &ipBarriersTable))) return hr;
+	ITablePtr ipBarriersTable = nullptr;
+	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_OldBARRIERS_NAME), &ipBarriersTable))) return hr;
 
-	// Load the barriers
-	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipForwardStar))) return hr;
-	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipBackwardStar))) return hr;
-
+	if (ipBarriersTable)
+	{
+		// Load the barriers
+		if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipForwardStar))) return hr;
+		if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipBackwardStar))) return hr;
+	}
 	INetworkAttribute2Ptr networkAttrib = nullptr;
 	VARIANT_BOOL useRestriction;
 

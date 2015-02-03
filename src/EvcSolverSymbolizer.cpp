@@ -172,38 +172,6 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 	ipNALayer->Add(ipEvacueesFeatureLayer);
 
 	//******************************************************************************************/
-	// Barriers layer
-
-	// Get the Barriers NAClass/FeatureClass
-	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_BARRIERS_NAME), &ipUnknown))) return hr;
-
-	IFeatureClassPtr ipBarriersFC(ipUnknown);
-	if (!ipBarriersFC) return E_UNEXPECTED;
-
-	// Create a new feature layer for the Barriers feature class
-	IFeatureLayerPtr ipBarrierFeatureLayer(CLSID_FeatureLayer);
-	ipBarrierFeatureLayer->putref_FeatureClass(ipBarriersFC);
-	ipBarrierFeatureLayer->put_Name(ATL::CComBSTR(CS_BARRIERS_NAME));
-
-	// Give the Barriers layer a unique value renderer and a unique value property page
-	CreateBarrierRenderer(ipSolverColor, &ipFeatureRenderer);
-
-	ipGeoFeatureLayer = ipBarrierFeatureLayer;
-	if (!ipGeoFeatureLayer) return S_OK;
-
-	if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
-
-	if (ipUniqueValuePropertyPageUID)
-	{
-		if (FAILED(hr = ipGeoFeatureLayer->put_RendererPropertyPageClassID(ipUniqueValuePropertyPageUID))) return hr;
-	}
-
-	((IFeatureSelectionPtr)ipBarrierFeatureLayer)->putref_SelectionColor(ipSelectionColor);
-
-	// Add the new barriers layer as a sub-layer in the new NALayer
-	ipNALayer->Add(ipBarrierFeatureLayer);
-
-	//******************************************************************************************/
 	// dynamic changes layer
 
 	// Get the Routes NAClass/FeatureClass
@@ -491,7 +459,7 @@ STDMETHODIMP EvcSolverSymbolizer::ResetRenderers(IColor *pSolverColor, INALayer 
 
 	//******************************************************************************************/
 	// Barriers
-	pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_BARRIERS_NAME), &ipSubLayer);
+	pNALayer->get_LayerByNAClassName(ATL::CComBSTR(CS_OldBARRIERS_NAME), &ipSubLayer);
 	if (ipSubLayer)
 	{
 		ipGeoFeatureLayer = ipSubLayer;
