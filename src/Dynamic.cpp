@@ -13,9 +13,11 @@
 #include "stdafx.h"
 #include "Dynamic.h"
 #include "NameConstants.h"
+#include "Evacuee.h"
+#include "NAVertex.h"
 
 DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dynamicMode) :
-	myDynamicMode(dynamicMode), currentTime(0.0)
+	myDynamicMode(dynamicMode)
 {
 	HRESULT hr = S_OK;
 	long count, EdgeDirIndex, StartTimeIndex, EndTimeIndex, CostIndex, CapacityIndex, EvcIndex;
@@ -23,10 +25,11 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 	IRowESRI * ipRow = nullptr;
 	VARIANT var;
 	INALocationRangesPtr range = nullptr;
-	DynamicChange * item = nullptr;
+	SingleDynamicChangePtr item = nullptr;
 	long EdgeCount, JunctionCount, EID, JID;
 	esriNetworkEdgeDirection dir;
 	double fromPosition, toPosition;
+	currentTime = dynamicTimeFrame.end();
 
 	if (!DynamicChangesTable)
 	{
@@ -46,7 +49,7 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 
 	while (ipCursor->NextRow(&ipRow) == S_OK)
 	{
-		item = new DEBUG_NEW_PLACEMENT DynamicChange();
+		item = new DEBUG_NEW_PLACEMENT SingleDynamicChange();
 		
 		if (FAILED(hr = ipRow->get_Value(EdgeDirIndex, &var))) goto END_OF_FUNC;
 		item->DisasterDirection = EdgeDirection(var.lVal);
@@ -91,4 +94,37 @@ END_OF_FUNC:
 		allChanges.clear();
 		myDynamicMode = DynamicMode::Disabled;
 	}
+}
+
+void DynamicDisaster::ResetDynamicChanges()
+{
+	dynamicTimeFrame.clear();
+	for (const auto & p : allChanges)
+	{
+		if (p->StartTime >= 0.0)
+		{
+			auto i = dynamicTimeFrame.emplace(CriticalTime(p->StartTime));
+			i.first->AddApplyChange(p);
+		}
+		if (p->EndTime >= 0.0)
+		{
+			auto j = dynamicTimeFrame.emplace(CriticalTime(p->EndTime));
+			j.first->AddUnapplyChange(p);
+		}
+	}
+	currentTime = dynamicTimeFrame.begin();
+}
+
+bool DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache)
+{
+	if (currentTime == dynamicTimeFrame.end()) return false;
+	const CriticalTime & currentChangeGroup = *currentTime;
+	++currentTime;
+	return currentChangeGroup.ProcessAllChanges(AllEvacuees, vcache, ecache);
+}
+
+bool CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache) const
+{
+
+	return true;
 }

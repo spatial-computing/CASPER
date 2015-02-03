@@ -116,6 +116,19 @@ struct NAEdgePtrEqual : public std::binary_function<NAEdgePtr, NAEdgePtr, bool>
 	size_t operator()(const NAEdgePtr & left, const NAEdgePtr & right) const { return left->EID == right->EID && left->Direction == right->Direction; }
 };
 
+struct NAedgePairHasher : public std::unary_function<std::pair<long, esriNetworkEdgeDirection>, size_t>
+{
+	size_t operator()(const std::pair<long, esriNetworkEdgeDirection> & pair) const { return pair.first; }
+};
+
+struct NAedgePairEqual : public std::binary_function<std::pair<long, esriNetworkEdgeDirection>, std::pair<long, esriNetworkEdgeDirection>, bool>
+{
+	bool operator()(const std::pair<long, esriNetworkEdgeDirection> & _Left, const std::pair<long, esriNetworkEdgeDirection> & _Right) const
+	{
+		return (_Left.first == _Right.first) && (_Left.second == _Right.second);
+	}
+};
+
 typedef public std::unordered_map<long, NAEdgePtr> NAEdgeTable;
 typedef std::unordered_map<long, NAEdgePtr>::const_iterator NAEdgeTableItr;
 typedef std::pair<long, NAEdgePtr> _NAEdgeTablePair;

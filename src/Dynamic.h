@@ -13,51 +13,61 @@
 
 #include "StdAfx.h"
 #include "utils.h"
+#include "NAEdge.h"
 
-struct DynamicChange
+// forward declare some classes
+class EvacueeList;
+class NAVertexCache;
+
+struct SingleDynamicChange
 {
-	struct PairHasher : public std::unary_function<std::pair<long, esriNetworkEdgeDirection>, size_t>
-	{
-		size_t operator()(const std::pair<long, esriNetworkEdgeDirection> & pair) const { return pair.first; }
-	};
-
-	struct PairEqual : public std::binary_function<std::pair<long, esriNetworkEdgeDirection>, std::pair<long, esriNetworkEdgeDirection>, bool>
-	{
-		bool operator()(const std::pair<long, esriNetworkEdgeDirection> & _Left, const std::pair<long, esriNetworkEdgeDirection> & _Right) const
-		{ 
-			return (_Left.first == _Right.first) && (_Left.second == _Right.second);
-		}
-	};
-
 	EdgeDirection DisasterDirection;
 	double      StartTime;
 	double      EndTime;
 	double      AffectedCostPercentage;
 	double      AffectedCapacityPercentage;
 	bool        EvacueesAreStuck;
-	bool        Applied;
 
-	std::unordered_set<std::pair<long, esriNetworkEdgeDirection>, PairHasher, PairEqual> EnclosedEdges;
+	std::unordered_set<std::pair<long, esriNetworkEdgeDirection>, NAedgePairHasher, NAedgePairEqual> EnclosedEdges;
 	std::unordered_set<long> EnclosedVertices;
 
-	DynamicChange(EdgeDirection disasterDirection, double startTime, double endTime, double affectedCostPercentage, double affectedCapacityPercentage, bool evacueesAreStuck) :
-		DisasterDirection(disasterDirection),  StartTime(startTime), EndTime(endTime), AffectedCostPercentage(affectedCostPercentage),
-		AffectedCapacityPercentage(affectedCapacityPercentage), EvacueesAreStuck(evacueesAreStuck), Applied(false) { }
+	SingleDynamicChange() : DisasterDirection(EdgeDirection::None), StartTime(0.0), EndTime(-1.0), AffectedCostPercentage(0.0), AffectedCapacityPercentage(0.0), EvacueesAreStuck(true) { }
+	SingleDynamicChange(EdgeDirection disasterDirection, double startTime, double endTime, double affectedCostPercentage, double affectedCapacityPercentage, bool evacueesAreStuck) :
+		DisasterDirection(disasterDirection),  StartTime(startTime), EndTime(endTime), AffectedCostPercentage(affectedCostPercentage), AffectedCapacityPercentage(affectedCapacityPercentage),
+		EvacueesAreStuck(evacueesAreStuck) { }
+};
 
-	DynamicChange() : DisasterDirection(EdgeDirection::None), StartTime(0.0), EndTime(-1.0), AffectedCostPercentage(0.0),
-		AffectedCapacityPercentage(0.0), EvacueesAreStuck(true), Applied(false) { }
+typedef SingleDynamicChange * SingleDynamicChangePtr;
+
+class CriticalTime
+{
+private:
+	double Time;
+	mutable std::vector<SingleDynamicChangePtr> Apply;
+	mutable std::vector<SingleDynamicChangePtr> Unapply;
+
+public:
+	CriticalTime(double time) : Time(time) { }
+	void AddApplyChange  (const SingleDynamicChangePtr & item) const {   Apply.push_back(item); }
+	void AddUnapplyChange(const SingleDynamicChangePtr & item) const { Unapply.push_back(item); }
+	bool ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache) const;
+
+	bool friend operator< (const CriticalTime & lhs, const CriticalTime & rhs) { return lhs.Time <  rhs.Time; }
 };
 
 class DynamicDisaster
 {
 private:
-	std::vector<DynamicChange *> allChanges;
-	double currentTime;
+	std::vector<SingleDynamicChangePtr> allChanges;
+	std::set<CriticalTime> dynamicTimeFrame;
+	std::set<CriticalTime>::const_iterator currentTime;
 	DynamicMode myDynamicMode;
 
 public:
 	bool Enabled() const { return myDynamicMode != DynamicMode::Disabled; }
-	DynamicDisaster(ITablePtr DynamicChangesLayer, DynamicMode dynamicMode);
+	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode);
+	void ResetDynamicChanges();
+	bool NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache);
 
 	virtual ~DynamicDisaster()
 	{ 

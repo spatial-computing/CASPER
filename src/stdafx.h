@@ -131,6 +131,7 @@ using ATL::CRegistryVirtualMachine;
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <fstream>
 #include <functional>
 #include <memory>
