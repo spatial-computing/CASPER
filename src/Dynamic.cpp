@@ -99,6 +99,8 @@ END_OF_FUNC:
 void DynamicDisaster::ResetDynamicChanges()
 {
 	dynamicTimeFrame.clear();
+	dynamicTimeFrame.emplace(CriticalTime(0.0));
+
 	for (const auto & p : allChanges)
 	{
 		if (p->StartTime >= 0.0)
@@ -119,12 +121,23 @@ bool DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees
 {
 	if (currentTime == dynamicTimeFrame.end()) return false;
 	const CriticalTime & currentChangeGroup = *currentTime;
+	currentChangeGroup.ProcessAllChanges(AllEvacuees, vcache, ecache, OriginalEdgeSettings);
 	++currentTime;
-	return currentChangeGroup.ProcessAllChanges(AllEvacuees, vcache, ecache);
+	return true;
 }
 
-bool CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache) const
+void CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache,
+	std::unordered_map<NAEdgePtr, std::pair<double, double>, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings) const
 {
+	// first undo previous changes using the backup map 'OriginalEdgeSettings'
 
-	return true;
+	// then clean the edges only if they are no longer affected
+
+	// next apply new changes to enclosed edges. backup original settings into the 'OriginalEdgeSettings' map
+
+	// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
+
+	// Now we have to figure out if any evacuee is enclosed and if so is it going to be stuck or moving
+
+	// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
 }

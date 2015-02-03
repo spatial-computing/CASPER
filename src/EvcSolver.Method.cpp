@@ -85,7 +85,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	// initialize all dynamic changes and prepare for loop
 	dynamicDisasters->ResetDynamicChanges();
 
-	do // dynamic CASPER loop
+	while (dynamicDisasters->NextDynamicChange(AllEvacuees, vcache, ecache)) // dynamic CASPER loop
 	{
 		NumberOfEvacueesInIteration = AllEvacuees->size();
 
@@ -198,6 +198,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 								if (closedList.Exist(currentEdge)) continue;
 
 								newCost = myVertex->GVal + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
+								if (newCost >= FLT_MAX) continue;
 
 								if (heap.IsVisited(currentEdge)) // edge has been visited before. update edge and decrease key.
 								{
@@ -277,7 +278,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				EffectiveIterationRatio.push_back(pow(double(NumberOfEvacueesInIteration) / AllEvacuees->size(), 1.0 / GlobalEvcCostAtIteration.size()));
 			}
 		} while (NumberOfEvacueesInIteration > 0);
-	} while (dynamicDisasters->NextDynamicChange(AllEvacuees, vcache, ecache));
+	}
 
 END_OF_FUNC:
 
@@ -517,8 +518,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			for (const auto & currentEdge : *adj)
 			{
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
-
 				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, solverMethod);
+				if (newCost >= FLT_MAX) continue;
+
 				if (closedList->Exist(currentEdge, NAEdgeMapGeneration::OldGen))
 				{
 					if (ShouldCARMACheckForDecreasedCost)

@@ -50,7 +50,8 @@ public:
 	CriticalTime(double time) : Time(time) { }
 	void AddApplyChange  (const SingleDynamicChangePtr & item) const {   Apply.push_back(item); }
 	void AddUnapplyChange(const SingleDynamicChangePtr & item) const { Unapply.push_back(item); }
-	bool ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache) const;
+	void ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, 
+		 std::unordered_map<NAEdgePtr, std::pair<double, double>, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings) const;
 
 	bool friend operator< (const CriticalTime & lhs, const CriticalTime & rhs) { return lhs.Time <  rhs.Time; }
 };
@@ -61,6 +62,7 @@ private:
 	std::vector<SingleDynamicChangePtr> allChanges;
 	std::set<CriticalTime> dynamicTimeFrame;
 	std::set<CriticalTime>::const_iterator currentTime;
+	std::unordered_map<NAEdgePtr, std::pair<double, double>, NAEdgePtrHasher, NAEdgePtrEqual> OriginalEdgeSettings;
 	DynamicMode myDynamicMode;
 
 public:
