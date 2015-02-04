@@ -193,6 +193,15 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 	return hr;
 }
 
+bool NAEdge::ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewOriginalCapacity, EvcSolverMethod method)
+{
+	bool changed = OriginalCost != NewOriginalCost || reservations->Capacity != NewOriginalCapacity;
+	OriginalCost = NewOriginalCost;
+	reservations->Capacity = NewOriginalCapacity;
+	if (changed) HowDirty(method, 1.0, true);
+	return changed;
+}
+
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
@@ -305,18 +314,13 @@ bool   NAEdge::IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n
 //******************************************************************************************/
 // NAEdgeCache
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
-NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
+NAEdgePtr NAEdgeCache::New(long EID, esriNetworkEdgeDirection dir)
 {
 	NAEdgePtr n = nullptr;
-	long EID;
 	NAEdgeTable * cache = nullptr;
-	esriNetworkEdgeDirection dir, otherDir;
+	esriNetworkEdgeDirection otherDir;
 	INetworkElementPtr ipEdgeElement;
 	INetworkEdgePtr edgeClone;
-
-	if (FAILED(edge->get_EID(&EID))) return nullptr;
-	if (FAILED(edge->get_Direction(&dir))) return nullptr;
-
 	if (dir == esriNEDAlongDigitized)
 	{
 		cache = cacheAlong;
@@ -335,7 +339,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
 		if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return nullptr;
 		edgeClone = ipEdgeElement;
 		if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return nullptr;
-		
+
 		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, Get(EID, otherDir), twoWayRoadsShareCap, ResTable, myTrafficModel);
 		cache->insert(NAEdgeTablePair(n));
 	}
@@ -344,6 +348,17 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
 		n = it->second;
 	}
 	return n;
+}
+
+NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
+{
+	long EID;
+	esriNetworkEdgeDirection dir;
+
+	if (FAILED(edge->get_EID(&EID))) return nullptr;
+	if (FAILED(edge->get_Direction(&dir))) return nullptr;
+
+	return New(EID, dir);
 }
 
 void NAEdgeCache::CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver)

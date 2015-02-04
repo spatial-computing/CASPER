@@ -31,6 +31,7 @@ enum class EdgeDirection       : unsigned char { None = 0x0, Along = 0x1, Agains
 
 DEFINE_ENUM_FLAG_OPERATORS(NAEdgeMapGeneration)
 DEFINE_ENUM_FLAG_OPERATORS(EvacueeGrouping)
+DEFINE_ENUM_FLAG_OPERATORS(EdgeDirection)
 template <class T> inline bool CheckFlag(T var, T flag) { return (var & flag) != T::None; }
 /*
 #define FLOCK_OBJ_STAT char

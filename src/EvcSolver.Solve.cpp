@@ -144,6 +144,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Some timing functions
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	BOOL c;
+	bool flagBadDynamicChangeSnapping = false;
 	double inputSecSys, calcSecSys, flockSecSys, outputSecSys, inputSecCpu, calcSecCpu, flockSecCpu, outputSecCpu;
 	__int64 tenNanoSec64;
 
@@ -211,7 +212,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Get the "Barriers" NAClass table (we need the NALocation objects from this NAClass to push barriers into the Forward Star)
 	ITablePtr ipBarriersTable = nullptr;
-	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_OldBARRIERS_NAME), &ipBarriersTable))) return hr;
+	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_OldBARRIERS_NAME), &ipBarriersTable, false))) return hr;
 
 	if (ipBarriersTable)
 	{
@@ -552,7 +553,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipUnk))) return hr;
 	bool DynamicTableExist = ipUnk;
 	if (DynamicTableExist) { if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipDynamicTable))) return hr; }
-	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, CASPERDynamicMode));
+	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, CASPERDynamicMode, flagBadDynamicChangeSnapping));
 
 	Evacuees->FinilizeGroupings(5.0 * costPerSec, disasterTable->Enabled()); // five seconds diameter for clustering
 
@@ -1054,6 +1055,11 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and evacuee seperation feature. They are not compatible so evacuee seperation has been temporarily disabled.")));
 	}
+
+	if (flagBadDynamicChangeSnapping)
+	{
+		pMessages->AddWarning(ATL::CComBSTR(_T("You have snapped some or all of DynamicChange polygons to vertices instead of edges and hence I cannot apply them properly. They have been ignored.")));
+	}	
 
 	// since vertices inside the cache are still pointing to some edges it's safer to clean them first
 	vcache = nullptr;

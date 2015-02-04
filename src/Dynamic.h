@@ -17,26 +17,55 @@
 
 // forward declare some classes
 class EvacueeList;
-class NAVertexCache;
+
+struct EdgeOriginalData
+{
+	double OriginalCost;
+	double OriginalCapacity;
+	double CostRatio;
+	double CapacityRatio;
+
+	EdgeOriginalData(NAEdgePtr edge)
+	{
+		OriginalCost = edge->OriginalCost;
+		OriginalCapacity = edge->OriginalCapacity();
+		CostRatio = 1.0;
+		CapacityRatio = 1.0;
+	}
+
+	void ResetRatios()
+	{
+		CostRatio = 1.0;
+		CapacityRatio = 1.0;
+	}
+
+	bool IsAffectedEdge() const { return CostRatio != 1.0 || CapacityRatio != 1.0; }
+
+	bool ApplyNewOriginalCostAndCapacity(const NAEdgePtr edge)
+	{
+		/// TODO figure out when we should mark the cost as infinite
+		return edge->ApplyNewOriginalCostAndCapacity(OriginalCost * CostRatio, OriginalCapacity * CapacityRatio, EvcSolverMethod::CASPERSolver);
+	}
+};
 
 struct SingleDynamicChange
 {
+	std::unordered_set<long> EnclosedEdges;
 	EdgeDirection DisasterDirection;
+
 	double      StartTime;
 	double      EndTime;
 	double      AffectedCostRate;
 	double      AffectedCapacityRate;
-	bool        EvacueesAreStuck;
 
-	std::unordered_set<std::pair<long, esriNetworkEdgeDirection>, NAedgePairHasher, NAedgePairEqual> EnclosedEdges;
-	std::unordered_set<long> EnclosedVertices;
+	SingleDynamicChange() : DisasterDirection(EdgeDirection::None), StartTime(0.0), EndTime(-1.0), AffectedCostRate(0.0), AffectedCapacityRate(0.0) { }
 
-	SingleDynamicChange() : DisasterDirection(EdgeDirection::None), StartTime(0.0), EndTime(-1.0), AffectedCostRate(0.0), AffectedCapacityRate(0.0), EvacueesAreStuck(true) { }
-
-	void check()
+	bool IsValid()
 	{
 		AffectedCostRate = min(max(AffectedCostRate, 0.0001), 10000.0);
 		AffectedCapacityRate = min(max(AffectedCapacityRate, 0.0001), 10000.0);
+		if (EndTime < 0.0) EndTime = FLT_MAX;
+		return StartTime >= 0.0 && StartTime < EndTime && !EnclosedEdges.empty();
 	}
 };
 
@@ -46,17 +75,16 @@ class CriticalTime
 {
 private:
 	double Time;
-	mutable std::vector<SingleDynamicChangePtr> Apply;
-	mutable std::vector<SingleDynamicChangePtr> Unapply;
+	mutable std::vector<SingleDynamicChangePtr> Intersected;
 
 public:
 	CriticalTime(double time) : Time(time) { }
-	void AddApplyChange  (const SingleDynamicChangePtr & item) const {   Apply.push_back(item); }
-	void AddUnapplyChange(const SingleDynamicChangePtr & item) const { Unapply.push_back(item); }
-	void ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, 
-		 std::unordered_map<NAEdgePtr, std::pair<double, double>, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings) const;
+	void AddIntersectedChange(const SingleDynamicChangePtr & item) const { Intersected.push_back(item); }
+	void ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, 
+		 std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode) const;
 
 	bool friend operator< (const CriticalTime & lhs, const CriticalTime & rhs) { return lhs.Time <  rhs.Time; }
+	static void MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTimeFrame);
 };
 
 class DynamicDisaster
@@ -65,13 +93,13 @@ private:
 	std::vector<SingleDynamicChangePtr> allChanges;
 	std::set<CriticalTime> dynamicTimeFrame;
 	std::set<CriticalTime>::const_iterator currentTime;
-	std::unordered_map<NAEdgePtr, std::pair<double, double>, NAEdgePtrHasher, NAEdgePtrEqual> OriginalEdgeSettings;
+	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> OriginalEdgeSettings;
 	DynamicMode myDynamicMode;
 
 public:
 	bool Enabled() const { return myDynamicMode != DynamicMode::Disabled; }
-	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode);
+	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping);
 	void ResetDynamicChanges();
-	bool NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache);
+	bool NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache);
 	virtual ~DynamicDisaster() { for (auto p : allChanges) delete p; }
 };

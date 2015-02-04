@@ -16,17 +16,17 @@
 #include "Evacuee.h"
 #include "NAVertex.h"
 
-DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dynamicMode) :
+DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping) :
 	myDynamicMode(dynamicMode)
 {
 	HRESULT hr = S_OK;
-	long count, EdgeDirIndex, StartTimeIndex, EndTimeIndex, CostIndex, CapacityIndex, EvcIndex;
+	long count, EdgeDirIndex, StartTimeIndex, EndTimeIndex, CostIndex, CapacityIndex;
 	ICursorPtr ipCursor = nullptr;
 	IRowESRI * ipRow = nullptr;
 	VARIANT var;
 	INALocationRangesPtr range = nullptr;
 	SingleDynamicChangePtr item = nullptr;
-	long EdgeCount, JunctionCount, EID, JID;
+	long EdgeCount, JunctionCount, EID;
 	esriNetworkEdgeDirection dir;
 	double fromPosition, toPosition;
 	currentTime = dynamicTimeFrame.end();
@@ -42,7 +42,6 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNENDTIME, &EndTimeIndex))) goto END_OF_FUNC;
 	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNCOST, &CostIndex))) goto END_OF_FUNC;
 	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNCAPACITY, &CapacityIndex))) goto END_OF_FUNC;
-	if (FAILED(hr = DynamicChangesTable->FindField(CS_FIELD_DYNEVCSTUCK, &EvcIndex))) goto END_OF_FUNC;
 	if (FAILED(hr = DynamicChangesTable->Search(nullptr, VARIANT_TRUE, &ipCursor))) goto END_OF_FUNC;
 	if (FAILED(hr = DynamicChangesTable->RowCount(nullptr, &count))) goto END_OF_FUNC;
 	allChanges.reserve(count);
@@ -61,8 +60,6 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 		item->AffectedCostRate = var.dblVal;
 		if (FAILED(hr = ipRow->get_Value(CapacityIndex, &var))) goto END_OF_FUNC;
 		item->AffectedCapacityRate = var.dblVal;
-		if (FAILED(hr = ipRow->get_Value(EvcIndex, &var))) goto END_OF_FUNC;
-		item->EvacueesAreStuck = var.lVal == 1l;
 
 		// load associated edge and junctions
 		INALocationRangesObjectPtr blob(ipRow);
@@ -73,17 +70,12 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 		for (long i = 0; i < EdgeCount; ++i)
 		{
 			if (FAILED(hr = range->QueryEdgeRange(i, &EID, &dir, &fromPosition, &toPosition))) continue;
-			item->EnclosedEdges.insert(std::pair<long, esriNetworkEdgeDirection>(EID, dir));
+			item->EnclosedEdges.insert(EID);
 		}
-		for (long i = 0; i < JunctionCount; ++i)
-		{
-			if (FAILED(hr = range->QueryJunction(i, &JID))) continue;
-			item->EnclosedVertices.insert(JID);
-		}
+		flagBadDynamicChangeSnapping |= JunctionCount != 0 && EdgeCount == 0;
 
 		// we're done with this item and no error happened. we'll push it to the set and continue to the other one
-		item->check();
-		allChanges.push_back(item);
+		if (item->IsValid()) allChanges.push_back(item);
 		item = nullptr;
 	}
 
@@ -103,42 +95,73 @@ void DynamicDisaster::ResetDynamicChanges()
 	dynamicTimeFrame.emplace(CriticalTime(0.0));
 
 	for (const auto & p : allChanges)
-	{
-		if (p->StartTime >= 0.0)
-		{
-			auto i = dynamicTimeFrame.emplace(CriticalTime(p->StartTime));
-			i.first->AddApplyChange(p);
-		}
-		if (p->EndTime >= 0.0)
-		{
-			auto j = dynamicTimeFrame.emplace(CriticalTime(p->EndTime));
-			j.first->AddUnapplyChange(p);
-		}
+	{	
+		auto i = dynamicTimeFrame.emplace(CriticalTime(p->StartTime));
+		i.first->AddIntersectedChange(p);		
+		if (p->EndTime < FLT_MAX) dynamicTimeFrame.emplace(CriticalTime(p->EndTime));
 	}
+	CriticalTime::MergeWithPreviousTimeFrame(dynamicTimeFrame);
 	currentTime = dynamicTimeFrame.begin();
 }
 
-bool DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache)
+void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTimeFrame)
+{
+	auto thisTime = dynamicTimeFrame.cbegin();
+	std::vector<SingleDynamicChangePtr> * previousTimeFrame = &(thisTime->Intersected);
+	
+	for (++thisTime; thisTime != dynamicTimeFrame.cend(); ++thisTime)
+	{
+		for (auto prevChange : *previousTimeFrame) if (prevChange->EndTime > thisTime->Time) thisTime->AddIntersectedChange(prevChange);
+		previousTimeFrame = &(thisTime->Intersected);
+	}
+}
+
+bool DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache)
 {
 	if (currentTime == dynamicTimeFrame.end()) return false;
 	const CriticalTime & currentChangeGroup = *currentTime;
-	currentChangeGroup.ProcessAllChanges(AllEvacuees, vcache, ecache, OriginalEdgeSettings);
+	currentChangeGroup.ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode);
 	++currentTime;
 	return true;
 }
 
-void CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache,
-	std::unordered_map<NAEdgePtr, std::pair<double, double>, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings) const
+void CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache,
+	 std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode) const
 {
-	// first undo previous changes using the backup map 'OriginalEdgeSettings'
+	// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
+	// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
+	if (myDynamicMode == DynamicMode::Full) for (auto evc : *AllEvacuees) evc->DynamicStep_MoveOnPath(this->Time);
+	else;///
 
-	// then clean the edges only if they are no longer affected
+	// first undo previous changes using the backup map 'OriginalEdgeSettings'
+	for (auto & pair : OriginalEdgeSettings) pair.second.ResetRatios();	
 
 	// next apply new changes to enclosed edges. backup original settings into the 'OriginalEdgeSettings' map
+	NAEdgePtr edge = nullptr;
+	for (auto polygon : Intersected)
+		for (auto EID : polygon->EnclosedEdges)
+		{
+			if (CheckFlag(polygon->DisasterDirection, EdgeDirection::Along))
+			{
+				edge = ecache->New(EID, esriNetworkEdgeDirection::esriNEDAlongDigitized);
+				auto i = OriginalEdgeSettings.emplace(std::pair<NAEdgePtr, EdgeOriginalData>(edge, EdgeOriginalData(edge)));
+				i.first->second.CapacityRatio *= polygon->AffectedCapacityRate;
+				i.first->second.CostRatio *= polygon->AffectedCostRate;
+			}
+			if (CheckFlag(polygon->DisasterDirection, EdgeDirection::Against))
+			{
+				edge = ecache->New(EID, esriNetworkEdgeDirection::esriNEDAgainstDigitized);
+				auto i = OriginalEdgeSettings.emplace(std::pair<NAEdgePtr, EdgeOriginalData>(edge, EdgeOriginalData(edge)));
+				i.first->second.CapacityRatio *= polygon->AffectedCapacityRate;
+				i.first->second.CostRatio *= polygon->AffectedCostRate;
+			}
+		}
 
-	// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
-
-	// Now we have to figure out if any evacuee is enclosed and if so is it going to be stuck or moving
-
-	// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
+	// apply to the graph
+	for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
+	
+	// then clean the edges only if they are no longer affected
+	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> clone(OriginalEdgeSettings);
+	OriginalEdgeSettings.clear();
+	for (const auto pair : clone) if (pair.second.IsAffectedEdge()) OriginalEdgeSettings.insert(pair);
 }

@@ -146,6 +146,7 @@ public:
 	virtual ~Evacuee(void);
 	Evacuee(const Evacuee & that) = delete;
 	Evacuee & operator=(const Evacuee &) = delete;
+	void DynamicStep_MoveOnPath(double CurrentTime);
 
 	static bool LessThan(const Evacuee * e1, const Evacuee * e2)
 	{

@@ -313,7 +313,7 @@ private:
 	HRESULT CreateEvcStuckCodedValueDomain(ICodedValueDomain* pCodedValueDomain);
 	HRESULT AddLocationFields(IFieldsEdit* pFieldsEdit, IDENetworkDataset* pDENDS);
 	HRESULT AddLocationFieldTypes(INAClassDefinitionEdit* pClassDef);
-	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable);
+	HRESULT GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable, bool throwError = true);
 	HRESULT LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx);
 	HRESULT DeterminMinimumPop2Route(std::shared_ptr<EvacueeList>, INetworkDatasetPtr, double &, bool &) const;
 	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &) const;

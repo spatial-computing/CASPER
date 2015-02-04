@@ -21,7 +21,7 @@ class EdgeReservations : private std::vector<EvcPathPtr>
 {
 private:
 	float          ReservedPop;
-	float          Capacity;
+	double         Capacity;
 	EdgeDirtyState dirtyState;
 	TrafficModel   * myTrafficModel;
 
@@ -65,6 +65,7 @@ public:
 	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = nullptr) const;
 	double GetCurrentCost(EvcSolverMethod method = EvcSolverMethod::CASPERSolver) const;
 	double LeftCapacity() const;
+	bool ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewOriginalCapacity, EvcSolverMethod method);
 
 	// Special function for Flocking: to check how much capacity the edge had originally
 	double OriginalCapacity() const { return reservations->Capacity; }
@@ -313,6 +314,7 @@ public:
 	NAEdgeCache(const NAEdgeCache & that) = delete;
 	NAEdgeCache & operator=(const NAEdgeCache &) = delete;
 
+	NAEdgePtr New(long EID, esriNetworkEdgeDirection dir);
 	NAEdgePtr New(INetworkEdgePtr edge);
 
 	NAEdgeTableItr AlongBegin()   const { return cacheAlong->begin();   }

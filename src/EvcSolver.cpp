@@ -744,23 +744,23 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNCOST));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldEdit->put_DefaultValue(ATL::CComVariant(0.0));
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(1.0));
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNCAPACITY));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldEdit->put_DefaultValue(ATL::CComVariant(0.0));
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(1.0));
 	ipFieldsEdit->AddField(ipFieldEdit);
 
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNEVCSTUCK));
-	ipFieldEdit->put_Type(esriFieldTypeInteger);
-	ipFieldEdit->put_DefaultValue(ATL::CComVariant(long(1)));
-	ipFieldEdit->putref_Domain((IDomainPtr)ipCodedValueDomainEvcStuck);
-	ipFieldsEdit->AddField(ipFieldEdit);
+	//ipField.CreateInstance(CLSID_Field);
+	//ipFieldEdit = ipField;
+	//ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNEVCSTUCK));
+	//ipFieldEdit->put_Type(esriFieldTypeInteger);
+	//ipFieldEdit->put_DefaultValue(ATL::CComVariant(long(1)));
+	//ipFieldEdit->putref_Domain((IDomainPtr)ipCodedValueDomainEvcStuck);
+	//ipFieldsEdit->AddField(ipFieldEdit);
 	
 	ipClassDefEdit->putref_Fields(ipFields);
 
@@ -772,7 +772,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNENDTIME), esriNAFieldTypeInput);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNCOST), esriNAFieldTypeInput);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNCAPACITY), esriNAFieldTypeInput);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNEVCSTUCK), esriNAFieldTypeInput);
+	// ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNEVCSTUCK), esriNAFieldTypeInput);
 
 	ipClassDefEdit->put_IsInput(VARIANT_TRUE);
 	ipClassDefEdit->put_IsOutput(VARIANT_FALSE);
@@ -1181,7 +1181,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	return hr;
 }
 
-HRESULT EvcSolver::GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable)
+HRESULT EvcSolver::GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable, bool throwError)
 {
 	if (!pContext || !ppTable) return E_POINTER;
 
@@ -1195,12 +1195,18 @@ HRESULT EvcSolver::GetNAClassTable(INAContext* pContext, BSTR className, ITable*
 
 	ITablePtr ipTable(ipUnk);
 
-	if (!ipTable) return ATL::AtlReportError(GetObjectCLSID(), _T("Context has an invalid NAClass."), IID_INASolver);
-
-	ipTable->AddRef();
-	*ppTable = ipTable;
-
-	return S_OK;
+	if (ipTable)
+	{
+		ipTable->AddRef();
+		*ppTable = ipTable;
+		return S_OK;
+	}
+	else
+	{
+		if (throwError) return ATL::AtlReportError(GetObjectCLSID(), _T("Context has an invalid NAClass."), IID_INASolver);
+		else *ppTable = nullptr;
+		return S_OK;
+	}
 }
 
 HRESULT EvcSolver::LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx)
@@ -1556,6 +1562,9 @@ HRESULT EvcSolver::CreateEvcStuckCodedValueDomain(ICodedValueDomain* pCodedValue
 
 	value.lVal = static_cast<long>(1);
 	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Stuck"));
+
+	value.lVal = static_cast<long>(2);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Backtrack"));
 
 	return S_OK;
 }

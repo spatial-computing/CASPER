@@ -270,6 +270,12 @@ Evacuee::~Evacuee(void)
 	delete Paths;
 }
 
+// first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
+void Evacuee::DynamicStep_MoveOnPath(double CurrentTime)
+{
+
+}
+
 EvacueeList::~EvacueeList()
 {
 	for (const auto & e : *this) delete e;

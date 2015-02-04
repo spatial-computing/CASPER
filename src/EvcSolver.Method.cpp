@@ -85,7 +85,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	// initialize all dynamic changes and prepare for loop
 	dynamicDisasters->ResetDynamicChanges();
 
-	while (dynamicDisasters->NextDynamicChange(AllEvacuees, vcache, ecache)) // dynamic CASPER loop
+	while (dynamicDisasters->NextDynamicChange(AllEvacuees, ecache)) // dynamic CASPER loop
 	{
 		NumberOfEvacueesInIteration = AllEvacuees->size();
 
