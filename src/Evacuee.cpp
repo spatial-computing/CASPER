@@ -33,7 +33,7 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 double PathSegment::GetCurrentCost(EvcSolverMethod method) const { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
 bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
 
-void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, NAEdgeMap * touchedEdges)
+void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths)
 {
 	// It's time to clean up the evacuee object and reset it for the next iteration
 	// To do this we first collect all its paths, take away all edge reservations, and then reset some of its fields.
@@ -41,7 +41,7 @@ void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std:
 	for (const auto & p : *evc->Paths)
 	{
 		for (auto s = p->crbegin(); s != p->crend(); ++s) (*s)->Edge->RemoveReservation(p, method, true);
-		if (touchedEdges) { for (const auto & s : *p) touchedEdges->Insert(s->Edge); }
+		if (touchedEdges) { for (const auto & s : *p) touchedEdges->insert(s->Edge); }
 		if (detachedPaths) detachedPaths->push_back(p); else delete p;
 	}
 	evc->Paths->clear();
@@ -271,9 +271,11 @@ Evacuee::~Evacuee(void)
 }
 
 // first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
-void Evacuee::DynamicStep_MoveOnPath(double CurrentTime)
+size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::const_iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::const_iterator & end,
+	 std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime)
 {
-
+	/// TODO
+	return 0;
 }
 
 EvacueeList::~EvacueeList()

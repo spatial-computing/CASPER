@@ -297,7 +297,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 {
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
-	NAEdgeMap touchededges;
+	std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> touchededges;
 
 	// Recalculate all path costs and then list them in a sorted manner by descending final cost
 	for (const auto & evc : *AllEvacuees)
@@ -352,8 +352,8 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
 	std::sort(EvacueesForNextIteration.begin(), EvacueesForNextIteration.end(), EvcPath::MoreThanPathOrder);
-	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, solverMethod, detachedPaths, &touchededges);
-	touchededges.CallHowDirty(solverMethod, 1.0, true);
+	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, solverMethod, &touchededges, detachedPaths);
+	NAEdge::HowDirtyExhaustive(touchededges.begin(), touchededges.end(), solverMethod, 1.0);
 
 	return EvacueesForNextIteration.size();
 }

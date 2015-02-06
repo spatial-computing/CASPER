@@ -38,13 +38,18 @@ struct EdgeOriginalData
 		CostRatio = 1.0;
 		CapacityRatio = 1.0;
 	}
+	bool IsRatiosNonZero() const { return CostRatio != 1.0 || CapacityRatio != 1.0; }
 
-	bool IsAffectedEdge() const { return CostRatio != 1.0 || CapacityRatio != 1.0; }
+	bool IsAffectedEdge(NAEdgePtr const edge) const
+	{
+		/// TODO figure out when we should mark the cost as infinite
+		return edge->IsNewOriginalCostAndCapacityDifferent(OriginalCost * CostRatio, OriginalCapacity * CapacityRatio);
+	}
 
 	bool ApplyNewOriginalCostAndCapacity(const NAEdgePtr edge)
 	{
 		/// TODO figure out when we should mark the cost as infinite
-		return edge->ApplyNewOriginalCostAndCapacity(OriginalCost * CostRatio, OriginalCapacity * CapacityRatio, EvcSolverMethod::CASPERSolver);
+		return edge->ApplyNewOriginalCostAndCapacity(OriginalCost * CostRatio, OriginalCapacity * CapacityRatio, true, EvcSolverMethod::CASPERSolver);
 	}
 };
 
@@ -80,7 +85,7 @@ private:
 public:
 	CriticalTime(double time) : Time(time) { }
 	void AddIntersectedChange(const SingleDynamicChangePtr & item) const { Intersected.push_back(item); }
-	void ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, 
+	size_t ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, 
 		 std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode) const;
 
 	bool friend operator< (const CriticalTime & lhs, const CriticalTime & rhs) { return lhs.Time <  rhs.Time; }
@@ -100,6 +105,6 @@ public:
 	bool Enabled() const { return myDynamicMode != DynamicMode::Disabled; }
 	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping);
 	void ResetDynamicChanges();
-	bool NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache);
+	size_t NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache);
 	virtual ~DynamicDisaster() { for (auto p : allChanges) delete p; }
 };

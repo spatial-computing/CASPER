@@ -116,52 +116,79 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 	}
 }
 
-bool DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache)
+size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache)
 {
-	if (currentTime == dynamicTimeFrame.end()) return false;
+	if (currentTime == dynamicTimeFrame.end()) return 0;
 	const CriticalTime & currentChangeGroup = *currentTime;
-	currentChangeGroup.ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode);
+	size_t EvcCount = currentChangeGroup.ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode);
 	++currentTime;
-	return true;
+	return EvcCount;
 }
 
-void CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache,
+size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache,
 	 std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode) const
 {
-	// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
-	// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
-	if (myDynamicMode == DynamicMode::Full) for (auto evc : *AllEvacuees) evc->DynamicStep_MoveOnPath(this->Time);
-	else;///
-
+	size_t CountPaths = 0;
 	// first undo previous changes using the backup map 'OriginalEdgeSettings'
 	for (auto & pair : OriginalEdgeSettings) pair.second.ResetRatios();	
 
 	// next apply new changes to enclosed edges. backup original settings into the 'OriginalEdgeSettings' map
 	NAEdgePtr edge = nullptr;
+	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual>::_Pairib i;
+
 	for (auto polygon : Intersected)
-		for (auto EID : polygon->EnclosedEdges)
+	{
+		if (CheckFlag(polygon->DisasterDirection, EdgeDirection::Along))
 		{
-			if (CheckFlag(polygon->DisasterDirection, EdgeDirection::Along))
+			for (auto EID : polygon->EnclosedEdges)
 			{
 				edge = ecache->New(EID, esriNetworkEdgeDirection::esriNEDAlongDigitized);
-				auto i = OriginalEdgeSettings.emplace(std::pair<NAEdgePtr, EdgeOriginalData>(edge, EdgeOriginalData(edge)));
-				i.first->second.CapacityRatio *= polygon->AffectedCapacityRate;
-				i.first->second.CostRatio *= polygon->AffectedCostRate;
-			}
-			if (CheckFlag(polygon->DisasterDirection, EdgeDirection::Against))
-			{
-				edge = ecache->New(EID, esriNetworkEdgeDirection::esriNEDAgainstDigitized);
-				auto i = OriginalEdgeSettings.emplace(std::pair<NAEdgePtr, EdgeOriginalData>(edge, EdgeOriginalData(edge)));
+				i = OriginalEdgeSettings.emplace(std::pair<NAEdgePtr, EdgeOriginalData>(edge, EdgeOriginalData(edge)));
 				i.first->second.CapacityRatio *= polygon->AffectedCapacityRate;
 				i.first->second.CostRatio *= polygon->AffectedCostRate;
 			}
 		}
-
-	// apply to the graph
-	for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
+		if (CheckFlag(polygon->DisasterDirection, EdgeDirection::Against))
+		{
+			for (auto EID : polygon->EnclosedEdges)
+			{
+				edge = ecache->New(EID, esriNetworkEdgeDirection::esriNEDAgainstDigitized);
+				i = OriginalEdgeSettings.emplace(std::pair<NAEdgePtr, EdgeOriginalData>(edge, EdgeOriginalData(edge)));
+				i.first->second.CapacityRatio *= polygon->AffectedCapacityRate;
+				i.first->second.CostRatio *= polygon->AffectedCostRate;
+			}
+		}
+	}
 	
-	// then clean the edges only if they are no longer affected
+	// extract affected edges and use it to identify affected evacuee paths
+	std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> DynamicallyAffectedEdges;
+	for (auto & pair : OriginalEdgeSettings) if (pair.second.IsAffectedEdge(pair.first)) DynamicallyAffectedEdges.insert(pair.first);
+
+	// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
+	// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
+	if (myDynamicMode == DynamicMode::Full)
+	{
+		DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
+		for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
+		CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time);
+	}
+	else if (myDynamicMode == DynamicMode::Smart)
+	{
+		DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
+		NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
+		CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time);
+	}
+
+	// now apply changes to the graph
+	for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
+
+	// re-calculate edges' dirtyness state
+	NAEdge::HowDirtyExhaustive(DynamicallyAffectedEdges.begin(), DynamicallyAffectedEdges.end(), EvcSolverMethod::CASPERSolver, 1.0);
+
+	// then clean the edges from backup map only if they are no longer affected
 	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> clone(OriginalEdgeSettings);
 	OriginalEdgeSettings.clear();
-	for (const auto pair : clone) if (pair.second.IsAffectedEdge()) OriginalEdgeSettings.insert(pair);
+	for (const auto pair : clone) if (pair.second.IsRatiosNonZero()) OriginalEdgeSettings.insert(pair);
+
+	return CountPaths;
 }

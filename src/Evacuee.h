@@ -19,6 +19,9 @@ class NAEdge;
 class NAEdgeCache;
 class NAEdgeContainer;
 class NAEdgeMap;
+class EvacueeList;
+struct NAEdgePtrHasher;
+struct NAEdgePtrEqual;
 typedef NAVertex * NAVertexPtr;
 
 class PathSegment
@@ -92,20 +95,6 @@ public:
 		myEvc = evc;
 	}
 
-	double GetMinCostRatio(double MaxEvacuationCost = 0.0) const;
-	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
-	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
-	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
-									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
-	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr, NAEdgeMap * touchedEdges = nullptr);
-	void ReattachToEvacuee(EvcSolverMethod method);
-	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
-	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
-
-	inline const int & GetKey()  const { return Order; }
-	friend bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
-	friend bool operator!=(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order != rhs.Order; }
-
 	virtual ~EvcPath(void)
 	{
 		for(const_iterator it = begin(); it != end(); it++) delete (*it);
@@ -114,16 +103,26 @@ public:
 	EvcPath(const EvcPath & that) = delete;
 	EvcPath & operator=(const EvcPath &) = delete;
 
-	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2)
-	{
-		return p1->Order < p2->Order;
-	}
+	double GetMinCostRatio(double MaxEvacuationCost = 0.0) const;
+	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
+	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
+	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
+									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
+	void ReattachToEvacuee(EvcSolverMethod method);
+	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
+	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
 
-	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2)
-	{
-		return p1->FinalEvacuationCost > p2->FinalEvacuationCost;
-	}
+	inline const int & GetKey()  const { return Order; }
+	friend bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
+	friend bool operator!=(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order != rhs.Order; }
 
+	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method,
+		                               std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges = nullptr, std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
+	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::const_iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::const_iterator & end,
+									   std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime);
+
+	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2) { return p1->Order < p2->Order; }
+	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
 	static bool MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2);
 };
 

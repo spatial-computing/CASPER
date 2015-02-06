@@ -65,7 +65,8 @@ public:
 	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = nullptr) const;
 	double GetCurrentCost(EvcSolverMethod method = EvcSolverMethod::CASPERSolver) const;
 	double LeftCapacity() const;
-	bool ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewOriginalCapacity, EvcSolverMethod method);
+	bool ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewOriginalCapacity, bool DelayHowDirty, EvcSolverMethod method);
+	bool IsNewOriginalCostAndCapacityDifferent(double NewOriginalCost, double NewOriginalCapacity) const;
 
 	// Special function for Flocking: to check how much capacity the edge had originally
 	double OriginalCapacity() const { return reservations->Capacity; }
@@ -87,7 +88,8 @@ public:
 	HRESULT InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
 									  long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag);
-
+	
+	static void DynamicStep_ExtractAffectedPaths(DoubleGrowingArrayList<EvcPath *, size_t> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges);
 	static bool CostLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
 	{
 		return e1->GetCurrentCost(method) < e2->GetCurrentCost(method);
@@ -101,6 +103,23 @@ public:
 	static double GetHeapKeyHur(const NAEdge * e);
 	static double GetHeapKeyNonHur(const NAEdge * e);
 	static bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2);
+	
+	template<class iterator_type> static void HowDirtyExhaustive(iterator_type begin, iterator_type end, EvcSolverMethod method, double minPop2Route)
+	{
+		NAEdgePtr edge = nullptr;
+		for (iterator_type i = begin; i != end; ++i)
+		{
+			edge = *i;
+			if (edge->CleanCost <= 0.0) edge->reservations->dirtyState = EdgeDirtyState::CostIncreased;
+			else
+			{
+				edge->reservations->dirtyState = EdgeDirtyState::CleanState;
+				double costchange = (edge->GetCost(minPop2Route, method) / edge->CleanCost) - 1.0;
+				if (costchange > FLT_EPSILON) edge->reservations->dirtyState = EdgeDirtyState::CostIncreased;
+				if (costchange < -FLT_EPSILON) edge->reservations->dirtyState = EdgeDirtyState::CostDecreased;
+			}
+		}
+	}
 };
 
 typedef NAEdge * NAEdgePtr;
@@ -158,7 +177,6 @@ public:
 		delete cacheAgainst;
 	}
 	
-	void CallHowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
 	void GetDirtyEdges(std::vector<NAEdgePtr> & dirty) const;
 	void Erase(NAEdgePtr edge) {        Erase(edge->EID, edge->Direction)  ; }
 	bool Exist(NAEdgePtr edge) { return Exist(edge->EID, edge->Direction)  ; }

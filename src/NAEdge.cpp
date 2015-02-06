@@ -193,12 +193,17 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 	return hr;
 }
 
-bool NAEdge::ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewOriginalCapacity, EvcSolverMethod method)
+bool NAEdge::IsNewOriginalCostAndCapacityDifferent(double NewOriginalCost, double NewOriginalCapacity) const
+{
+	return OriginalCost != NewOriginalCost || reservations->Capacity != NewOriginalCapacity;
+}
+
+bool NAEdge::ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewOriginalCapacity, bool DelayHowDirty, EvcSolverMethod method)
 {
 	bool changed = OriginalCost != NewOriginalCost || reservations->Capacity != NewOriginalCapacity;
 	OriginalCost = NewOriginalCost;
 	reservations->Capacity = NewOriginalCapacity;
-	if (changed) HowDirty(method, 1.0, true);
+	if (changed && !DelayHowDirty) HowDirty(method, 1.0, true);
 	return changed;
 }
 
@@ -300,6 +305,20 @@ void NAEdge::GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cle
 		if (*p != *crossings.back()) crossings.push_back(p);
 		_ASSERT_EXPR(!EvcPath::LessThanOrder(p, crossings.back()), L"Path reservations are not in increasing order");
 	}
+}
+
+void NAEdge::DynamicStep_ExtractAffectedPaths(DoubleGrowingArrayList<EvcPathPtr, size_t> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges)
+{
+	std::unordered_set<int> insertedPaths;
+	std::unordered_set<int>::_Pairib i;
+	insertedPaths.reserve(DynamicallyAffectedEdges.size());
+
+	for (auto edge : DynamicallyAffectedEdges)
+		for (auto path : *(edge->reservations))
+		{
+			i = insertedPaths.insert(path->GetKey());
+			if (i.second) AffectedPaths.push_back(path);
+		}
 }
 
 // Special function for CCRP: to check how much capacity is left on this edge.
@@ -472,12 +491,6 @@ void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
 
 	NAEdgeTableItr i = cache->find(eid);
 	if (i != cache->end()) cache->erase(i);
-}
-
-void NAEdgeMap::CallHowDirty(EvcSolverMethod method, double minPop2Route, bool exhaustive)
-{
-	for (const auto & i : *cacheAlong  ) i.second->HowDirty(method, minPop2Route, exhaustive);
-	for (const auto & i : *cacheAgainst) i.second->HowDirty(method, minPop2Route, exhaustive);
 }
 
 HRESULT NAEdgeMap::Insert(NAEdgePtr edge)
