@@ -25,6 +25,12 @@ struct EdgeOriginalData
 	double CostRatio;
 	double CapacityRatio;
 
+	// constants for range of valid ratio
+	static const double MaxCostRatio;
+	static const double MinCostRatio;
+	static const double MaxCapacityRatio;
+	static const double MinCapacityRatio;
+
 	EdgeOriginalData(NAEdgePtr edge)
 	{
 		OriginalCost = edge->OriginalCost;
@@ -40,16 +46,17 @@ struct EdgeOriginalData
 	}
 	bool IsRatiosNonZero() const { return CostRatio != 1.0 || CapacityRatio != 1.0; }
 
+	inline double AdjustedCost()     const { return CostRatio     < MaxCostRatio     ? (CostRatio     > MinCostRatio     ? OriginalCost     * CostRatio : OriginalCost * MinCostRatio) : FLT_MAX; }
+	inline double AdjustedCapacity() const { return CapacityRatio < MaxCapacityRatio ? (CapacityRatio > MinCapacityRatio ? OriginalCapacity * CapacityRatio : 0.0) : OriginalCapacity * MaxCapacityRatio; }
+
 	bool IsAffectedEdge(NAEdgePtr const edge) const
 	{
-		/// TODO figure out when we should mark the cost as infinite
-		return edge->IsNewOriginalCostAndCapacityDifferent(OriginalCost * CostRatio, OriginalCapacity * CapacityRatio);
+		return edge->IsNewOriginalCostAndCapacityDifferent(AdjustedCost(), AdjustedCapacity());
 	}
 
 	bool ApplyNewOriginalCostAndCapacity(const NAEdgePtr edge)
 	{
-		/// TODO figure out when we should mark the cost as infinite
-		return edge->ApplyNewOriginalCostAndCapacity(OriginalCost * CostRatio, OriginalCapacity * CapacityRatio, true, EvcSolverMethod::CASPERSolver);
+		return edge->ApplyNewOriginalCostAndCapacity(AdjustedCost(), AdjustedCapacity(), true, EvcSolverMethod::CASPERSolver);
 	}
 };
 
@@ -67,8 +74,8 @@ struct SingleDynamicChange
 
 	bool IsValid()
 	{
-		AffectedCostRate = min(max(AffectedCostRate, 0.0001), 10000.0);
-		AffectedCapacityRate = min(max(AffectedCapacityRate, 0.0001), 10000.0);
+		AffectedCostRate = min(max(AffectedCostRate, EdgeOriginalData::MinCostRatio), EdgeOriginalData::MaxCostRatio);
+		AffectedCapacityRate = min(max(AffectedCapacityRate, EdgeOriginalData::MinCapacityRatio), EdgeOriginalData::MaxCapacityRatio);
 		if (EndTime < 0.0) EndTime = FLT_MAX;
 		return StartTime >= 0.0 && StartTime < EndTime && !EnclosedEdges.empty();
 	}

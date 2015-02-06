@@ -207,6 +207,8 @@ bool NAEdge::ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewO
 	return changed;
 }
 
+double NAEdge::GetCurrentCost(EvcSolverMethod method) const { return GetCost(0.0, method); }
+
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
@@ -324,7 +326,6 @@ void NAEdge::DynamicStep_ExtractAffectedPaths(DoubleGrowingArrayList<EvcPathPtr,
 // Special function for CCRP: to check how much capacity is left on this edge.
 // Will be used to get max capacity available on a path
 double NAEdge::LeftCapacity() const { return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost); }
-double NAEdge::GetCurrentCost(EvcSolverMethod method) const { return OriginalCost / GetTrafficSpeedRatio(reservations->ReservedPop, method); }
 
 double NAEdge::GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
 double NAEdge::GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }

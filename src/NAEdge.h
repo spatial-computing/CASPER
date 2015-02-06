@@ -95,10 +95,10 @@ public:
 		return e1->GetCurrentCost(method) < e2->GetCurrentCost(method);
 	}
 
-	static bool CongestionLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
-	{
-		return e1->GetTrafficSpeedRatio(e1->reservations->ReservedPop, method) > e2->GetTrafficSpeedRatio(e2->reservations->ReservedPop, method);
-	}
+	//static bool CongestionLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
+	//{
+	//	return e1->GetTrafficSpeedRatio(e1->reservations->ReservedPop, method) > e2->GetTrafficSpeedRatio(e2->reservations->ReservedPop, method);
+	//}
 
 	static double GetHeapKeyHur(const NAEdge * e);
 	static double GetHeapKeyNonHur(const NAEdge * e);

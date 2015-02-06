@@ -16,8 +16,13 @@
 #include "Evacuee.h"
 #include "NAVertex.h"
 
-DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping) :
-	myDynamicMode(dynamicMode)
+// constants for range of valid ratio
+const double EdgeOriginalData::MaxCostRatio     = 1000.0;
+const double EdgeOriginalData::MinCostRatio     = 1.0 / 1000.0;
+const double EdgeOriginalData::MaxCapacityRatio = 1000.0;
+const double EdgeOriginalData::MinCapacityRatio = 1.0 / 100.0;
+
+DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping) : myDynamicMode(dynamicMode)
 {
 	HRESULT hr = S_OK;
 	long count, EdgeDirIndex, StartTimeIndex, EndTimeIndex, CostIndex, CapacityIndex;
@@ -128,7 +133,8 @@ size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacue
 size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache,
 	 std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode) const
 {
-	size_t CountPaths = 0;
+	size_t CountPaths = AllEvacuees->size();
+
 	// first undo previous changes using the backup map 'OriginalEdgeSettings'
 	for (auto & pair : OriginalEdgeSettings) pair.second.ResetRatios();	
 
@@ -166,19 +172,21 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 
 	// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
 	// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
-	if (myDynamicMode == DynamicMode::Full)
+	if (Time > 0.0)
 	{
-		DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
-		for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
-		CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time);
+		if (myDynamicMode == DynamicMode::Full)
+		{
+			DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
+			for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
+			CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time);
+		}
+		else if (myDynamicMode == DynamicMode::Smart)
+		{
+			DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
+			NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
+			CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time);
+		}
 	}
-	else if (myDynamicMode == DynamicMode::Smart)
-	{
-		DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
-		NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
-		CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time);
-	}
-
 	// now apply changes to the graph
 	for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
 
