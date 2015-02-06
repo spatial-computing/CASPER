@@ -295,47 +295,6 @@ STDMETHODIMP EvcSolverSymbolizer::CreateLayer(INAContext* pNAContext, INALayer**
 	ipNALayer->Add(ipEdgesFeatureLayer);
 
 	//******************************************************************************************/
-	// RouteEdges layer
-
-	// Get the EdgeStat NAClass/FeatureClass
-	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnknown))) return hr;
-
-	IFeatureClassPtr ipRouteEdgesFC(ipUnknown);
-	if (!ipRouteEdgesFC) return E_UNEXPECTED;
-
-	// Create a new feature layer for the EdgeStat feature class
-	IFeatureLayerPtr ipRouteEdgesFeatureLayer(CLSID_FeatureLayer);
-	ipRouteEdgesFeatureLayer->putref_FeatureClass(ipRouteEdgesFC);
-	ipRouteEdgesFeatureLayer->put_Name(ATL::CComBSTR(CS_ROUTEEDGES_NAME));
-
-	// Give the EdgeStat layer a simple renderer and a single symbol property page
-	CreateLineRenderer(ipSolverColor, &ipFeatureRenderer);
-
-	ipGeoFeatureLayer = ipRouteEdgesFeatureLayer;
-	if (!ipGeoFeatureLayer) return S_OK;
-
-	if (FAILED(hr = ipGeoFeatureLayer->putref_Renderer(ipFeatureRenderer))) return hr;
-
-	IUIDPtr ipSingleSymbolPropertyPageUIDRE(CLSID_UID);
-
-	if (FAILED(ipSingleSymbolPropertyPageUIDRE->put_Value(ATL::CComVariant(L"esriCartoUI.SingleSymbolPropertyPage"))))
-	{
-		// Renderer Property Pages are not installed with Engine. In this
-		// case getting the property page by PROGID is an expected failure.
-		ipSingleSymbolPropertyPageUIDRE = nullptr;
-	}
-
-	if (ipSingleSymbolPropertyPageUIDRE)
-	{
-		if (FAILED(hr = ipGeoFeatureLayer->put_RendererPropertyPageClassID(ipSingleSymbolPropertyPageUIDRE))) return hr;
-	}
-
-	((IFeatureSelectionPtr)ipRouteEdgesFeatureLayer)->putref_SelectionColor(ipSelectionColor);
-
-	// Add the new RouteEdges layer as a sub-layer in the new NALayer
-	ipNALayer->Add(ipRouteEdgesFeatureLayer);
-
-	//******************************************************************************************/
 	// flocks layer
 	// Get the flocks NAClass/FeatureClass
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnknown))) return hr;

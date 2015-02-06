@@ -123,9 +123,9 @@ void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolver
 }
 
 HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag,
-	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBufferR, IFeatureBufferPtr ipFeatureBufferE, IFeatureCursorPtr ipFeatureCursorR,
-	IFeatureCursorPtr ipFeatureCursorE, long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex,
-	long ERRouteFieldIndex, long EREdgeFieldIndex, long EREdgeDirFieldIndex, long ERSeqFieldIndex, long ERFromPosFieldIndex, long ERToPosFieldIndex, long ERCostFieldIndex, bool ExportRouteEdges)
+	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBufferR, IFeatureCursorPtr ipFeatureCursorR,
+	long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex,
+	long ERRouteFieldIndex, long EREdgeFieldIndex, long EREdgeDirFieldIndex, long ERSeqFieldIndex, long ERFromPosFieldIndex, long ERToPosFieldIndex, long ERCostFieldIndex)
 {
 	HRESULT hr = S_OK;
 	OrginalCost = 0.0;
@@ -137,7 +137,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	esriGeometryType type;
 	IPointCollectionPtr pcollect;
 	IPointPtr p;
-	VARIANT RouteOID, RouteEdgesOID;
+	VARIANT RouteOID;
 
 	for (const auto & pathSegment : *this)
 	{
@@ -211,30 +211,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	f << RouteOID.intVal << ',' << myEvc->PredictedCost << ',' << ReserveEvacuationCost << ',' << FinalEvacuationCost << std::endl;
 	f.close();
 	#endif
-
-	// now export each path segment into ReouteEdges table
-	long seq = 0;
-	double segmentCost = RoutedPop * initDelayCostPerPop;
-	BSTR dir;
-	if (ExportRouteEdges)
-	{
-		for (const auto & pathSegment : *this)
-		{
-			segmentCost += pathSegment->Edge->GetCurrentCost() * abs(pathSegment->GetEdgePortion());
-			dir = pathSegment->Edge->Direction == esriNEDAgainstDigitized ? L"Against" : L"Along";
-
-			if (FAILED(hr = ipFeatureBufferE->putref_Shape(pathSegment->pline))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERRouteFieldIndex, RouteOID))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(EREdgeFieldIndex, ATL::CComVariant(pathSegment->Edge->EID)))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(EREdgeDirFieldIndex, ATL::CComVariant(dir)))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERSeqFieldIndex, ATL::CComVariant(seq)))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERFromPosFieldIndex, ATL::CComVariant(pathSegment->GetFromRatio())))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERToPosFieldIndex, ATL::CComVariant(pathSegment->GetToRatio())))) return hr;
-			if (FAILED(hr = ipFeatureBufferE->put_Value(ERCostFieldIndex, ATL::CComVariant(segmentCost)))) return hr;
-
-			if (FAILED(hr = ipFeatureCursorE->InsertFeature(ipFeatureBufferE, &RouteEdgesOID))) return hr;
-		}
-	}
+	
 	// Step the progress bar before continuing to the next Evacuee point
 	if (ipStepProgressor) ipStepProgressor->Step();
 

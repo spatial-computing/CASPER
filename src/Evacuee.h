@@ -106,8 +106,8 @@ public:
 	double GetMinCostRatio(double MaxEvacuationCost = 0.0) const;
 	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
 	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
-	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
-									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
+	HRESULT AddPathToFeatureBuffers(ITrackCancel *, INetworkDatasetPtr, IFeatureClassContainerPtr, bool &,
+		IStepProgressorPtr, double &, double, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long, long, long, long, long, long, long, long);
 	void ReattachToEvacuee(EvcSolverMethod method);
 	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
 	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
