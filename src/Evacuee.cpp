@@ -31,7 +31,50 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 }
 
 double PathSegment::GetCurrentCost(EvcSolverMethod method) const { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
-bool EvcPath::MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
+bool EvcPath::MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
+
+// first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
+size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end,
+	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, double initDelayPerPop)
+{
+	size_t count = 0, segment = 0;
+	double pathCost = 0.0, segCost = 0.0, segRatio = 0.0;
+	EvcPathPtr path = nullptr;
+
+	if (CurrentTime > 0.0)
+	{
+		std::sort(begin, end, EvcPath::MoreThanPathOrder2);
+		for (auto p = begin; p != end; ++p)
+		{
+			path = *p;
+			if (path->FinalEvacuationCost > CurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty())
+			{
+				segCost = 0.0;
+				pathCost = 0.0;
+				for (segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
+				{
+					segCost = path->at(segment)->GetCurrentCost(method);
+					pathCost += segCost;
+				}
+				segRatio = (pathCost - CurrentTime) / segCost;
+
+				for (size_t i = path->size() - 1; i >= segment; --i)
+				{
+					path->at(i)->Edge->RemoveReservation(path, method, true);
+					DynamicallyAffectedEdges.insert(path->at(i)->Edge);
+					delete path->at(i);
+				}
+				path->Frozen = true;
+				path->erase(path->begin() + segment, path->end());
+
+				path->myEvc->Status = EvacueeStatus::Unprocessed;
+				path->MySafeZone->Reserve(-path->RoutedPop);
+				++count;
+			}
+		}
+	}
+	return count;
+}
 
 void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths)
 {
@@ -245,14 +288,6 @@ Evacuee::~Evacuee(void)
 	Vertices->clear();
 	delete Vertices;
 	delete Paths;
-}
-
-// first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
-size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::const_iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::const_iterator & end,
-	 std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime)
-{
-	/// TODO
-	return 0;
 }
 
 EvacueeList::~EvacueeList()

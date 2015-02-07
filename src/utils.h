@@ -187,6 +187,52 @@ public:
 		data[index] = data[--_size];
 	}
 
+	class iterator : public virtual std::iterator<std::random_access_iterator_tag, T>
+	{
+	private:
+		GrowingArrayList<T, S, ZeroSize> & myList;
+		S myIndex;
+
+	public:
+		iterator(GrowingArrayList<T, S, ZeroSize> & list, S index = ZeroSize) : myList(list), myIndex(index) { };
+		iterator(const iterator & copy) : myList(copy.myList), myIndex(copy.myIndex) { };
+		
+		iterator & operator=(const iterator & rhs)
+		{
+			if (&myList != &(rhs.myList)) throw std::logic_error("operator call on different iterators");
+			myIndex = rhs.myIndex;
+			return *this;
+		}
+
+		bool operator<(const iterator & rhs) const
+		{
+			if (&myList != &(rhs.myList)) throw std::logic_error("operator call on different iterators");
+			return myIndex < rhs.myIndex;
+		}
+
+		bool operator>(const iterator & rhs) const
+		{
+			if (&myList != &(rhs.myList)) throw std::logic_error("operator call on different iterators");
+			return myIndex > rhs.myIndex;
+		}
+
+		iterator & operator++() { ++myIndex; return *this; }
+		iterator operator++(int){ ++myIndex; return *this; }
+		iterator & operator--() { --myIndex; return *this; }
+		T & operator*() { return myList[myIndex]; }
+		bool operator==(iterator const & rhs) const { return &myList == &(rhs.myList) && myIndex == rhs.myIndex; }
+		bool operator!=(iterator const & rhs) const { return !(*this == rhs); }
+
+		// random access operators
+		iterator & operator+=(S n) { myIndex += n; return *this; }
+		iterator & operator-=(S n) { myIndex -= n; return *this; }
+		iterator operator+(S n) const { return iterator(myList, myIndex + n); }
+		iterator operator-(S n) const { return iterator(myList, myIndex - n); }
+		friend iterator operator+(S n, iterator const & rhs) { return iterator(rhs.myList, rhs.myIndex + n); }
+		friend iterator operator-(S n, iterator const & rhs) { return iterator(rhs.myList, rhs.myIndex - n); }
+		friend difference_type operator-(iterator const & lhs, iterator const & rhs) { return lhs.myIndex - rhs.myIndex; }
+	};
+
 	class const_iterator
 	{
 	private:
@@ -195,7 +241,10 @@ public:
 
 	public:
 		const_iterator(const GrowingArrayList<T, S, ZeroSize> & list, S index = ZeroSize) : myList(list), myIndex(index) { };
+		const_iterator(const const_iterator & copy) : myList(copy.myList), myIndex(copy.myIndex) { };
+
 		const_iterator & operator++() { ++myIndex; return *this; }
+		const_iterator & operator--() { --myIndex; return *this; }
 		const T & operator*() const { return myList[myIndex]; }
 		bool operator==(const_iterator const & rhs) const { return &myList == &(rhs.myList) && myIndex == rhs.myIndex; }
 		bool operator!=(const_iterator const & rhs) const { return !(*this == rhs); }
@@ -203,6 +252,8 @@ public:
 
 	const_iterator begin() const { return const_iterator(*this); }
 	const_iterator end()   const { return const_iterator(*this, _size); }
+	iterator begin()  { return iterator(*this); }
+	iterator end()    { return iterator(*this, _size); }
 };
 
 template <class T, class S = UINT8, S ZeroSize = 0>
@@ -231,7 +282,7 @@ public:
 
 	using baseArray::begin;
 	using baseArray::end;
-	using baseArray::const_iterator;
+	using baseArray::iterator;
 
 	MinimumArrayList(S cap = ZeroSize) : GrowingArrayList<std::pair<K, V>, S, ZeroSize>(cap), minValueIndex(ZeroSize) { }
 

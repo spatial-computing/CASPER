@@ -95,11 +95,6 @@ public:
 		return e1->GetCurrentCost(method) < e2->GetCurrentCost(method);
 	}
 
-	//static bool CongestionLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
-	//{
-	//	return e1->GetTrafficSpeedRatio(e1->reservations->ReservedPop, method) > e2->GetTrafficSpeedRatio(e2->reservations->ReservedPop, method);
-	//}
-
 	static double GetHeapKeyHur(const NAEdge * e);
 	static double GetHeapKeyNonHur(const NAEdge * e);
 	static bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2);
@@ -339,6 +334,7 @@ public:
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
+	double GetInitDelayPerPop()   const { return myTrafficModel->InitDelayCostPerPop;  }
 	NAEdgePtr Get(long eid, esriNetworkEdgeDirection dir) const;
 	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
 	void Clear();

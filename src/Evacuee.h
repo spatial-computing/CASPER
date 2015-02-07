@@ -22,6 +22,7 @@ class NAEdgeMap;
 class EvacueeList;
 struct NAEdgePtrHasher;
 struct NAEdgePtrEqual;
+class SafeZone;
 typedef NAVertex * NAVertexPtr;
 
 class PathSegment
@@ -63,6 +64,8 @@ class Evacuee;
 class EvcPath : private std::deque<PathSegmentPtr>
 {
 private:
+	bool    Frozen;
+	SafeZone * MySafeZone;
 	double  RoutedPop;
 	double  ReserveEvacuationCost;
 	double  FinalEvacuationCost;
@@ -85,9 +88,9 @@ public:
 	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
 	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
 
-	EvcPath(double routedPop, int order, Evacuee * evc) : baselist()
+	EvcPath(double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone) :
+		baselist(), MySafeZone(mySafeZone), RoutedPop(routedPop), Frozen(false)
 	{
-		RoutedPop = routedPop;
 		FinalEvacuationCost = 0.0;
 		ReserveEvacuationCost = 0.0;
 		OrginalCost = 0.0;
@@ -118,12 +121,13 @@ public:
 
 	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method,
 		                               std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges = nullptr, std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
-	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::const_iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::const_iterator & end,
-									   std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime);
+	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end,
+									   std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, double initDelayPerPop);
 
 	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2) { return p1->Order < p2->Order; }
 	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
-	static bool MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2);
+	static bool MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
+	static bool MoreThanPathOrder2(const EvcPath * p1, const EvcPath * p2) { return p1->Order > p2->Order; }
 };
 
 typedef EvcPath * EvcPathPtr;
@@ -197,7 +201,7 @@ public:
 	bool IsSeperationDisabledForDynamicCASPER() const { return SeperationDisabledForDynamicCASPER; }
 	void Insert(const EvacueePtr & item) { push_back(item); }
 	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator begin() const { return DoubleGrowingArrayList<EvacueePtr, size_t>::begin(); }
-	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator end()   const { return DoubleGrowingArrayList<EvacueePtr, size_t>::end();   }
+	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator end()   const { return DoubleGrowingArrayList<EvacueePtr, size_t>::end(); }
 	size_t size() const { return DoubleGrowingArrayList<EvacueePtr, size_t, 0>::size(); }
 };
 

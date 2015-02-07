@@ -351,7 +351,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.
-	std::sort(EvacueesForNextIteration.begin(), EvacueesForNextIteration.end(), EvcPath::MoreThanPathOrder);
+	std::sort(EvacueesForNextIteration.begin(), EvacueesForNextIteration.end(), EvcPath::MoreThanPathOrder1);
 	for (const auto & evc : EvacueesForNextIteration) EvcPath::DetachPathsFromEvacuee(evc, solverMethod, &touchededges, detachedPaths);
 	NAEdge::HowDirtyExhaustive(touchededges.begin(), touchededges.end(), solverMethod, 1.0);
 
@@ -838,7 +838,7 @@ bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 		populationLeft -= population2Route;
 
 		// create a new path for this portion of the population
-		path = new DEBUG_NEW_PLACEMENT EvcPath(population2Route, ++pathGenerationCount, currentEvacuee);
+		path = new DEBUG_NEW_PLACEMENT EvcPath(population2Route, ++pathGenerationCount, currentEvacuee, BetterSafeZone);
 
 		// special case for the last edge. We have to sub-curve it based on the safe point location along the edge
 		if (BetterSafeZone->getBehindEdge())

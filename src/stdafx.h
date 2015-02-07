@@ -135,6 +135,7 @@ using ATL::CRegistryVirtualMachine;
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <iterator>
 
 #pragma warning(push)
 #pragma warning(disable : 4521) /* Ignore warning for boost::heap multiple copy constructors  */

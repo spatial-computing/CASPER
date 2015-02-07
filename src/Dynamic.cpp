@@ -22,7 +22,8 @@ const double EdgeOriginalData::MinCostRatio     = 1.0 / 1000.0;
 const double EdgeOriginalData::MaxCapacityRatio = 1000.0;
 const double EdgeOriginalData::MinCapacityRatio = 1.0 / 100.0;
 
-DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping) : myDynamicMode(dynamicMode)
+DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping, EvcSolverMethod solverMethod) : 
+	myDynamicMode(dynamicMode), SolverMethod(solverMethod)
 {
 	HRESULT hr = S_OK;
 	long count, EdgeDirIndex, StartTimeIndex, EndTimeIndex, CostIndex, CapacityIndex;
@@ -125,13 +126,13 @@ size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacue
 {
 	if (currentTime == dynamicTimeFrame.end()) return 0;
 	const CriticalTime & currentChangeGroup = *currentTime;
-	size_t EvcCount = currentChangeGroup.ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode);
+	size_t EvcCount = currentChangeGroup.ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
 	++currentTime;
 	return EvcCount;
 }
 
 size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache,
-	 std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode) const
+	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod) const
 {
 	size_t CountPaths = AllEvacuees->size();
 
@@ -172,26 +173,26 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 
 	// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
 	// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
-	if (Time > 0.0)
+	if (this->Time > 0.0)
 	{
 		if (myDynamicMode == DynamicMode::Full)
 		{
 			DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
 			for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
-			CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time);
+			CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetInitDelayPerPop());
 		}
 		else if (myDynamicMode == DynamicMode::Smart)
 		{
 			DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
 			NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
-			CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time);
+			CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetInitDelayPerPop());
 		}
 	}
 	// now apply changes to the graph
 	for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
 
 	// re-calculate edges' dirtyness state
-	NAEdge::HowDirtyExhaustive(DynamicallyAffectedEdges.begin(), DynamicallyAffectedEdges.end(), EvcSolverMethod::CASPERSolver, 1.0);
+	NAEdge::HowDirtyExhaustive(DynamicallyAffectedEdges.begin(), DynamicallyAffectedEdges.end(), solverMethod, 1.0);
 
 	// then clean the edges from backup map only if they are no longer affected
 	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> clone(OriginalEdgeSettings);

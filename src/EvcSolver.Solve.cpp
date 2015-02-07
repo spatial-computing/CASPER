@@ -547,7 +547,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipUnk))) return hr;
 	bool DynamicTableExist = ipUnk;
 	if (DynamicTableExist) { if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipDynamicTable))) return hr; }
-	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, CASPERDynamicMode, flagBadDynamicChangeSnapping));
+	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, CASPERDynamicMode, flagBadDynamicChangeSnapping, solverMethod));
 
 	Evacuees->FinilizeGroupings(5.0 * costPerSec, disasterTable->Enabled()); // five seconds diameter for clustering
 

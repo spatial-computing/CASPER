@@ -93,7 +93,7 @@ public:
 	CriticalTime(double time) : Time(time) { }
 	void AddIntersectedChange(const SingleDynamicChangePtr & item) const { Intersected.push_back(item); }
 	size_t ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, 
-		 std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode) const;
+		   std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod method) const;
 
 	bool friend operator< (const CriticalTime & lhs, const CriticalTime & rhs) { return lhs.Time <  rhs.Time; }
 	static void MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTimeFrame);
@@ -107,10 +107,11 @@ private:
 	std::set<CriticalTime>::const_iterator currentTime;
 	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> OriginalEdgeSettings;
 	DynamicMode myDynamicMode;
+	EvcSolverMethod SolverMethod;
 
 public:
 	bool Enabled() const { return myDynamicMode != DynamicMode::Disabled; }
-	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping);
+	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping, EvcSolverMethod solverMethod);
 	void ResetDynamicChanges();
 	size_t NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache);
 	virtual ~DynamicDisaster() { for (auto p : allChanges) delete p; }
