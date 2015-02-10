@@ -124,7 +124,7 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 	}
 }
 
-size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, INetworkQueryPtr ipNetworkQuery)
+size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache)
 {
 	if (currentTime == dynamicTimeFrame.end())
 	{
@@ -140,12 +140,12 @@ size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacue
 		EvcPath::DynamicStep_MergePaths(AllEvacuees, SolverMethod, ecache->GetInitDelayPerPop());
 		return 0;
 	}
-	size_t EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, ipNetworkQuery, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
+	size_t EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
 	++currentTime;
 	return EvcCount;
 }
 
-size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, INetworkQueryPtr ipNetworkQuery,
+size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache,
 	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod) const
 {
 	size_t CountPaths = AllEvacuees->size();
@@ -193,13 +193,13 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 		{
 			DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
 			for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
-			CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ipNetworkQuery, OriginalEdgeSettings);
+			CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
 		}
 		else if (myDynamicMode == DynamicMode::Smart)
 		{
 			DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
 			NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
-			CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ipNetworkQuery, OriginalEdgeSettings);
+			CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
 		}
 	}
 	// now apply changes to the graph

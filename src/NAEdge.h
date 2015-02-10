@@ -283,7 +283,6 @@ public:
 	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop,
 		EvcTrafficModel model, INetworkForwardStarExPtr _ipForwardStar, INetworkForwardStarExPtr _ipBackwardStar, INetworkQueryPtr _ipNetworkQuery, HRESULT & hr)
 	{
-		hr = S_OK;
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
 		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
@@ -299,17 +298,20 @@ public:
 		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipAdjacencies))) return;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return;
 		ipCurrentEdge = ipEdgeElement;
+	}
 
+	void InitSourceCache() const
+	{
 		// create cache in network dataset object
 		long SourceCount = 0, sourceID = 0;
-		INetworkDataset2Ptr network(_ipNetworkQuery);
+		INetworkDataset2Ptr network(ipNetworkQuery);
 		INetworkSourcePtr source = nullptr;
-		if (SUCCEEDED(hr = network->get_SourceCount(&SourceCount)))
+		if (SUCCEEDED(network->get_SourceCount(&SourceCount)))
 		{
 			for (long i = 0; i < SourceCount; ++i)
 			{
-				if (FAILED(hr = network->get_Source(i, &source))) continue;
-				if (FAILED(hr = source->get_ID(&sourceID))) continue;
+				if (FAILED( network->get_Source(i, &source))) continue;
+				if (FAILED(source->get_ID(&sourceID))) continue;
 				ipNetworkQuery->PopulateIDCache(sourceID);
 			}
 		}
@@ -330,6 +332,7 @@ public:
 	NAEdgePtr New(long EID, esriNetworkEdgeDirection dir);
 	NAEdgePtr New(INetworkEdgePtr edge);
 
+	INetworkQueryPtr GetNetworkQuery()  { return ipNetworkQuery;        }
 	NAEdgeTableItr AlongBegin()   const { return cacheAlong->begin();   }
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }

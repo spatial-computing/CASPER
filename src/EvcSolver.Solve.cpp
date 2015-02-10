@@ -578,6 +578,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 
 	disasterTable = nullptr;
+	ecache->InitSourceCache();
 
 	//******************************************************************************************/
 	// Write output
