@@ -958,9 +958,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 
 	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList.size());
-
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), CARMAExtractCounts.size(), carmaSec, max(0, mem));
-
 	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
 	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
@@ -1010,7 +1008,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(ATL::CComBSTR(simulationIncompleteEndingMsg));
-	if (IsSafeZoneMissed) pMessages->AddWarning(ATL::CComBSTR(L"One or more safe zones where snapped into the same network junction and hence they were merged into one safe zone. It this is not OK, use a different Network Location setting."));
+	if (IsSafeZoneMissed) pMessages->AddWarning(ATL::CComBSTR(
+		L"One or more safe zones where snapped into the same network junction and hence they were merged into one safe zone. It this is not OK, use a different Network Location setting."));
 
 	if (!(collisionMsg.IsEmpty()))
 	{
@@ -1025,15 +1024,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode but the network analysis layer does not have the DynamicChanges feature class.")));
 	}
 
+	if (disasterTable->Enabled() && flockingEnabled == VARIANT_TRUE)
+		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and flocking simulation. The simulation does not honor the dynamic changes and hence the results will not necessarily comply.")));
+	
 	if (Evacuees->IsSeperationDisabledForDynamicCASPER())
-	{
 		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and evacuee seperation feature. They are not compatible so evacuee seperation has been temporarily disabled.")));
-	}
-
+	
 	if (flagBadDynamicChangeSnapping)
-	{
 		pMessages->AddWarning(ATL::CComBSTR(_T("You have snapped some or all of DynamicChange polygons to vertices instead of edges and hence I cannot apply them properly. They have been ignored.")));
-	}	
 
 	// since vertices inside the cache are still pointing to some edges it's safer to clean them first
 	vcache = nullptr;

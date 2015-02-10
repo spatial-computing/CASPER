@@ -15,6 +15,7 @@
 #include "utils.h"
 
 class NAVertex;
+class NAVertexCache;
 class NAEdge;
 class NAEdgeCache;
 class NAEdgeContainer;
@@ -23,6 +24,7 @@ class EvacueeList;
 struct NAEdgePtrHasher;
 struct NAEdgePtrEqual;
 class SafeZone;
+struct EdgeOriginalData;
 typedef NAVertex * NAVertexPtr;
 
 class PathSegment
@@ -84,6 +86,7 @@ public:
 	using baselist::const_iterator;
 
 	inline double GetRoutedPop()             const { return RoutedPop;             }
+	inline bool   IsFrozen()                 const { return Frozen;                }
 	inline double GetReserveEvacuationCost() const { return ReserveEvacuationCost; }
 	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
 	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
@@ -119,10 +122,12 @@ public:
 	friend bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
 	friend bool operator!=(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order != rhs.Order; }
 
-	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method,
-		                               std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges = nullptr, std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
-	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end,
-									   std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, double initDelayPerPop);
+	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges = nullptr,
+		std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
+	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end, 
+		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery,
+		const std::unordered_map<NAEdge *, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings);
+	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, EvcSolverMethod solverMethod, double InitDelayPerPop);
 
 	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2) { return p1->Order < p2->Order; }
 	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
@@ -149,7 +154,7 @@ public:
 	virtual ~Evacuee(void);
 	Evacuee(const Evacuee & that) = delete;
 	Evacuee & operator=(const Evacuee &) = delete;
-	void DynamicStep_MoveOnPath(double CurrentTime);
+	void DynamicMove(NAEdge * edge, double FromRatio, INetworkQueryPtr ipNetworkQuery, const std::unordered_map<NAEdge *, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings);
 
 	static bool LessThan(const Evacuee * e1, const Evacuee * e2)
 	{

@@ -95,7 +95,7 @@ END_OF_FUNC:
 	}
 }
 
-void DynamicDisaster::ResetDynamicChanges()
+size_t DynamicDisaster::ResetDynamicChanges()
 {
 	dynamicTimeFrame.clear();
 	dynamicTimeFrame.emplace(CriticalTime(0.0));
@@ -108,6 +108,8 @@ void DynamicDisaster::ResetDynamicChanges()
 	}
 	CriticalTime::MergeWithPreviousTimeFrame(dynamicTimeFrame);
 	currentTime = dynamicTimeFrame.begin();
+
+	return dynamicTimeFrame.size();
 }
 
 void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTimeFrame)
@@ -122,22 +124,34 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 	}
 }
 
-size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache)
+size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, INetworkQueryPtr ipNetworkQuery)
 {
-	if (currentTime == dynamicTimeFrame.end()) return 0;
-	const CriticalTime & currentChangeGroup = *currentTime;
-	size_t EvcCount = currentChangeGroup.ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
+	if (currentTime == dynamicTimeFrame.end())
+	{
+		// we are done processing all dynamic cganges so let's merge all partitioned / frozen paths
+		// and bring back the default graph settings
+		for (auto & pair : OriginalEdgeSettings) pair.second.ResetRatios();
+
+		// now apply original values to the graph
+		for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
+		OriginalEdgeSettings.clear();
+
+		// merge path together
+		EvcPath::DynamicStep_MergePaths(AllEvacuees, SolverMethod, ecache->GetInitDelayPerPop());
+		return 0;
+	}
+	size_t EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, ipNetworkQuery, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
 	++currentTime;
 	return EvcCount;
 }
 
-size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache,
+size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, INetworkQueryPtr ipNetworkQuery,
 	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod) const
 {
 	size_t CountPaths = AllEvacuees->size();
 
 	// first undo previous changes using the backup map 'OriginalEdgeSettings'
-	for (auto & pair : OriginalEdgeSettings) pair.second.ResetRatios();	
+	for (auto & pair : OriginalEdgeSettings) pair.second.ResetRatios();
 
 	// next apply new changes to enclosed edges. backup original settings into the 'OriginalEdgeSettings' map
 	NAEdgePtr edge = nullptr;
@@ -179,13 +193,13 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 		{
 			DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
 			for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
-			CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetInitDelayPerPop());
+			CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ipNetworkQuery, OriginalEdgeSettings);
 		}
 		else if (myDynamicMode == DynamicMode::Smart)
 		{
 			DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
 			NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
-			CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetInitDelayPerPop());
+			CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ipNetworkQuery, OriginalEdgeSettings);
 		}
 	}
 	// now apply changes to the graph

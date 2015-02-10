@@ -14,6 +14,7 @@
 #include "Evacuee.h"
 #include "NAVertex.h"
 #include "NAEdge.h"
+#include "Dynamic.h"
 
 HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry)
 {
@@ -35,7 +36,8 @@ bool EvcPath::MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { retur
 
 // first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
 size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end,
-	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, double initDelayPerPop)
+	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery,
+	const std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings)
 {
 	size_t count = 0, segment = 0;
 	double pathCost = 0.0, segCost = 0.0, segRatio = 0.0;
@@ -51,22 +53,31 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 			{
 				segCost = 0.0;
 				pathCost = 0.0;
+
+				// find the segment where we need to cut the path
 				for (segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
 				{
 					segCost = path->at(segment)->GetCurrentCost(method);
 					pathCost += segCost;
 				}
+				if (pathCost < CurrentTime) throw std::logic_error("A path is shorter than calculated");
 				segRatio = (pathCost - CurrentTime) / segCost;
 
+				// move the evacuee to this segment
+				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery, OriginalEdgeSettings);
+
+				// pop out the rest of the segments in this path
 				for (size_t i = path->size() - 1; i >= segment; --i)
 				{
 					path->at(i)->Edge->RemoveReservation(path, method, true);
 					DynamicallyAffectedEdges.insert(path->at(i)->Edge);
 					delete path->at(i);
 				}
-				path->Frozen = true;
 				path->erase(path->begin() + segment, path->end());
 
+				// setup this path as frozen and mark the evacuee as unporcessed
+				path->Frozen = true;
+				path->FinalEvacuationCost = CurrentTime;
 				path->myEvc->Status = EvacueeStatus::Unprocessed;
 				path->MySafeZone->Reserve(-path->RoutedPop);
 				++count;
@@ -74,6 +85,43 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 		}
 	}
 	return count;
+}
+
+void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, EvcSolverMethod solverMethod, double InitDelayPerPop)
+{
+	std::vector<EvcPathPtr> frozenList;
+	EvcPathPtr mainPath = nullptr, fp = nullptr;
+	for (auto evc : *AllEvacuees)	
+		if (evc->Status != EvacueeStatus::Unreachable)
+		{
+			// first identify the main path and the frozen ones
+			frozenList.clear();
+			mainPath = nullptr;
+			for (auto p : *evc->Paths)
+			{
+				if (p->Frozen) frozenList.push_back(p);
+				else
+				{
+					if (mainPath) throw std::logic_error("One evacuee has many unfrozen/main paths");
+					mainPath = p;
+				}
+			}
+
+			// now merge the frozen ones to the mian one in the order they are created
+			for (auto p = frozenList.rbegin(); p != frozenList.rend(); ++p)
+			{
+				fp = *p;
+				mainPath->front()->SetFromRatio(0.0);
+				mainPath->FinalEvacuationCost += fp->FinalEvacuationCost;
+				for (auto seg = fp->rbegin(); seg != fp->rend(); ++seg) mainPath->push_front(*seg);
+				fp->clear();
+				delete fp;
+			}
+
+			// leave the main path as the only path for this evacuee
+			evc->Paths->clear();
+			evc->Paths->push_back(mainPath);
+		}
 }
 
 void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths)
@@ -172,7 +220,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 {
 	HRESULT hr = S_OK;
 	OrginalCost = 0.0;
-	FinalEvacuationCost = 0.0;
+	/// FinalEvacuationCost = 0.0;
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
@@ -217,7 +265,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 		}
 		// Final cost calculations
 		double p = abs(pathSegment->GetEdgePortion());
-		FinalEvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
+		/// FinalEvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
 		OrginalCost         += pathSegment->Edge->OriginalCost     * p;
 	}
 
@@ -229,7 +277,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	}
 
 	// add the initial delay cost
-	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
+	/// FinalEvacuationCost += RoutedPop * initDelayCostPerPop; // we no longer calculate Final cost since the dynamic step is doing it more accurately
 	globalEvcCost = max(globalEvcCost, FinalEvacuationCost);
 
 	// Store the feature values on the feature buffer
@@ -288,6 +336,24 @@ Evacuee::~Evacuee(void)
 	Vertices->clear();
 	delete Vertices;
 	delete Paths;
+}
+
+void Evacuee::DynamicMove(NAEdgePtr edge, double toRatio, INetworkQueryPtr ipNetworkQuery, const std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings)
+{
+	INetworkElementPtr ipElement = nullptr;
+	for (auto v : *Vertices) delete v;
+	Vertices->clear();
+
+	if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipElement))) return;
+	INetworkJunctionPtr toJunction(ipElement);
+	if (FAILED(edge->NetEdge->QueryJunctions(nullptr, toJunction))) return;
+
+	NAVertexPtr myVertex = new DEBUG_NEW_PLACEMENT NAVertex(toJunction, edge);
+	myVertex->GVal = toRatio * edge->OriginalCost;
+	auto i = OriginalEdgeSettings.find(edge);
+	if (i != OriginalEdgeSettings.end()) myVertex->GVal = toRatio * i->second.AdjustedCost();
+
+	Vertices->push_back(myVertex);
 }
 
 EvacueeList::~EvacueeList()

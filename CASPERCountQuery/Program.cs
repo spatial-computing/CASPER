@@ -26,13 +26,14 @@ namespace CountQuery
     {
         static int Main(string[] args)
         {
-            if (args.Length < 1)
+            if (args.Length < 2)
             {
-                Console.WriteLine("Usage: CASPERCountQuery logfilename.csv");
+                Console.WriteLine("Usage: CASPERCountQuery logfilename.csv MODE");
                 return 1;
             }
 
             string inpFile = args[0];
+            int mode = int.Parse(args[1]);
 
             try
             {
@@ -64,9 +65,20 @@ namespace CountQuery
                 {
                     for (int i = 0; i < DistSetupNames.Count(); ++i)
                         for (int j = 0; j < DistSetupNames.Count(); ++j)
-                            if (record.First(r => r.SetupName == DistSetupNames[i]).Improvment >= record.First(r => r.SetupName == DistSetupNames[j]).Improvment) output[i, j]++;
-                            // output[i, j] += record.First(r => r.SetupName == DistSetupNames[i]).Improvment - record.First(r => r.SetupName == DistSetupNames[j]).Improvment;
-                            // if (record.First(r => r.SetupName == DistSetupNames[i]).Improvment > record.First(r => r.SetupName == DistSetupNames[j]).Improvment) output[i, j]++;
+                            switch (mode)
+                            {
+                                case 1:
+                                    if (record.First(r => r.SetupName == DistSetupNames[i]).Improvment >= record.First(r => r.SetupName == DistSetupNames[j]).Improvment) output[i, j]++;
+                                    break;
+                                case 2:
+                                    output[i, j] += record.First(r => r.SetupName == DistSetupNames[i]).Improvment - record.First(r => r.SetupName == DistSetupNames[j]).Improvment;
+                                    break;
+                                case 3:
+                                    if (record.First(r => r.SetupName == DistSetupNames[i]).Improvment > record.First(r => r.SetupName == DistSetupNames[j]).Improvment) output[i, j]++;
+                                    break;
+                                default:
+                                    throw new Exception("Bad MODE");
+                            }                        
                 }
 
                 for (int i = -1; i < DistSetupNames.Count(); ++i)

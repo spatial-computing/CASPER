@@ -17,6 +17,7 @@
 
 // forward declare some classes
 class EvacueeList;
+class NAVertexCache;
 
 struct EdgeOriginalData
 {
@@ -44,6 +45,7 @@ struct EdgeOriginalData
 		CostRatio = 1.0;
 		CapacityRatio = 1.0;
 	}
+
 	bool IsRatiosNonZero() const { return CostRatio != 1.0 || CapacityRatio != 1.0; }
 
 	inline double AdjustedCost()     const { return CostRatio     < MaxCostRatio     ? (CostRatio     > MinCostRatio     ? OriginalCost     * CostRatio : OriginalCost * MinCostRatio) : FLT_MAX; }
@@ -92,7 +94,7 @@ private:
 public:
 	CriticalTime(double time) : Time(time) { }
 	void AddIntersectedChange(const SingleDynamicChangePtr & item) const { Intersected.push_back(item); }
-	size_t ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, 
+	size_t ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, INetworkQueryPtr ipNetworkQuery,
 		   std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod method) const;
 
 	bool friend operator< (const CriticalTime & lhs, const CriticalTime & rhs) { return lhs.Time <  rhs.Time; }
@@ -112,7 +114,7 @@ private:
 public:
 	bool Enabled() const { return myDynamicMode != DynamicMode::Disabled; }
 	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping, EvcSolverMethod solverMethod);
-	void ResetDynamicChanges();
-	size_t NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache);
+	size_t ResetDynamicChanges();
+	size_t NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, INetworkQueryPtr ipNetworkQuery);
 	virtual ~DynamicDisaster() { for (auto p : allChanges) delete p; }
 };

@@ -39,6 +39,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
 	int pathGenerationCount = -1, EvacueeProcessOrder = -1;
 	size_t CARMAClosedSize = 0, sumVisitedEdge = 0, NumberOfEvacueesInIteration = 0;
+	long progressBaseValue = 0l;
 	auto leafs = std::shared_ptr<NAEdgeContainer>(new DEBUG_NEW_PLACEMENT NAEdgeContainer(200));
 	std::vector<NAEdgePtr> readyEdges;
 	HANDLE proc = GetCurrentProcess();
@@ -66,12 +67,15 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		break;
 	}
 
+	// initialize all dynamic changes and prepare for loop
+	size_t countDynamic = dynamicDisasters->ResetDynamicChanges();
+
 	// Setup a message on our step progress bar indicating that we are traversing the network
 	if (ipStepProgressor)
 	{
 		// Setup our progress bar based on the number of Evacuee points
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) goto END_OF_FUNC;
-		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(AllEvacuees->size())))) goto END_OF_FUNC;
+		if (FAILED(hr = ipStepProgressor->put_MaxRange((long)(countDynamic * AllEvacuees->size())))) goto END_OF_FUNC;
 		if (FAILED(hr = ipStepProgressor->put_StepValue(1))) goto END_OF_FUNC;
 	}
 
@@ -82,18 +86,13 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 	if (FAILED(hr = DeterminMinimumPop2Route(AllEvacuees, ipNetworkDataset, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
 
-	// initialize all dynamic changes and prepare for loop
-	dynamicDisasters->ResetDynamicChanges();
-
-	while (dynamicDisasters->NextDynamicChange(AllEvacuees, ecache)) // dynamic CASPER loop
+	while (NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, ipNetworkQuery) > 0) // dynamic CASPER loop
 	{
-		NumberOfEvacueesInIteration = AllEvacuees->size();
-
 		do // iteration loop
 		{
 			if (ipStepProgressor)
 			{
-				if (FAILED(hr = ipStepProgressor->put_Position((long)(AllEvacuees->size() - NumberOfEvacueesInIteration)))) goto END_OF_FUNC;
+				if (FAILED(hr = ipStepProgressor->put_Position(progressBaseValue + (long)(AllEvacuees->size() - NumberOfEvacueesInIteration)))) goto END_OF_FUNC;
 				statusMsg.Format(_T("Performing %s search (pass %d)"), AlgName, GlobalEvcCostAtIteration.size() + 1);
 			}
 			do
@@ -278,6 +277,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				EffectiveIterationRatio.push_back(pow(double(NumberOfEvacueesInIteration) / AllEvacuees->size(), 1.0 / GlobalEvcCostAtIteration.size()));
 			}
 		} while (NumberOfEvacueesInIteration > 0);
+		progressBaseValue += AllEvacuees->size();
 	}
 
 END_OF_FUNC:
@@ -305,10 +305,11 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 		{
 			evc->FinalCost = 0.0;
 			for (const auto & path : *evc->Paths)
-			{
-				path->CalculateFinalEvacuationCost(initDelayCostPerPop, EvcSolverMethod::CASPERSolver);
-				allPaths.push_back(path);
-			}
+				if (!path->IsFrozen())
+				{
+					path->CalculateFinalEvacuationCost(initDelayCostPerPop, EvcSolverMethod::CASPERSolver);
+					allPaths.push_back(path);
+				}
 		}
 
 	std::sort(allPaths.begin(), allPaths.end(), EvcPath::MoreThanFinalCost);
