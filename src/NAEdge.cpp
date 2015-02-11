@@ -223,7 +223,7 @@ double NAEdge::GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const
 
 double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost) const
 {
-	if (reservations->Capacity <= 0.0 || OriginalCost >= FLT_MAX) return FLT_MAX;
+	if (reservations->Capacity <= 0.0 || OriginalCost >= INFINITE) return INFINITE;
 	double speedPercent = 1.0;
 	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);
 	newPop += reservations->ReservedPop;

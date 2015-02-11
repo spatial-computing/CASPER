@@ -322,10 +322,10 @@ Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
 	Vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 	Paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
 	Population = pop;
-	PredictedCost = FLT_MAX;
+	PredictedCost = INFINITE;
 	Status = EvacueeStatus::Unprocessed;
 	ProcessOrder = -1;
-	FinalCost = FLT_MAX;
+	FinalCost = INFINITE;
 }
 
 Evacuee::~Evacuee(void)
@@ -393,10 +393,10 @@ void SortedInsertIntoMapOfLists(std::unordered_map<long, std::list<EvacueePtr>> 
 	i->second.insert(j, evc);
 }
 
-void EvacueeList::FinilizeGroupings(double OKDistance, bool DynamicCASPEREnabled)
+void EvacueeList::FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPEREnabled)
 {
 	// turn off seperation flag is dynamic capser is enabled
-	if (DynamicCASPEREnabled)
+	if (DynamicCASPEREnabled == DynamicMode::Full || DynamicCASPEREnabled == DynamicMode::Smart)
 	{
 		SeperationDisabledForDynamicCASPER = CheckFlag(groupingOption, EvacueeGrouping::Separate);
 		groupingOption &= ~EvacueeGrouping::Separate;
@@ -450,7 +450,7 @@ void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CA
 		if (evc->Status == EvacueeStatus::Unprocessed && evc->Population > 0.0)
 		{
 			// reset evacuation prediction for continues carma sort
-			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = FLT_MAX;
+			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = INFINITE;
 
 			for (const auto & v : *evc->Vertices)
 			{
@@ -507,7 +507,7 @@ void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<Evacue
 	for (const auto & evc : *this)
 		for (const auto & e : evc.second)
 		{
-			if (e->PredictedCost >= FLT_MAX)
+			if (e->PredictedCost >= INFINITE)
 			{
 				e->Status = EvacueeStatus::Unreachable;
 				#ifdef TRACE
@@ -536,7 +536,7 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 {
 	double cost = 0.0;
 	double totalPop = population2Route + reservedPop;
-	if (capacity == 0.0 && costPerDensity > 0.0) return FLT_MAX;
+	if (capacity == 0.0 && costPerDensity > 0.0) return INFINITE;
 	if (totalPop > capacity && capacity > 0.0) cost += costPerDensity * ((totalPop / capacity) - 1.0);
 	if (behindEdge) cost += behindEdge->GetCost(population2Route, solverMethod, globalDeltaCost) * positionAlong;
 	return cost;

@@ -99,6 +99,7 @@ STDMETHODIMP EvcSolverPropPage::Show(UINT nCmdShow)
 		m_ipEvcSolver->get_DynamicCASPEROption(&dynMode);
 		::SendMessage(m_hcmbdynModeOptions, CB_RESETCONTENT, NULL, NULL);
 		::SendMessage(m_hcmbdynModeOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Disable")));
+		::SendMessage(m_hcmbdynModeOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Simple")));
 		::SendMessage(m_hcmbdynModeOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Full")));
 		::SendMessage(m_hcmbdynModeOptions, CB_ADDSTRING, NULL, (LPARAM)(_T("Smart")));
 		::SendMessage(m_hcmbdynModeOptions, CB_SETCURSEL, (WPARAM)dynMode, NULL);

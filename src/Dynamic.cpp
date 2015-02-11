@@ -85,30 +85,48 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 		item = nullptr;
 	}
 
+	// can i model the good old static barrier layer using my DynbamicChanges layer?
+	dynamicTimeFrame.clear();
+	auto fr = dynamicTimeFrame.emplace(CriticalTime(0.0));
+	auto bc = dynamicTimeFrame.emplace(CriticalTime(INFINITE));
+
+	if (myDynamicMode == DynamicMode::Simple)
+	{
+		// if we are in simp[le mode, we ignore all times and apply all changes at time 0, untill infinity
+		for (const auto & p : allChanges)
+		{
+			fr.first->AddIntersectedChange(p);
+			bc.first->AddIntersectedChange(p);
+		}
+	}
+	else if (myDynamicMode == DynamicMode::Smart || myDynamicMode == DynamicMode::Full)
+	{
+		for (const auto & p : allChanges)
+		{
+			auto i = dynamicTimeFrame.emplace(CriticalTime(p->StartTime));
+			dynamicTimeFrame.emplace(CriticalTime(p->EndTime));
+			i.first->AddIntersectedChange(p);
+		}
+		CriticalTime::MergeWithPreviousTimeFrame(dynamicTimeFrame);
+
+		// check if we can downgrade the time frame to Simple mode
+		if (dynamicTimeFrame.size() == 2) myDynamicMode = DynamicMode::Simple;
+	}
+
 END_OF_FUNC:
 	if (FAILED(hr))
 	{
 		if (item) delete item;
 		for (auto p : allChanges) delete p;
 		allChanges.clear();
+		dynamicTimeFrame.clear();
 		myDynamicMode = DynamicMode::Disabled;
 	}
 }
 
 size_t DynamicDisaster::ResetDynamicChanges()
 {
-	dynamicTimeFrame.clear();
-	dynamicTimeFrame.emplace(CriticalTime(0.0));
-
-	for (const auto & p : allChanges)
-	{	
-		auto i = dynamicTimeFrame.emplace(CriticalTime(p->StartTime));
-		i.first->AddIntersectedChange(p);		
-		if (p->EndTime < FLT_MAX) dynamicTimeFrame.emplace(CriticalTime(p->EndTime));
-	}
-	CriticalTime::MergeWithPreviousTimeFrame(dynamicTimeFrame);
 	currentTime = dynamicTimeFrame.begin();
-
 	return dynamicTimeFrame.size();
 }
 
@@ -119,28 +137,20 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 	
 	for (++thisTime; thisTime != dynamicTimeFrame.cend(); ++thisTime)
 	{
-		for (auto prevChange : *previousTimeFrame) if (prevChange->EndTime > thisTime->Time) thisTime->AddIntersectedChange(prevChange);
+		for (auto prevChange : *previousTimeFrame) 
+			if (prevChange->EndTime > thisTime->Time || prevChange->EndTime >= INFINITE) thisTime->AddIntersectedChange(prevChange);
 		previousTimeFrame = &(thisTime->Intersected);
 	}
 }
 
 size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache)
 {
-	if (currentTime == dynamicTimeFrame.end())
-	{
-		// we are done processing all dynamic cganges so let's merge all partitioned / frozen paths
-		// and bring back the default graph settings
-		for (auto & pair : OriginalEdgeSettings) pair.second.ResetRatios();
+	size_t EvcCount = 0;
 
-		// now apply original values to the graph
-		for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
-		OriginalEdgeSettings.clear();
+	/// TODO should we check if the dynamic mode is disabled or not?
 
-		// merge path together
-		EvcPath::DynamicStep_MergePaths(AllEvacuees, SolverMethod, ecache->GetInitDelayPerPop());
-		return 0;
-	}
-	size_t EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
+	if (currentTime != dynamicTimeFrame.end()) EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
+	_ASSERT_EXPR(currentTime != dynamicTimeFrame.end(), "NextDynamicChange function called on invalid iterator");
 	++currentTime;
 	return EvcCount;
 }
@@ -156,8 +166,9 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 	// next apply new changes to enclosed edges. backup original settings into the 'OriginalEdgeSettings' map
 	NAEdgePtr edge = nullptr;
 	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual>::_Pairib i;
+	std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> DynamicallyAffectedEdges;
 
-	for (auto polygon : Intersected)
+	for (auto polygon : this->Intersected)
 	{
 		if (CheckFlag(polygon->DisasterDirection, EdgeDirection::Along))
 		{
@@ -180,38 +191,48 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 			}
 		}
 	}
-	
-	// extract affected edges and use it to identify affected evacuee paths
-	std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> DynamicallyAffectedEdges;
-	for (auto & pair : OriginalEdgeSettings) if (pair.second.IsAffectedEdge(pair.first)) DynamicallyAffectedEdges.insert(pair.first);
-
-	// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
-	// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
-	if (this->Time > 0.0)
+	if (this->Time < INFINITE)
 	{
-		if (myDynamicMode == DynamicMode::Full)
+		// extract affected edges and use it to identify affected evacuee paths
+		for (auto & pair : OriginalEdgeSettings) if (pair.second.IsAffectedEdge(pair.first)) DynamicallyAffectedEdges.insert(pair.first);
+
+		// for each evacuee, find the edge that the evacuee is likely to be their based on the time of this event
+		// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
+		if (this->Time > 0.0)
 		{
-			DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
-			for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
-			CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
-		}
-		else if (myDynamicMode == DynamicMode::Smart)
-		{
-			DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
-			NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
-			CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
+			if (myDynamicMode == DynamicMode::Full)
+			{
+				DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
+				for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
+				CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
+			}
+			else if (myDynamicMode == DynamicMode::Smart)
+			{
+				DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
+				NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
+				CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
+			}
 		}
 	}
 	// now apply changes to the graph
 	for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
 
-	// re-calculate edges' dirtyness state
-	NAEdge::HowDirtyExhaustive(DynamicallyAffectedEdges.begin(), DynamicallyAffectedEdges.end(), solverMethod, 1.0);
+	if (this->Time >= INFINITE)
+	{
+		// merge paths together only if we are in a non-simple mode
+		if (myDynamicMode != DynamicMode::Simple) EvcPath::DynamicStep_MergePaths(AllEvacuees, solverMethod, ecache->GetInitDelayPerPop());
+		CountPaths = 0;
+		OriginalEdgeSettings.clear();
+	}
+	else
+	{
+		// re-calculate edges' dirtyness state
+		NAEdge::HowDirtyExhaustive(DynamicallyAffectedEdges.begin(), DynamicallyAffectedEdges.end(), solverMethod, 1.0);
 
-	// then clean the edges from backup map only if they are no longer affected
-	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> clone(OriginalEdgeSettings);
-	OriginalEdgeSettings.clear();
-	for (const auto pair : clone) if (pair.second.IsRatiosNonZero()) OriginalEdgeSettings.insert(pair);
-
+		// then clean the edges from backup map only if they are no longer affected
+		std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> clone(OriginalEdgeSettings);
+		OriginalEdgeSettings.clear();
+		for (const auto pair : clone) if (pair.second.IsRatiosNonOne()) OriginalEdgeSettings.insert(pair);
+	}
 	return CountPaths;
 }

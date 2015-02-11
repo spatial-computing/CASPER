@@ -13,6 +13,8 @@
 
 #include "StdAfx.h"
 
+#define INFINITE 3.402823466e+38
+
 enum class EdgeDirtyState      : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
 enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGen = 0x2, AllGens = 0x3 };
 enum class EvacueeStatus       : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
@@ -23,7 +25,7 @@ enum class EdgeDirection       : unsigned char { None = 0x0, Along = 0x1, Agains
 [export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC")] enum class EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
 [export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948")] enum class EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3, EXPModel = 0x4 };
 [export, uuid("C46A6356-07A6-473A-B39F-FBB74469201D")] enum class EvacueeGrouping : unsigned char { None = 0x0, Merge = 0x1, Separate = 0x2, MergeSeparate = 0x3 };
-[export, uuid("1B84C35A-9585-49DA-9B81-BB4873E8D331")] enum class DynamicMode     : unsigned char { Disabled = 0x0, Full = 0x1, Smart = 0x2 };
+[export, uuid("1B84C35A-9585-49DA-9B81-BB4873E8D331")] enum class DynamicMode     : unsigned char { Disabled = 0x0, Simple = 0x1, Full = 0x2, Smart = 0x3 };
 
 // enum for carma sort setting
 [export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char
@@ -342,7 +344,7 @@ public:
 	using map::cbegin;
 	using map::cend;
 
-	Histogram(size_t capacity = 0) : map(capacity), maxWeight(-FLT_MAX) { }
+	Histogram(size_t capacity = 0) : map(capacity), maxWeight(-INFINITE) { }
 	void WeightedAdd(const std::vector<T> & list, double weight) { for (const auto & i : list) WeightedAdd(i, weight); }
 	virtual ~Histogram() { }
 

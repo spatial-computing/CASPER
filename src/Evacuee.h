@@ -197,7 +197,7 @@ private:
 public:
 	EvacueeList(EvacueeGrouping GroupingOption, size_t capacity = 0) : groupingOption(GroupingOption), SeperationDisabledForDynamicCASPER(false), DoubleGrowingArrayList<EvacueePtr, size_t>(capacity) { }
 	virtual ~EvacueeList();
-	void FinilizeGroupings(double OKDistance, bool DynamicCASPEREnabled);
+	void FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPEREnabled);
 
 	EvacueeList(const EvacueeList & that) = delete;
 	EvacueeList & operator=(const EvacueeList &) = delete;

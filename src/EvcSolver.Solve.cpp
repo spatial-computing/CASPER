@@ -549,7 +549,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (DynamicTableExist) { if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipDynamicTable))) return hr; }
 	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, CASPERDynamicMode, flagBadDynamicChangeSnapping, solverMethod));
 
-	Evacuees->FinilizeGroupings(5.0 * costPerSec, disasterTable->Enabled()); // five seconds diameter for clustering
+	Evacuees->FinilizeGroupings(5.0 * costPerSec, disasterTable->GetDynamicMode()); // five seconds diameter for clustering
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -1024,8 +1024,10 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		CASPERDynamicMode = DynamicMode::Disabled;
 		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode but the network analysis layer does not have the DynamicChanges feature class.")));
 	}
+	if (disasterTable->GetDynamicMode() > DynamicMode::Simple && exportEdgeStat)
+		pMessages->AddMessage(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and export edge statistics. The exported statistics would be the final edge status (at infinite time) and does not reflect the intermediate edge congestions. The Routes layer however does reflect the most accurate congestions.")));
 
-	if (disasterTable->Enabled() && flockingEnabled == VARIANT_TRUE)
+	if (disasterTable->GetDynamicMode() > DynamicMode::Simple && flockingEnabled == VARIANT_TRUE)
 		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and flocking simulation. The simulation does not honor the dynamic changes and hence the results will not necessarily comply.")));
 	
 	if (Evacuees->IsSeperationDisabledForDynamicCASPER())
