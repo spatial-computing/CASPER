@@ -293,7 +293,7 @@ public:
 	virtual ~NAEdgeCache(void)
 	{
 		Clear();
-		ipNetworkQuery->ClearIDCache();
+		//ipNetworkQuery->ClearIDCache();
 		delete myTrafficModel;
 		delete cacheAlong;
 		delete cacheAgainst;
