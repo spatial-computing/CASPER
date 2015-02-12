@@ -271,6 +271,7 @@ public:
 		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipAdjacencies))) return;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return;
 		ipCurrentEdge = ipEdgeElement;
+		InitSourceCache();
 	}
 
 	void InitSourceCache() const
@@ -293,7 +294,7 @@ public:
 	virtual ~NAEdgeCache(void)
 	{
 		Clear();
-		//ipNetworkQuery->ClearIDCache();
+		ipNetworkQuery->ClearIDCache();
 		delete myTrafficModel;
 		delete cacheAlong;
 		delete cacheAgainst;
