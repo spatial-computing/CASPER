@@ -61,12 +61,12 @@ NAEdge::NAEdge(const NAEdge& cpy) : TreeNext(cpy.TreeNext), AdjacentForward(cpy.
 	ToVertex = cpy.ToVertex;
 	CleanCost = cpy.CleanCost;
 	TreePrevious = cpy.TreePrevious;
-	myGeometry = cpy.myGeometry;
+	//myGeometry = cpy.myGeometry;
 }
 
 NAEdge::NAEdge(INetworkEdgePtr edge, long capacityAttribID, long costAttribID, const NAEdge * otherEdge, bool twoWayRoadsShareCap, std::list<EdgeReservationsPtr> & ResTable, TrafficModel * model)
 {
-	myGeometry = nullptr;
+	//myGeometry = nullptr;
 	TreePrevious = nullptr;
 	CleanCost = -1.0;
 	ToVertex = nullptr;
@@ -130,6 +130,7 @@ HRESULT NAEdge::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassCo
 	IFeatureClassPtr ipNetworkSourceFC;
 	IFeaturePtr ipSourceFeature;
 	ICurvePtr ipSubCurve;
+	IGeometryPtr myGeometry = nullptr;
 
 	if (!myGeometry)
 	{

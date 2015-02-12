@@ -45,7 +45,7 @@ typedef EdgeReservations * EdgeReservationsPtr;
 class NAEdge
 {
 private:
-	IGeometryPtr myGeometry;
+	//IGeometryPtr myGeometry;
 	EdgeReservations * reservations;
 	double CleanCost;
 	double GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const;
@@ -271,7 +271,6 @@ public:
 		if (FAILED(hr = ipNetworkQuery->CreateForwardStarAdjacencies(&ipAdjacencies))) return;
 		if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return;
 		ipCurrentEdge = ipEdgeElement;
-		InitSourceCache();
 	}
 
 	void InitSourceCache() const
