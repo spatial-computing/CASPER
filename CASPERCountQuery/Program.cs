@@ -88,7 +88,7 @@ namespace CountQuery
                         if (i == -1 && j == -1) System.Console.Write("\t");
                         else if (i == -1 && j != -1) System.Console.Write(DistSetupNames[j] + "\t");
                         else if (i != -1 && j == -1) System.Console.Write(Environment.NewLine + DistSetupNames[i] + "\t");
-                        else System.Console.Write(output[i, j] + "\t");
+                        else System.Console.Write(output[i, j].ToString("F3") + "\t");
                     }
                 }
             }
