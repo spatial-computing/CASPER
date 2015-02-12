@@ -45,7 +45,7 @@ typedef EdgeReservations * EdgeReservationsPtr;
 class NAEdge
 {
 private:
-	//IGeometryPtr myGeometry;
+	IGeometryPtr myGeometry;
 	EdgeReservations * reservations;
 	double CleanCost;
 	double GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const;
@@ -240,6 +240,7 @@ private:
 	long			capacityAttribID;
 	long			costAttribID;
 	bool			twoWayRoadsShareCap;
+	mutable bool	IsSourceCache;
 	NAEdgeTable		* cacheAlong;
 	NAEdgeTable		* cacheAgainst;
 	std::list<ArrayList<NAEdgePtr> *> GarbageNeighborList;
@@ -256,6 +257,7 @@ public:
 	NAEdgeCache(long CapacityAttribID, long CostAttribID, double SaturationPerCap, double CriticalDensPerCap, bool TwoWayRoadsShareCap, double InitDelayCostPerPop,
 		EvcTrafficModel model, INetworkForwardStarExPtr _ipForwardStar, INetworkForwardStarExPtr _ipBackwardStar, INetworkQueryPtr _ipNetworkQuery, HRESULT & hr)
 	{
+		IsSourceCache = false;
 		capacityAttribID = CapacityAttribID;
 		costAttribID = CostAttribID;
 		cacheAlong = new DEBUG_NEW_PLACEMENT std::unordered_map<long, NAEdgePtr>();
@@ -275,6 +277,9 @@ public:
 
 	void InitSourceCache() const
 	{
+		if (IsSourceCache) ipNetworkQuery->ClearIDCache();
+		IsSourceCache = true;
+
 		// create cache in network dataset object
 		long SourceCount = 0, sourceID = 0;
 		INetworkDataset2Ptr network(ipNetworkQuery);
@@ -293,7 +298,7 @@ public:
 	virtual ~NAEdgeCache(void)
 	{
 		Clear();
-		ipNetworkQuery->ClearIDCache();
+		if (IsSourceCache) ipNetworkQuery->ClearIDCache();
 		delete myTrafficModel;
 		delete cacheAlong;
 		delete cacheAgainst;

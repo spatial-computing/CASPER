@@ -574,7 +574,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	//******************************************************************************************/
 	// Write output
-	ecache->InitSourceCache();
+
+	/// decided not to use ArcObjects' source caching and instead have my own geometry cache
+	/// ecache->InitSourceCache();
 
 	// Now that we have completed our traversal of the network from the Evacuee points, we must output the connected/disconnected edges
 	// to the "LineData" NAClass
