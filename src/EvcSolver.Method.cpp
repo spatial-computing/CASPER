@@ -28,7 +28,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	NAEdgePtr myEdge = nullptr;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
-	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, MaxPathCostSoFar = 0.0, addedCostAsPenalty = 0.0;
+	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, MaxPathCostSoFar = 0.0, addedCostAsPenalty = 0.0, EvcStartTime = 0.0;
 	std::vector<NAVertexPtr>::const_iterator vit;
 	INetworkJunctionPtr ipCurrentJunction = nullptr;
 	INetworkElementPtr ipJunctionElement = nullptr;
@@ -36,7 +36,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	auto sortedEvacuees = std::shared_ptr<std::vector<EvacueePtr>>(new DEBUG_NEW_PLACEMENT std::vector<EvacueePtr>());
 	unsigned int countEvacueesInOneBucket = 0, countCASPERLoops = 0, sumVisitedDirtyEdge = 0;
 	int pathGenerationCount = -1, EvacueeProcessOrder = -1;
-	size_t CARMAClosedSize = 0, sumVisitedEdge = 0, NumberOfEvacueesInIteration = 0;
+	size_t CARMAClosedSize = 0, sumVisitedEdge = 0, NumberOfEvacueesInIteration = 0, LocalIteration = 0;
 	long progressBaseValue = 0l;
 	auto leafs = std::shared_ptr<NAEdgeContainer>(new DEBUG_NEW_PLACEMENT NAEdgeContainer(200));
 	std::vector<NAEdgePtr> readyEdges;
@@ -85,8 +85,10 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	if (FAILED(hr = DeterminMinimumPop2Route(AllEvacuees, ipNetworkDataset, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
 
 	// dynamic CASPER loop
-	for (NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache); NumberOfEvacueesInIteration > 0; NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache))
+	for (NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, EvcStartTime); NumberOfEvacueesInIteration > 0;
+		 NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, EvcStartTime))
 	{
+		LocalIteration = 0;
 		do // iteration loop
 		{
 			if (ipStepProgressor)
@@ -234,7 +236,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 						// Generate path for this evacuee if any found
 						if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))
-							MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->back?()->GetReserveEvacuationCost());
+							MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->front()->GetReserveEvacuationCost());
 
 #ifdef DEBUG
 						std::wostringstream os_;
@@ -267,7 +269,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			UpdatePeakMemoryUsage();
 
 			// figure out how may of paths need to be detached and process again
-			NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration);
+			NumberOfEvacueesInIteration = FindPathsThatNeedToBeProcessedInIteration(AllEvacuees, detachedPaths, GlobalEvcCostAtIteration, EvcStartTime, LocalIteration);
 			if (NumberOfEvacueesInIteration > 0)
 			{
 				carmaSortCriteria = CARMASort::ReverseFinalCost;
@@ -290,7 +292,8 @@ END_OF_FUNC:
 	return hr;
 }
 
-size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths, std::vector<double> & GlobalEvcCostAtIteration) const
+size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths,
+	std::vector<double> & GlobalEvcCostAtIteration, double EvcStartTime, size_t & LocalIteration) const
 {
 	std::vector<EvcPathPtr> allPaths;
 	std::vector<EvacueePtr> EvacueesForNextIteration;
@@ -317,16 +320,20 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	const double ThreasholdForPathOverlap = 0.4;
 
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
-	/// TODO adjust the final evacuation cost based on dynamicly splited paths
-	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
-	size_t Iteration = GlobalEvcCostAtIteration.size();
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / iterateRatio, Iteration)));
+	GlobalEvcCostAtIteration.push_back(EvcStartTime + allPaths.front()->GetFinalEvacuationCost());
 
-	if (Iteration > 1)
+	// instead of assuming iteration is equal size of GlobalEvcCostAtIteration, we now ask that from the solver function.
+	// it is garanteed that at least 'Iteration' many loops happened before and hence GlobalEvcCostAtIteration.size() >= Iteration
+	// the number 'Iteration' referes to the loops that happened since the last dynamic change
+	++LocalIteration;
+	size_t GolbalIteration = GlobalEvcCostAtIteration.size();
+	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / iterateRatio, LocalIteration)));
+
+	if (LocalIteration > 1)
 	{
 		// check if it got worse and then undo it
-		if (GlobalEvcCostAtIteration[Iteration - 1] > GlobalEvcCostAtIteration[Iteration - 2] ||
-		  ((GlobalEvcCostAtIteration[Iteration - 1] == GlobalEvcCostAtIteration[Iteration - 2]) && iterateRatio >= 1.0f))
+		if (GlobalEvcCostAtIteration[GolbalIteration - 1] >  GlobalEvcCostAtIteration[GolbalIteration - 2] ||
+		  ((GlobalEvcCostAtIteration[GolbalIteration - 1] == GlobalEvcCostAtIteration[GolbalIteration - 2]) && iterateRatio >= 1.0f))
 
 		{
 			for (const auto & path : *detachedPaths) path->CleanYourEvacueePaths(solverMethod);
@@ -346,7 +353,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	for (const auto & path : allPaths)
 	{
 		if (EvacueesForNextIteration.size() >= MaxEvacueesInIteration) break;
-		path->DoesItNeedASecondChance(ThreasholdForCost, ThreasholdForPathOverlap, EvacueesForNextIteration, GlobalEvcCostAtIteration[Iteration - 1], solverMethod);
+		path->DoesItNeedASecondChance(ThreasholdForCost, ThreasholdForPathOverlap, EvacueesForNextIteration, GlobalEvcCostAtIteration[GolbalIteration - 1], solverMethod);
 	}
 
 	// Now that we know which evacuees are going to be processed again, let's reset their values and detach their paths.

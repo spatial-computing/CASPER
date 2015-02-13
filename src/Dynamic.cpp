@@ -144,19 +144,20 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 	}
 }
 
-size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache)
+size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime)
 {
 	size_t EvcCount = 0;
-	if (currentTime != dynamicTimeFrame.end()) EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
+	if (currentTime != dynamicTimeFrame.end()) EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, EvcStartTime, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
 	_ASSERT_EXPR(currentTime != dynamicTimeFrame.end(), "NextDynamicChange function called on invalid iterator");
 	++currentTime;
 	return EvcCount;
 }
 
-size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache,
+size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime,
 	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod) const
 {
 	size_t CountPaths = AllEvacuees->size();
+	EvcStartTime = this->Time;
 
 	// first undo previous changes using the backup map 'OriginalEdgeSettings'
 	for (auto & pair : OriginalEdgeSettings) pair.second.ResetRatios();
