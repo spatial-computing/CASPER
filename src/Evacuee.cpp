@@ -120,7 +120,7 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 
 			// leave the main path as the only path for this evacuee
 			evc->Paths->clear();
-			evc->Paths->push_back(mainPath);
+			evc->Paths->push_front(mainPath);
 		}
 }
 
@@ -322,10 +322,10 @@ Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
 	Vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 	Paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
 	Population = pop;
-	PredictedCost = INFINITE;
+	PredictedCost = CASPER_INFINITY;
 	Status = EvacueeStatus::Unprocessed;
 	ProcessOrder = -1;
-	FinalCost = INFINITE;
+	FinalCost = CASPER_INFINITY;
 }
 
 Evacuee::~Evacuee(void)
@@ -450,7 +450,7 @@ void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CA
 		if (evc->Status == EvacueeStatus::Unprocessed && evc->Population > 0.0)
 		{
 			// reset evacuation prediction for continues carma sort
-			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = INFINITE;
+			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = CASPER_INFINITY;
 
 			for (const auto & v : *evc->Vertices)
 			{
@@ -507,7 +507,7 @@ void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<Evacue
 	for (const auto & evc : *this)
 		for (const auto & e : evc.second)
 		{
-			if (e->PredictedCost >= INFINITE)
+			if (e->PredictedCost >= CASPER_INFINITY)
 			{
 				e->Status = EvacueeStatus::Unreachable;
 				#ifdef TRACE
@@ -536,7 +536,7 @@ double SafeZone::SafeZoneCost(double population2Route, EvcSolverMethod solverMet
 {
 	double cost = 0.0;
 	double totalPop = population2Route + reservedPop;
-	if (capacity == 0.0 && costPerDensity > 0.0) return INFINITE;
+	if (capacity == 0.0 && costPerDensity > 0.0) return CASPER_INFINITY;
 	if (totalPop > capacity && capacity > 0.0) cost += costPerDensity * ((totalPop / capacity) - 1.0);
 	if (behindEdge) cost += behindEdge->GetCost(population2Route, solverMethod, globalDeltaCost) * positionAlong;
 	return cost;

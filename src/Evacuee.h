@@ -180,7 +180,7 @@ public:
 
 	static bool ReverseEvacuationCost(const Evacuee * e1, const Evacuee * e2)
 	{
-		return e1->Paths->back()->GetReserveEvacuationCost() > e2->Paths->back()->GetReserveEvacuationCost();
+		return e1->Paths->back?()->GetReserveEvacuationCost() > e2->Paths->back?()->GetReserveEvacuationCost();
 	}
 };
 

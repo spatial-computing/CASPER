@@ -84,7 +84,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 	if (FAILED(hr = DeterminMinimumPop2Route(AllEvacuees, ipNetworkDataset, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
 
-	while (NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache) > 0) // dynamic CASPER loop
+	// dynamic CASPER loop
+	for (NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache); NumberOfEvacueesInIteration > 0; NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache))
 	{
 		do // iteration loop
 		{
@@ -152,7 +153,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							if (FAILED(hr = PrepareVerticesForHeap(*h, vcache, ecache, &closedList, readyEdges, population2Route, this->solverMethod, this->selfishRatio, MaxPathCostSoFar, QueryDirection::Backward))) goto END_OF_FUNC;
 						for (const auto & e : readyEdges) heap.Insert(e);
 
-						TimeToBeat = INFINITE;
+						TimeToBeat = CASPER_INFINITY;
 						BetterSafeZone = nullptr;
 						finalVertex = nullptr;
 						foundRestrictedSafezone = false;
@@ -193,7 +194,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 								if (closedList.Exist(currentEdge)) continue;
 
 								newCost = myVertex->GVal + currentEdge->GetCost(population2Route, this->solverMethod, &globalDeltaCost);
-								if (newCost >= INFINITE) continue;
+								if (newCost >= CASPER_INFINITY) continue;
 
 								if (heap.IsVisited(currentEdge)) // edge has been visited before. update edge and decrease key.
 								{
@@ -233,7 +234,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 						// Generate path for this evacuee if any found
 						if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))
-							MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->back()->GetReserveEvacuationCost());
+							MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->back?()->GetReserveEvacuationCost());
 
 #ifdef DEBUG
 						std::wostringstream os_;
@@ -316,6 +317,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	const double ThreasholdForPathOverlap = 0.4;
 
 	// collect what is the global evacuation time at each iteration and check that we're not getting worse
+	/// TODO adjust the final evacuation cost based on dynamicly splited paths
 	GlobalEvcCostAtIteration.push_back(allPaths.front()->GetFinalEvacuationCost());
 	size_t Iteration = GlobalEvcCostAtIteration.size();
 	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / iterateRatio, Iteration)));
@@ -416,7 +418,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		minPop2Route = 1.0; // separable CCRPSolver and any case of SPSolver
 		if ((this->solverMethod == EvcSolverMethod::CASPERSolver) || (this->solverMethod == EvcSolverMethod::CCRPSolver && !separationRequired))
 		{
-			minPop2Route = INFINITE;
+			minPop2Route = CASPER_INFINITY;
 			for (const auto & e : *Evacuees)
 			{
 				if (e->Status != EvacueeStatus::Unprocessed || e->Population <= 0.0) continue;
@@ -457,7 +459,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 
 		// we're done with all these leafs. let's clean up and collect new ones for the next round.
 		leafs->Clear();
-		SearchRadius = INFINITE;
+		SearchRadius = CASPER_INFINITY;
 
 		// Continue traversing the network while the heap has remaining junctions in it
 		// this is the actual Dijkstra code with backward network traversal. it will only update h value.
@@ -517,7 +519,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			{
 				if (FAILED(hr = currentEdge->NetEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 				newCost = myVertex->GVal + currentEdge->GetCost(minPop2Route, solverMethod);
-				if (newCost >= INFINITE) continue;
+				if (newCost >= CASPER_INFINITY) continue;
 
 				if (closedList->Exist(currentEdge, NAEdgeMapGeneration::OldGen))
 				{
@@ -689,7 +691,7 @@ HRESULT InsertLeafEdgeToHeap(INetworkQueryPtr ipNetworkQuery, std::shared_ptr<NA
 		fPtr->SetBehindEdge(leaf);
 		fPtr->GVal = tPtr->GetH(leaf->TreePrevious->EID) + leaf->GetCleanCost();
 		fPtr->Previous = nullptr;
-		_ASSERT(fPtr->GVal < INFINITE);
+		_ASSERT(fPtr->GVal < CASPER_INFINITY);
 		heap.Insert(leaf);
 	}
 	return hr;
@@ -733,7 +735,7 @@ HRESULT FindDirtyEdgesWithACleanParent(std::shared_ptr<NAEdgeCache> ecache, std:
 	for (const auto e : removedDirty)
 	{
 		betterParent = nullptr;
-		betterH = INFINITE;
+		betterH = CASPER_INFINITY;
 
 		if (FAILED(hr = e->NetEdge->QueryJunctions(nullptr, t))) return hr;
 		toVertex = vcache->New(t, ipNetworkQuery);
@@ -899,7 +901,7 @@ bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 // Also CASPER and CARMA should be in sync at this number otherwise all the h values are useless.
 HRESULT EvcSolver::DeterminMinimumPop2Route(std::shared_ptr<EvacueeList> Evacuees, INetworkDatasetPtr ipNetworkDataset, double & globalMinPop2Route, bool & separationRequired) const
 {
-	double minPop = INFINITE, maxPop = 1.0, CommonCostOfEdgeInUnits = 1.0, avgPop = 0.0;
+	double minPop = CASPER_INFINITY, maxPop = 1.0, CommonCostOfEdgeInUnits = 1.0, avgPop = 0.0;
 	HRESULT hr = S_OK;
 	INetworkAttributePtr costAttrib;
 	esriNetworkAttributeUnits unit;

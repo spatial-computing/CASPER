@@ -577,7 +577,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	calcSecCpu = tenNanoSec64 / 10000000.0;
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
 
-	disasterTable = nullptr;
+	disasterTable->Flush();
 	ecache->InitSourceCache();
 
 	//******************************************************************************************/

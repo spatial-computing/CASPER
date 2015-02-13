@@ -48,7 +48,7 @@ struct EdgeOriginalData
 
 	bool IsRatiosNonOne() const { return CostRatio != 1.0 || CapacityRatio != 1.0; }
 
-	inline double AdjustedCost()     const { return CostRatio     < MaxCostRatio     ? (CostRatio     > MinCostRatio     ? OriginalCost     * CostRatio : OriginalCost * MinCostRatio) : INFINITE; }
+	inline double AdjustedCost()     const { return CostRatio     < MaxCostRatio     ? (CostRatio     > MinCostRatio     ? OriginalCost     * CostRatio : OriginalCost * MinCostRatio) : CASPER_INFINITY; }
 	inline double AdjustedCapacity() const { return CapacityRatio < MaxCapacityRatio ? (CapacityRatio > MinCapacityRatio ? OriginalCapacity * CapacityRatio : 0.0) : OriginalCapacity * MaxCapacityRatio; }
 
 	bool IsAffectedEdge(NAEdgePtr const edge) const
@@ -78,7 +78,7 @@ struct SingleDynamicChange
 	{
 		AffectedCostRate = min(max(AffectedCostRate, EdgeOriginalData::MinCostRatio), EdgeOriginalData::MaxCostRatio);
 		AffectedCapacityRate = min(max(AffectedCapacityRate, EdgeOriginalData::MinCapacityRatio), EdgeOriginalData::MaxCapacityRatio);
-		EndTime = EndTime < 0.0 || EndTime > INFINITE ? INFINITE : EndTime;
+		EndTime = EndTime < 0.0 || EndTime > CASPER_INFINITY ? CASPER_INFINITY : EndTime;
 		return StartTime >= 0.0 && StartTime < EndTime && !EnclosedEdges.empty();
 	}
 };
@@ -112,9 +112,17 @@ private:
 	EvcSolverMethod SolverMethod;
 
 public:
+	void Flush()
+	{
+		for (auto p : allChanges) delete p;
+		allChanges.clear();
+		dynamicTimeFrame.clear();
+		OriginalEdgeSettings.clear();
+	}
+
 	DynamicMode GetDynamicMode() const { return myDynamicMode; }
 	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping, EvcSolverMethod solverMethod);
 	size_t ResetDynamicChanges();
 	size_t NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache);
-	virtual ~DynamicDisaster() { for (auto p : allChanges) delete p; }
+	virtual ~DynamicDisaster() { Flush(); }
 };

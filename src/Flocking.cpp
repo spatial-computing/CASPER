@@ -395,7 +395,7 @@ void FlockingEnviroment::Init(std::shared_ptr<EvacueeList> evcList, INetworkQuer
 	double pathLen = 0.0;
 	std::list<EvcPathPtr>::const_iterator pathItr;
 	maxPathLen = 0.0;
-	minPathLen = INFINITE;
+	minPathLen = CASPER_INFINITY;
 	srand((unsigned int)time(NULL));
 
 	// pre-init clean up just in case the environment is being re-used

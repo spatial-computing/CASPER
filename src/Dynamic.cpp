@@ -35,7 +35,10 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 	long EdgeCount, JunctionCount, EID;
 	esriNetworkEdgeDirection dir;
 	double fromPosition, toPosition;
+	std::set<CriticalTime>::_Pairib fr, bc;
 	currentTime = dynamicTimeFrame.end();
+
+	if (dynamicMode == DynamicMode::Disabled) goto END_OF_FUNC;
 
 	if (!DynamicChangesTable)
 	{
@@ -87,8 +90,8 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 
 	// can i model the good old static barrier layer using my DynbamicChanges layer?
 	dynamicTimeFrame.clear();
-	auto fr = dynamicTimeFrame.emplace(CriticalTime(0.0));
-	auto bc = dynamicTimeFrame.emplace(CriticalTime(INFINITE));
+	fr = dynamicTimeFrame.emplace(CriticalTime(0.0));
+	bc = dynamicTimeFrame.emplace(CriticalTime(CASPER_INFINITY));
 
 	if (myDynamicMode == DynamicMode::Simple)
 	{
@@ -117,17 +120,15 @@ END_OF_FUNC:
 	if (FAILED(hr))
 	{
 		if (item) delete item;
-		for (auto p : allChanges) delete p;
-		allChanges.clear();
-		dynamicTimeFrame.clear();
 		myDynamicMode = DynamicMode::Disabled;
+		Flush();
 	}
 }
 
 size_t DynamicDisaster::ResetDynamicChanges()
 {
 	currentTime = dynamicTimeFrame.begin();
-	return dynamicTimeFrame.size();
+	return dynamicTimeFrame.size() - 1;
 }
 
 void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTimeFrame)
@@ -138,7 +139,7 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 	for (++thisTime; thisTime != dynamicTimeFrame.cend(); ++thisTime)
 	{
 		for (auto prevChange : *previousTimeFrame) 
-			if (prevChange->EndTime > thisTime->Time || prevChange->EndTime >= INFINITE) thisTime->AddIntersectedChange(prevChange);
+			if (prevChange->EndTime > thisTime->Time || prevChange->EndTime >= CASPER_INFINITY) thisTime->AddIntersectedChange(prevChange);
 		previousTimeFrame = &(thisTime->Intersected);
 	}
 }
@@ -146,9 +147,6 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache)
 {
 	size_t EvcCount = 0;
-
-	/// TODO should we check if the dynamic mode is disabled or not?
-
 	if (currentTime != dynamicTimeFrame.end()) EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
 	_ASSERT_EXPR(currentTime != dynamicTimeFrame.end(), "NextDynamicChange function called on invalid iterator");
 	++currentTime;
@@ -191,7 +189,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 			}
 		}
 	}
-	if (this->Time < INFINITE)
+	if (this->Time < CASPER_INFINITY)
 	{
 		// extract affected edges and use it to identify affected evacuee paths
 		for (auto & pair : OriginalEdgeSettings) if (pair.second.IsAffectedEdge(pair.first)) DynamicallyAffectedEdges.insert(pair.first);
@@ -217,7 +215,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 	// now apply changes to the graph
 	for (auto & pair : OriginalEdgeSettings) pair.second.ApplyNewOriginalCostAndCapacity(pair.first);
 
-	if (this->Time >= INFINITE)
+	if (this->Time >= CASPER_INFINITY)
 	{
 		// merge paths together only if we are in a non-simple mode
 		if (myDynamicMode != DynamicMode::Simple) EvcPath::DynamicStep_MergePaths(AllEvacuees, solverMethod, ecache->GetInitDelayPerPop());

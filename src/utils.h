@@ -13,7 +13,9 @@
 
 #include "StdAfx.h"
 
-#define INFINITE 3.402823466e+38
+#ifndef CASPER_INFINITY
+#define CASPER_INFINITY 3.402823466e+38
+#endif
 
 enum class EdgeDirtyState      : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
 enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGen = 0x2, AllGens = 0x3 };
@@ -344,7 +346,7 @@ public:
 	using map::cbegin;
 	using map::cend;
 
-	Histogram(size_t capacity = 0) : map(capacity), maxWeight(-INFINITE) { }
+	Histogram(size_t capacity = 0) : map(capacity), maxWeight(-CASPER_INFINITY) { }
 	void WeightedAdd(const std::vector<T> & list, double weight) { for (const auto & i : list) WeightedAdd(i, weight); }
 	virtual ~Histogram() { }
 
