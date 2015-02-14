@@ -237,7 +237,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						// Generate path for this evacuee if any found
 						if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))
 							MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->front()->GetReserveEvacuationCost());
-
+ 						// else currentEvacuee->Status = EvacueeStatus::Unreachable;
 #ifdef DEBUG
 						std::wostringstream os_;
 						os_.precision(3);

@@ -106,6 +106,16 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 					mainPath = p;
 				}
 			}
+			_ASSERT_EXPR(!frozenList.empty(), L"The evacuee does not have any frozen paths to be merged");
+			if (frozenList.empty()) continue;
+			if (!mainPath)
+			{
+				// in this case the evacuee has some frozen paths so originally could evacuate but after this dynamic
+				// change it no longer can move so it is considered stuck
+				for (auto p : *evc->Paths) delete fp;
+				evc->Paths->clear();
+				continue;
+			}
 
 			// now merge the frozen ones to the mian one in the order they are created
 			for (auto p = frozenList.rbegin(); p != frozenList.rend(); ++p)
@@ -121,6 +131,12 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 			// leave the main path as the only path for this evacuee
 			evc->Paths->clear();
 			evc->Paths->push_front(mainPath);
+		}
+		else
+		{
+			// this is the case where the evacuee is now stuck accroding to CARMA loop. so we should just release the memory for all paths
+			for (auto p : *evc->Paths) delete fp;
+			evc->Paths->clear();
 		}
 }
 
@@ -509,6 +525,8 @@ void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<Evacue
 		{
 			if (e->PredictedCost >= CASPER_INFINITY)
 			{
+				/// TODO so once we mark an evacuee as unreachable, is there any chance it can be reachable again because of a dynamic change?
+				/// does the current system handles this change or it keeps it always unreachable?
 				e->Status = EvacueeStatus::Unreachable;
 				#ifdef TRACE
 				f << ' ' << ATL::CW2A(e->Name.bstrVal);
