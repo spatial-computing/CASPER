@@ -35,3 +35,6 @@ ipch/
 *.vsp
 *.vsps
 *.vspx
+
+# ignore python files
+*.pyc
