@@ -40,7 +40,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 	const std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings)
 {
 	size_t count = 0, segment = 0;
-	double pathCost = 0.0, segCost = 0.0, segRatio = 0.0;
+	double pathCost = 0.0, segCost = 0.0, segRatio = 0.0, myCurrentTime;
 	EvcPathPtr path = nullptr;
 
 	if (CurrentTime > 0.0)
@@ -49,19 +49,21 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 		for (auto p = begin; p != end; ++p)
 		{
 			path = *p;
-			if (path->FinalEvacuationCost > CurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty())
+			myCurrentTime = CurrentTime;
+			for (auto fp : *path->myEvc->Paths) if (fp->Frozen) myCurrentTime -= fp->FinalEvacuationCost;
+			if (path->FinalEvacuationCost > myCurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty())
 			{
 				segCost = 0.0;
 				pathCost = 0.0;
 
 				// find the segment where we need to cut the path
-				for (segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
+				for (segment = 0; pathCost < myCurrentTime && segment < path->size(); ++segment)
 				{
 					segCost = path->at(segment)->GetCurrentCost(method);
 					pathCost += segCost;
 				}
-				if (pathCost < CurrentTime) throw std::logic_error("A path is shorter than calculated");
-				segRatio = (pathCost - CurrentTime) / segCost;
+				if (pathCost < myCurrentTime) throw std::logic_error("A path is shorter than calculated");
+				segRatio = (pathCost - myCurrentTime) / segCost;
 
 				// move the evacuee to this segment
 				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery, OriginalEdgeSettings);
@@ -77,13 +79,39 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 
 				// setup this path as frozen and mark the evacuee as unporcessed
 				path->Frozen = true;
-				path->FinalEvacuationCost = CurrentTime;
+				path->FinalEvacuationCost = myCurrentTime;
 				path->myEvc->Status = EvacueeStatus::Unprocessed;
 				path->MySafeZone->Reserve(-path->RoutedPop);
 				++count;
 			}
 		}
 	}
+	return count;
+}
+
+size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double CurrentTime)
+{
+	/// TODO think about what do you want to do with evacuees that are currently marked as unreachable
+	size_t count = 0;
+	for (auto e : *AllEvacuees)
+		if (e->Status == EvacueeStatus::Unreachable)
+		{
+			// setup this path as an empty frozen one and mark the evacuee as unporcessed
+			EvcPath * path = nullptr;
+			if (e->Paths->empty())
+			{
+				path = new DEBUG_NEW_PLACEMENT EvcPath(0, -1, e, nullptr);
+				e->Paths->push_front(path);
+			}
+			else
+			{
+				path = e->Paths->front();
+			}
+			path->Frozen = true;
+			path->FinalEvacuationCost += CurrentTime;
+			e->Status = EvacueeStatus::Unprocessed;
+			++count;
+		}
 	return count;
 }
 
@@ -112,7 +140,7 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 			{
 				// in this case the evacuee has some frozen paths so originally could evacuate but after this dynamic
 				// change it no longer can move so it is considered stuck
-				for (auto p : *evc->Paths) delete fp;
+				for (auto p : *evc->Paths) delete p;
 				evc->Paths->clear();
 				continue;
 			}
@@ -135,7 +163,7 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 		else
 		{
 			// this is the case where the evacuee is now stuck accroding to CARMA loop. so we should just release the memory for all paths
-			for (auto p : *evc->Paths) delete fp;
+			for (auto p : *evc->Paths) delete p;
 			evc->Paths->clear();
 		}
 }
@@ -147,11 +175,13 @@ void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std:
 	// at the end keep a record of touched edges for a 'HowDirty' call
 	for (const auto & p : *evc->Paths)
 	{
+		/// TODO what should I do with frozen paths here?
+		if (p->Frozen) continue;
 		for (auto s = p->crbegin(); s != p->crend(); ++s) (*s)->Edge->RemoveReservation(p, method, true);
 		if (touchedEdges) { for (const auto & s : *p) touchedEdges->insert(s->Edge); }
 		if (detachedPaths) detachedPaths->push_back(p); else delete p;
 	}
-	evc->Paths->clear();
+	evc->Paths->remove_if([](const EvcPathPtr p)->bool { return !p->IsFrozen(); });
 }
 
 void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
@@ -203,7 +233,7 @@ void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double Threashol
 		double cutOffWeight = ThreasholdForPathOverlap * FreqOfOverlaps.maxWeight;
 		for (const auto & pair : FreqOfOverlaps)
 		{
-			if (pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > cutOffWeight)
+			if (!(pair.first->Frozen) && pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > cutOffWeight)
 			{
 				AffectingList.push_back(pair.first->myEvc);
 				pair.first->myEvc->Status = EvacueeStatus::Unprocessed;

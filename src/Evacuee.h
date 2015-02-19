@@ -128,6 +128,7 @@ public:
 		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery,
 		const std::unordered_map<NAEdge *, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings);
 	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, EvcSolverMethod solverMethod, double InitDelayPerPop);
+	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double CurrentTime);
 
 	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2) { return p1->Order < p2->Order; }
 	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }

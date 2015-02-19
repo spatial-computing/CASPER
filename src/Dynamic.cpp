@@ -211,14 +211,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 				NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
 				CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
 			}
-
-			/// TODO think about what do you want to do with evacuees that are currently marked as unreachable
-			for (auto e : *AllEvacuees)
-				if (e->Status == EvacueeStatus::Unreachable)
-				{
-					e->Status == EvacueeStatus::Unprocessed;
-					++CountPaths;
-				}
+			CountPaths += EvcPath::DynamicStep_UnreachableEvacuees(AllEvacuees, this->Time);
 		}
 	}
 	// now apply changes to the graph

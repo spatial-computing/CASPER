@@ -231,7 +231,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	m_PreserveLastStop = VARIANT_FALSE;
 	m_UseTimeWindows = VARIANT_FALSE;
 	evacueeGroupingOption = EvacueeGrouping::None;
-	CASPERDynamicMode = DynamicMode::Smart;
+	CASPERDynamicMode = DynamicMode::Disabled;
 	VarExportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
