@@ -70,6 +70,7 @@ private:
 	SafeZone * MySafeZone;
 	double  RoutedPop;
 	double  ReserveEvacuationCost;
+	double  PathStartCost;
 	double  FinalEvacuationCost;
 	double  OrginalCost;
 	int     Order;
@@ -91,12 +92,12 @@ public:
 	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
 	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
 
-	EvcPath(double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone) :
-		baselist(), MySafeZone(mySafeZone), RoutedPop(routedPop), Frozen(false)
+	EvcPath(double initDelayCostPerPop, double startCost, double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone) :
+		baselist(), MySafeZone(mySafeZone), RoutedPop(routedPop), Frozen(false), PathStartCost(startCost)
 	{
-		FinalEvacuationCost = 0.0;
-		ReserveEvacuationCost = 0.0;
-		OrginalCost = 0.0;
+		FinalEvacuationCost = RoutedPop * initDelayCostPerPop + startCost;
+		ReserveEvacuationCost = RoutedPop * initDelayCostPerPop + startCost;
+		OrginalCost = RoutedPop * initDelayCostPerPop + startCost;
 		Order = order;
 		myEvc = evc;
 	}
@@ -114,25 +115,26 @@ public:
 	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel *, INetworkDatasetPtr, IFeatureClassContainerPtr, bool &,
 		IStepProgressorPtr, double &, double, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long, long, long, long, long, long, long, long);
-	void ReattachToEvacuee(EvcSolverMethod method);
-	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
+	void ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges);
+	inline void CleanYourEvacueePaths(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges) { EvcPath::DetachPathsFromEvacuee(myEvc, method, touchedEdges); }
 	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
 
 	inline const int & GetKey()  const { return Order; }
 	friend bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
 	friend bool operator!=(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order != rhs.Order; }
 
-	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges = nullptr,
+	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges,
 		std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
 	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end, 
 		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery,
 		const std::unordered_map<NAEdge *, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings);
 	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, EvcSolverMethod solverMethod, double InitDelayPerPop);
-	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double CurrentTime);
+	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees);
 
 	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2) { return p1->Order < p2->Order; }
 	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
 	static bool MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
+	static bool LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
 	static bool MoreThanPathOrder2(const EvcPath * p1, const EvcPath * p2) { return p1->Order > p2->Order; }
 };
 

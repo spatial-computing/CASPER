@@ -33,6 +33,7 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 
 double PathSegment::GetCurrentCost(EvcSolverMethod method) const { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
 bool EvcPath::MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
+bool EvcPath::LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order < e2->Paths->front()->Order; }
 
 // first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
 size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end,
@@ -40,7 +41,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 	const std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings)
 {
 	size_t count = 0, segment = 0;
-	double pathCost = 0.0, segCost = 0.0, segRatio = 0.0, myCurrentTime;
+	double pathCost = 0.0, segCost = 0.0, segRatio = 0.0;
 	EvcPathPtr path = nullptr;
 
 	if (CurrentTime > 0.0)
@@ -49,21 +50,19 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 		for (auto p = begin; p != end; ++p)
 		{
 			path = *p;
-			myCurrentTime = CurrentTime;
-			for (auto fp : *path->myEvc->Paths) if (fp->Frozen) myCurrentTime -= fp->FinalEvacuationCost;
-			if (path->FinalEvacuationCost > myCurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty())
+			if (path->FinalEvacuationCost > CurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty())
 			{
 				segCost = 0.0;
 				pathCost = 0.0;
 
 				// find the segment where we need to cut the path
-				for (segment = 0; pathCost < myCurrentTime && segment < path->size(); ++segment)
+				for (segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
 				{
 					segCost = path->at(segment)->GetCurrentCost(method);
 					pathCost += segCost;
 				}
-				if (pathCost < myCurrentTime) throw std::logic_error("A path is shorter than calculated");
-				segRatio = (pathCost - myCurrentTime) / segCost;
+				if (pathCost < CurrentTime) throw std::logic_error("A path is shorter than calculated");
+				segRatio = (pathCost - CurrentTime) / segCost;
 
 				// move the evacuee to this segment
 				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery, OriginalEdgeSettings);
@@ -79,8 +78,9 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 
 				// setup this path as frozen and mark the evacuee as unporcessed
 				path->Frozen = true;
-				path->FinalEvacuationCost = myCurrentTime;
 				path->myEvc->Status = EvacueeStatus::Unprocessed;
+				path->myEvc->PredictedCost = CASPER_INFINITY;
+				path->myEvc->FinalCost = CASPER_INFINITY;
 				path->MySafeZone->Reserve(-path->RoutedPop);
 				++count;
 			}
@@ -89,27 +89,15 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 	return count;
 }
 
-size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double CurrentTime)
+size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees)
 {
-	/// TODO think about what do you want to do with evacuees that are currently marked as unreachable
 	size_t count = 0;
+
 	for (auto e : *AllEvacuees)
 		if (e->Status == EvacueeStatus::Unreachable)
 		{
-			// setup this path as an empty frozen one and mark the evacuee as unporcessed
-			EvcPath * path = nullptr;
-			if (e->Paths->empty())
-			{
-				path = new DEBUG_NEW_PLACEMENT EvcPath(0, -1, e, nullptr);
-				e->Paths->push_front(path);
-			}
-			else
-			{
-				path = e->Paths->front();
-			}
-			path->Frozen = true;
-			path->FinalEvacuationCost += CurrentTime;
 			e->Status = EvacueeStatus::Unprocessed;
+			e->PredictedCost = CASPER_INFINITY;
 			++count;
 		}
 	return count;
@@ -119,7 +107,8 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 {
 	std::vector<EvcPathPtr> frozenList;
 	EvcPathPtr mainPath = nullptr, fp = nullptr;
-	for (auto evc : *AllEvacuees)	
+
+	for (auto evc : *AllEvacuees)
 		if (evc->Status != EvacueeStatus::Unreachable)
 		{
 			// first identify the main path and the frozen ones
@@ -145,18 +134,18 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 				continue;
 			}
 
-			// now merge the frozen ones to the mian one in the order they are created
+			// now merge the frozen ones to the main one in the order they are created
 			for (auto p = frozenList.rbegin(); p != frozenList.rend(); ++p)
 			{
 				fp = *p;
 				mainPath->front()->SetFromRatio(0.0);
-				mainPath->FinalEvacuationCost += fp->FinalEvacuationCost;
 				for (auto seg = fp->rbegin(); seg != fp->rend(); ++seg) mainPath->push_front(*seg);
 				fp->clear();
 				delete fp;
 			}
 
 			// leave the main path as the only path for this evacuee
+			mainPath->PathStartCost = 0.0;
 			evc->Paths->clear();
 			evc->Paths->push_front(mainPath);
 		}
@@ -168,26 +157,32 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 		}
 }
 
-void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> * touchedEdges, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths)
+void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges, std::shared_ptr<std::vector<EvcPathPtr>> detachedPaths)
 {
 	// It's time to clean up the evacuee object and reset it for the next iteration
 	// To do this we first collect all its paths, take away all edge reservations, and then reset some of its fields.
 	// at the end keep a record of touched edges for a 'HowDirty' call
 	for (const auto & p : *evc->Paths)
 	{
-		/// TODO what should I do with frozen paths here?
 		if (p->Frozen) continue;
-		for (auto s = p->crbegin(); s != p->crend(); ++s) (*s)->Edge->RemoveReservation(p, method, true);
-		if (touchedEdges) { for (const auto & s : *p) touchedEdges->insert(s->Edge); }
+		for (auto s = p->crbegin(); s != p->crend(); ++s)
+		{
+			(*s)->Edge->RemoveReservation(p, method, true);
+			touchedEdges.insert((*s)->Edge);
+		}
 		if (detachedPaths) detachedPaths->push_back(p); else delete p;
 	}
 	evc->Paths->remove_if([](const EvcPathPtr p)->bool { return !p->IsFrozen(); });
 }
 
-void EvcPath::ReattachToEvacuee(EvcSolverMethod method)
+void EvcPath::ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges)
 {
-	for (const auto & s : *this) s->Edge->AddReservation(this, method, true);
-	myEvc->Paths->push_back(this);
+	for (const auto & s : *this)
+	{
+		s->Edge->AddReservation(this, method, true);
+		touchedEdges.insert(s->Edge);
+	}
+	myEvc->Paths->push_front(this);
 }
 
 double EvcPath::GetMinCostRatio(double MaxEvacuationCost) const
@@ -253,9 +248,8 @@ void EvcPath::AddSegment(EvcSolverMethod method, PathSegmentPtr segment)
 
 void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method)
 {
-	FinalEvacuationCost = 0.0;
+	FinalEvacuationCost = RoutedPop * initDelayCostPerPop + this->PathStartCost;
 	for (const auto & pathSegment : *this) FinalEvacuationCost += pathSegment->GetCurrentCost(method);
-	FinalEvacuationCost += RoutedPop * initDelayCostPerPop;
 	myEvc->FinalCost = max(myEvc->FinalCost, FinalEvacuationCost);
 }
 
@@ -265,8 +259,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	long ERRouteFieldIndex, long EREdgeFieldIndex, long EREdgeDirFieldIndex, long ERSeqFieldIndex, long ERFromPosFieldIndex, long ERToPosFieldIndex, long ERCostFieldIndex)
 {
 	HRESULT hr = S_OK;
-	OrginalCost = 0.0;
-	/// FinalEvacuationCost = 0.0;
+	OrginalCost = RoutedPop * initDelayCostPerPop + this->PathStartCost;
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
@@ -311,8 +304,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 		}
 		// Final cost calculations
 		double p = abs(pathSegment->GetEdgePortion());
-		/// FinalEvacuationCost += pathSegment->Edge->GetCurrentCost() * p;
-		OrginalCost         += pathSegment->Edge->OriginalCost     * p;
+		OrginalCost += pathSegment->Edge->OriginalCost * p;
 	}
 
 	// Add the last point of the last path segment to the polyline
@@ -441,7 +433,7 @@ void SortedInsertIntoMapOfLists(std::unordered_map<long, std::list<EvacueePtr>> 
 
 void EvacueeList::FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPEREnabled)
 {
-	// turn off seperation flag is dynamic capser is enabled
+	// turn off seperation flag if dynamic capser is enabled
 	if (DynamicCASPEREnabled == DynamicMode::Full || DynamicCASPEREnabled == DynamicMode::Smart)
 	{
 		SeperationDisabledForDynamicCASPER = CheckFlag(groupingOption, EvacueeGrouping::Separate);
@@ -555,8 +547,6 @@ void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<Evacue
 		{
 			if (e->PredictedCost >= CASPER_INFINITY)
 			{
-				/// TODO so once we mark an evacuee as unreachable, is there any chance it can be reachable again because of a dynamic change?
-				/// does the current system handles this change or it keeps it always unreachable?
 				e->Status = EvacueeStatus::Unreachable;
 				#ifdef TRACE
 				f << ' ' << ATL::CW2A(e->Name.bstrVal);

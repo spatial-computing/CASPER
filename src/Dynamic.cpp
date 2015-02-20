@@ -211,7 +211,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 				NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
 				CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
 			}
-			CountPaths += EvcPath::DynamicStep_UnreachableEvacuees(AllEvacuees, this->Time);
+			CountPaths += EvcPath::DynamicStep_UnreachableEvacuees(AllEvacuees);
 		}
 	}
 	// now apply changes to the graph
