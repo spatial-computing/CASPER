@@ -124,6 +124,8 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 				}
 			}
 			_ASSERT_EXPR(!frozenList.empty(), L"The evacuee does not have any frozen paths to be merged");
+			_ASSERT_EXPR(evc->Paths->front() == mainPath, L"Front path has to be non-frozen");
+
 			if (frozenList.empty()) continue;
 			if (!mainPath)
 			{
@@ -173,6 +175,8 @@ void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std:
 		if (detachedPaths) detachedPaths->push_back(p); else delete p;
 	}
 	evc->Paths->remove_if([](const EvcPathPtr p)->bool { return !p->IsFrozen(); });
+
+	/// TODO there is a null ref bug here: I'm deleting the path first then i go check and wanna remove it from list if it's not frozen
 }
 
 void EvcPath::ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges)
@@ -188,8 +192,8 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdg
 double EvcPath::GetMinCostRatio(double MaxEvacuationCost) const
 {
 	if (MaxEvacuationCost <= 0.0) MaxEvacuationCost = FinalEvacuationCost;
-	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / MaxEvacuationCost;
-	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / MaxEvacuationCost;
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc-> PredictedCost) / MaxEvacuationCost;
+	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / MaxEvacuationCost;
 	return min(PredictionCostRatio, EvacuationCostRatio);
 }
 
@@ -201,8 +205,8 @@ double EvcPath::GetAvgCostRatio(double MaxEvacuationCost) const
 
 void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<EvacueePtr> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method)
 {
-	double PredictionCostRatio = (ReserveEvacuationCost - myEvc->PredictedCost) / ThisIterationMaxCost;
-	double EvacuationCostRatio = (FinalEvacuationCost - ReserveEvacuationCost) / ThisIterationMaxCost;
+	double PredictionCostRatio = (ReserveEvacuationCost - myEvc-> PredictedCost) / ThisIterationMaxCost;
+	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
 
 	if (PredictionCostRatio >= ThreasholdForCost || EvacuationCostRatio >= ThreasholdForCost)
 	{

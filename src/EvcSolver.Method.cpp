@@ -337,7 +337,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 		  ((GlobalEvcCostAtIteration[GolbalIteration - 1] == GlobalEvcCostAtIteration[GolbalIteration - 2]) && iterateRatio >= 1.0f))
 
 		{
-			std::sort(detachedPaths->begin(), detachedPaths->end(), EvcPath::LessThanPathOrder1);
+			std::sort(detachedPaths->begin(), detachedPaths->end(), EvcPath::LessThanPathOrder2);
 			for (const auto & path : *detachedPaths) path->CleanYourEvacueePaths(solverMethod, touchededges);
 			for (const auto & path : *detachedPaths) path->ReattachToEvacuee(solverMethod, touchededges);
 			NAEdge::HowDirtyExhaustive(touchededges.begin(), touchededges.end(), solverMethod, 1.0);

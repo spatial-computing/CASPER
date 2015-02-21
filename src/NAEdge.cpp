@@ -305,7 +305,7 @@ void NAEdge::GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cle
 	for (const auto & p : *reservations)
 	{
 		if (*p != *crossings.back()) crossings.push_back(p);
-		_ASSERT_EXPR(!EvcPath::LessThanOrder(p, crossings.back()), L"Path reservations are not in increasing order");
+		_ASSERT_EXPR(!EvcPath::LessThanPathOrder2(p, crossings.back()), L"Path reservations are not in increasing order");
 	}
 }
 

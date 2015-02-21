@@ -637,7 +637,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
 
-	std::sort(tempPathList.begin(), tempPathList.end(), EvcPath::LessThanOrder);
+	std::sort(tempPathList.begin(), tempPathList.end(), EvcPath::LessThanPathOrder2);
 
 	// Get the "Routes" NAClass feature class
 	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
@@ -650,8 +650,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBufferR))) return hr;
 
 	// Query for the appropriate field index values in the "routes" feature class
-	long evNameFieldIndex = -1, evacTimeFieldIndex = -1, orgTimeFieldIndex = -1, RIDFieldIndex = -1, ERRouteFieldIndex = -1, EREdgeFieldIndex = -1,
-		ERSeqFieldIndex = -1, ERFromPosFieldIndex = -1, ERToPosFieldIndex = -1, ERCostFieldIndex = -1, EREdgeDirFieldIndex = -1;
+	long evNameFieldIndex = -1, evacTimeFieldIndex  = -1, orgTimeFieldIndex = -1, RIDFieldIndex    = -1, ERRouteFieldIndex   = -1, EREdgeFieldIndex = -1,
+		 ERSeqFieldIndex  = -1, ERFromPosFieldIndex = -1, ERToPosFieldIndex = -1, ERCostFieldIndex = -1, EREdgeDirFieldIndex = -1;
 
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;

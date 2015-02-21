@@ -212,6 +212,11 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 				CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
 			}
 			CountPaths += EvcPath::DynamicStep_UnreachableEvacuees(AllEvacuees);
+
+			// what if all paths are OK and non are affected and there are no unreachable evacuees?
+			// In that case we still need to call CASPER and allow for at least of iterative loop to
+			// execute just to make sure this round of graph changes is also considered.
+			if (CountPaths == 0) CountPaths = 1;
 		}
 	}
 	// now apply changes to the graph
