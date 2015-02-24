@@ -38,7 +38,12 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 	std::set<CriticalTime>::_Pairib fr, bc;
 	currentTime = dynamicTimeFrame.end();
 
-	if (dynamicMode == DynamicMode::Disabled) goto END_OF_FUNC;
+	if (dynamicMode == DynamicMode::Disabled)
+	{
+		dynamicTimeFrame.emplace(CriticalTime(0.0));
+		dynamicTimeFrame.emplace(CriticalTime(CASPER_INFINITY));
+		goto END_OF_FUNC;
+	}
 
 	if (!DynamicChangesTable)
 	{
@@ -147,8 +152,9 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime)
 {
 	size_t EvcCount = 0;
-	if (currentTime != dynamicTimeFrame.end()) EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, EvcStartTime, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
-	_ASSERT_EXPR(currentTime != dynamicTimeFrame.end(), "NextDynamicChange function called on invalid iterator");
+	_ASSERT_EXPR(currentTime != dynamicTimeFrame.end(), L"NextDynamicChange function called on invalid iterator");
+	if (currentTime == dynamicTimeFrame.end()) return 0;
+	EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, EvcStartTime, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
 	++currentTime;
 	return EvcCount;
 }
@@ -225,7 +231,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 	if (this->Time >= CASPER_INFINITY)
 	{
 		// merge paths together only if we are in a non-simple mode
-		if (myDynamicMode != DynamicMode::Simple) EvcPath::DynamicStep_MergePaths(AllEvacuees, solverMethod, ecache->GetInitDelayPerPop());
+		if (myDynamicMode == DynamicMode::Smart || myDynamicMode == DynamicMode::Full) EvcPath::DynamicStep_MergePaths(AllEvacuees, solverMethod, ecache->GetInitDelayPerPop());
 		CountPaths = 0;
 		OriginalEdgeSettings.clear();
 	}

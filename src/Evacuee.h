@@ -114,7 +114,7 @@ public:
 	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
 	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel *, INetworkDatasetPtr, IFeatureClassContainerPtr, bool &,
-		IStepProgressorPtr, double &, double, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long, long, long, long, long, long, long, long);
+		IStepProgressorPtr, double &, double, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long);
 	void ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges);
 	inline void CleanYourEvacueePaths(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges) { EvcPath::DetachPathsFromEvacuee(myEvc, method, touchedEdges); }
 	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);

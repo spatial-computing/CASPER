@@ -95,7 +95,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (ipStepProgressor)
 			{
 				if (FAILED(hr = ipStepProgressor->put_Position(progressBaseValue + (long)(AllEvacuees->size() - NumberOfEvacueesInIteration)))) goto END_OF_FUNC;
-				statusMsg.Format(_T("Performing %s search (pass %d)"), AlgName, GlobalEvcCostAtIteration.size() + 1);
+				statusMsg.Format(_T("Performing %s search (time %.2f, pass %d)"), AlgName, EvcStartTime, GlobalEvcCostAtIteration.size() + 1);
 			}
 			do
 			{

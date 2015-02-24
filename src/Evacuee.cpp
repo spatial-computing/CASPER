@@ -137,7 +137,7 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 			}
 
 			// now merge the frozen ones to the main one in the order they are created
-			for (auto p = frozenList.rbegin(); p != frozenList.rend(); ++p)
+			for (auto p = frozenList.cbegin(); p != frozenList.cend(); ++p)
 			{
 				fp = *p;
 				mainPath->front()->SetFromRatio(0.0);
@@ -164,19 +164,24 @@ void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std:
 	// It's time to clean up the evacuee object and reset it for the next iteration
 	// To do this we first collect all its paths, take away all edge reservations, and then reset some of its fields.
 	// at the end keep a record of touched edges for a 'HowDirty' call
-	for (const auto & p : *evc->Paths)
+	EvcPathPtr path = nullptr;
+	for (auto i = evc->Paths->begin(); i != evc->Paths->end();)
 	{
-		if (p->Frozen) continue;
-		for (auto s = p->crbegin(); s != p->crend(); ++s)
+		path = *i;
+		if (path->Frozen) ++i; // ignore frozen paths. They are not to be detached
+		else
 		{
-			(*s)->Edge->RemoveReservation(p, method, true);
-			touchedEdges.insert((*s)->Edge);
-		}
-		if (detachedPaths) detachedPaths->push_back(p); else delete p;
-	}
-	evc->Paths->remove_if([](const EvcPathPtr p)->bool { return !p->IsFrozen(); });
+			for (auto s = path->crbegin(); s != path->crend(); ++s)
+			{
+				(*s)->Edge->RemoveReservation(path, method, true);
+				touchedEdges.insert((*s)->Edge);
+			}
 
-	/// TODO there is a null ref bug here: I'm deleting the path first then i go check and wanna remove it from list if it's not frozen
+			// this erase act as iterator advancement too. next we either backup thr path in a vector or delete it all together
+			i = evc->Paths->erase(i);
+			if (detachedPaths) detachedPaths->push_back(path); else delete path; 
+		}
+	}
 }
 
 void EvcPath::ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges)
@@ -259,8 +264,7 @@ void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolver
 
 HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag,
 	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBufferR, IFeatureCursorPtr ipFeatureCursorR,
-	long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex,
-	long ERRouteFieldIndex, long EREdgeFieldIndex, long EREdgeDirFieldIndex, long ERSeqFieldIndex, long ERFromPosFieldIndex, long ERToPosFieldIndex, long ERCostFieldIndex)
+	long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex)
 {
 	HRESULT hr = S_OK;
 	OrginalCost = RoutedPop * initDelayCostPerPop + this->PathStartCost;

@@ -650,8 +650,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBufferR))) return hr;
 
 	// Query for the appropriate field index values in the "routes" feature class
-	long evNameFieldIndex = -1, evacTimeFieldIndex  = -1, orgTimeFieldIndex = -1, RIDFieldIndex    = -1, ERRouteFieldIndex   = -1, EREdgeFieldIndex = -1,
-		 ERSeqFieldIndex  = -1, ERFromPosFieldIndex = -1, ERToPosFieldIndex = -1, ERCostFieldIndex = -1, EREdgeDirFieldIndex = -1;
+	long evNameFieldIndex = -1, evacTimeFieldIndex  = -1, orgTimeFieldIndex = -1, RIDFieldIndex    = -1;
 
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
@@ -670,8 +669,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	for (const auto & p : tempPathList)
 	{
 		if (FAILED(hr = p->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
-			ipFeatureCursorR, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, EREdgeDirFieldIndex, ERSeqFieldIndex,
-			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex))) return hr;
+			ipFeatureCursorR, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex))) return hr;
 	}
 
 	// flush the insert buffer
