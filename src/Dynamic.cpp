@@ -208,14 +208,14 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 			if (myDynamicMode == DynamicMode::Full)
 			{
 				DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
-				for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) allPaths.push_back(p);
-				CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
+				for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) if (!p->IsFrozen()) allPaths.push_back(p);
+				CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery());
 			}
 			else if (myDynamicMode == DynamicMode::Smart)
 			{
-				DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(DynamicallyAffectedEdges.size());
+				DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(min(AllEvacuees->size(), DynamicallyAffectedEdges.size()));
 				NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
-				CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), OriginalEdgeSettings);
+				CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery());
 			}
 			CountPaths += EvcPath::DynamicStep_UnreachableEvacuees(AllEvacuees);
 
@@ -231,7 +231,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 	if (this->Time >= CASPER_INFINITY)
 	{
 		// merge paths together only if we are in a non-simple mode
-		if (myDynamicMode == DynamicMode::Smart || myDynamicMode == DynamicMode::Full) EvcPath::DynamicStep_MergePaths(AllEvacuees, solverMethod, ecache->GetInitDelayPerPop());
+		if (myDynamicMode == DynamicMode::Smart || myDynamicMode == DynamicMode::Full) EvcPath::DynamicStep_MergePaths(AllEvacuees);
 		CountPaths = 0;
 		OriginalEdgeSettings.clear();
 	}

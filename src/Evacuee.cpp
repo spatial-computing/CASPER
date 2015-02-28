@@ -37,8 +37,7 @@ bool EvcPath::LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { retur
 
 // first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
 size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end,
-	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery,
-	const std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings)
+	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery)
 {
 	size_t count = 0, segment = 0;
 	double pathCost = 0.0, segCost = 0.0, segRatio = 0.0;
@@ -50,7 +49,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 		for (auto p = begin; p != end; ++p)
 		{
 			path = *p;
-			if (path->FinalEvacuationCost > CurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty())
+			if (path->FinalEvacuationCost > CurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty() && !path->Frozen)
 			{
 				segCost = 0.0;
 				pathCost = 0.0;
@@ -61,11 +60,16 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 					segCost = path->at(segment)->GetCurrentCost(method);
 					pathCost += segCost;
 				}
-				if (pathCost < CurrentTime) throw std::logic_error("A path is shorter than calculated");
+				if (pathCost < CurrentTime)
+				{
+					// this is the case where the head of population has reached the safe zone but the tail of it
+					// is not. Because the initDelayPerPop is non-zero. We will consider this a path that cannot be splited.
+					continue;
+				}
 				segRatio = (pathCost - CurrentTime) / segCost;
 
 				// move the evacuee to this segment
-				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery, OriginalEdgeSettings);
+				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery);
 
 				// pop out the rest of the segments in this path
 				for (size_t i = path->size() - 1; i >= segment; --i)
@@ -92,7 +96,6 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees)
 {
 	size_t count = 0;
-
 	for (auto e : *AllEvacuees)
 		if (e->Status == EvacueeStatus::Unreachable)
 		{
@@ -103,7 +106,7 @@ size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> All
 	return count;
 }
 
-void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, EvcSolverMethod solverMethod, double InitDelayPerPop)
+void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees)
 {
 	std::vector<EvcPathPtr> frozenList;
 	EvcPathPtr mainPath = nullptr, fp = nullptr;
@@ -123,18 +126,19 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, E
 					mainPath = p;
 				}
 			}
-			_ASSERT_EXPR(!frozenList.empty(), L"The evacuee does not have any frozen paths to be merged");
-			_ASSERT_EXPR(evc->Paths->front() == mainPath, L"Front path has to be non-frozen");
 
 			if (frozenList.empty()) continue;
 			if (!mainPath)
 			{
 				// in this case the evacuee has some frozen paths so originally could evacuate but after this dynamic
 				// change it no longer can move so it is considered stuck
+				/// TODO What happensd here is that the evacuee is marked as process instead of unreachable. Is this going to create some problems for me?
 				for (auto p : *evc->Paths) delete p;
 				evc->Paths->clear();
 				continue;
 			}
+
+			_ASSERT_EXPR(evc->Paths->front() == mainPath, L"Front path has to be non-frozen");
 
 			// now merge the frozen ones to the main one in the order they are created
 			for (auto p = frozenList.cbegin(); p != frozenList.cend(); ++p)
@@ -365,41 +369,41 @@ Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
 {
 	ObjectID = objectID;
 	Name = name;
-	Vertices = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
+	VerticesAndRatio = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
 	Paths = new DEBUG_NEW_PLACEMENT std::list<EvcPathPtr>();
 	Population = pop;
 	PredictedCost = CASPER_INFINITY;
 	Status = EvacueeStatus::Unprocessed;
 	ProcessOrder = -1;
 	FinalCost = CASPER_INFINITY;
+	DiscoveryLeaf = nullptr;
 }
 
 Evacuee::~Evacuee(void)
 {
 	for (auto & p : *Paths) delete p;
-	for (auto v : *Vertices) delete v;
+	for (auto v : *VerticesAndRatio) delete v;
 	Paths->clear();
-	Vertices->clear();
-	delete Vertices;
+	VerticesAndRatio->clear();
+	delete VerticesAndRatio;
 	delete Paths;
 }
 
-void Evacuee::DynamicMove(NAEdgePtr edge, double toRatio, INetworkQueryPtr ipNetworkQuery, const std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings)
+void Evacuee::DynamicMove(NAEdgePtr edge, double toRatio, INetworkQueryPtr ipNetworkQuery)
 {
 	INetworkElementPtr ipElement = nullptr;
-	for (auto v : *Vertices) delete v;
-	Vertices->clear();
+	for (auto v : *VerticesAndRatio) delete v;
+	VerticesAndRatio->clear();
 
 	if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipElement))) return;
 	INetworkJunctionPtr toJunction(ipElement);
 	if (FAILED(edge->NetEdge->QueryJunctions(nullptr, toJunction))) return;
 
 	NAVertexPtr myVertex = new DEBUG_NEW_PLACEMENT NAVertex(toJunction, edge);
-	myVertex->GVal = toRatio * edge->OriginalCost;
-	auto i = OriginalEdgeSettings.find(edge);
-	if (i != OriginalEdgeSettings.end()) myVertex->GVal = toRatio * i->second.AdjustedCost();
+	myVertex->GVal = toRatio;
+	DiscoveryLeaf = edge;
 
-	Vertices->push_back(myVertex);
+	VerticesAndRatio->push_back(myVertex);
 }
 
 EvacueeList::~EvacueeList()
@@ -410,12 +414,15 @@ EvacueeList::~EvacueeList()
 
 void MergeEvacueeClusters(std::unordered_map<long, std::list<EvacueePtr>> & EdgeEvacuee, std::vector<EvacueePtr> & ToErase, double OKDistance)
 {
+	EvacueePtr left = nullptr;
+	NAEdgePtr edge = nullptr;
 	for (const auto & l : EdgeEvacuee)
 	{
-		EvacueePtr left = nullptr;
+		left = nullptr;
+		edge = l.second.front()->VerticesAndRatio->front()->GetBehindEdge();
 		for (const auto & i : l.second)
 		{
-			if (left && abs(i->Vertices->front()->GVal - left->Vertices->front()->GVal) <= OKDistance)
+			if (left && abs(i->VerticesAndRatio->front()->GVal - left->VerticesAndRatio->front()->GVal) <= OKDistance / edge->OriginalCost)
 			{
 				// merge i with left
 				ToErase.push_back(i);
@@ -428,15 +435,10 @@ void MergeEvacueeClusters(std::unordered_map<long, std::list<EvacueePtr>> & Edge
 
 void SortedInsertIntoMapOfLists(std::unordered_map<long, std::list<EvacueePtr>> & EdgeEvacuee, long eid, EvacueePtr evc)
 {
-	auto i = EdgeEvacuee.find(eid);
-	if (i == EdgeEvacuee.end())
-	{
-		EdgeEvacuee.insert(std::pair<long, std::list<EvacueePtr>>(eid, std::list<EvacueePtr>()));
-		i = EdgeEvacuee.find(eid);
-	}
-	auto j = i->second.begin();
-	while (j != i->second.end() && evc->Vertices->front()->GVal > (*j)->Vertices->front()->GVal) ++j;
-	i->second.insert(j, evc);
+	auto i = EdgeEvacuee.insert(std::pair<long, std::list<EvacueePtr>>(eid, std::list<EvacueePtr>()));
+	auto j = i.first->second.begin();
+	while (j != i.first->second.end() && evc->VerticesAndRatio->front()->GVal > (*j)->VerticesAndRatio->front()->GVal) ++j;
+	i.first->second.insert(j, evc);
 }
 
 void EvacueeList::FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPEREnabled)
@@ -458,7 +460,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPER
 		
 		for (const auto & evc : *this)
 		{
-			v1 = evc->Vertices->front();
+			v1 = evc->VerticesAndRatio->front();
 			e1 = v1->GetBehindEdge();
 			if (!e1) // evacuee mapped to intersection
 			{
@@ -470,7 +472,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPER
 					i->second->Population += evc->Population;
 				}
 			}
-			else if (evc->Vertices->size() == 2) SortedInsertIntoMapOfLists(DoubleEdgeEvacuee, e1->EID, evc);  // evacuee mapped to both side of the street segment
+			else if (evc->VerticesAndRatio->size() == 2) SortedInsertIntoMapOfLists(DoubleEdgeEvacuee, e1->EID, evc);  // evacuee mapped to both side of the street segment
 			else if (e1->Direction == esriNetworkEdgeDirection::esriNEDAlongDigitized) SortedInsertIntoMapOfLists(EdgeAlongEvacuee, e1->EID, evc);
 			else SortedInsertIntoMapOfLists(EdgeAgainstEvacuee, e1->EID, evc);
 		}
@@ -489,7 +491,7 @@ void EvacueeList::FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPER
 	shrink_to_fit();
 }
 
-void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir)
+void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir, std::shared_ptr<NAEdgeContainer> leafs)
 {
 	for(const auto & evc : *list)
 	{
@@ -498,7 +500,10 @@ void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CA
 			// reset evacuation prediction for continues carma sort
 			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = CASPER_INFINITY;
 
-			for (const auto & v : *evc->Vertices)
+			// this is to help CARMA find this evacuee again if it happens to be in a clean part of the tree/graph
+			if (evc->DiscoveryLeaf) leafs->Insert(evc->DiscoveryLeaf);
+
+			for (const auto & v : *evc->VerticesAndRatio)
 			{
 				if (find(v->EID) == end()) insert(_NAEvacueeVertexTablePair(v->EID, std::vector<EvacueePtr>()));
 				at(v->EID).push_back(evc);
@@ -507,11 +512,10 @@ void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CA
 	}
 }
 
-void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAEdgeContainer> leafs, double pop, EvcSolverMethod method)
+void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, double pop, EvcSolverMethod method)
 {
 	const auto & pair = find(myVertex->EID);
-	NAVertexPtr foundVertex;
-	bool AtLeastOneEvacueeFound = false;
+	NAVertexPtr foundVertex = nullptr;
 	double newPredictedCost = 0.0;
 
 	if (pair != end())
@@ -519,7 +523,7 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge 
 		for (const auto & evc : pair->second)
 		{
 			foundVertex = nullptr;
-			for (const auto & v : *evc->Vertices)
+			for (const auto & v : *evc->VerticesAndRatio)
 			{
 				if (v->EID == myVertex->EID)
 				{
@@ -531,15 +535,17 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge 
 			{
 				newPredictedCost = myVertex->GVal;
 				NAEdgePtr behindEdge = foundVertex->GetBehindEdge();
-				if (behindEdge) newPredictedCost += foundVertex->GVal * behindEdge->GetCost(pop, method) / behindEdge->OriginalCost;
+				if (behindEdge)
+				{
+					newPredictedCost += foundVertex->GVal * behindEdge->GetCost(pop, method) /* / behindEdge->OriginalCost*/;
+					// because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
+					evc->DiscoveryLeaf = behindEdge;
+				}
 				evc->PredictedCost = min(evc->PredictedCost, newPredictedCost);
 				SortedEvacuees->push_back(evc);
-				AtLeastOneEvacueeFound = true;
 			}
 		}
 		erase(myVertex->EID);
-		// because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
-		if (AtLeastOneEvacueeFound) leafs->Insert(myEdge); 
 	}
 }
 
@@ -568,12 +574,13 @@ void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<Evacue
 	#endif
 }
 
-SafeZone::~SafeZone() { delete Vertex; }
+SafeZone::~SafeZone() { delete VertexAndRatio; }
 
 SafeZone::SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap) : junction(_junction), behindEdge(_behindEdge), positionAlong(posAlong), capacity(0.0)
 {
 	reservedPop = 0.0;
-	Vertex = new DEBUG_NEW_PLACEMENT NAVertex(junction,behindEdge);
+	VertexAndRatio = new DEBUG_NEW_PLACEMENT NAVertex(junction, behindEdge);
+	VertexAndRatio->GVal = posAlong;
 	if (cap.vt == VT_R8) capacity = cap.dblVal;
 	else if (cap.vt == VT_BSTR) swscanf_s(cap.bstrVal, L"%lf", &capacity);
 }
@@ -597,7 +604,7 @@ bool SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadin
 	if (behindEdge && !restricted)
 	{
 		restricted = true;
-		if (SUCCEEDED(hr = ecache->QueryAdjacencies(Vertex, leadingEdge, QueryDirection::Forward, &adj)))
+		if (SUCCEEDED(hr = ecache->QueryAdjacencies(VertexAndRatio, leadingEdge, QueryDirection::Forward, &adj)))
 		{
 			for (const auto & currentEdge : *adj) if (NAEdge::IsEqualNAEdgePtr(behindEdge, currentEdge)) restricted = false;
 		}
@@ -607,7 +614,7 @@ bool SafeZone::IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadin
 
 bool SafeZoneTable::insert(SafeZonePtr z)
 {
-	auto insertRet = std::unordered_map<long, SafeZonePtr>::insert(std::pair<long, SafeZonePtr>(z->Vertex->EID, z));
+	auto insertRet = std::unordered_map<long, SafeZonePtr>::insert(std::pair<long, SafeZonePtr>(z->VertexAndRatio->EID, z));
 	if (!insertRet.second) delete z;
 	return insertRet.second;
 }

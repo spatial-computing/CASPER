@@ -152,8 +152,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 						// populate the heap with vertices associated with the current evacuee
 						readyEdges.clear();
-						for (std::vector<NAVertexPtr>::const_iterator h = currentEvacuee->Vertices->begin(); h != currentEvacuee->Vertices->end(); h++)
-							if (FAILED(hr = PrepareVerticesForHeap(*h, vcache, ecache, &closedList, readyEdges, population2Route, this->solverMethod, this->selfishRatio, MaxPathCostSoFar, QueryDirection::Backward))) goto END_OF_FUNC;
+						for (auto const & v : *(currentEvacuee->VerticesAndRatio))
+							if (FAILED(hr = PrepareVerticesForHeap(v, vcache, ecache, &closedList, readyEdges, population2Route, solverMethod, selfishRatio, MaxPathCostSoFar, QueryDirection::Backward))) goto END_OF_FUNC;
 						for (const auto & e : readyEdges) heap.Insert(e);
 
 						TimeToBeat = CASPER_INFINITY;
@@ -238,20 +238,21 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						// Generate path for this evacuee if any found
 						if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired, EvcStartTime))
 							MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->front()->GetReserveEvacuationCost());
- 						// else currentEvacuee->Status = EvacueeStatus::Unreachable;
-#ifdef DEBUG
+ 						else currentEvacuee->Status = EvacueeStatus::Unreachable;
+
+						#ifdef DEBUG
 						std::wostringstream os_;
 						os_.precision(3);
 						os_ << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ',' << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 						OutputDebugStringW(os_.str().c_str());
-#endif
-#ifdef TRACE
+						#endif
+						#ifdef TRACE
 						std::ofstream f;
 						f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 						f.precision(3);
 						f << "CARMALoop stat " << countEvacueesInOneBucket << ": " << (int)sumVisitedEdge << ',' << (int)sumVisitedDirtyEdge << ',' << sumVisitedDirtyEdge / (CARMAPerformanceRatio * sumVisitedEdge) << std::endl;
 						f.close();
-#endif
+						#endif
 
 						// cleanup search heap and closed-list
 						UpdatePeakMemoryUsage();
@@ -259,7 +260,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						closedList.Clear();
 					} // end of while loop for multiple routes single evacuee
 
-					currentEvacuee->Status = EvacueeStatus::Processed;
+					if (currentEvacuee->Status == EvacueeStatus::Unprocessed) currentEvacuee->Status = EvacueeStatus::Processed;
 
 					// determine if the previous round of DJs where fast enough and if not break out of the loop and have CARMALoop do something about it
 					if (this->solverMethod == EvcSolverMethod::CASPERSolver && sumVisitedDirtyEdge > this->CARMAPerformanceRatio * sumVisitedEdge) break;
@@ -391,15 +392,19 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	unsigned int CARMAExtractCount = 0;
 	ArrayList<NAEdgePtr> * adj = nullptr;
 	ATL::CString statusMsg;
-	bool ShouldCARMACheckForDecreasedCost = false;
+	bool ShouldCARMACheckForDecreasedCost = false, FullSPTSelected = false;
 	std::vector<NAEdgePtr> removedDirty; removedDirty.reserve(10000);
 	const std::function<bool(EvacueePtr, EvacueePtr)> SortFunctions[7] =
 		{ Evacuee::LessThanObjectID, Evacuee::LessThan, Evacuee::LessThan, Evacuee::MoreThan, Evacuee::MoreThan, Evacuee::ReverseFinalCost, Evacuee::ReverseEvacuationCost };
 
 	// keeping reachable evacuees in a new hashtable for better access
 	// also keep unreachable ones in the redundant list
+
+	/// TODO what heppens here is that some evacuee may change location (DynamicCASPER) and hence the previous leafs
+	/// may not be the same edges to discover them again. In case of a DSPT this may mislead CARMA.
+	/// Also this is even more interesting when the evacuee is stuck
 	NAEvacueeVertexTable EvacueePairs;
-	EvacueePairs.InsertReachable(Evacuees, CarmaSortCriteria); // this is very important to be 'CarmaSortCriteria' with capital 'C'
+	EvacueePairs.InsertReachable(Evacuees, CarmaSortCriteria, leafs); // this is very important to be 'CarmaSortCriteria' with capital 'C'
 	SortedEvacuees->clear();
 
 	#ifdef TRACE
@@ -414,14 +419,9 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 	{
 		if (ipStepProgressor)
 		{
-			statusMsg.Format(_T("CARMA Loop %d"), CARMAExtractCounts.size() + 1);
+			statusMsg.Format(_T("CARMA Loop %d: ..."), CARMAExtractCounts.size() + 1);
 			if (FAILED(hr = ipStepProgressor->put_Message(ATL::CComBSTR(statusMsg)))) return hr;
 		}
-		#ifdef DEBUG
-		std::wostringstream os_;
-		os_ << "CARMALoop #" << CARMAExtractCounts.size() + 1 << std::endl;
-		OutputDebugStringW(os_.str().c_str());
-		#endif
 
 		// search for min population on graph evacuees left to be routed. The next if has to be in-tune with what population will be routed next.
 		// the h values should always be an underestimation
@@ -441,12 +441,27 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		// generally speaking we use FullSPT if the user wants it or if the mimPop2Route has changed.
 		// if the minPop has changed it means pretty much all edges are dirty and there is no point checking them or do DSPT.
 		// later in the code we also check if there are too many dirty edges and in that case we also revert back to FullSPT.
-		if (ThreeGenCARMA == VARIANT_FALSE || minPop2Route != prevMinPop2Route) closedList->Clear(NAEdgeMapGeneration::AllGens); 
+		FullSPTSelected = ThreeGenCARMA == VARIANT_FALSE || minPop2Route != prevMinPop2Route;
+		if (FullSPTSelected) closedList->Clear(NAEdgeMapGeneration::AllGens); // Full SPT
 		else closedList->MarkAllAsOldGen(); // DSPT option
 
 		// This is where the new dynamic CARMA starts. At this point you have to clear the dirty section of the carma tree.
 		// also keep the previous leafs only if they are still in closedList. They help re-discover EvacueePairs
 		MarkDirtyEdgesAsUnVisited(closedList->oldGen, leafs, removedDirty, ShouldCARMACheckForDecreasedCost);
+
+		if (ipStepProgressor)
+		{
+			if (FullSPTSelected) statusMsg.Format(_T("CARMA Loop %d: Full SPT"), CARMAExtractCounts.size() + 1);
+			else if (ShouldCARMACheckForDecreasedCost) statusMsg.Format(_T("CARMA Loop %d: Fully-Dynamic SPT"), CARMAExtractCounts.size() + 1);
+			else statusMsg.Format(_T("CARMA Loop %d: Semi-Dynamic SPT"), CARMAExtractCounts.size() + 1);
+			if (FAILED(hr = ipStepProgressor->put_Message(ATL::CComBSTR(statusMsg)))) return hr;
+		}
+		#ifdef DEBUG
+		std::wostringstream os_;
+		os_ << statusMsg.GetBuffer(statusMsg.GetLength()) << std::endl;
+		OutputDebugStringW(os_.str().c_str());
+		statusMsg.ReleaseBuffer();
+		#endif
 
 		// pre-add dirty edges to heap with their old clean parents instead of checking it during loop
 		if (FAILED(hr = FindDirtyEdgesWithACleanParent(ecache, vcache, ipNetworkQuery, closedList, leafs, removedDirty))) return hr;
@@ -454,7 +469,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		// prepare and insert safe zone vertices into the heap
 		for (const auto & z : *safeZoneList)
 		{
-			if (FAILED(hr = PrepareVerticesForHeap(z.second->Vertex, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, solverMethod, 0.0, 0.0, QueryDirection::Forward))) return hr;
+			if (FAILED(hr = PrepareVerticesForHeap(z.second->VertexAndRatio, vcache, ecache, closedList->oldGen, readyEdges, minPop2Route, solverMethod, 0.0, 0.0, QueryDirection::Forward))) return hr;
 		}
 		for (const auto & h : readyEdges)
 		{
@@ -521,7 +536,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 				continue;
 			}
 
-			EvacueePairs.RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, leafs, minPop2Route, solverMethod);
+			EvacueePairs.RemoveDiscoveredEvacuees(myVertex, myEdge, SortedEvacuees, minPop2Route, solverMethod);
 
 			if (FAILED(hr = ecache->QueryAdjacencies(myVertex, myEdge, QueryDirection::Backward, &adj))) return hr;
 
@@ -772,6 +787,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 	double globalDeltaPenalty = 0.0;
 	ArrayList<NAEdgePtr> * adj = nullptr;
 
+	// Remember vertex gval is now only ratio along edge
 	temp = vcache->New(point->Junction);
 	temp->SetBehindEdge(point->GetBehindEdge());
 	temp->GVal = point->GVal;
@@ -785,7 +801,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 	{
 		if (!closedList->Exist(edge))
 		{
-			temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) / edge->OriginalCost;
+			temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) /* / edge->OriginalCost*/;
 			temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
 			readyEdges.push_back(edge);
 		}
@@ -801,7 +817,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 			temp = vcache->New(point->Junction);
 			temp->Previous = nullptr;
 			temp->SetBehindEdge(edge);
-			temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) / edge->OriginalCost;
+			temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) /* / edge->OriginalCost*/;
 			temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
 			readyEdges.push_back(edge);
 		}
@@ -859,11 +875,10 @@ bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 		{
 			// search for mother vertex and its position along the edge
 			edgePortion = 1.0;
-			for (const auto & v : *currentEvacuee->Vertices)
+			for (const auto & v : *currentEvacuee->VerticesAndRatio)
 				if (v->EID == finalVertex->EID)
 				{
-					if (v->GetBehindEdge()) edgePortion = v->GVal / v->GetBehindEdge()->OriginalCost;
-					else edgePortion = v->GVal;
+					edgePortion = v->GVal;
 					break;
 				}
 

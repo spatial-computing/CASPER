@@ -480,7 +480,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (!isRestricted)
 					{
 						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, nullptr);
-						currentEvacuee->Vertices->push_back(myVertex);
+						currentEvacuee->VerticesAndRatio->push_back(myVertex);
 					}
 				}
 
@@ -507,8 +507,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->GVal = posAlongEdge * myVertex->GetBehindEdge()->OriginalCost;
-							currentEvacuee->Vertices->push_back(myVertex);
+							myVertex->GVal = posAlongEdge /** myVertex->GetBehindEdge()->OriginalCost*/;
+							currentEvacuee->VerticesAndRatio->push_back(myVertex);
 						}
 					}
 
@@ -530,13 +530,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->GVal = posAlongEdge * myVertex->GetBehindEdge()->OriginalCost;
-							currentEvacuee->Vertices->push_back(myVertex);
+							myVertex->GVal = posAlongEdge /** myVertex->GetBehindEdge()->OriginalCost*/;
+							currentEvacuee->VerticesAndRatio->push_back(myVertex);
 						}
 					}
 				}
 			}
-			if (currentEvacuee->Vertices->size() > 0) Evacuees->Insert(currentEvacuee);
+			if (currentEvacuee->VerticesAndRatio->size() > 0) Evacuees->Insert(currentEvacuee);
 			else delete currentEvacuee;
 		}
 	}

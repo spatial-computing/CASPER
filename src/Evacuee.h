@@ -126,13 +126,12 @@ public:
 	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges,
 		std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
 	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end, 
-		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery,
-		const std::unordered_map<NAEdge *, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings);
-	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees, EvcSolverMethod solverMethod, double InitDelayPerPop);
+		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuerys);
+	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees);
 	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees);
 
 	
-	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
+	static bool MoreThanFinalCost (const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
 	static bool MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
 	static bool LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
 	static bool MoreThanPathOrder2(const EvcPath * p1, const EvcPath * p2) { return p1->Order > p2->Order; }
@@ -144,8 +143,9 @@ typedef EvcPath * EvcPathPtr;
 class Evacuee
 {
 public:
-	std::vector<NAVertexPtr> * Vertices;
+	std::vector<NAVertexPtr> * VerticesAndRatio;
 	std::list<EvcPathPtr>    * Paths;
+	NAEdge                   * DiscoveryLeaf;
 	VARIANT                  Name;
 	double                   Population;
 	double                   PredictedCost;
@@ -158,7 +158,7 @@ public:
 	virtual ~Evacuee(void);
 	Evacuee(const Evacuee & that) = delete;
 	Evacuee & operator=(const Evacuee &) = delete;
-	void DynamicMove(NAEdge * edge, double FromRatio, INetworkQueryPtr ipNetworkQuery, const std::unordered_map<NAEdge *, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings);
+	void DynamicMove(NAEdge * edge, double FromRatio, INetworkQueryPtr ipNetworkQuery);
 
 	static bool LessThan(const Evacuee * e1, const Evacuee * e2)
 	{
@@ -172,20 +172,9 @@ public:
 		else return e1->PredictedCost > e2->PredictedCost;
 	}
 
-	static bool LessThanObjectID(const Evacuee * e1, const Evacuee * e2)
-	{
-		return e1->ObjectID < e2->ObjectID;
-	}
-
-	static bool ReverseFinalCost(const Evacuee * e1, const Evacuee * e2)
-	{
-		return e1->FinalCost > e2->FinalCost;
-	}
-
-	static bool ReverseEvacuationCost(const Evacuee * e1, const Evacuee * e2)
-	{
-		return e1->Paths->front()->GetReserveEvacuationCost() > e2->Paths->front()->GetReserveEvacuationCost();
-	}
+	static bool LessThanObjectID(const Evacuee * e1, const Evacuee * e2) { return e1->ObjectID  < e2->ObjectID;  }
+	static bool ReverseFinalCost(const Evacuee * e1, const Evacuee * e2) { return e1->FinalCost > e2->FinalCost; }
+	static bool ReverseEvacuationCost(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->GetReserveEvacuationCost() > e2->Paths->front()->GetReserveEvacuationCost(); }
 };
 
 typedef Evacuee * EvacueePtr;
@@ -219,8 +208,8 @@ class NAEvacueeVertexTable : protected std::unordered_map<long, std::vector<Evac
 public:
 	using std::unordered_map<long, std::vector<EvacueePtr>>::empty;
 
-	void InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir);
-	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAEdgeContainer> leafs, double pop, EvcSolverMethod method);
+	void InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir, std::shared_ptr<NAEdgeContainer> leafs);
+	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, double pop, EvcSolverMethod method);
 	void LoadSortedEvacuees(std::shared_ptr<std::vector<EvacueePtr>>) const;
 };
 
@@ -234,7 +223,7 @@ private:
 	double   reservedPop;
 
 public:
-	NAVertex * Vertex;
+	NAVertex * VertexAndRatio;
 
 	inline void   Reserve(double pop)      { reservedPop += pop;   }
 	inline double getPositionAlong() const { return positionAlong; }
