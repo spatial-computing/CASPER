@@ -132,7 +132,7 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees)
 			{
 				// in this case the evacuee has some frozen paths so originally could evacuate but after this dynamic
 				// change it no longer can move so it is considered stuck
-				/// TODO What happensd here is that the evacuee is marked as process instead of unreachable. Is this going to create some problems for me?
+				/// TODO What happens here is that the evacuee is marked as processed instead of unreachable. Is this going to create some problems for me?
 				for (auto p : *evc->Paths) delete p;
 				evc->Paths->clear();
 				continue;
@@ -487,7 +487,6 @@ void EvacueeList::FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPER
 			delete e;
 		}
 	}
-
 	shrink_to_fit();
 }
 
@@ -501,7 +500,8 @@ void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CA
 			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = CASPER_INFINITY;
 
 			// this is to help CARMA find this evacuee again if it happens to be in a clean part of the tree/graph
-			if (evc->DiscoveryLeaf) leafs->Insert(evc->DiscoveryLeaf);
+			if (evc->DiscoveryLeaf) leafs->Insert(evc->DiscoveryLeaf->EID, (unsigned char)3);
+			evc->Status = EvacueeStatus::CARMALooking;
 
 			for (const auto & v : *evc->VerticesAndRatio)
 			{
@@ -515,33 +515,38 @@ void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CA
 void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdgePtr myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, double pop, EvcSolverMethod method)
 {
 	const auto & pair = find(myVertex->EID);
-	NAVertexPtr foundVertex = nullptr;
-	double newPredictedCost = 0.0;
+	NAVertexPtr foundVertexRatio = nullptr;
+	NAEdgePtr behindEdge = nullptr;
+	double newPredictedCost = 0.0, edgeCost = 0.0;
 
 	if (pair != end())
 	{
 		for (const auto & evc : pair->second)
 		{
-			foundVertex = nullptr;
+			foundVertexRatio = nullptr;
 			for (const auto & v : *evc->VerticesAndRatio)
 			{
 				if (v->EID == myVertex->EID)
 				{
-					foundVertex = v;
+					foundVertexRatio = v;
 					break;
 				}
 			}
-			if (foundVertex)
+			if (foundVertexRatio && evc->Status == EvacueeStatus::CARMALooking)
 			{
-				newPredictedCost = myVertex->GVal;
-				NAEdgePtr behindEdge = foundVertex->GetBehindEdge();
-				if (behindEdge)
+				behindEdge = foundVertexRatio->GetBehindEdge();
+				if (behindEdge) edgeCost = behindEdge->GetCost(pop, method);
+				else edgeCost = 0.0;
+				if (edgeCost < CASPER_INFINITY)
 				{
-					newPredictedCost += foundVertex->GVal * behindEdge->GetCost(pop, method) /* / behindEdge->OriginalCost*/;
+					evc->Status = EvacueeStatus::Unprocessed;
+					newPredictedCost = myVertex->GVal + foundVertexRatio->GVal * edgeCost;
+					evc->PredictedCost = min(evc->PredictedCost, newPredictedCost);
+
 					// because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
-					evc->DiscoveryLeaf = behindEdge;
+					evc->DiscoveryLeaf = myEdge;
 				}
-				evc->PredictedCost = min(evc->PredictedCost, newPredictedCost);
+				else evc->Status = EvacueeStatus::Unreachable;
 				SortedEvacuees->push_back(evc);
 			}
 		}
@@ -556,17 +561,17 @@ void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<Evacue
 	f.open("c:\\evcsolver.log", std::ios_base::out | std::ios_base::app);
 	f << "List of unreachable evacuees =";
 	#endif
-	for (const auto & evc : *this)
-		for (const auto & e : evc.second)
+	for (const auto & evcList : *this)
+		for (const auto & evc : evcList.second)
 		{
-			if (e->PredictedCost >= CASPER_INFINITY)
+			if (evc->Status == EvacueeStatus::CARMALooking || evc->PredictedCost >= CASPER_INFINITY)
 			{
-				e->Status = EvacueeStatus::Unreachable;
+				evc->Status = EvacueeStatus::Unreachable;
 				#ifdef TRACE
 				f << ' ' << ATL::CW2A(e->Name.bstrVal);
 				#endif
 			}
-			else SortedEvacuees->push_back(e);
+			else SortedEvacuees->push_back(evc);
 		}
 	#ifdef TRACE
 	f << std::endl;

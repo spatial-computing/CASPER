@@ -19,7 +19,7 @@
 
 enum class EdgeDirtyState      : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
 enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGen = 0x2, AllGens = 0x3 };
-enum class EvacueeStatus       : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
+enum class EvacueeStatus       : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2, CARMALooking = 0x3 };
 enum class QueryDirection      : unsigned char { Forward = 0x1, Backward = 0x2 };
 enum class FlockingStatus      : unsigned char { None = '\0', Init = 'I', Moving = 'M', End = 'E', Stopped = 'S', Collided = 'C' };
 enum class EdgeDirection       : unsigned char { None = 0x0, Along = 0x1, Against = 0x2, Both = 0x3 };

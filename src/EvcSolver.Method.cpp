@@ -123,7 +123,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 							goto END_OF_FUNC;
 						}
 					}
-
+					_ASSERT_EXPR(currentEvacuee->Status != EvacueeStatus::CARMALooking, L"CARMA did not make up his mind on this evacuee");
 					if (currentEvacuee->Status != EvacueeStatus::Unprocessed) continue;
 
 					// Step the progress bar before continuing to the next Evacuee point
@@ -431,7 +431,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 			minPop2Route = CASPER_INFINITY;
 			for (const auto & e : *Evacuees)
 			{
-				if (e->Status != EvacueeStatus::Unprocessed || e->Population <= 0.0) continue;
+				if (e->Status != EvacueeStatus::CARMALooking || e->Population <= 0.0) continue;
 				minPop2Route = min(minPop2Route, e->Population);
 			}
 			if (separationRequired) minPop2Route = min(globalMinPop2Route, minPop2Route);
@@ -784,7 +784,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 	HRESULT hr = S_OK;
 	NAVertexPtr temp;
 	NAEdgePtr edge;
-	double globalDeltaPenalty = 0.0;
+	double globalDeltaPenalty = 0.0, edgeCost = 0.0;
 	ArrayList<NAEdgePtr> * adj = nullptr;
 
 	// Remember vertex gval is now only ratio along edge
@@ -801,7 +801,9 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 	{
 		if (!closedList->Exist(edge))
 		{
-			temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) /* / edge->OriginalCost*/;
+			edgeCost = edge->GetCost(pop, solverMethod, &globalDeltaPenalty) /* / edge->OriginalCost*/;
+			if (edgeCost >= CASPER_INFINITY) temp->GVal = CASPER_INFINITY;
+			else temp->GVal = point->GVal * edgeCost;
 			temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
 			readyEdges.push_back(edge);
 		}
@@ -817,7 +819,9 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 			temp = vcache->New(point->Junction);
 			temp->Previous = nullptr;
 			temp->SetBehindEdge(edge);
-			temp->GVal = point->GVal * edge->GetCost(pop, solverMethod, &globalDeltaPenalty) /* / edge->OriginalCost*/;
+			edgeCost = edge->GetCost(pop, solverMethod, &globalDeltaPenalty) /* / edge->OriginalCost*/;
+			if (edgeCost >= CASPER_INFINITY) temp->GVal = CASPER_INFINITY;
+			else temp->GVal = point->GVal * edgeCost;
 			temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
 			readyEdges.push_back(edge);
 		}
