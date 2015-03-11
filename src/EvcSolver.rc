@@ -69,12 +69,12 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "USC SSI"
-            VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
+			VALUE "CompanyName", "USC SSI"
+			VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
 			VALUE "FileVersion", GIT_DESCRIBE
-            VALUE "InternalName", "EvcSolver32.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2015"
-            VALUE "OriginalFilename", "EvcSolver32.dll"
+			VALUE "InternalName", "EvcSolver32.dll"
+			VALUE "LegalCopyright", "Copyright (C) 2015"
+			VALUE "OriginalFilename", "EvcSolver32.dll"
 			VALUE "ProductName", PROJ_NAME_S
 			VALUE "ProductVersion", GIT_DESCRIBE
         END
@@ -115,7 +115,7 @@ BEGIN
     LTEXT           "Capacity Network Attribute:",IDC_STATIC_Capacity,217,41,91,8
     COMBOBOX        IDC_COMBO_CAPACITY,313,39,76,37,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,42,91,8
-    COMBOBOX        IDC_COMBO_METHOD,113,40,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_METHOD,124,40,65,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Traffic Model:",IDC_STATIC,217,116,84,8
     COMBOBOX        IDC_COMBO_TRAFFICMODEL,298,113,91,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Population split or group:",IDC_CHECK_SEPARABLE,19,201,91,12
@@ -142,15 +142,15 @@ BEGIN
     EDITTEXT        IDC_EDIT_SELFISH,142,145,47,14,ES_AUTOHSCROLL
     LTEXT           "Selfish Routing Ratio:",IDC_Lable_SelfishRatio,20,146,78,8
     LTEXT           "CARMA Sort Direction:",IDC_STATIC_CarmaSort,20,76,76,8
-    COMBOBOX        IDC_COMBO_CarmaSort,113,74,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_CarmaSort,124,74,65,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "UTurn Policy:",IDC_STATIC_UTurn,217,75,65,8
     COMBOBOX        IDC_COMBO_UTurn,273,74,116,38,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,WS_EX_TRANSPARENT
     EDITTEXT        IDC_EDIT_Iterative,142,162,47,14,ES_AUTOHSCROLL
     LTEXT           "Iterative Solver Ratio:",IDC_Lable_IterationRatio,20,163,120,8
     LTEXT           "CASPER for ArcGIS v10.2.3",IDC_STATIC_Title,7,5,389,14
-    COMBOBOX        IDC_CMB_GroupOption,113,199,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Dynamic Mode:",IDC_STATIC_DYNMODE,20,60,91,8
-    COMBOBOX        IDC_COMBO_DYNMODE,113,57,76,37,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CMB_GroupOption,124,199,65,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dynamic Mode (experimental):",IDC_STATIC_DYNMODE,20,60,101,8
+    COMBOBOX        IDC_COMBO_DYNMODE,124,57,65,37,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 
@@ -200,3 +200,4 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+

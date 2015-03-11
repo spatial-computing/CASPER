@@ -236,7 +236,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 						if (!BetterSafeZone && foundRestrictedSafezone) ++EvacueesWithRestrictedSafezone;
 
 						// Generate path for this evacuee if any found
-						if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired, EvcStartTime))
+						if (GeneratePath(BetterSafeZone, finalVertex, populationLeft, pathGenerationCount, currentEvacuee, population2Route, separationRequired))
 							MaxPathCostSoFar = max(MaxPathCostSoFar, currentEvacuee->Paths->front()->GetReserveEvacuationCost());
  						else currentEvacuee->Status = EvacueeStatus::Unreachable;
 
@@ -829,7 +829,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 	return hr;
 }
 
-bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired, double EvcStartTime) const
+bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex, double & populationLeft, int & pathGenerationCount, EvacueePtr currentEvacuee, double population2Route, bool separationRequired) const
 {
 	double leftCap, edgePortion;
 	EvcPath * path = nullptr;
@@ -859,7 +859,7 @@ bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 		populationLeft -= population2Route;
 
 		// create a new path for this portion of the population
-		path = new DEBUG_NEW_PLACEMENT EvcPath(initDelayCostPerPop, EvcStartTime, population2Route, ++pathGenerationCount, currentEvacuee, BetterSafeZone);
+		path = new DEBUG_NEW_PLACEMENT EvcPath(initDelayCostPerPop, population2Route, ++pathGenerationCount, currentEvacuee, BetterSafeZone);
 
 		// special case for the last edge. We have to sub-curve it based on the safe point location along the edge
 		if (BetterSafeZone->getBehindEdge())

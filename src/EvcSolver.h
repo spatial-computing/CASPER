@@ -319,7 +319,7 @@ private:
 	size_t  FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvcPathPtr>>, std::vector<double> &, size_t &) const;
 	void    MarkDirtyEdgesAsUnVisited(NAEdgeMap *, std::shared_ptr<NAEdgeContainer>, std::vector<NAEdgePtr> &, bool &) const;
 	void    NonRecursiveMarkAndRemove(NAEdgePtr, NAEdgeMap *, std::vector<NAEdgePtr> &) const;
-	bool    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool, double EvcStartTime) const;
+	bool    GeneratePath(SafeZonePtr, NAVertexPtr, double &, int &, EvacueePtr, double, bool) const;
 	void    UpdatePeakMemoryUsage();
 
 	esriNAOutputLineType	m_outputLineType;

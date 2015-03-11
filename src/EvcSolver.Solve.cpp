@@ -594,6 +594,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::vector<EvcPathPtr>::const_iterator pit;
 	bool sourceNotFoundFlag = false;
 	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);
+	size_t StuckEvacuee = 0;
 
 	// load the Mercator projection and analysis projection
 	ISpatialReferencePtr ipNAContextSR;
@@ -609,9 +610,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	for (const auto & currentEvacuee : *Evacuees)
 	{
 		// get all points from the stack and make one polyline from them. this will be the path.
-		if (currentEvacuee->Paths->empty())
+		if (currentEvacuee->Paths->empty() || currentEvacuee->Status == EvacueeStatus::Unreachable)
 		{
-			if (currentEvacuee->Population > 0.0) *pIsPartialSolution = VARIANT_TRUE;
+			if (currentEvacuee->Population > 0.0)
+			{
+				*pIsPartialSolution = VARIANT_TRUE;
+				++StuckEvacuee;
+			}
 		}
 		else
 		{
@@ -956,7 +961,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ATL::CString performanceMsg, CARMALoopMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg, iterationMsg1, iterationMsg2;
 	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 
-	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList.size());
+	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points. %d evacuee(s) were unreachable."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList.size(), StuckEvacuee);
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), CARMAExtractCounts.size(), carmaSec, max(0, mem));
 	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 

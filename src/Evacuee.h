@@ -92,15 +92,7 @@ public:
 	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
 	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
 
-	EvcPath(double initDelayCostPerPop, double startCost, double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone) :
-		baselist(), MySafeZone(mySafeZone), RoutedPop(routedPop), Frozen(false), PathStartCost(startCost)
-	{
-		FinalEvacuationCost = RoutedPop * initDelayCostPerPop + startCost;
-		ReserveEvacuationCost = RoutedPop * initDelayCostPerPop + startCost;
-		OrginalCost = RoutedPop * initDelayCostPerPop + startCost;
-		Order = order;
-		myEvc = evc;
-	}
+	EvcPath(double initDelayCostPerPop, double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone);
 
 	virtual ~EvcPath(void)
 	{
@@ -128,7 +120,7 @@ public:
 	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end, 
 		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuerys);
 	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees);
-	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees);
+	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double StartCost);
 
 	
 	static bool MoreThanFinalCost (const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
@@ -150,6 +142,7 @@ public:
 	double                   Population;
 	double                   PredictedCost;
 	double                   FinalCost;
+	double                   StartingCost;
 	UINT32                   ObjectID;
 	EvacueeStatus            Status;
 	int                      ProcessOrder;
@@ -158,7 +151,7 @@ public:
 	virtual ~Evacuee(void);
 	Evacuee(const Evacuee & that) = delete;
 	Evacuee & operator=(const Evacuee &) = delete;
-	void DynamicMove(NAEdge * edge, double FromRatio, INetworkQueryPtr ipNetworkQuery);
+	void DynamicMove(NAEdge * edge, double FromRatio, INetworkQueryPtr ipNetworkQuery, double startTime);
 
 	static bool LessThan(const Evacuee * e1, const Evacuee * e2)
 	{

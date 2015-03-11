@@ -37,9 +37,10 @@ namespace CASPERLog
 
                 var logs = logSplit.Where(l => (!string.IsNullOrEmpty(l)) && l.StartsWith("CASPER for ArcGIS(x86"));
                 string Itr1 = string.Empty, Itr2 = string.Empty, Calc = string.Empty, ScenarioName = string.Empty, SetupName = string.Empty,
-                    Carma = string.Empty, EvcTime = string.Empty, Mem = string.Empty, carmaTime = string.Empty;
+                    Carma = string.Empty, EvcTime = string.Empty, Mem = string.Empty, carmaTime = string.Empty, stuck = string.Empty;
                 var csvStrings = new List<string>(logs.Count());
 
+                var StuckRex = new Regex(@"routes are generated from the evacuee points. (\d+) evacuee(s) were unreachable.", RegexOptions.None);
                 var NameRex = new Regex("\\\\([A-Za-z0-9 \\-]+)\" SKIP TERMINATE", RegexOptions.None);
                 var SetupNameRex = new Regex(@"Solved ([^ ]+) with scenario ([^ \n\r]+)" + Environment.NewLine, RegexOptions.None);                
                 var CalcRex = new Regex(@"Calculation = (\d+\.\d+) \(kernel\), (\d+\.\d+) \(user\)", RegexOptions.None);
@@ -53,7 +54,7 @@ namespace CASPERLog
                 Match m = null;
                 int Setup = 0;
 
-                csvStrings.Add("SetupName,Scenario,CalcTime (min),CarmaLoops,IterationCount,EffectiveIterationRatios,CarmaTime (sec),EvcTime,MemUsage (MB)");
+                csvStrings.Add("SetupName,Scenario,CalcTime (min),CarmaLoops,IterationCount,EffectiveIterationRatios,StuckEvacee,CarmaTime (sec),EvcTime,MemUsage (MB)");
 
                 foreach (string log in logs)
                 {
@@ -109,8 +110,11 @@ namespace CASPERLog
                     m = ItrRex2.Match(log);
                     if (m.Success) Itr2 = m.Groups[1].Captures[0].ToString().Replace(", ","|");
                     else Itr2 = "";
+                    m = StuckRex.Match(log);
+                    if (m.Success) stuck = m.Groups[1].Captures[0].ToString();
+                    else stuck = "-9999";
 
-                    csvStrings.Add(SetupName + "," + ScenarioName + "," + Calc + "," + Carma + "," + Itr1 + "," +Itr2 +"," + carmaTime + "," + EvcTime + "," + Mem);
+                    csvStrings.Add(SetupName + "," + ScenarioName + "," + Calc + "," + Carma + "," + Itr1 + "," + Itr2 + "," + stuck + "," + carmaTime + "," + EvcTime + "," + Mem);
                 }
 
                 File.WriteAllLines(outFile, csvStrings);

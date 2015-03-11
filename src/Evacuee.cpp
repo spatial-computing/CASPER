@@ -31,6 +31,17 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 	return hr;
 }
 
+EvcPath::EvcPath(double initDelayCostPerPop, double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone) :
+	baselist(), MySafeZone(mySafeZone), RoutedPop(routedPop), Frozen(false)
+{
+	PathStartCost = evc->StartingCost;
+	FinalEvacuationCost = RoutedPop * initDelayCostPerPop + PathStartCost;
+	ReserveEvacuationCost = RoutedPop * initDelayCostPerPop + PathStartCost;
+	OrginalCost = RoutedPop * initDelayCostPerPop + PathStartCost;
+	Order = order;
+	myEvc = evc;
+}
+
 double PathSegment::GetCurrentCost(EvcSolverMethod method) const { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
 bool EvcPath::MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
 bool EvcPath::LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order < e2->Paths->front()->Order; }
@@ -60,7 +71,11 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 					segCost = path->at(segment)->GetCurrentCost(method);
 					pathCost += segCost;
 				}
-				if (pathCost < CurrentTime)
+				
+				// segment is always moving a step ahead of pathCost and segCost.
+				--segment;
+
+				if (pathCost <= CurrentTime)
 				{
 					// this is the case where the head of population has reached the safe zone but the tail of it
 					// is not. Because the initDelayPerPop is non-zero. We will consider this a path that cannot be splited.
@@ -69,7 +84,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 				segRatio = (pathCost - CurrentTime) / segCost;
 
 				// move the evacuee to this segment
-				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery);
+				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery, CurrentTime);
 
 				// pop out the rest of the segments in this path
 				for (size_t i = path->size() - 1; i >= segment; --i)
@@ -93,7 +108,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 	return count;
 }
 
-size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees)
+size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double StartCost)
 {
 	size_t count = 0;
 	for (auto e : *AllEvacuees)
@@ -102,6 +117,7 @@ size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> All
 			e->Status = EvacueeStatus::Unprocessed;
 			e->PredictedCost = CASPER_INFINITY;
 			++count;
+			e->StartingCost = StartCost;
 		}
 	return count;
 }
@@ -367,6 +383,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 
 Evacuee::Evacuee(VARIANT name, double pop, UINT32 objectID)
 {
+	StartingCost = 0.0;
 	ObjectID = objectID;
 	Name = name;
 	VerticesAndRatio = new DEBUG_NEW_PLACEMENT std::vector<NAVertexPtr>();
@@ -389,7 +406,7 @@ Evacuee::~Evacuee(void)
 	delete Paths;
 }
 
-void Evacuee::DynamicMove(NAEdgePtr edge, double toRatio, INetworkQueryPtr ipNetworkQuery)
+void Evacuee::DynamicMove(NAEdgePtr edge, double toRatio, INetworkQueryPtr ipNetworkQuery, double startTime)
 {
 	INetworkElementPtr ipElement = nullptr;
 	for (auto v : *VerticesAndRatio) delete v;
@@ -402,6 +419,7 @@ void Evacuee::DynamicMove(NAEdgePtr edge, double toRatio, INetworkQueryPtr ipNet
 	NAVertexPtr myVertex = new DEBUG_NEW_PLACEMENT NAVertex(toJunction, edge);
 	myVertex->GVal = toRatio;
 	DiscoveryLeaf = edge;
+	this->StartingCost = startTime;
 
 	VerticesAndRatio->push_back(myVertex);
 }
