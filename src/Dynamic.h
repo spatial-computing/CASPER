@@ -79,7 +79,7 @@ struct SingleDynamicChange
 		AffectedCostRate = min(max(AffectedCostRate, EdgeOriginalData::MinCostRatio), EdgeOriginalData::MaxCostRatio);
 		AffectedCapacityRate = min(max(AffectedCapacityRate, EdgeOriginalData::MinCapacityRatio), EdgeOriginalData::MaxCapacityRatio);
 		EndTime = EndTime < 0.0 || EndTime > CASPER_INFINITY ? CASPER_INFINITY : EndTime;
-		return StartTime >= 0.0 && StartTime < EndTime && !EnclosedEdges.empty();
+		return StartTime >= 0.0 && StartTime < EndTime && !EnclosedEdges.empty() && (AffectedCostRate != 1.0 || AffectedCapacityRate != 1.0);
 	}
 };
 

@@ -278,7 +278,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 				EffectiveIterationRatio.push_back(pow(double(NumberOfEvacueesInIteration) / AllEvacuees->size(), 1.0 / GlobalEvcCostAtIteration.size()));
 			}
 		} while (NumberOfEvacueesInIteration > 0);
-		progressBaseValue += AllEvacuees->size();
+		progressBaseValue += (long)AllEvacuees->size();
 	}
 
 END_OF_FUNC:

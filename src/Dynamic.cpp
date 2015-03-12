@@ -90,6 +90,7 @@ DynamicDisaster::DynamicDisaster(ITablePtr DynamicChangesTable, DynamicMode dyna
 
 		// we're done with this item and no error happened. we'll push it to the set and continue to the other one
 		if (item->IsValid()) allChanges.push_back(item);
+		else delete item;
 		item = nullptr;
 	}
 
@@ -182,7 +183,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 				edge = ecache->New(EID, esriNetworkEdgeDirection::esriNEDAlongDigitized);
 				i = OriginalEdgeSettings.emplace(std::pair<NAEdgePtr, EdgeOriginalData>(edge, EdgeOriginalData(edge)));
 				i.first->second.CapacityRatio *= polygon->AffectedCapacityRate;
-				i.first->second.CostRatio *= polygon->AffectedCostRate;
+				i.first->second.CostRatio     *= polygon->AffectedCostRate;
 			}
 		}
 		if (CheckFlag(polygon->DisasterDirection, EdgeDirection::Against))
@@ -192,7 +193,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 				edge = ecache->New(EID, esriNetworkEdgeDirection::esriNEDAgainstDigitized);
 				i = OriginalEdgeSettings.emplace(std::pair<NAEdgePtr, EdgeOriginalData>(edge, EdgeOriginalData(edge)));
 				i.first->second.CapacityRatio *= polygon->AffectedCapacityRate;
-				i.first->second.CostRatio *= polygon->AffectedCostRate;
+				i.first->second.CostRatio     *= polygon->AffectedCostRate;
 			}
 		}
 	}

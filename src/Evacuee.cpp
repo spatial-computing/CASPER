@@ -72,7 +72,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 					pathCost += segCost;
 				}
 				
-				// segment is always moving a step ahead of pathCost and segCost.
+				// segment is always moving one step ahead of pathCost and segCost.
 				--segment;
 
 				if (pathCost <= CurrentTime)
@@ -87,7 +87,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery, CurrentTime);
 
 				// pop out the rest of the segments in this path
-				for (size_t i = path->size() - 1; i >= segment; --i)
+				for (int i = (int)path->size() - 1; i >= (int)segment; --i)
 				{
 					path->at(i)->Edge->RemoveReservation(path, method, true);
 					DynamicallyAffectedEdges.insert(path->at(i)->Edge);
@@ -188,7 +188,7 @@ void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std:
 	for (auto i = evc->Paths->begin(); i != evc->Paths->end();)
 	{
 		path = *i;
-		if (path->Frozen) ++i; // ignore frozen paths. They are not to be detached
+		if (!path || path->Frozen) ++i; // ignore frozen paths. They are not to be detached
 		else
 		{
 			for (auto s = path->crbegin(); s != path->crend(); ++s)
@@ -283,11 +283,10 @@ void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolver
 }
 
 HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag,
-	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, double initDelayCostPerPop, IFeatureBufferPtr ipFeatureBufferR, IFeatureCursorPtr ipFeatureCursorR,
+	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, IFeatureBufferPtr ipFeatureBufferR, IFeatureCursorPtr ipFeatureCursorR,
 	long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex)
 {
 	HRESULT hr = S_OK;
-	OrginalCost = RoutedPop * initDelayCostPerPop + this->PathStartCost;
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
 	long pointCount = -1;
 	VARIANT_BOOL keepGoing;
@@ -330,9 +329,6 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 				if (FAILED(hr = pline->AddPoint(p))) return hr;
 			}
 		}
-		// Final cost calculations
-		double p = abs(pathSegment->GetEdgePortion());
-		OrginalCost += pathSegment->Edge->OriginalCost * p;
 	}
 
 	// Add the last point of the last path segment to the polyline
@@ -419,7 +415,7 @@ void Evacuee::DynamicMove(NAEdgePtr edge, double toRatio, INetworkQueryPtr ipNet
 	NAVertexPtr myVertex = new DEBUG_NEW_PLACEMENT NAVertex(toJunction, edge);
 	myVertex->GVal = toRatio;
 	DiscoveryLeaf = edge;
-	this->StartingCost = startTime;
+	StartingCost = startTime;
 
 	VerticesAndRatio->push_back(myVertex);
 }
@@ -544,7 +540,7 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 			foundVertexRatio = nullptr;
 			for (const auto & v : *evc->VerticesAndRatio)
 			{
-				if (v->EID == myVertex->EID)
+				if (v && v->EID == myVertex->EID)
 				{
 					foundVertexRatio = v;
 					break;

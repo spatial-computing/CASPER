@@ -135,7 +135,7 @@ protected:
 			S range = min(newCap, capacity);
 			T * tempdata = new DEBUG_NEW_PLACEMENT T[newCap];
 			for (S i = ZeroSize; i < range; ++i) tempdata[i] = data[i];
-			delete[] data;
+			delete [] data;
 			data = tempdata;
 		}
 		capacity = newCap;

@@ -34,7 +34,7 @@ private:
 	double toRatio;
 
 public:
-    NAEdge * Edge;
+    NAEdge     * Edge;
     IPolylinePtr pline;
 
     double GetEdgePortion() const { return toRatio - fromRatio; }
@@ -66,15 +66,15 @@ class Evacuee;
 class EvcPath : private std::deque<PathSegmentPtr>
 {
 private:
+	SafeZone* MySafeZone;
+	Evacuee * myEvc;
+	int     Order;
 	bool    Frozen;
-	SafeZone * MySafeZone;
 	double  RoutedPop;
 	double  ReserveEvacuationCost;
 	double  PathStartCost;
 	double  FinalEvacuationCost;
 	double  OrginalCost;
-	int     Order;
-	Evacuee * myEvc;
 	typedef std::deque<PathSegmentPtr> baselist;
 
 public:
@@ -106,7 +106,7 @@ public:
 	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
 	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel *, INetworkDatasetPtr, IFeatureClassContainerPtr, bool &,
-		IStepProgressorPtr, double &, double, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long);
+		IStepProgressorPtr, double &, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long);
 	void ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges);
 	inline void CleanYourEvacueePaths(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges) { EvcPath::DetachPathsFromEvacuee(myEvc, method, touchedEdges); }
 	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);

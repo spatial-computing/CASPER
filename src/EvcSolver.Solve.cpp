@@ -673,7 +673,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 #endif
 	for (const auto & p : tempPathList)
 	{
-		if (FAILED(hr = p->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
+		if (FAILED(hr = p->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, ipFeatureBufferR,
 			ipFeatureCursorR, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex))) return hr;
 	}
 
@@ -1013,7 +1013,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(ATL::CComBSTR(simulationIncompleteEndingMsg));
 	if (IsSafeZoneMissed) pMessages->AddWarning(ATL::CComBSTR(
-		L"One or more safe zones where snapped into the same network junction and hence they were merged into one safe zone. It this is not OK, use a different Network Location setting."));
+		L"One or more safe zones where snapped into the same network junction and hence they were merged into one safe zone. If this is not OK, use a different Network Location setting."));
 
 	if (!(collisionMsg.IsEmpty()))
 	{
