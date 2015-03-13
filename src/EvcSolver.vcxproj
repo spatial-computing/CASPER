@@ -196,6 +196,7 @@ exit 0</Command>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <AdditionalOptions>/Qpar /Qpar-report:1 /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
+      <CompileAsManaged>false</CompileAsManaged>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -268,13 +269,14 @@ exit 0</Command>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <DisableSpecificWarnings>4100;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <EnablePREfast>false</EnablePREfast>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <SmallerTypeCheck>true</SmallerTypeCheck>
       <AdditionalOptions>/Qpar /Qpar-report:1 /Qvec-report:1 %(AdditionalOptions)</AdditionalOptions>
+      <CompileAsManaged>false</CompileAsManaged>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -347,7 +349,7 @@ exit 0</Command>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>None</DebugInformationFormat>
       <OmitFramePointers>true</OmitFramePointers>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <EnablePREfast>false</EnablePREfast>
@@ -429,7 +431,7 @@ exit 0</Command>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <WarningLevel>Level4</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>None</DebugInformationFormat>
       <OmitFramePointers>true</OmitFramePointers>
       <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <EnablePREfast>false</EnablePREfast>

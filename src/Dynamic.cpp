@@ -208,13 +208,15 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 		{
 			if (myDynamicMode == DynamicMode::Full)
 			{
-				DoubleGrowingArrayList<EvcPath *, size_t> allPaths(AllEvacuees->size());
+				std::vector<EvcPathPtr> allPaths;
+				allPaths.reserve(AllEvacuees->size());
 				for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) if (!p->IsFrozen()) allPaths.push_back(p);
 				CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery());
 			}
 			else if (myDynamicMode == DynamicMode::Smart)
 			{
-				DoubleGrowingArrayList<EvcPathPtr, size_t> AffectedPaths(min(AllEvacuees->size(), DynamicallyAffectedEdges.size()));
+				std::vector<EvcPathPtr> AffectedPaths;
+				AffectedPaths.reserve(min(AllEvacuees->size(), DynamicallyAffectedEdges.size()));
 				NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
 				CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery());
 			}

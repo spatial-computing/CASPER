@@ -309,7 +309,7 @@ void NAEdge::GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cle
 	}
 }
 
-void NAEdge::DynamicStep_ExtractAffectedPaths(DoubleGrowingArrayList<EvcPathPtr, size_t> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges)
+void NAEdge::DynamicStep_ExtractAffectedPaths(std::vector<EvcPathPtr> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges)
 {
 	std::unordered_set<int> insertedPaths;
 	std::unordered_set<int>::_Pairib i;

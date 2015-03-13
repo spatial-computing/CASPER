@@ -47,11 +47,11 @@ bool EvcPath::MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { retur
 bool EvcPath::LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order < e2->Paths->front()->Order; }
 
 // first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
-size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end,
+template<class iterator_type> size_t EvcPath::DynamicStep_MoveOnPath(const iterator_type & begin, const iterator_type & end,
 	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery)
 {
 	size_t count = 0, segment = 0;
-	double pathCost = 0.0, segCost = 0.0, segRatio = 0.0;
+	double pathCost = 0.0, edgeRatio = 0.0, edgeCost = 0.0;
 	EvcPathPtr path = nullptr;
 
 	if (CurrentTime > 0.0)
@@ -62,38 +62,37 @@ size_t EvcPath::DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, s
 			path = *p;
 			if (path->FinalEvacuationCost > CurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty() && !path->Frozen)
 			{
-				segCost = 0.0;
-				pathCost = 0.0;
-
 				// find the segment where we need to cut the path
-				for (segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
-				{
-					segCost = path->at(segment)->GetCurrentCost(method);
-					pathCost += segCost;
-				}
+				for (pathCost = 0.0, segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
+					pathCost += path->at(segment)->GetCurrentCost(method);
 				
 				// segment is always moving one step ahead of pathCost and segCost.
 				--segment;
 
+				// this is the case where the head of population has reached the safe zone but the tail of it
+				// is not. Because the initDelayPerPop is non-zero. We will consider this a path that cannot be splited.
+				/// TODO we have to mark this path as frozen but this somehow at merge we have to be able to tell if someone is stuck or finished
 				if (pathCost <= CurrentTime)
 				{
-					// this is the case where the head of population has reached the safe zone but the tail of it
-					// is not. Because the initDelayPerPop is non-zero. We will consider this a path that cannot be splited.
+					path->Frozen = true;
+					path->myEvc->Status = EvacueeStatus::Processed;
 					continue;
 				}
-				segRatio = (pathCost - CurrentTime) / segCost;
 
 				// move the evacuee to this segment
-				path->myEvc->DynamicMove(path->at(segment)->Edge, segRatio, ipNetworkQuery, CurrentTime);
+				edgeCost = path->at(segment)->Edge->GetCurrentCost(method);
+				edgeRatio = (pathCost - CurrentTime) / edgeCost;
+				path->myEvc->DynamicMove(path->at(segment)->Edge, edgeRatio, ipNetworkQuery, CurrentTime);
+				path->at(segment)->SetToRatio(edgeRatio);
 
 				// pop out the rest of the segments in this path
-				for (int i = (int)path->size() - 1; i >= (int)segment; --i)
+				for (size_t i = path->size() - 1; i > segment; --i)
 				{
 					path->at(i)->Edge->RemoveReservation(path, method, true);
 					DynamicallyAffectedEdges.insert(path->at(i)->Edge);
 					delete path->at(i);
 				}
-				path->erase(path->begin() + segment, path->end());
+				path->erase(path->begin() + segment + 1, path->end());
 
 				// setup this path as frozen and mark the evacuee as unporcessed
 				path->Frozen = true;
@@ -149,6 +148,7 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees)
 				// in this case the evacuee has some frozen paths so originally could evacuate but after this dynamic
 				// change it no longer can move so it is considered stuck
 				/// TODO What happens here is that the evacuee is marked as processed instead of unreachable. Is this going to create some problems for me?
+				/// TODO how would i know if this was stuck or ended and rescued before the disster?
 				for (auto p : *evc->Paths) delete p;
 				evc->Paths->clear();
 				continue;
@@ -160,8 +160,12 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees)
 			for (auto p = frozenList.cbegin(); p != frozenList.cend(); ++p)
 			{
 				fp = *p;
-				mainPath->front()->SetFromRatio(0.0);
-				for (auto seg = fp->rbegin(); seg != fp->rend(); ++seg) mainPath->push_front(*seg);
+				_ASSERT_EXPR(NAEdge::IsEqualNAEdgePtr(mainPath->front()->Edge, fp->back()->Edge), L"Two half-paths need to share an edge at merge section");
+				_ASSERT_EXPR(std::fabs(mainPath->front()->GetFromRatio() - fp->back()->GetToRatio()) < 0.0001 , L"Two half-paths need to be splitted at around the same edge ratio");
+
+				mainPath->front()->SetFromRatio(fp->back()->GetFromRatio());
+				for (auto seg = fp->rbegin() + 1; seg != fp->rend(); ++seg) mainPath->push_front(*seg);
+				delete fp->back();
 				fp->clear();
 				delete fp;
 			}
@@ -413,7 +417,7 @@ void Evacuee::DynamicMove(NAEdgePtr edge, double toRatio, INetworkQueryPtr ipNet
 	if (FAILED(edge->NetEdge->QueryJunctions(nullptr, toJunction))) return;
 
 	NAVertexPtr myVertex = new DEBUG_NEW_PLACEMENT NAVertex(toJunction, edge);
-	myVertex->GVal = toRatio;
+	myVertex->GVal = 1.0 - toRatio;
 	DiscoveryLeaf = edge;
 	StartingCost = startTime;
 

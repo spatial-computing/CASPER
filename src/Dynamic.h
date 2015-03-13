@@ -126,3 +126,7 @@ public:
 	size_t NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime);
 	virtual ~DynamicDisaster() { Flush(); }
 };
+
+// specia template function instantiation
+template size_t EvcPath::DynamicStep_MoveOnPath<std::vector<EvcPathPtr>::iterator>(const std::vector<EvcPathPtr>::iterator & begin, const std::vector<EvcPathPtr>::iterator & end,
+	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuerys);

@@ -807,7 +807,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 			temp->GlobalPenaltyCost = edge->MaxAddedCostOnReservedPathsWithNewFlow(globalDeltaPenalty, MaxEvacueeCostSoFar, temp->GVal + temp->GetMinHOrZero(), selfishRatio);
 			readyEdges.push_back(edge);
 		}
-		else _ASSERT(1);
+		else _ASSERT(false);
 	}
 	else
 	{
@@ -815,7 +815,7 @@ HRESULT PrepareVerticesForHeap(NAVertexPtr point, std::shared_ptr<NAVertexCache>
 		if (FAILED(hr = ecache->QueryAdjacencies(temp, nullptr, dir, &adj))) return hr;
 		for (const auto & edge : *adj)
 		{
-			if (closedList->Exist(edge)) continue; // dynamic carma condition .... only dirty destination edges are inserted.
+			if (closedList->Exist(edge)) continue; // DSPT condition .... only dirty destination edges are inserted.
 			temp = vcache->New(point->Junction);
 			temp->Previous = nullptr;
 			temp->SetBehindEdge(edge);

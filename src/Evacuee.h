@@ -45,7 +45,13 @@ public:
     {
 	    fromRatio = FromRatio;
 	    if (fromRatio == toRatio) fromRatio = toRatio - 0.001;
-    }
+	}
+
+	void SetToRatio(double ToRatio)
+	{
+		toRatio = ToRatio;
+		if (fromRatio == toRatio) toRatio = fromRatio + 0.001;
+	}
 
 	double GetFromRatio() const { return fromRatio; }
 	double GetToRatio()   const { return toRatio;   }
@@ -117,7 +123,7 @@ public:
 
 	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges,
 		std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
-	static size_t DynamicStep_MoveOnPath(const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & begin, const DoubleGrowingArrayList<EvcPath *, size_t>::iterator & end, 
+	template<class iterator_type> static size_t DynamicStep_MoveOnPath(const iterator_type & begin, const iterator_type & end,
 		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuerys);
 	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees);
 	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double StartCost);

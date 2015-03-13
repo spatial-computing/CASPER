@@ -191,6 +191,7 @@ public:
 		data[index] = data[--_size];
 	}
 
+	/// TODO this iterator is still bugy if you use it with std::sort ... or maybe other STL functions. Be careful.
 	class iterator : public virtual std::iterator<std::random_access_iterator_tag, T>
 	{
 	private:

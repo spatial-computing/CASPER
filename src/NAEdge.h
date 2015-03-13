@@ -89,7 +89,7 @@ public:
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
 									  long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag);
 	
-	static void DynamicStep_ExtractAffectedPaths(DoubleGrowingArrayList<EvcPath *, size_t> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges);
+	static void DynamicStep_ExtractAffectedPaths(std::vector<EvcPath *> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges);
 	static bool CostLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
 	{
 		return e1->GetCurrentCost(method) < e2->GetCurrentCost(method);
