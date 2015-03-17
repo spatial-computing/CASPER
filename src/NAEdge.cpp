@@ -318,9 +318,11 @@ void NAEdge::DynamicStep_ExtractAffectedPaths(std::vector<EvcPathPtr> & Affected
 	for (auto edge : DynamicallyAffectedEdges)
 		for (auto path : *(edge->reservations))
 		{
-			if (path->IsFrozen()) continue;
-			i = insertedPaths.insert(path->GetKey());
-			if (i.second) AffectedPaths.push_back(path);
+			if (path->IsActive())
+			{
+				i = insertedPaths.insert(path->GetKey());
+				if (i.second) AffectedPaths.push_back(path);
+			}
 		}
 }
 

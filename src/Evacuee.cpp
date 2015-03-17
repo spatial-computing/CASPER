@@ -32,7 +32,7 @@ HRESULT PathSegment::GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureCl
 }
 
 EvcPath::EvcPath(double initDelayCostPerPop, double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone) :
-	baselist(), MySafeZone(mySafeZone), RoutedPop(routedPop), Frozen(false)
+	baselist(), MySafeZone(mySafeZone), RoutedPop(routedPop), Status(PathStatus::ActiveComplete)
 {
 	PathStartCost = evc->StartingCost;
 	FinalEvacuationCost = RoutedPop * initDelayCostPerPop + PathStartCost;
@@ -60,21 +60,29 @@ template<class iterator_type> size_t EvcPath::DynamicStep_MoveOnPath(const itera
 		for (auto p = begin; p != end; ++p)
 		{
 			path = *p;
-			if (path->FinalEvacuationCost > CurrentTime && path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty() && !path->Frozen)
+			if (path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty() && path->Status == PathStatus::ActiveComplete)
 			{
 				// find the segment where we need to cut the path
-				for (pathCost = 0.0, segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
-					pathCost += path->at(segment)->GetCurrentCost(method);
+				if (path->FinalEvacuationCost > CurrentTime)
+				{
+					for (pathCost = 0.0, segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
+						pathCost += path->at(segment)->GetCurrentCost(method);
 				
-				// segment is always moving one step ahead of pathCost and segCost.
-				--segment;
+					// segment is always moving one step ahead of pathCost and segCost.
+					--segment;
+				}
+				else
+				{
+					pathCost = path->FinalEvacuationCost;
+					segment = path->size() - 1;
+				}
 
 				// this is the case where the head of population has reached the safe zone but the tail of it
 				// is not. Because the initDelayPerPop is non-zero. We will consider this a path that cannot be splited.
 				/// TODO we have to mark this path as frozen but this somehow at merge we have to be able to tell if someone is stuck or finished
 				if (pathCost <= CurrentTime)
 				{
-					path->Frozen = true;
+					path->Status = PathStatus::FrozenComplete;
 					path->myEvc->Status = EvacueeStatus::Processed;
 					continue;
 				}
@@ -95,7 +103,7 @@ template<class iterator_type> size_t EvcPath::DynamicStep_MoveOnPath(const itera
 				path->erase(path->begin() + segment + 1, path->end());
 
 				// setup this path as frozen and mark the evacuee as unporcessed
-				path->Frozen = true;
+				path->Status = PathStatus::FrozenSplitted;
 				path->myEvc->Status = EvacueeStatus::Unprocessed;
 				path->myEvc->PredictedCost = CASPER_INFINITY;
 				path->myEvc->FinalCost = CASPER_INFINITY;
@@ -134,7 +142,7 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees)
 			mainPath = nullptr;
 			for (auto p : *evc->Paths)
 			{
-				if (p->Frozen) frozenList.push_back(p);
+				if (p->Status == PathStatus::FrozenSplitted) frozenList.push_back(p);
 				else
 				{
 					if (mainPath) throw std::logic_error("One evacuee has many unfrozen/main paths");
@@ -192,7 +200,7 @@ void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std:
 	for (auto i = evc->Paths->begin(); i != evc->Paths->end();)
 	{
 		path = *i;
-		if (!path || path->Frozen) ++i; // ignore frozen paths. They are not to be detached
+		if (!path || path->Status != PathStatus::ActiveComplete) ++i; // ignore frozen paths. They are not to be detached
 		else
 		{
 			for (auto s = path->crbegin(); s != path->crend(); ++s)
@@ -237,7 +245,7 @@ void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double Threashol
 	double PredictionCostRatio = (ReserveEvacuationCost - myEvc-> PredictedCost) / ThisIterationMaxCost;
 	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
 
-	if (PredictionCostRatio >= ThreasholdForCost || EvacuationCostRatio >= ThreasholdForCost)
+	if (this->Status == PathStatus::ActiveComplete && PredictionCostRatio >= ThreasholdForCost || EvacuationCostRatio >= ThreasholdForCost)
 	{
 		if (myEvc->Status == EvacueeStatus::Processed)
 		{
@@ -261,7 +269,7 @@ void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double Threashol
 		double cutOffWeight = ThreasholdForPathOverlap * FreqOfOverlaps.maxWeight;
 		for (const auto & pair : FreqOfOverlaps)
 		{
-			if (!(pair.first->Frozen) && pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > cutOffWeight)
+			if (pair.first->Status == PathStatus::ActiveComplete && pair.first->myEvc->Status == EvacueeStatus::Processed && pair.second > cutOffWeight)
 			{
 				AffectingList.push_back(pair.first->myEvc);
 				pair.first->myEvc->Status = EvacueeStatus::Unprocessed;

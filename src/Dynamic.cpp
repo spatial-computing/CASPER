@@ -210,7 +210,7 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 			{
 				std::vector<EvcPathPtr> allPaths;
 				allPaths.reserve(AllEvacuees->size());
-				for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) if (!p->IsFrozen()) allPaths.push_back(p);
+				for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) if (p->IsActive()) allPaths.push_back(p);
 				CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery());
 			}
 			else if (myDynamicMode == DynamicMode::Smart)

@@ -23,6 +23,7 @@ enum class EvacueeStatus       : unsigned char { Unprocessed = 0x0, Processed = 
 enum class QueryDirection      : unsigned char { Forward = 0x1, Backward = 0x2 };
 enum class FlockingStatus      : unsigned char { None = '\0', Init = 'I', Moving = 'M', End = 'E', Stopped = 'S', Collided = 'C' };
 enum class EdgeDirection       : unsigned char { None = 0x0, Along = 0x1, Against = 0x2, Both = 0x3 };
+enum class PathStatus          : unsigned char { ActiveComplete = 0x0, FrozenComplete = 0x1, FrozenSplitted = 0x2 };
 
 [export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC")] enum class EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
 [export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948")] enum class EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3, EXPModel = 0x4 };

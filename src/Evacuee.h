@@ -72,16 +72,16 @@ class Evacuee;
 class EvcPath : private std::deque<PathSegmentPtr>
 {
 private:
-	SafeZone* MySafeZone;
-	Evacuee * myEvc;
-	int     Order;
-	bool    Frozen;
-	double  RoutedPop;
-	double  ReserveEvacuationCost;
-	double  PathStartCost;
-	double  FinalEvacuationCost;
-	double  OrginalCost;
-	typedef std::deque<PathSegmentPtr> baselist;
+	SafeZone   * MySafeZone;
+	Evacuee    * myEvc;
+	int        Order;
+	PathStatus Status;
+	double     RoutedPop;
+	double     ReserveEvacuationCost;
+	double     PathStartCost;
+	double     FinalEvacuationCost;
+	double     OrginalCost;
+	typedef    std::deque<PathSegmentPtr> baselist;
 
 public:
 	using baselist::shrink_to_fit;
@@ -93,9 +93,9 @@ public:
 	using baselist::const_iterator;
 
 	inline double GetRoutedPop()             const { return RoutedPop;             }
-	inline bool   IsFrozen()                 const { return Frozen;                }
 	inline double GetReserveEvacuationCost() const { return ReserveEvacuationCost; }
-	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
+	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost; }
+	inline bool   IsActive()                 const { return Status == PathStatus::ActiveComplete; }
 	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
 
 	EvcPath(double initDelayCostPerPop, double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone);
