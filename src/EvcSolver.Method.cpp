@@ -85,8 +85,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	if (FAILED(hr = DeterminMinimumPop2Route(AllEvacuees, ipNetworkDataset, globalMinPop2Route, separationRequired))) goto END_OF_FUNC;
 
 	// dynamic CASPER loop
-	for (NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, EvcStartTime); NumberOfEvacueesInIteration > 0;
-		 NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, EvcStartTime))
+	for (NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, EvcStartTime, pathGenerationCount); NumberOfEvacueesInIteration > 0;
+		 NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, EvcStartTime, pathGenerationCount))
 	{
 		LocalIteration = 0;
 		RevisedCarmaSortCriteria = this->CarmaSortCriteria;
@@ -887,8 +887,8 @@ bool EvcSolver::GeneratePath(SafeZonePtr BetterSafeZone, NAVertexPtr finalVertex
 				}
 
 			// path can be empty if the source and destination are the same vertex
-			PathSegmentPtr lastAdded = path->front();
-			if (!path->empty() && NAEdge::IsEqualNAEdgePtr(lastAdded->Edge, finalVertex->GetBehindEdge()))
+			PathSegmentPtr lastAdded = path->empty() ? nullptr : path->front();
+			if (lastAdded && NAEdge::IsEqualNAEdgePtr(lastAdded->Edge, finalVertex->GetBehindEdge()))
 			{
 				lastAdded->SetFromRatio(1.0 - edgePortion);
 			}

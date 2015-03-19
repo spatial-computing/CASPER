@@ -42,24 +42,32 @@ EvcPath::EvcPath(double initDelayCostPerPop, double routedPop, int order, Evacue
 	myEvc = evc;
 }
 
+EvcPath::EvcPath(const EvcPath & that) : baselist(), MySafeZone(that.MySafeZone), RoutedPop(that.RoutedPop), Status(PathStatus::ActiveComplete)
+{
+	PathStartCost = that.PathStartCost;
+	FinalEvacuationCost = that.FinalEvacuationCost;
+	ReserveEvacuationCost = that.ReserveEvacuationCost;
+	OrginalCost = that.OrginalCost;
+	Order = that.Order;
+	myEvc = that.myEvc;
+}
+
 double PathSegment::GetCurrentCost(EvcSolverMethod method) const { return Edge->GetCurrentCost(method) * abs(GetEdgePortion()); }
 bool EvcPath::MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order > e2->Paths->front()->Order; }
 bool EvcPath::LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->Order < e2->Paths->front()->Order; }
 
 // first i have to move the evacuee. then cut the path and back it up. mark the evacuee to be processed again.
-template<class iterator_type> size_t EvcPath::DynamicStep_MoveOnPath(const iterator_type & begin, const iterator_type & end,
-	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery)
+size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPath::PtrHasher, EvcPath::PtrEqual> & AffectedPaths, std::vector<EvcPath *> & allPaths,
+	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery, int & pathGenerationCount)
 {
 	size_t count = 0, segment = 0;
 	double pathCost = 0.0, edgeRatio = 0.0, edgeCost = 0.0;
-	EvcPathPtr path = nullptr;
 
 	if (CurrentTime > 0.0)
 	{
-		std::sort(begin, end, EvcPath::MoreThanPathOrder2);
-		for (auto p = begin; p != end; ++p)
+		std::sort(allPaths.begin(), allPaths.end(), EvcPath::MoreThanPathOrder2);
+		for (auto path : allPaths)
 		{
-			path = *p;
 			if (path->myEvc->Status != EvacueeStatus::Unreachable && !path->empty() && path->Status == PathStatus::ActiveComplete)
 			{
 				// find the segment where we need to cut the path
@@ -67,7 +75,7 @@ template<class iterator_type> size_t EvcPath::DynamicStep_MoveOnPath(const itera
 				{
 					for (pathCost = 0.0, segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
 						pathCost += path->at(segment)->GetCurrentCost(method);
-				
+
 					// segment is always moving one step ahead of pathCost and segCost.
 					--segment;
 				}
@@ -79,7 +87,7 @@ template<class iterator_type> size_t EvcPath::DynamicStep_MoveOnPath(const itera
 
 				// this is the case where the head of population has reached the safe zone but the tail of it
 				// is not. Because the initDelayPerPop is non-zero. We will consider this a path that cannot be splited.
-				/// TODO we have to mark this path as frozen but this somehow at merge we have to be able to tell if someone is stuck or finished
+				// we have to mark this path as frozen but this somehow at merge we have to be able to tell if someone is stuck or finished
 				if (pathCost <= CurrentTime)
 				{
 					path->Status = PathStatus::FrozenComplete;
@@ -92,23 +100,52 @@ template<class iterator_type> size_t EvcPath::DynamicStep_MoveOnPath(const itera
 				edgeRatio = (pathCost - CurrentTime) / edgeCost;
 				path->myEvc->DynamicMove(path->at(segment)->Edge, edgeRatio, ipNetworkQuery, CurrentTime);
 				path->at(segment)->SetToRatio(edgeRatio);
-
-				// pop out the rest of the segments in this path
-				for (size_t i = path->size() - 1; i > segment; --i)
-				{
-					path->at(i)->Edge->RemoveReservation(path, method, true);
-					DynamicallyAffectedEdges.insert(path->at(i)->Edge);
-					delete path->at(i);
-				}
-				path->erase(path->begin() + segment + 1, path->end());
-
-				// setup this path as frozen and mark the evacuee as unporcessed
 				path->Status = PathStatus::FrozenSplitted;
-				path->myEvc->Status = EvacueeStatus::Unprocessed;
-				path->myEvc->PredictedCost = CASPER_INFINITY;
-				path->myEvc->FinalCost = CASPER_INFINITY;
-				path->MySafeZone->Reserve(-path->RoutedPop);
-				++count;
+				
+				// this path is not affected by this round of dynamic changes so no need to count it to be proccessed again.
+				// simply split into two paths and mark last one as active
+				if (AffectedPaths.find(path) != AffectedPaths.end())
+				{
+					// pop out the rest of the segments in this path
+					for (size_t i = path->size() - 1; i > segment; --i)
+					{
+						path->at(i)->Edge->RemoveReservation(path, method, true);
+						DynamicallyAffectedEdges.insert(path->at(i)->Edge);
+						delete path->at(i);
+					}
+
+					// we also remove this reservation because the next path will start here and we don't want the evacuee to overlap itself
+					path->at(segment)->Edge->RemoveReservation(path, method, true);
+
+					// setup this path as frozen and mark the evacuee as unporcessed
+					path->myEvc->Status = EvacueeStatus::Unprocessed;
+					path->myEvc->PredictedCost = CASPER_INFINITY;
+					path->myEvc->FinalCost = CASPER_INFINITY;
+					path->MySafeZone->Reserve(-path->RoutedPop);
+					++count;
+				}
+				else
+				{
+					// split this path into two seperate paths: one splittedfrozen and the other active. keep evacuee as processed.
+					EvcPathPtr newPath = new DEBUG_NEW_PLACEMENT EvcPath(*path);
+					newPath->Order = ++pathGenerationCount;
+					newPath->PathStartCost = CurrentTime;
+
+					// pop out the rest of the segments in this path and then add it to the newPath
+					for (size_t i = path->size() - 1; i > segment; --i)
+					{
+						newPath->push_front(path->at(i));
+						path->at(i)->Edge->SwapReservation(path, newPath);
+					}
+
+					// we also remove this reservation because the next path will start here and we don't want the evacuee to overlap itself
+					PathSegmentPtr dupSegment = new DEBUG_NEW_PLACEMENT PathSegment(path->at(segment)->Edge, edgeRatio);
+					path->at(segment)->Edge->SwapReservation(path, newPath);
+					newPath->push_front(dupSegment);
+					newPath->myEvc->Paths->push_front(newPath);
+				}
+				
+				path->erase(path->begin() + segment + 1, path->end());
 			}
 		}
 	}
@@ -156,7 +193,6 @@ void EvcPath::DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees)
 				// in this case the evacuee has some frozen paths so originally could evacuate but after this dynamic
 				// change it no longer can move so it is considered stuck
 				/// TODO What happens here is that the evacuee is marked as processed instead of unreachable. Is this going to create some problems for me?
-				/// TODO how would i know if this was stuck or ended and rescued before the disster?
 				for (auto p : *evc->Paths) delete p;
 				evc->Paths->clear();
 				continue;
@@ -203,13 +239,16 @@ void EvcPath::DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std:
 		if (!path || path->Status != PathStatus::ActiveComplete) ++i; // ignore frozen paths. They are not to be detached
 		else
 		{
+			/// TODO should we also change safezone reservation?
+			path->MySafeZone->Reserve(-path->RoutedPop);
+
 			for (auto s = path->crbegin(); s != path->crend(); ++s)
 			{
 				(*s)->Edge->RemoveReservation(path, method, true);
 				touchedEdges.insert((*s)->Edge);
 			}
 
-			// this erase act as iterator advancement too. next we either backup thr path in a vector or delete it all together
+			// this erase acts as iterator advancement too. next we either backup the path in a vector or delete it all together
 			i = evc->Paths->erase(i);
 			if (detachedPaths) detachedPaths->push_back(path); else delete path; 
 		}
@@ -223,6 +262,8 @@ void EvcPath::ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdg
 		s->Edge->AddReservation(this, method, true);
 		touchedEdges.insert(s->Edge);
 	}
+	/// TODO should we also change safezone reservation?
+	MySafeZone->Reserve(RoutedPop);
 	myEvc->Paths->push_front(this);
 }
 

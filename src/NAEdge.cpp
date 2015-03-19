@@ -48,6 +48,17 @@ void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 	ReservedPop -= (float)flow;
 }
 
+void EdgeReservations::SwapReservation(const EvcPathPtr oldPath, const EvcPathPtr newPath)
+{
+	int last = (int)size() - 1;
+	for (int i = last; i >= 0; --i) if (*oldPath == *at(i))
+	{
+		at(i) = newPath;
+		return;
+	}
+	throw std::out_of_range("OldPath not found in edge reservation");
+}
+
 //******************************************************************************************/
 // NAEdge Methods
 
@@ -309,21 +320,11 @@ void NAEdge::GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cle
 	}
 }
 
-void NAEdge::DynamicStep_ExtractAffectedPaths(std::vector<EvcPathPtr> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges)
+void NAEdge::DynamicStep_ExtractAffectedPaths(std::unordered_set<EvcPathPtr, EvcPath::PtrHasher, EvcPath::PtrEqual> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges)
 {
-	std::unordered_set<int> insertedPaths;
-	std::unordered_set<int>::_Pairib i;
-	insertedPaths.reserve(DynamicallyAffectedEdges.size());
-
 	for (auto edge : DynamicallyAffectedEdges)
 		for (auto path : *(edge->reservations))
-		{
-			if (path->IsActive())
-			{
-				i = insertedPaths.insert(path->GetKey());
-				if (i.second) AffectedPaths.push_back(path);
-			}
-		}
+			if (path->IsActive()) AffectedPaths.insert(path);
 }
 
 // Special function for CCRP: to check how much capacity is left on this edge.

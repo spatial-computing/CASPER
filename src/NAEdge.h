@@ -31,6 +31,7 @@ public:
 	EdgeReservations & operator=(const EdgeReservations &) = delete;
 	void AddReservation(double newFlow, EvcPathPtr path);
 	void RemoveReservation(double flow, EvcPathPtr path);
+	void SwapReservation(const EvcPathPtr oldPath, const EvcPathPtr newPath);
 
 	friend class NAEdge;
 };
@@ -83,13 +84,14 @@ public:
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
+	void SwapReservation(const EvcPathPtr oldPath, const EvcPathPtr newPath) { reservations->SwapReservation(oldPath, newPath); }
 	void GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cleanVectorFirst = false);
 	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const;
 	HRESULT InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
 									  long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag);
 	
-	static void DynamicStep_ExtractAffectedPaths(std::vector<EvcPath *> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges);
+	static void DynamicStep_ExtractAffectedPaths(std::unordered_set<EvcPathPtr, EvcPath::PtrHasher, EvcPath::PtrEqual> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges);
 	static bool CostLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
 	{
 		return e1->GetCurrentCost(method) < e2->GetCurrentCost(method);

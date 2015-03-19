@@ -95,7 +95,7 @@ public:
 	CriticalTime(double time) : Time(time) { }
 	void AddIntersectedChange(const SingleDynamicChangePtr & item) const { Intersected.push_back(item); }
 	size_t ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime,
-		   std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod) const;
+		std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod, int & pathGenerationCount) const;
 
 	bool friend operator< (const CriticalTime & lhs, const CriticalTime & rhs) { return lhs.Time <  rhs.Time; }
 	static void MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTimeFrame);
@@ -123,10 +123,6 @@ public:
 	DynamicMode GetDynamicMode() const { return myDynamicMode; }
 	DynamicDisaster(ITablePtr SingleDynamicChangesLayer, DynamicMode dynamicMode, bool & flagBadDynamicChangeSnapping, EvcSolverMethod solverMethod);
 	size_t ResetDynamicChanges();
-	size_t NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime);
+	size_t NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime, int & pathGenerationCount);
 	virtual ~DynamicDisaster() { Flush(); }
 };
-
-// specia template function instantiation
-template size_t EvcPath::DynamicStep_MoveOnPath<std::vector<EvcPathPtr>::iterator>(const std::vector<EvcPathPtr>::iterator & begin, const std::vector<EvcPathPtr>::iterator & end,
-	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuerys);

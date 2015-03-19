@@ -67,6 +67,10 @@ for ExpName in ScenarioNames:
         # only solve if the layer is a network analysis layer
         if desc.dataType == "NALayer":
             arcpy.SetProgressorLabel("Solving " + lyr.name + " with scenario " + ExpName[0] + "...")
+
+            # if you want to change some layer properties, this may help:
+            # http://resources.arcgis.com/en/help/main/10.1/index.html#//01mr0000000v000000
+            
             # load input locations
             arcpy.AddMessage("loading input points to " + lyr.name + " from scenario " + ExpName[0])
             arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name UID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")

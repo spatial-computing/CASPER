@@ -105,7 +105,7 @@ public:
 		for(const_iterator it = begin(); it != end(); it++) delete (*it);
 		clear();
 	}
-	EvcPath(const EvcPath & that) = delete;
+	EvcPath(const EvcPath & that);
 	EvcPath & operator=(const EvcPath &) = delete;
 
 	double GetMinCostRatio(double MaxEvacuationCost = 0.0) const;
@@ -123,17 +123,30 @@ public:
 
 	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges,
 		std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
-	template<class iterator_type> static size_t DynamicStep_MoveOnPath(const iterator_type & begin, const iterator_type & end,
-		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuerys);
+	
 	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees);
 	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double StartCost);
-
 	
 	static bool MoreThanFinalCost (const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
 	static bool MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
 	static bool LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
 	static bool MoreThanPathOrder2(const EvcPath * p1, const EvcPath * p2) { return p1->Order > p2->Order; }
 	static bool LessThanPathOrder2(const EvcPath * p1, const EvcPath * p2) { return p1->Order < p2->Order; }
+
+	// hash functor for NAEdgePtr
+	struct PtrHasher : public std::unary_function<EvcPath *, size_t>
+	{
+		size_t operator()(const EvcPath * path) const { return path->Order; }
+	};
+
+	// equal functor for NAEdgePtr
+	struct PtrEqual : public std::binary_function<EvcPath *, EvcPath *, bool>
+	{
+		size_t operator()(const EvcPath * left, const EvcPath * right) const { return left->Order == right->Order; }
+	};
+
+	static size_t DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPath::PtrHasher, EvcPath::PtrEqual> & AffectedPaths, std::vector<EvcPath *> & allPaths,
+		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuerys, int & pathGenerationCount);
 };
 
 typedef EvcPath * EvcPathPtr;

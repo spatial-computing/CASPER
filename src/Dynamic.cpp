@@ -150,18 +150,18 @@ void CriticalTime::MergeWithPreviousTimeFrame(std::set<CriticalTime> & dynamicTi
 	}
 }
 
-size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime)
+size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime, int & pathGenerationCount)
 {
 	size_t EvcCount = 0;
 	_ASSERT_EXPR(currentTime != dynamicTimeFrame.end(), L"NextDynamicChange function called on invalid iterator");
 	if (currentTime == dynamicTimeFrame.end()) return 0;
-	EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, EvcStartTime, OriginalEdgeSettings, this->myDynamicMode, SolverMethod);
+	EvcCount = currentTime->ProcessAllChanges(AllEvacuees, ecache, EvcStartTime, OriginalEdgeSettings, this->myDynamicMode, SolverMethod, pathGenerationCount);
 	++currentTime;
 	return EvcCount;
 }
 
 size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime,
-	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod) const
+	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod, int & pathGenerationCount) const
 {
 	size_t CountPaths = AllEvacuees->size();
 	EvcStartTime = this->Time;
@@ -206,20 +206,21 @@ size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees,
 		// now it's time to move all evacuees along their paths based on current time of this event and evacuee stuck policy
 		if (this->Time > 0.0)
 		{
+			std::vector<EvcPathPtr> allPaths;
+			std::unordered_set<EvcPathPtr, EvcPath::PtrHasher, EvcPath::PtrEqual> AffectedPaths;
+			allPaths.reserve(AllEvacuees->size());
+			for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) if (p->IsActive()) allPaths.push_back(p);
 			if (myDynamicMode == DynamicMode::Full)
 			{
-				std::vector<EvcPathPtr> allPaths;
-				allPaths.reserve(AllEvacuees->size());
-				for (auto e : *AllEvacuees) for (auto p : *(e->Paths)) if (p->IsActive()) allPaths.push_back(p);
-				CountPaths = EvcPath::DynamicStep_MoveOnPath(allPaths.begin(), allPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery());
+				AffectedPaths.reserve(AllEvacuees->size());
+				AffectedPaths.insert(allPaths.cbegin(), allPaths.cend());
 			}
 			else if (myDynamicMode == DynamicMode::Smart)
 			{
-				std::vector<EvcPathPtr> AffectedPaths;
 				AffectedPaths.reserve(min(AllEvacuees->size(), DynamicallyAffectedEdges.size()));
 				NAEdge::DynamicStep_ExtractAffectedPaths(AffectedPaths, DynamicallyAffectedEdges);
-				CountPaths = EvcPath::DynamicStep_MoveOnPath(AffectedPaths.begin(), AffectedPaths.end(), DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery());
 			}
+			CountPaths  = EvcPath::DynamicStep_MoveOnPath(AffectedPaths, allPaths, DynamicallyAffectedEdges, this->Time, solverMethod, ecache->GetNetworkQuery(), pathGenerationCount);
 			CountPaths += EvcPath::DynamicStep_UnreachableEvacuees(AllEvacuees, this->Time);
 
 			// what if all paths are OK and non are affected and there are no unreachable evacuees?
