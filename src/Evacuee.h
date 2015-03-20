@@ -15,10 +15,16 @@
 #include "utils.h"
 
 class NAVertex;
+class NAVertexCache;
 class NAEdge;
 class NAEdgeCache;
 class NAEdgeContainer;
 class NAEdgeMap;
+class EvacueeList;
+struct NAEdgePtrHasher;
+struct NAEdgePtrEqual;
+class SafeZone;
+struct EdgeOriginalData;
 typedef NAVertex * NAVertexPtr;
 
 class PathSegment
@@ -28,7 +34,7 @@ private:
 	double toRatio;
 
 public:
-    NAEdge * Edge;
+    NAEdge     * Edge;
     IPolylinePtr pline;
 
     double GetEdgePortion() const { return toRatio - fromRatio; }
@@ -39,7 +45,13 @@ public:
     {
 	    fromRatio = FromRatio;
 	    if (fromRatio == toRatio) fromRatio = toRatio - 0.001;
-    }
+	}
+
+	void SetToRatio(double ToRatio)
+	{
+		toRatio = ToRatio;
+		if (fromRatio == toRatio) toRatio = fromRatio + 0.001;
+	}
 
 	double GetFromRatio() const { return fromRatio; }
 	double GetToRatio()   const { return toRatio;   }
@@ -60,13 +72,16 @@ class Evacuee;
 class EvcPath : private std::deque<PathSegmentPtr>
 {
 private:
-	double  RoutedPop;
-	double  ReserveEvacuationCost;
-	double  FinalEvacuationCost;
-	double  OrginalCost;
-	int     Order;
-	Evacuee * myEvc;
-	typedef std::deque<PathSegmentPtr> baselist;
+	SafeZone   * MySafeZone;
+	Evacuee    * myEvc;
+	int        Order;
+	PathStatus Status;
+	double     RoutedPop;
+	double     ReserveEvacuationCost;
+	double     PathStartCost;
+	double     FinalEvacuationCost;
+	double     OrginalCost;
+	typedef    std::deque<PathSegmentPtr> baselist;
 
 public:
 	using baselist::shrink_to_fit;
@@ -79,52 +94,59 @@ public:
 
 	inline double GetRoutedPop()             const { return RoutedPop;             }
 	inline double GetReserveEvacuationCost() const { return ReserveEvacuationCost; }
-	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost;   }
+	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost; }
+	inline bool   IsActive()                 const { return Status == PathStatus::ActiveComplete; }
 	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
 
-	EvcPath(double routedPop, int order, Evacuee * evc) : baselist()
-	{
-		RoutedPop = routedPop;
-		FinalEvacuationCost = 0.0;
-		ReserveEvacuationCost = 0.0;
-		OrginalCost = 0.0;
-		Order = order;
-		myEvc = evc;
-	}
-
-	double GetMinCostRatio(double MaxEvacuationCost = 0.0) const;
-	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
-	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
-	HRESULT AddPathToFeatureBuffers(ITrackCancel * , INetworkDatasetPtr , IFeatureClassContainerPtr , bool & , IStepProgressorPtr , double & , double , IFeatureBufferPtr , IFeatureBufferPtr ,
-									IFeatureCursorPtr , IFeatureCursorPtr , long , long , long , long ,	long , long , long , long , long , long , long , bool);
-	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr, NAEdgeMap * touchedEdges = nullptr);
-	void ReattachToEvacuee(EvcSolverMethod method);
-	inline void CleanYourEvacueePaths(EvcSolverMethod method) { EvcPath::DetachPathsFromEvacuee(myEvc, method); }
-	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
-
-	inline const int & GetKey()  const { return Order; }
-	friend bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
-	friend bool operator!=(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order != rhs.Order; }
+	EvcPath(double initDelayCostPerPop, double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone);
 
 	virtual ~EvcPath(void)
 	{
 		for(const_iterator it = begin(); it != end(); it++) delete (*it);
 		clear();
 	}
-	EvcPath(const EvcPath & that) = delete;
+	EvcPath(const EvcPath & that);
 	EvcPath & operator=(const EvcPath &) = delete;
 
-	static bool LessThanOrder(const EvcPath * p1, const EvcPath * p2)
-	{
-		return p1->Order < p2->Order;
-	}
+	double GetMinCostRatio(double MaxEvacuationCost = 0.0) const;
+	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
+	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
+	HRESULT AddPathToFeatureBuffers(ITrackCancel *, INetworkDatasetPtr, IFeatureClassContainerPtr, bool &,
+		IStepProgressorPtr, double &, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long);
+	void ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges);
+	inline void CleanYourEvacueePaths(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges) { EvcPath::DetachPathsFromEvacuee(myEvc, method, touchedEdges); }
+	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
 
-	static bool MoreThanFinalCost(const EvcPath * p1, const EvcPath * p2)
-	{
-		return p1->FinalEvacuationCost > p2->FinalEvacuationCost;
-	}
+	inline const int & GetKey()  const { return Order; }
+	friend bool operator==(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order == rhs.Order; }
+	friend bool operator!=(const EvcPath & lhs, const EvcPath & rhs) { return lhs.Order != rhs.Order; }
 
-	static bool MoreThanPathOrder(const Evacuee * e1, const Evacuee * e2);
+	static void DetachPathsFromEvacuee(Evacuee * evc, EvcSolverMethod method, std::unordered_set < NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges,
+		std::shared_ptr<std::vector<EvcPath *>> detachedPaths = nullptr);
+	
+	static void DynamicStep_MergePaths(std::shared_ptr<EvacueeList> AllEvacuees);
+	static size_t DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double StartCost);
+	
+	static bool MoreThanFinalCost (const EvcPath * p1, const EvcPath * p2) { return p1->FinalEvacuationCost > p2->FinalEvacuationCost; }
+	static bool MoreThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
+	static bool LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2);
+	static bool MoreThanPathOrder2(const EvcPath * p1, const EvcPath * p2) { return p1->Order > p2->Order; }
+	static bool LessThanPathOrder2(const EvcPath * p1, const EvcPath * p2) { return p1->Order < p2->Order; }
+
+	// hash functor for NAEdgePtr
+	struct PtrHasher : public std::unary_function<EvcPath *, size_t>
+	{
+		size_t operator()(const EvcPath * path) const { return path->Order; }
+	};
+
+	// equal functor for NAEdgePtr
+	struct PtrEqual : public std::binary_function<EvcPath *, EvcPath *, bool>
+	{
+		size_t operator()(const EvcPath * left, const EvcPath * right) const { return left->Order == right->Order; }
+	};
+
+	static size_t DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPath::PtrHasher, EvcPath::PtrEqual> & AffectedPaths, std::vector<EvcPath *> & allPaths,
+		std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuerys, int & pathGenerationCount);
 };
 
 typedef EvcPath * EvcPathPtr;
@@ -132,12 +154,14 @@ typedef EvcPath * EvcPathPtr;
 class Evacuee
 {
 public:
-	std::vector<NAVertexPtr> * Vertices;
+	std::vector<NAVertexPtr> * VerticesAndRatio;
 	std::list<EvcPathPtr>    * Paths;
+	NAEdge                   * DiscoveryLeaf;
 	VARIANT                  Name;
 	double                   Population;
 	double                   PredictedCost;
 	double                   FinalCost;
+	double                   StartingCost;
 	UINT32                   ObjectID;
 	EvacueeStatus            Status;
 	int                      ProcessOrder;
@@ -146,6 +170,7 @@ public:
 	virtual ~Evacuee(void);
 	Evacuee(const Evacuee & that) = delete;
 	Evacuee & operator=(const Evacuee &) = delete;
+	void DynamicMove(NAEdge * edge, double FromRatio, INetworkQueryPtr ipNetworkQuery, double startTime);
 
 	static bool LessThan(const Evacuee * e1, const Evacuee * e2)
 	{
@@ -159,20 +184,9 @@ public:
 		else return e1->PredictedCost > e2->PredictedCost;
 	}
 
-	static bool LessThanObjectID(const Evacuee * e1, const Evacuee * e2)
-	{
-		return e1->ObjectID < e2->ObjectID;
-	}
-
-	static bool ReverseFinalCost(const Evacuee * e1, const Evacuee * e2)
-	{
-		return e1->FinalCost > e2->FinalCost;
-	}
-
-	static bool ReverseEvacuationCost(const Evacuee * e1, const Evacuee * e2)
-	{
-		return e1->Paths->back()->GetReserveEvacuationCost() > e2->Paths->back()->GetReserveEvacuationCost();
-	}
+	static bool LessThanObjectID(const Evacuee * e1, const Evacuee * e2) { return e1->ObjectID  < e2->ObjectID;  }
+	static bool ReverseFinalCost(const Evacuee * e1, const Evacuee * e2) { return e1->FinalCost > e2->FinalCost; }
+	static bool ReverseEvacuationCost(const Evacuee * e1, const Evacuee * e2) { return e1->Paths->front()->GetReserveEvacuationCost() > e2->Paths->front()->GetReserveEvacuationCost(); }
 };
 
 typedef Evacuee * EvacueePtr;
@@ -183,17 +197,21 @@ class EvacueeList : private DoubleGrowingArrayList<EvacueePtr, size_t>
 {
 private:
 	EvacueeGrouping groupingOption;
+	bool SeperationDisabledForDynamicCASPER;
 
 public:
-	EvacueeList(EvacueeGrouping GroupingOption, size_t capacity = 0) : groupingOption(GroupingOption), DoubleGrowingArrayList<EvacueePtr, size_t>(capacity) { }
+	EvacueeList(EvacueeGrouping GroupingOption, size_t capacity = 0) : groupingOption(GroupingOption), SeperationDisabledForDynamicCASPER(false), DoubleGrowingArrayList<EvacueePtr, size_t>(capacity) { }
 	virtual ~EvacueeList();
+	void FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPEREnabled);
+
 	EvacueeList(const EvacueeList & that) = delete;
 	EvacueeList & operator=(const EvacueeList &) = delete;
 
+	bool IsSeperable() const { return CheckFlag(groupingOption, EvacueeGrouping::Separate); }
+	bool IsSeperationDisabledForDynamicCASPER() const { return SeperationDisabledForDynamicCASPER; }
 	void Insert(const EvacueePtr & item) { push_back(item); }
-	void FinilizeGroupings(double OKDistance);
-	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator begin() { return DoubleGrowingArrayList<EvacueePtr, size_t>::begin(); }
-	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator end() { return DoubleGrowingArrayList<EvacueePtr, size_t>::end(); }
+	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator begin() const { return DoubleGrowingArrayList<EvacueePtr, size_t>::begin(); }
+	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator end()   const { return DoubleGrowingArrayList<EvacueePtr, size_t>::end(); }
 	size_t size() const { return DoubleGrowingArrayList<EvacueePtr, size_t, 0>::size(); }
 };
 
@@ -202,8 +220,8 @@ class NAEvacueeVertexTable : protected std::unordered_map<long, std::vector<Evac
 public:
 	using std::unordered_map<long, std::vector<EvacueePtr>>::empty;
 
-	void InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir);
-	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAEdgeContainer> leafs, double pop, EvcSolverMethod method);
+	void InsertReachable(std::shared_ptr<EvacueeList> list, CARMASort sortDir, std::shared_ptr<NAEdgeContainer> leafs);
+	void RemoveDiscoveredEvacuees(NAVertex * myVertex, NAEdge * myEdge, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, double pop, EvcSolverMethod method);
 	void LoadSortedEvacuees(std::shared_ptr<std::vector<EvacueePtr>>) const;
 };
 
@@ -217,7 +235,7 @@ private:
 	double   reservedPop;
 
 public:
-	NAVertex * Vertex;
+	NAVertex * VertexAndRatio;
 
 	inline void   Reserve(double pop)      { reservedPop += pop;   }
 	inline double getPositionAlong() const { return positionAlong; }

@@ -156,7 +156,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	IUnknownPtr           ipUnknown;
 	INamedSetPtr          ipNAClassDefinitions;
-	INAClassDefinitionPtr ipEvacueePointsClassDef, ipBarriersClassDef, ipRoutesClassDef, ipZonesClassDef, ipEdgeStatClassDef, ipFlocksClassDef, ipRouteEdgesClassDef;
+	INAClassDefinitionPtr ipEvacueePointsClassDef, ipRoutesClassDef, ipZonesClassDef, ipEdgeStatClassDef, ipFlocksClassDef, ipDynamicChangeClassDef;
 
 	// Build the class definitions
 	if (FAILED(hr = BuildClassDefinitions(ipNAContextSR, &ipNAClassDefinitions, pNetwork))) return hr;
@@ -167,8 +167,8 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_ZONES_NAME), &ipUnknown);
 	ipZonesClassDef = ipUnknown;
 
-	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_BARRIERS_NAME), &ipUnknown);
-	ipBarriersClassDef = ipUnknown;
+	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipUnknown);
+	ipDynamicChangeClassDef = ipUnknown;
 
 	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_ROUTES_NAME), &ipUnknown);
 	ipRoutesClassDef = ipUnknown;
@@ -178,10 +178,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 
 	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnknown);
 	ipFlocksClassDef = ipUnknown;
-
-	ipNAClassDefinitions->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnknown);
-	ipRouteEdgesClassDef = ipUnknown;
-
+	
 	// Create a context and initialize it
 	INAContextPtr     ipNAContext(CLSID_NAContext);
 	INAContextEditPtr ipNAContextEdit(ipNAContext);
@@ -197,16 +194,14 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_ZONES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipEvacueePointsClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipNAClass))) return hr;
-	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipBarriersClassDef, &ipNAClass))) return hr;
-	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipNAClass))) return hr;
+	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipDynamicChangeClassDef, &ipNAClass))) return hr;
+	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_DYNCHANGES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipRoutesClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_ROUTES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipEdgeStatClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipFlocksClassDef, &ipNAClass))) return hr;
 	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_FLOCKS_NAME), (IUnknownPtr)ipNAClass))) return hr;
-	if (FAILED(hr = ipNAContextEdit->CreateAnalysisClass(ipRouteEdgesClassDef, &ipNAClass))) return hr;
-	if (FAILED(hr = ipNAClasses->Add(ATL::CComBSTR(CS_ROUTEEDGES_NAME), (IUnknownPtr)ipNAClass))) return hr;
 
 	// NOTE: this is an appropriate place to set up any hierarchy defaults if your
 	// solver supports using a hierarchy attribute (this solver does not). This is
@@ -236,6 +231,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	m_PreserveLastStop = VARIANT_FALSE;
 	m_UseTimeWindows = VARIANT_FALSE;
 	evacueeGroupingOption = EvacueeGrouping::None;
+	CASPERDynamicMode = DynamicMode::Disabled;
 	VarExportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
@@ -369,6 +365,17 @@ STDMETHODIMP EvcSolver::Load(IStream* pStm)
 		savedVersion = 6;
 	}
 
+	//version 6
+	if (savedVersion >= 8)
+	{
+		if (FAILED(hr = pStm->Read(&CASPERDynamicMode, sizeof(CASPERDynamicMode), &numBytes))) return hr;
+	}
+	else
+	{
+		CASPERDynamicMode = DynamicMode::Disabled;
+		savedVersion = 8;
+	}
+	
 	CARMAPerformanceRatio = min(max(CARMAPerformanceRatio, 0.0f), 1.0f);
 	selfishRatio = min(max(selfishRatio, 0.0f), 1.0f);
 	iterateRatio = min(max(iterateRatio, 0.0f), 1.0f);
@@ -415,6 +422,7 @@ STDMETHODIMP EvcSolver::Save(IStream* pStm, BOOL fClearDirty)
 	if (FAILED(hr = pStm->Write(&selfishRatio, sizeof(selfishRatio), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&CarmaSortCriteria, sizeof(CarmaSortCriteria), &numBytes))) return hr;
 	if (FAILED(hr = pStm->Write(&iterateRatio, sizeof(iterateRatio), &numBytes))) return hr;
+	if (FAILED(hr = pStm->Write(&CASPERDynamicMode, sizeof(CASPERDynamicMode), &numBytes))) return hr;
 
 	return S_OK;
 }
@@ -459,12 +467,6 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	// - Shape
 	// - Name
 	// - Population					  number of un-seperatable people/cars at this location
-	// - (NALocation fields)
-
-	// Barriers (input)               Barriers restrict network edges from being
-	// - OID                          traversable
-	// - Shape
-	// - Name
 	// - (NALocation fields)
 
 	// Routes (output)                Evacuation routes
@@ -666,13 +668,18 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_EVACUEES_NAME), (IUnknownPtr)ipClassDef);
 
 	//******************************************************************************************/
-	// Barriers class definition
+	// DynamicChanges class definition
 
 	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
 	ipClassDefEdit = ipClassDef;
 	ipIUID.CreateInstance(CLSID_UID);
-	if (FAILED(hr = ipIUID->put_Value(ATL::CComVariant(L"esriNetworkAnalyst.NALocationFeature")))) return hr;
-	ipClassDefEdit->putref_ClassCLSID(ipIUID);
+	if (FAILED(hr = ipIUID->put_Value(ATL::CComVariant(L"esriNetworkAnalyst.NALocationRangesFeature")))) return hr;
+	if (FAILED(hr = ipClassDefEdit->putref_ClassCLSID(ipIUID))) return hr;
+
+	// set up coded value domains for the the dynamic changes status values
+	ICodedValueDomainPtr ipCodedValueDomainEdgeDir(CLSID_CodedValueDomain), ipCodedValueDomainEvcStuck(CLSID_CodedValueDomain);
+	CreateEdgeDirCodedValueDomain(ipCodedValueDomainEdgeDir);
+	CreateEvcStuckCodedValueDomain(ipCodedValueDomainEvcStuck);
 
 	ipFields.CreateInstance(CLSID_Fields);
 	ipFieldsEdit = ipFields;
@@ -688,7 +695,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	{
 		IGeometryDefEditPtr  ipGeoDef(CLSID_GeometryDef);
 
-		ipGeoDef->put_GeometryType(esriGeometryPoint);
+		ipGeoDef->put_GeometryType(esriGeometryPolygon);
 		ipGeoDef->put_HasM(VARIANT_FALSE);
 		ipGeoDef->put_HasZ(VARIANT_FALSE);
 		ipGeoDef->putref_SpatialReference(pSpatialRef);
@@ -701,26 +708,72 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 
 	ipField.CreateInstance(CLSID_Field);
 	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_NAME));
-	ipFieldEdit->put_Type(esriFieldTypeString);
-	ipFieldEdit->put_Length(128);
+	ipFieldEdit->put_Name(ATL::CComBSTR(L"Locations"));
+	ipFieldEdit->put_Type(esriFieldTypeBlob);
+	ipFieldEdit->put_Required(VARIANT_TRUE);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
-	AddLocationFields(ipFieldsEdit, pDENDS);
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNROADDIR));
+	ipFieldEdit->put_Type(esriFieldTypeInteger);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(static_cast<long>(EdgeDirection::Both)));
+	ipFieldEdit->putref_Domain((IDomainPtr)ipCodedValueDomainEdgeDir);
+	ipFieldsEdit->AddField(ipFieldEdit);
 
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNSTARTTIME));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(0.0));
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNENDTIME));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(-1.0));
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNCOST));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(1.0));
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNCAPACITY));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(1.0));
+	ipFieldsEdit->AddField(ipFieldEdit);
+
+	//ipField.CreateInstance(CLSID_Field);
+	//ipFieldEdit = ipField;
+	//ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNEVCSTUCK));
+	//ipFieldEdit->put_Type(esriFieldTypeInteger);
+	//ipFieldEdit->put_DefaultValue(ATL::CComVariant(long(1)));
+	//ipFieldEdit->putref_Domain((IDomainPtr)ipCodedValueDomainEvcStuck);
+	//ipFieldsEdit->AddField(ipFieldEdit);
+	
 	ipClassDefEdit->putref_Fields(ipFields);
-
-	AddLocationFieldTypes(ipClassDefEdit);
 
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_OID), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeInput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_NAME), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(L"Locations"), esriNAFieldTypeInput | esriNAFieldTypeNotEditable);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNROADDIR), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNSTARTTIME), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNENDTIME), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNCOST), esriNAFieldTypeInput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNCAPACITY), esriNAFieldTypeInput);
+	// ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_DYNEVCSTUCK), esriNAFieldTypeInput);
 
 	ipClassDefEdit->put_IsInput(VARIANT_TRUE);
 	ipClassDefEdit->put_IsOutput(VARIANT_FALSE);
 
-	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_BARRIERS_NAME));
-	ipClassDefinitions->Add(ATL::CComBSTR(CS_BARRIERS_NAME), (IUnknownPtr)ipClassDef);
+	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_DYNCHANGES_NAME));
+	ipClassDefinitions->Add(ATL::CComBSTR(CS_DYNCHANGES_NAME), (IUnknownPtr)ipClassDef);
 
 	//******************************************************************************************/
 	// Flocks class definition
@@ -1023,99 +1076,6 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefinitions->Add(ATL::CComBSTR(CS_EDGES_NAME), (IUnknownPtr)ipClassDef);
 
 	//******************************************************************************************/
-	// RouteEdges class definition
-
-	ipClassDef.CreateInstance(CLSID_NAClassDefinition);
-	ipClassDefEdit = ipClassDef;
-	ipIUID.CreateInstance(CLSID_UID);
-	if (FAILED(hr = ipIUID->put_Value(ATL::CComVariant(L"esriGeoDatabase.Feature")))) return hr;
-	if (FAILED(hr = ipClassDefEdit->putref_ClassCLSID(ipIUID))) return hr;
-
-	ipFields.CreateInstance(CLSID_Fields);
-	ipFieldsEdit = ipFields;
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_OID));
-	ipFieldEdit->put_Type(esriFieldTypeOID);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	{
-		IGeometryDefEditPtr  ipGeoDef(CLSID_GeometryDef);
-
-		ipGeoDef->put_GeometryType(esriGeometryPolyline);
-		ipGeoDef->put_HasM(VARIANT_FALSE);
-		ipGeoDef->put_HasZ(VARIANT_FALSE);
-		ipGeoDef->putref_SpatialReference(pSpatialRef);
-		ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_SHAPE));
-		ipFieldEdit->put_IsNullable(VARIANT_TRUE);
-		ipFieldEdit->put_Type(esriFieldTypeGeometry);
-		ipFieldEdit->putref_GeometryDef(ipGeoDef);
-	}
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_RID));
-	ipFieldEdit->put_Type(esriFieldTypeInteger);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_EID));
-	ipFieldEdit->put_Type(esriFieldTypeInteger);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DIR));
-	ipFieldEdit->put_Type(esriFieldTypeString);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_SEQ));
-	ipFieldEdit->put_Type(esriFieldTypeInteger);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_FromP));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_ToP));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipField.CreateInstance(CLSID_Field);
-	ipFieldEdit = ipField;
-	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_COST));
-	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldsEdit->AddField(ipFieldEdit);
-
-	ipClassDefEdit->putref_Fields(ipFields);
-
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_OID), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_SHAPE), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable | esriNAFieldTypeNotVisible);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_RID), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_EID), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_SEQ), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_FromP), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_ToP), esriNAFieldTypeOutput);
-	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_COST), esriNAFieldTypeOutput);
-
-	ipClassDefEdit->put_IsInput(VARIANT_FALSE);
-	ipClassDefEdit->put_IsOutput(VARIANT_TRUE);
-
-	ipClassDefEdit->put_Name(ATL::CComBSTR(CS_ROUTEEDGES_NAME));
-	ipClassDefinitions->Add(ATL::CComBSTR(CS_ROUTEEDGES_NAME), (IUnknownPtr)ipClassDef);
-
-	//******************************************************************************************/
 	// Return the class definitions once we have finished
 	ipClassDefinitions->AddRef();
 	*ppDefinitions = ipClassDefinitions;
@@ -1123,7 +1083,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	return hr;
 }
 
-HRESULT EvcSolver::GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable)
+HRESULT EvcSolver::GetNAClassTable(INAContext* pContext, BSTR className, ITable** ppTable, bool throwError)
 {
 	if (!pContext || !ppTable) return E_POINTER;
 
@@ -1137,12 +1097,18 @@ HRESULT EvcSolver::GetNAClassTable(INAContext* pContext, BSTR className, ITable*
 
 	ITablePtr ipTable(ipUnk);
 
-	if (!ipTable) return ATL::AtlReportError(GetObjectCLSID(), _T("Context has an invalid NAClass."), IID_INASolver);
-
-	ipTable->AddRef();
-	*ppTable = ipTable;
-
-	return S_OK;
+	if (ipTable)
+	{
+		ipTable->AddRef();
+		*ppTable = ipTable;
+		return S_OK;
+	}
+	else
+	{
+		if (throwError) return ATL::AtlReportError(GetObjectCLSID(), _T("Context has an invalid NAClass."), IID_INASolver);
+		else *ppTable = nullptr;
+		return S_OK;
+	}
 }
 
 HRESULT EvcSolver::LoadBarriers(ITable* pTable, INetworkQuery* pNetworkQuery, INetworkForwardStarEx* pNetworkForwardStarEx)
@@ -1460,6 +1426,47 @@ HRESULT EvcSolver::CreateStatusCodedValueDomain(ICodedValueDomain* pCodedValueDo
 
 	value.lVal = esriNAObjectStatusTimeWindowViolation;
 	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Time window violation"));
+
+	return S_OK;
+}
+
+HRESULT EvcSolver::CreateEdgeDirCodedValueDomain(ICodedValueDomain* pCodedValueDomain)
+{
+	if (!pCodedValueDomain) return E_POINTER;
+
+	IDomainPtr(pCodedValueDomain)->put_Name(ATL::CComBSTR(CS_FIELD_EDGEDIR_STATUS));
+	IDomainPtr(pCodedValueDomain)->put_FieldType(esriFieldTypeInteger);
+
+	ATL::CComVariant value(static_cast<long>(EdgeDirection::None));
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"None"));
+
+	value.lVal = static_cast<long>(EdgeDirection::Along);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Along Edge"));
+
+	value.lVal = static_cast<long>(EdgeDirection::Against);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Against Edge"));
+
+	value.lVal = static_cast<long>(EdgeDirection::Both);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Both Directions"));
+
+	return S_OK;
+}
+
+HRESULT EvcSolver::CreateEvcStuckCodedValueDomain(ICodedValueDomain* pCodedValueDomain)
+{
+	if (!pCodedValueDomain) return E_POINTER;
+
+	IDomainPtr(pCodedValueDomain)->put_Name(ATL::CComBSTR(CS_FIELD_EVCSTUCK_STATUS));
+	IDomainPtr(pCodedValueDomain)->put_FieldType(esriFieldTypeInteger);
+
+	ATL::CComVariant value(static_cast<long>(0));
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Keep Moving"));
+
+	value.lVal = static_cast<long>(1);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Stuck"));
+
+	value.lVal = static_cast<long>(2);
+	pCodedValueDomain->AddCode(value, ATL::CComBSTR(L"Backtrack"));
 
 	return S_OK;
 }

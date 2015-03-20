@@ -117,8 +117,6 @@ using ATL::CRegistryVirtualMachine;
 #include "_CustomSolver_i.c"
 
 // other needed libraries
-#include "float.h"  // for FLT_MAX, etc.
-#include <cmath>    // for HUGE_VAL
 #include <algorithm>
 #include <ctime>
 #include <string>
@@ -130,9 +128,12 @@ using ATL::CRegistryVirtualMachine;
 #include <deque>
 #include <stack>
 #include <unordered_map>
+#include <unordered_set>
+#include <set>
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <iterator>
 
 #pragma warning(push)
 #pragma warning(disable : 4521) /* Ignore warning for boost::heap multiple copy constructors  */

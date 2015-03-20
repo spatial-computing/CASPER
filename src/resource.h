@@ -2,7 +2,11 @@
 // Microsoft Visual C++ generated include file.
 // Used by EvcSolver.rc
 //
-#define PROJ_NAME_S                     "CASPER for ArcGIS"
+
+#ifndef PROJ_NAME_S
+#define PROJ_NAME_S "CASPER for ArcGIS"
+#endif
+
 #define SW_HIDE                         0
 #define HIDE_WINDOW                     0
 #define WM_NULL                         0x0000
@@ -1088,7 +1092,10 @@
 #define IDC_COMBO_CarmaSort2            258
 #define IDC_CMB_GroupOption             258
 #define WM_DEADCHAR                     0x0103
+#define IDC_STATIC_DYNMODE              259
 #define WM_SYSKEYDOWN                   0x0104
+#define IDC_COMBO_CAPACITY2             260
+#define IDC_COMBO_DYNMODE               260
 #define WM_SYSKEYUP                     0x0105
 #define WM_SYSCHAR                      0x0106
 #define WM_SYSDEADCHAR                  0x0107

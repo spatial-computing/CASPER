@@ -21,7 +21,7 @@ class EdgeReservations : private std::vector<EvcPathPtr>
 {
 private:
 	float          ReservedPop;
-	float          Capacity;
+	double         Capacity;
 	EdgeDirtyState dirtyState;
 	TrafficModel   * myTrafficModel;
 
@@ -31,6 +31,7 @@ public:
 	EdgeReservations & operator=(const EdgeReservations &) = delete;
 	void AddReservation(double newFlow, EvcPathPtr path);
 	void RemoveReservation(double flow, EvcPathPtr path);
+	void SwapReservation(const EvcPathPtr oldPath, const EvcPathPtr newPath);
 
 	friend class NAEdge;
 };
@@ -65,6 +66,8 @@ public:
 	double GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost = nullptr) const;
 	double GetCurrentCost(EvcSolverMethod method = EvcSolverMethod::CASPERSolver) const;
 	double LeftCapacity() const;
+	bool ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewOriginalCapacity, bool DelayHowDirty, EvcSolverMethod method);
+	bool IsNewOriginalCostAndCapacityDifferent(double NewOriginalCost, double NewOriginalCapacity) const;
 
 	// Special function for Flocking: to check how much capacity the edge had originally
 	double OriginalCapacity() const { return reservations->Capacity; }
@@ -81,25 +84,39 @@ public:
 	float GetReservedPop() const { return reservations->ReservedPop; }
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
+	void SwapReservation(const EvcPathPtr oldPath, const EvcPathPtr newPath) { reservations->SwapReservation(oldPath, newPath); }
 	void GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cleanVectorFirst = false);
 	double MaxAddedCostOnReservedPathsWithNewFlow(double deltaCostOfNewFlow, double longestPathSoFar, double currentPathSoFar, double selfishRatio) const;
 	HRESULT InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, IFeatureBufferPtr ipFeatureBuffer, IFeatureCursorPtr ipFeatureCursor,
 									  long eidFieldIndex, long sourceIDFieldIndex, long sourceOIDFieldIndex, long dirFieldIndex, long resPopFieldIndex, long travCostFieldIndex,
 									  long orgCostFieldIndex, long congestionFieldIndex, bool & sourceNotFoundFlag);
-
+	
+	static void DynamicStep_ExtractAffectedPaths(std::unordered_set<EvcPathPtr, EvcPath::PtrHasher, EvcPath::PtrEqual> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges);
 	static bool CostLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
 	{
 		return e1->GetCurrentCost(method) < e2->GetCurrentCost(method);
 	}
 
-	static bool CongestionLessThan(NAEdge * e1, NAEdge * e2, EvcSolverMethod method)
-	{
-		return e1->GetTrafficSpeedRatio(e1->reservations->ReservedPop, method) > e2->GetTrafficSpeedRatio(e2->reservations->ReservedPop, method);
-	}
-
 	static double GetHeapKeyHur(const NAEdge * e);
 	static double GetHeapKeyNonHur(const NAEdge * e);
 	static bool   IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2);
+	
+	template<class iterator_type> static void HowDirtyExhaustive(iterator_type begin, iterator_type end, EvcSolverMethod method, double minPop2Route)
+	{
+		NAEdgePtr edge = nullptr;
+		for (iterator_type i = begin; i != end; ++i)
+		{
+			edge = *i;
+			if (edge->CleanCost <= 0.0) edge->reservations->dirtyState = EdgeDirtyState::CostIncreased;
+			else
+			{
+				edge->reservations->dirtyState = EdgeDirtyState::CleanState;
+				double costchange = (edge->GetCost(minPop2Route, method) / edge->CleanCost) - 1.0;
+				if (costchange > FLT_EPSILON) edge->reservations->dirtyState = EdgeDirtyState::CostIncreased;
+				if (costchange < -FLT_EPSILON) edge->reservations->dirtyState = EdgeDirtyState::CostDecreased;
+			}
+		}
+	}
 };
 
 typedef NAEdge * NAEdgePtr;
@@ -114,6 +131,19 @@ struct NAEdgePtrHasher : public std::unary_function<NAEdgePtr, size_t>
 struct NAEdgePtrEqual : public std::binary_function<NAEdgePtr, NAEdgePtr, bool>
 {
 	size_t operator()(const NAEdgePtr & left, const NAEdgePtr & right) const { return left->EID == right->EID && left->Direction == right->Direction; }
+};
+
+struct NAedgePairHasher : public std::unary_function<std::pair<long, esriNetworkEdgeDirection>, size_t>
+{
+	size_t operator()(const std::pair<long, esriNetworkEdgeDirection> & pair) const { return pair.first; }
+};
+
+struct NAedgePairEqual : public std::binary_function<std::pair<long, esriNetworkEdgeDirection>, std::pair<long, esriNetworkEdgeDirection>, bool>
+{
+	bool operator()(const std::pair<long, esriNetworkEdgeDirection> & _Left, const std::pair<long, esriNetworkEdgeDirection> & _Right) const
+	{
+		return (_Left.first == _Right.first) && (_Left.second == _Right.second);
+	}
 };
 
 typedef public std::unordered_map<long, NAEdgePtr> NAEdgeTable;
@@ -144,7 +174,6 @@ public:
 		delete cacheAgainst;
 	}
 	
-	void CallHowDirty(EvcSolverMethod method, double minPop2Route = 1.0, bool exhaustive = false);
 	void GetDirtyEdges(std::vector<NAEdgePtr> & dirty) const;
 	void Erase(NAEdgePtr edge) {        Erase(edge->EID, edge->Direction)  ; }
 	bool Exist(NAEdgePtr edge) { return Exist(edge->EID, edge->Direction)  ; }
@@ -307,12 +336,15 @@ public:
 	NAEdgeCache(const NAEdgeCache & that) = delete;
 	NAEdgeCache & operator=(const NAEdgeCache &) = delete;
 
+	NAEdgePtr New(long EID, esriNetworkEdgeDirection dir);
 	NAEdgePtr New(INetworkEdgePtr edge);
 
+	INetworkQueryPtr GetNetworkQuery()  { return ipNetworkQuery;        }
 	NAEdgeTableItr AlongBegin()   const { return cacheAlong->begin();   }
 	NAEdgeTableItr AlongEnd()     const { return cacheAlong->end();     }
 	NAEdgeTableItr AgainstBegin() const { return cacheAgainst->begin(); }
 	NAEdgeTableItr AgainstEnd()   const { return cacheAgainst->end();   }
+	double GetInitDelayPerPop()   const { return myTrafficModel->InitDelayCostPerPop;  }
 	NAEdgePtr Get(long eid, esriNetworkEdgeDirection dir) const;
 	size_t Size() const { return cacheAlong->size() + cacheAgainst->size(); }
 	void Clear();

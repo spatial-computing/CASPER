@@ -48,6 +48,17 @@ void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
 	ReservedPop -= (float)flow;
 }
 
+void EdgeReservations::SwapReservation(const EvcPathPtr oldPath, const EvcPathPtr newPath)
+{
+	int last = (int)size() - 1;
+	for (int i = last; i >= 0; --i) if (*oldPath == *at(i))
+	{
+		at(i) = newPath;
+		return;
+	}
+	throw std::out_of_range("OldPath not found in edge reservation");
+}
+
 //******************************************************************************************/
 // NAEdge Methods
 
@@ -193,20 +204,37 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 	return hr;
 }
 
+bool NAEdge::IsNewOriginalCostAndCapacityDifferent(double NewOriginalCost, double NewOriginalCapacity) const
+{
+	return OriginalCost != NewOriginalCost || reservations->Capacity != NewOriginalCapacity;
+}
+
+bool NAEdge::ApplyNewOriginalCostAndCapacity(double NewOriginalCost, double NewOriginalCapacity, bool DelayHowDirty, EvcSolverMethod method)
+{
+	bool changed = OriginalCost != NewOriginalCost || reservations->Capacity != NewOriginalCapacity;
+	OriginalCost = NewOriginalCost;
+	reservations->Capacity = NewOriginalCapacity;
+	if (changed && !DelayHowDirty) HowDirty(method, 1.0, true);
+	return changed;
+}
+
+double NAEdge::GetCurrentCost(EvcSolverMethod method) const { return GetCost(0.0, method); }
+
 // This is where the actual capacity aware part is happening:
 // We take the original values of the edge and recalculate the
 // new travel cost based on number of reserved spots by previous evacuees.
 double NAEdge::GetTrafficSpeedRatio(double allPop, EvcSolverMethod method) const
 {
 	double speedPercent = 1.0;
-	if (method == EvcSolverMethod::CASPERSolver) speedPercent = reservations->myTrafficModel->GetCongestionPercentage(reservations->Capacity, allPop);
-	else if (method == EvcSolverMethod::CCRPSolver) speedPercent = allPop > reservations->myTrafficModel->CriticalDensPerCap * reservations->Capacity ? 0.0 : 1.0;
+	if      (method == EvcSolverMethod::CASPERSolver) speedPercent = reservations->myTrafficModel->GetCongestionPercentage(reservations->Capacity, allPop);
+	else if (method == EvcSolverMethod::CCRPSolver  ) speedPercent = allPop > reservations->myTrafficModel->CriticalDensPerCap * reservations->Capacity ? 0.0 : 1.0;
 	speedPercent = min(1.0, max(0.0001, speedPercent));
 	return speedPercent;
 }
 
 double NAEdge::GetCost(double newPop, EvcSolverMethod method, double * globalDeltaCost) const
 {
+	if (reservations->Capacity <= 0.0 || OriginalCost >= CASPER_INFINITY) return CASPER_INFINITY;
 	double speedPercent = 1.0;
 	if (reservations->myTrafficModel->InitDelayCostPerPop > 0.0) newPop = min(newPop, OriginalCost / reservations->myTrafficModel->InitDelayCostPerPop);
 	newPop += reservations->ReservedPop;
@@ -288,14 +316,20 @@ void NAEdge::GetUniqeCrossingPaths(std::vector<EvcPathPtr> & crossings, bool cle
 	for (const auto & p : *reservations)
 	{
 		if (*p != *crossings.back()) crossings.push_back(p);
-		_ASSERT_EXPR(!EvcPath::LessThanOrder(p, crossings.back()), L"Path reservations are not in increasing order");
+		_ASSERT_EXPR(!EvcPath::LessThanPathOrder2(p, crossings.back()), L"Path reservations are not in increasing order");
 	}
+}
+
+void NAEdge::DynamicStep_ExtractAffectedPaths(std::unordered_set<EvcPathPtr, EvcPath::PtrHasher, EvcPath::PtrEqual> & AffectedPaths, const std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges)
+{
+	for (auto edge : DynamicallyAffectedEdges)
+		for (auto path : *(edge->reservations))
+			if (path->IsActive()) AffectedPaths.insert(path);
 }
 
 // Special function for CCRP: to check how much capacity is left on this edge.
 // Will be used to get max capacity available on a path
 double NAEdge::LeftCapacity() const { return reservations->myTrafficModel->LeftCapacityOnEdge(reservations->Capacity, reservations->ReservedPop, OriginalCost); }
-double NAEdge::GetCurrentCost(EvcSolverMethod method) const { return OriginalCost / GetTrafficSpeedRatio(reservations->ReservedPop, method); }
 
 double NAEdge::GetHeapKeyHur   (const NAEdge * e)                     { return e->ToVertex->GVal + e->ToVertex->GlobalPenaltyCost + e->ToVertex->GetMinHOrZero(); }
 double NAEdge::GetHeapKeyNonHur(const NAEdge * e)                     { return e->ToVertex->GVal; }
@@ -304,18 +338,13 @@ bool   NAEdge::IsEqualNAEdgePtr(const NAEdge * n1, const NAEdge * n2) { return n
 //******************************************************************************************/
 // NAEdgeCache
 // Creates a new edge pointer based on the given NetworkEdge. If one exist in the cache, it will be sent out.
-NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
+NAEdgePtr NAEdgeCache::New(long EID, esriNetworkEdgeDirection dir)
 {
 	NAEdgePtr n = nullptr;
-	long EID;
 	NAEdgeTable * cache = nullptr;
-	esriNetworkEdgeDirection dir, otherDir;
+	esriNetworkEdgeDirection otherDir;
 	INetworkElementPtr ipEdgeElement;
 	INetworkEdgePtr edgeClone;
-
-	if (FAILED(edge->get_EID(&EID))) return nullptr;
-	if (FAILED(edge->get_Direction(&dir))) return nullptr;
-
 	if (dir == esriNEDAlongDigitized)
 	{
 		cache = cacheAlong;
@@ -334,7 +363,7 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
 		if (FAILED(ipNetworkQuery->CreateNetworkElement(esriNETEdge, &ipEdgeElement))) return nullptr;
 		edgeClone = ipEdgeElement;
 		if (FAILED(ipNetworkQuery->QueryEdge(EID, dir, edgeClone))) return nullptr;
-		
+
 		n = new DEBUG_NEW_PLACEMENT NAEdge(edgeClone, capacityAttribID, costAttribID, Get(EID, otherDir), twoWayRoadsShareCap, ResTable, myTrafficModel);
 		cache->insert(NAEdgeTablePair(n));
 	}
@@ -343,6 +372,17 @@ NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
 		n = it->second;
 	}
 	return n;
+}
+
+NAEdgePtr NAEdgeCache::New(INetworkEdgePtr edge)
+{
+	long EID;
+	esriNetworkEdgeDirection dir;
+
+	if (FAILED(edge->get_EID(&EID))) return nullptr;
+	if (FAILED(edge->get_Direction(&dir))) return nullptr;
+
+	return New(EID, dir);
 }
 
 void NAEdgeCache::CleanAllEdgesAndRelease(double minPop2Route, EvcSolverMethod solver)
@@ -456,12 +496,6 @@ void NAEdgeMap::Erase(long eid, esriNetworkEdgeDirection dir)
 
 	NAEdgeTableItr i = cache->find(eid);
 	if (i != cache->end()) cache->erase(i);
-}
-
-void NAEdgeMap::CallHowDirty(EvcSolverMethod method, double minPop2Route, bool exhaustive)
-{
-	for (const auto & i : *cacheAlong  ) i.second->HowDirty(method, minPop2Route, exhaustive);
-	for (const auto & i : *cacheAgainst) i.second->HowDirty(method, minPop2Route, exhaustive);
 }
 
 HRESULT NAEdgeMap::Insert(NAEdgePtr edge)

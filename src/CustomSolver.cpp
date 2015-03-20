@@ -46,7 +46,7 @@ public:
 			 // set program start for memory leak detection (DEBUG Mode)
 				_ASSERTE(_CrtCheckMemory());
 				// turn the next line on to activate heap checking during debug
-				// CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_EVERY_1024_DF);
+				/// _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_EVERY_1024_DF);
 				break;
 
 			case DLL_THREAD_ATTACH:

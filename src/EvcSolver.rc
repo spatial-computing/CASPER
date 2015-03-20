@@ -3,17 +3,17 @@
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "winres.h"
 #include "gitdescribe.h"
 
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 // English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
@@ -21,7 +21,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 
 #ifdef APSTUDIO_INVOKED
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 //
 // TEXTINCLUDE
 //
@@ -46,14 +46,15 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-//******************************************************************************************/
+
+/////////////////////////////////////////////////////////////////////////////
 //
 // Version
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 10,2,5,0
- PRODUCTVERSION 10,2,5,0
+ FILEVERSION 10,2,6,0
+ PRODUCTVERSION 10,2,6,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,14 +69,14 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "USC SSI"
-            VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
-            VALUE "FileVersion", GIT_DESCRIBE
-            VALUE "InternalName", "EvcSolver32.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2015"
-            VALUE "OriginalFilename", "EvcSolver32.dll"
-            VALUE "ProductName", PROJ_NAME_S
-            VALUE "ProductVersion", GIT_DESCRIBE
+			VALUE "CompanyName", "USC SSI"
+			VALUE "FileDescription", "Evacuation Routing Network Analyst Tool"
+			VALUE "FileVersion", GIT_DESCRIBE
+			VALUE "InternalName", "EvcSolver32.dll"
+			VALUE "LegalCopyright", "Copyright (C) 2015"
+			VALUE "OriginalFilename", "EvcSolver32.dll"
+			VALUE "ProductName", PROJ_NAME_S
+			VALUE "ProductVersion", GIT_DESCRIBE
         END
     END
     BLOCK "VarFileInfo"
@@ -85,14 +86,14 @@ BEGIN
 END
 
 
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 //
 // REGISTRY
 //
 
 IDR_CUSTOMSOLVER        REGISTRY                "EvcSolver.rgs"
 
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
@@ -104,20 +105,20 @@ FONT 8, "Arial", 0, 0, 0x1
 BEGIN
     GROUPBOX        "Evacuation Options",IDC_SearchGroup,7,25,190,156
     GROUPBOX        "General Options",IDC_GeneralOptions,7,187,190,74
-    GROUPBOX        "Traffic Options",IDC_CapacityOptions,205,93,191,73
+    GROUPBOX        "Traffic Options",IDC_CapacityOptions,205,99,191,73
     GROUPBOX        "Flocking Model Options",IDC_FlockOptions,205,179,191,82
-    GROUPBOX        "Routing Options",IDC_RoutingOptions,205,25,191,55
-    LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,217,149,119,8
-    EDITTEXT        IDC_EDIT_SAT,343,143,46,14,ES_AUTOHSCROLL
-    LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,130,108,8
-    EDITTEXT        IDC_EDIT_Critical,343,124,46,14,ES_AUTOHSCROLL
-    LTEXT           "Capacity Network Attribute:",IDC_STATIC_Capacity,20,41,91,8
-    COMBOBOX        IDC_COMBO_CAPACITY,113,39,76,37,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,59,91,8
-    COMBOBOX        IDC_COMBO_METHOD,113,57,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Traffic Model:",IDC_STATIC,217,111,84,8
-    COMBOBOX        IDC_COMBO_TRAFFICMODEL, 298, 108, 91, 50, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Population split or group:", IDC_CHECK_SEPARABLE, 19, 201, 91, 12
+    GROUPBOX        "Routing Options",IDC_RoutingOptions,205,25,191,68
+    LTEXT           "Saturation Density per Unit Capacity:",IDC_LableSat,217,156,119,8
+    EDITTEXT        IDC_EDIT_SAT,343,150,46,14,ES_AUTOHSCROLL
+    LTEXT           "Critical Density per Unit Capacity:",IDC_LableCritical,217,137,108,8
+    EDITTEXT        IDC_EDIT_Critical,343,131,46,14,ES_AUTOHSCROLL
+    LTEXT           "Capacity Network Attribute:",IDC_STATIC_Capacity,217,41,91,8
+    COMBOBOX        IDC_COMBO_CAPACITY,313,39,76,37,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Route Optimization Method:",IDC_STATIC_METHOD,20,42,91,8
+    COMBOBOX        IDC_COMBO_METHOD,124,40,65,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Traffic Model:",IDC_STATIC,217,116,84,8
+    COMBOBOX        IDC_COMBO_TRAFFICMODEL,298,113,91,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Population split or group:",IDC_CHECK_SEPARABLE,19,201,91,12
     CONTROL         "Export Edge/Street Statistics",IDC_CHECK_EDGESTAT,
                     "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,215,115,13
     LTEXT           "Cost per Safe Zone Density:",IDC_LableZoneDensity,20,114,95,8
@@ -127,8 +128,8 @@ BEGIN
     LTEXT           "Snapshot Interval:",IDC_STATIC_FlockSnapInterval,217,227,59,8
     EDITTEXT        IDC_EDIT_FlockSimulationInterval,343,239,46,14,ES_AUTOHSCROLL
     LTEXT           "Simulation Interval:",IDC_STATIC_FlockSimulationInterval,217,244,60,8
-    LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,217,41,77,8
-    COMBOBOX        IDC_COMBO_COST,298,39,91,46,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Cost Network Attribute:",IDC_STATIC_Cost,217,59,77,8
+    COMBOBOX        IDC_COMBO_COST,298,57,91,46,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Two way roads share capacity",IDC_CHECK_SHARECAP,"Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,19,230,129,13
     LTEXT           "Init Delay Cost Per Evacuee:",IDC_STATIC_INITDELAY,20,96,102,8
     EDITTEXT        IDC_EDIT_INITDELAY,142,94,47,14,ES_AUTOHSCROLL
@@ -141,17 +142,19 @@ BEGIN
     EDITTEXT        IDC_EDIT_SELFISH,142,145,47,14,ES_AUTOHSCROLL
     LTEXT           "Selfish Routing Ratio:",IDC_Lable_SelfishRatio,20,146,78,8
     LTEXT           "CARMA Sort Direction:",IDC_STATIC_CarmaSort,20,76,76,8
-    COMBOBOX        IDC_COMBO_CarmaSort,113,74,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "UTurn Policy:",IDC_STATIC_UTurn,217,58,65,8
-    COMBOBOX        IDC_COMBO_UTurn,298,57,91,38,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,WS_EX_TRANSPARENT
+    COMBOBOX        IDC_COMBO_CarmaSort,124,74,65,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "UTurn Policy:",IDC_STATIC_UTurn,217,75,65,8
+    COMBOBOX        IDC_COMBO_UTurn,273,74,116,38,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,WS_EX_TRANSPARENT
     EDITTEXT        IDC_EDIT_Iterative,142,162,47,14,ES_AUTOHSCROLL
     LTEXT           "Iterative Solver Ratio:",IDC_Lable_IterationRatio,20,163,120,8
-    LTEXT           "CASPER for ArcGIS v10.2.3",IDC_STATIC_Title,7,7,389,14
-    COMBOBOX        IDC_CMB_GroupOption,113,199,76,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "CASPER for ArcGIS v10.2.3",IDC_STATIC_Title,7,5,389,14
+    COMBOBOX        IDC_CMB_GroupOption,124,199,65,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dynamic Mode (experimental):",IDC_STATIC_DYNMODE,20,60,101,8
+    COMBOBOX        IDC_COMBO_DYNMODE,124,57,65,37,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 //
 // DESIGNINFO
 //
@@ -170,26 +173,31 @@ END
 #endif    // APSTUDIO_INVOKED
 
 
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 //
 // String Table
 //
 
 STRINGTABLE
 BEGIN
-    IDS_PROJNAME                   PROJ_NAME_S
+	IDS_PROJNAME                   PROJ_NAME_S
     IDS_TITLEEvcSolverPROPPAGE     "Evacuation Settings"
     IDS_HELPFILEEvcSolverPROPPAGE  "EvacuationSolverHelpFile"
     IDS_DOCSTRINGEvcSolverPROPPAGE "Evacuation Settings"
 END
 
 #endif    // English (United States) resources
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
+
+
 
 #ifndef APSTUDIO_INVOKED
-//******************************************************************************************/
+/////////////////////////////////////////////////////////////////////////////
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-//******************************************************************************************/
+
+
+/////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+

@@ -13,15 +13,22 @@
 
 #include "StdAfx.h"
 
-enum class EdgeDirtyState : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
+#ifndef CASPER_INFINITY
+#define CASPER_INFINITY 3.402823466e+38
+#endif
+
+enum class EdgeDirtyState      : unsigned char { CleanState = 0x0, CostIncreased = 0x1, CostDecreased = 0x2 };
 enum class NAEdgeMapGeneration : unsigned char { None = 0x0, OldGen = 0x1, NewGen = 0x2, AllGens = 0x3 };
-enum class EvacueeStatus : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2 };
-enum class QueryDirection : unsigned char { Forward = 0x1, Backward = 0x2 };
-enum class FlockingStatus : unsigned char { None = '\0', Init = 'I', Moving = 'M', End = 'E', Stopped = 'S', Collided = 'C' };
+enum class EvacueeStatus       : unsigned char { Unprocessed = 0x0, Processed = 0x1, Unreachable = 0x2, CARMALooking = 0x3 };
+enum class QueryDirection      : unsigned char { Forward = 0x1, Backward = 0x2 };
+enum class FlockingStatus      : unsigned char { None = '\0', Init = 'I', Moving = 'M', End = 'E', Stopped = 'S', Collided = 'C' };
+enum class EdgeDirection       : unsigned char { None = 0x0, Along = 0x1, Against = 0x2, Both = 0x3 };
+enum class PathStatus          : unsigned char { ActiveComplete = 0x0, FrozenComplete = 0x1, FrozenSplitted = 0x2 };
 
 [export, uuid("096CB996-9144-4CC3-BB69-FCFAA5C273FC")] enum class EvcSolverMethod : unsigned char { SPSolver = 0x0, CCRPSolver = 0x1, CASPERSolver = 0x2 };
 [export, uuid("BFDD2DB3-DA25-42CA-8021-F67BF7D14948")] enum class EvcTrafficModel : unsigned char { FLATModel = 0x0, STEPModel = 0x1, LINEARModel = 0x2, POWERModel = 0x3, EXPModel = 0x4 };
 [export, uuid("C46A6356-07A6-473A-B39F-FBB74469201D")] enum class EvacueeGrouping : unsigned char { None = 0x0, Merge = 0x1, Separate = 0x2, MergeSeparate = 0x3 };
+[export, uuid("1B84C35A-9585-49DA-9B81-BB4873E8D331")] enum class DynamicMode     : unsigned char { Disabled = 0x0, Simple = 0x1, Full = 0x2, Smart = 0x3 };
 
 // enum for carma sort setting
 [export, uuid("AAC29CC5-80A9-454A-984B-43525917E53B")] enum CARMASort : unsigned char
@@ -29,6 +36,7 @@ enum class FlockingStatus : unsigned char { None = '\0', Init = 'I', Moving = 'M
 
 DEFINE_ENUM_FLAG_OPERATORS(NAEdgeMapGeneration)
 DEFINE_ENUM_FLAG_OPERATORS(EvacueeGrouping)
+DEFINE_ENUM_FLAG_OPERATORS(EdgeDirection)
 template <class T> inline bool CheckFlag(T var, T flag) { return (var & flag) != T::None; }
 /*
 #define FLOCK_OBJ_STAT char
@@ -128,7 +136,7 @@ protected:
 			S range = min(newCap, capacity);
 			T * tempdata = new DEBUG_NEW_PLACEMENT T[newCap];
 			for (S i = ZeroSize; i < range; ++i) tempdata[i] = data[i];
-			delete[] data;
+			delete [] data;
 			data = tempdata;
 		}
 		capacity = newCap;
@@ -184,6 +192,53 @@ public:
 		data[index] = data[--_size];
 	}
 
+	/// TODO this iterator is still bugy if you use it with std::sort ... or maybe other STL functions. Be careful.
+	class iterator : public virtual std::iterator<std::random_access_iterator_tag, T>
+	{
+	private:
+		GrowingArrayList<T, S, ZeroSize> & myList;
+		S myIndex;
+
+	public:
+		iterator(GrowingArrayList<T, S, ZeroSize> & list, S index = ZeroSize) : myList(list), myIndex(index) { };
+		iterator(const iterator & copy) : myList(copy.myList), myIndex(copy.myIndex) { };
+		
+		iterator & operator=(const iterator & rhs)
+		{
+			if (&myList != &(rhs.myList)) throw std::logic_error("operator call on different iterators");
+			myIndex = rhs.myIndex;
+			return *this;
+		}
+
+		bool operator<(const iterator & rhs) const
+		{
+			if (&myList != &(rhs.myList)) throw std::logic_error("operator call on different iterators");
+			return myIndex < rhs.myIndex;
+		}
+
+		bool operator>(const iterator & rhs) const
+		{
+			if (&myList != &(rhs.myList)) throw std::logic_error("operator call on different iterators");
+			return myIndex > rhs.myIndex;
+		}
+
+		iterator & operator++() { ++myIndex; return *this; }
+		iterator operator++(int){ ++myIndex; return *this; }
+		iterator & operator--() { --myIndex; return *this; }
+		T & operator*() { return myList[myIndex]; }
+		bool operator==(iterator const & rhs) const { return &myList == &(rhs.myList) && myIndex == rhs.myIndex; }
+		bool operator!=(iterator const & rhs) const { return !(*this == rhs); }
+
+		// random access operators
+		iterator & operator+=(S n) { myIndex += n; return *this; }
+		iterator & operator-=(S n) { myIndex -= n; return *this; }
+		iterator operator+(S n) const { return iterator(myList, myIndex + n); }
+		iterator operator-(S n) const { return iterator(myList, myIndex - n); }
+		friend iterator operator+(S n, iterator const & rhs) { return iterator(rhs.myList, rhs.myIndex + n); }
+		friend iterator operator-(S n, iterator const & rhs) { return iterator(rhs.myList, rhs.myIndex - n); }
+		friend difference_type operator-(iterator const & lhs, iterator const & rhs) { return lhs.myIndex - rhs.myIndex; }
+	};
+
 	class const_iterator
 	{
 	private:
@@ -192,7 +247,10 @@ public:
 
 	public:
 		const_iterator(const GrowingArrayList<T, S, ZeroSize> & list, S index = ZeroSize) : myList(list), myIndex(index) { };
+		const_iterator(const const_iterator & copy) : myList(copy.myList), myIndex(copy.myIndex) { };
+
 		const_iterator & operator++() { ++myIndex; return *this; }
+		const_iterator & operator--() { --myIndex; return *this; }
 		const T & operator*() const { return myList[myIndex]; }
 		bool operator==(const_iterator const & rhs) const { return &myList == &(rhs.myList) && myIndex == rhs.myIndex; }
 		bool operator!=(const_iterator const & rhs) const { return !(*this == rhs); }
@@ -200,6 +258,8 @@ public:
 
 	const_iterator begin() const { return const_iterator(*this); }
 	const_iterator end()   const { return const_iterator(*this, _size); }
+	iterator begin()  { return iterator(*this); }
+	iterator end()    { return iterator(*this, _size); }
 };
 
 template <class T, class S = UINT8, S ZeroSize = 0>
@@ -228,7 +288,7 @@ public:
 
 	using baseArray::begin;
 	using baseArray::end;
-	using baseArray::const_iterator;
+	using baseArray::iterator;
 
 	MinimumArrayList(S cap = ZeroSize) : GrowingArrayList<std::pair<K, V>, S, ZeroSize>(cap), minValueIndex(ZeroSize) { }
 
@@ -288,7 +348,7 @@ public:
 	using map::cbegin;
 	using map::cend;
 
-	Histogram(size_t capacity = 0) : map(capacity), maxWeight(-FLT_MAX) { }
+	Histogram(size_t capacity = 0) : map(capacity), maxWeight(-CASPER_INFINITY) { }
 	void WeightedAdd(const std::vector<T> & list, double weight) { for (const auto & i : list) WeightedAdd(i, weight); }
 	virtual ~Histogram() { }
 

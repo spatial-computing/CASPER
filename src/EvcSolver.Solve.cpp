@@ -144,6 +144,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	// Some timing functions
 	FILETIME cpuTimeS, cpuTimeE, sysTimeS, sysTimeE, createTime, exitTime;
 	BOOL c;
+	bool flagBadDynamicChangeSnapping = false;
 	double inputSecSys, calcSecSys, flockSecSys, outputSecSys, inputSecCpu, calcSecCpu, flockSecCpu, outputSecCpu;
 	__int64 tenNanoSec64;
 
@@ -171,12 +172,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_EDGES_NAME), &ipUnk))) return hr;
 	INAClassPtr ipEdgesNAClass(ipUnk);
 	if (FAILED(hr = ipEdgesNAClass->DeleteAllRows())) return hr;
-
-	ipUnk = nullptr;
-	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_ROUTEEDGES_NAME), &ipUnk))) return hr;
-	bool ExportRouteEdges = ipUnk;
-	INAClassPtr ipRouteEdgesNAClass(ipUnk);
-	if (ExportRouteEdges) { if (FAILED(hr = ipRouteEdgesNAClass->DeleteAllRows())) return hr; }
 
 	ipUnk = nullptr;
 	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_FLOCKS_NAME), &ipUnk))) return hr;
@@ -210,13 +205,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipBackwardStar->put_BacktrackPolicy(backtrack))) return hr;
 
 	// Get the "Barriers" NAClass table (we need the NALocation objects from this NAClass to push barriers into the Forward Star)
-	ITablePtr ipBarriersTable;
-	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_BARRIERS_NAME), &ipBarriersTable))) return hr;
+	ITablePtr ipBarriersTable = nullptr;
+	if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_OldBARRIERS_NAME), &ipBarriersTable, false))) return hr;
 
-	// Load the barriers
-	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipForwardStar))) return hr;
-	if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipBackwardStar))) return hr;
-
+	if (ipBarriersTable)
+	{
+		// Load the barriers
+		if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipForwardStar))) return hr;
+		if (FAILED(hr = LoadBarriers(ipBarriersTable, ipNetworkQuery, ipBackwardStar))) return hr;
+	}
 	INetworkAttribute2Ptr networkAttrib = nullptr;
 	VARIANT_BOOL useRestriction;
 
@@ -483,7 +480,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 					if (!isRestricted)
 					{
 						myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipElement, nullptr);
-						currentEvacuee->Vertices->push_back(myVertex);
+						currentEvacuee->VerticesAndRatio->push_back(myVertex);
 					}
 				}
 
@@ -510,8 +507,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipEdge));
-							myVertex->GVal = posAlongEdge * myVertex->GetBehindEdge()->OriginalCost;
-							currentEvacuee->Vertices->push_back(myVertex);
+							myVertex->GVal = posAlongEdge /** myVertex->GetBehindEdge()->OriginalCost*/;
+							currentEvacuee->VerticesAndRatio->push_back(myVertex);
 						}
 					}
 
@@ -533,18 +530,26 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(nullptr, ipCurrentJunction))) return hr;
 
 							myVertex = new DEBUG_NEW_PLACEMENT NAVertex(ipCurrentJunction, ecache->New(ipOtherEdge));
-							myVertex->GVal = posAlongEdge * myVertex->GetBehindEdge()->OriginalCost;
-							currentEvacuee->Vertices->push_back(myVertex);
+							myVertex->GVal = posAlongEdge /** myVertex->GetBehindEdge()->OriginalCost*/;
+							currentEvacuee->VerticesAndRatio->push_back(myVertex);
 						}
 					}
 				}
 			}
-			if (currentEvacuee->Vertices->size() > 0) Evacuees->Insert(currentEvacuee);
+			if (currentEvacuee->VerticesAndRatio->size() > 0) Evacuees->Insert(currentEvacuee);
 			else delete currentEvacuee;
 		}
 	}
 
-	Evacuees->FinilizeGroupings(5.0 * costPerSec); // five seconds diameter for clustering
+	// load dynamic changes table
+	ipUnk = nullptr;
+	ITablePtr ipDynamicTable = nullptr;
+	if (FAILED(hr = ipNAClasses->get_ItemByName(ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipUnk))) return hr;
+	bool DynamicTableExist = ipUnk;
+	if (DynamicTableExist) { if (FAILED(hr = GetNAClassTable(pNAContext, ATL::CComBSTR(CS_DYNCHANGES_NAME), &ipDynamicTable))) return hr; }
+	std::shared_ptr<DynamicDisaster> disasterTable(new DEBUG_NEW_PLACEMENT DynamicDisaster(ipDynamicTable, CASPERDynamicMode, flagBadDynamicChangeSnapping, solverMethod));
+
+	Evacuees->FinilizeGroupings(5.0 * costPerSec, disasterTable->GetDynamicMode()); // five seconds diameter for clustering
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -562,7 +567,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	hr = S_OK;
 	UpdatePeakMemoryUsage();
 	if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts,
-			ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio))) return hr;
+		ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio, disasterTable))) return hr;
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -571,6 +576,9 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	tenNanoSec64 = (*((__int64 *) &cpuTimeE)) - (*((__int64 *) &cpuTimeS));
 	calcSecCpu = tenNanoSec64 / 10000000.0;
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeS, &cpuTimeS);
+
+	disasterTable->Flush();
+	ecache->InitSourceCache();
 
 	//******************************************************************************************/
 	// Write output
@@ -589,6 +597,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	std::vector<EvcPathPtr>::const_iterator pit;
 	bool sourceNotFoundFlag = false;
 	IFeatureClassContainerPtr ipFeatureClassContainer(ipNetworkDataset);
+	size_t StuckEvacuee = 0;
 
 	// load the Mercator projection and analysis projection
 	ISpatialReferencePtr ipNAContextSR;
@@ -604,9 +613,13 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	for (const auto & currentEvacuee : *Evacuees)
 	{
 		// get all points from the stack and make one polyline from them. this will be the path.
-		if (currentEvacuee->Paths->empty())
+		if (currentEvacuee->Paths->empty() || currentEvacuee->Status == EvacueeStatus::Unreachable)
 		{
-			if (currentEvacuee->Population > 0.0) *pIsPartialSolution = VARIANT_TRUE;
+			if (currentEvacuee->Population > 0.0)
+			{
+				*pIsPartialSolution = VARIANT_TRUE;
+				++StuckEvacuee;
+			}
 		}
 		else
 		{
@@ -632,27 +645,20 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 		if (FAILED(hr = ipStepProgressor->put_Position(0))) return hr;
 	}
 
-	std::sort(tempPathList.begin(), tempPathList.end(), EvcPath::LessThanOrder);
+	std::sort(tempPathList.begin(), tempPathList.end(), EvcPath::LessThanPathOrder2);
 
 	// Get the "Routes" NAClass feature class
 	IFeatureClassPtr ipRoutesFC(ipRoutesNAClass);
-	IFeatureClassPtr ipRouteEdgesFC(ipRouteEdgesNAClass);
-
-	// If EdgeStats are not going to be exported then we don't even bother with RouteEdges
-	ExportRouteEdges &= exportEdgeStat;
-
+	
 	// Create an insert cursor and feature buffer from the "Routes" feature class to be used to write routes
-	IFeatureCursorPtr ipFeatureCursorR, ipFeatureCursorE, ipFeatureCursorU;
+	IFeatureCursorPtr ipFeatureCursorR, ipFeatureCursorU;
 	if (FAILED(hr = ipRoutesFC->Insert(VARIANT_TRUE, &ipFeatureCursorR))) return hr;
-	if (ExportRouteEdges) if (FAILED(hr = ipRouteEdgesFC->Insert(VARIANT_TRUE, &ipFeatureCursorE))) return hr;
 
-	IFeatureBufferPtr ipFeatureBufferR, ipFeatureBufferE;
+	IFeatureBufferPtr ipFeatureBufferR;
 	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBufferR))) return hr;
-	if (ExportRouteEdges) if (FAILED(hr = ipRouteEdgesFC->CreateFeatureBuffer(&ipFeatureBufferE))) return hr;
 
 	// Query for the appropriate field index values in the "routes" feature class
-	long evNameFieldIndex = -1, evacTimeFieldIndex = -1, orgTimeFieldIndex = -1, RIDFieldIndex = -1, ERRouteFieldIndex = -1, EREdgeFieldIndex = -1,
-		ERSeqFieldIndex = -1, ERFromPosFieldIndex = -1, ERToPosFieldIndex = -1, ERCostFieldIndex = -1, EREdgeDirFieldIndex = -1;
+	long evNameFieldIndex = -1, evacTimeFieldIndex  = -1, orgTimeFieldIndex = -1, RIDFieldIndex    = -1;
 
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
@@ -660,16 +666,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_RID), &RIDFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
 	if (popFieldIndex < 0) { if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr; }
-	if (ExportRouteEdges)
-	{
-		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_RID), &ERRouteFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_EID), &EREdgeFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_SEQ), &ERSeqFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_FromP), &ERFromPosFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_ToP), &ERToPosFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_COST), &ERCostFieldIndex))) return hr;
-		if (FAILED(hr = ipRouteEdgesFC->FindField(ATL::CComBSTR(CS_FIELD_DIR), &EREdgeDirFieldIndex))) return hr;
-	}
 
 #ifdef DEBUG
 	std::wostringstream os_;
@@ -680,14 +676,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 #endif
 	for (const auto & p : tempPathList)
 	{
-		if (FAILED(hr = p->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, initDelayCostPerPop, ipFeatureBufferR,
-			ipFeatureBufferE, ipFeatureCursorR, ipFeatureCursorE, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, ERRouteFieldIndex, EREdgeFieldIndex, EREdgeDirFieldIndex, ERSeqFieldIndex,
-			ERFromPosFieldIndex, ERToPosFieldIndex, ERCostFieldIndex, ExportRouteEdges))) return hr;
+		if (FAILED(hr = p->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, ipFeatureBufferR,
+			ipFeatureCursorR, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex))) return hr;
 	}
 
 	// flush the insert buffer
 	ipFeatureCursorR->Flush();
-	if (ExportRouteEdges) ipFeatureCursorE->Flush();
 
 	// copy all route OIDs to RouteID field
 	if (RIDFieldIndex > -1)
@@ -970,10 +964,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	ATL::CString performanceMsg, CARMALoopMsg, ZeroHurMsg, CARMAExtractsMsg, CacheHitMsg, initMsg, iterationMsg1, iterationMsg2;
 	size_t mem = (peakMemoryUsage - baseMemoryUsage) / 1048576;
 
-	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList.size());
-
+	initMsg.Format(_T("%s(%s) version %s. %d routes are generated from the evacuee points. %d evacuee(s) were unreachable."), PROJ_NAME, PROJ_ARCH, _T(GIT_DESCRIBE), tempPathList.size(), StuckEvacuee);
 	CARMALoopMsg.Format(_T("The algorithm performed %d CARMA loop(s) in %.2f seconds. Peak memory usage (exclude flocking) was %d MB."), CARMAExtractCounts.size(), carmaSec, max(0, mem));
-
 	CacheHitMsg.Format(_T("Traffic model calculation had %.2f%% cache hit."), ecache->GetCacheHitPercentage());
 
 	performanceMsg.Format(_T("Timing: Input = %.2f (kernel), %.2f (user); Calculation = %.2f (kernel), %.2f (user); Output = %.2f (kernel), %.2f (user); Flocking = %.2f (kernel), %.2f (user); Total = %.2f"),
@@ -1015,9 +1007,6 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (!iterationMsg2.IsEmpty()) pMessages->AddMessage(ATL::CComBSTR(iterationMsg2));
 	if (ecache->GetCacheHitPercentage() < 80.0) pMessages->AddMessage(ATL::CComBSTR(CacheHitMsg));
 
-	// check version lock: if the evclayer is too old to be solved then add a warning
-	if (!ExportRouteEdges && exportEdgeStat) pMessages->AddWarning(ATL::CComBSTR(_T("This evacuation routing layer is old and does not have the RouteEdges table.")));
-
 	if (EvacueesWithRestrictedSafezone > 0)
 	{
 		ATL::CString RestrictedWarning;
@@ -1026,13 +1015,32 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 
 	if (!(simulationIncompleteEndingMsg.IsEmpty())) pMessages->AddWarning(ATL::CComBSTR(simulationIncompleteEndingMsg));
-	if (IsSafeZoneMissed) pMessages->AddWarning(ATL::CComBSTR(L"One or more safe zones where snapped into the same network junction and hence they were merged into one safe zone. It this is not OK, use a different Network Location setting."));
+	if (IsSafeZoneMissed) pMessages->AddWarning(ATL::CComBSTR(
+		L"One or more safe zones where snapped into the same network junction and hence they were merged into one safe zone. If this is not OK, use a different Network Location setting."));
 
 	if (!(collisionMsg.IsEmpty()))
 	{
 		collisionMsg.Insert(0, _T("Some collisions have been reported at the following intervals: "));
 		pMessages->AddWarning(ATL::CComBSTR(collisionMsg));
 	}
+
+	// check if user wants a dynamic CASPER but we don't have the dynamic change table
+	if (!DynamicTableExist && CASPERDynamicMode != DynamicMode::Disabled)
+	{
+		CASPERDynamicMode = DynamicMode::Disabled;
+		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode but the network analysis layer does not have the DynamicChanges feature class.")));
+	}
+	if (disasterTable->GetDynamicMode() > DynamicMode::Simple && exportEdgeStat)
+		pMessages->AddMessage(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and export edge statistics. The exported statistics would be the final edge status (at infinite time) and does not reflect the intermediate edge congestions. The Routes layer however does reflect the most accurate congestions.")));
+
+	if (disasterTable->GetDynamicMode() > DynamicMode::Simple && flockingEnabled == VARIANT_TRUE)
+		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and flocking simulation. The simulation does not honor the dynamic changes and hence the results will not necessarily comply.")));
+	
+	if (Evacuees->IsSeperationDisabledForDynamicCASPER())
+		pMessages->AddWarning(ATL::CComBSTR(_T("You have enabled the dynamic CASPER mode and evacuee seperation feature. They are not compatible so evacuee seperation has been temporarily disabled.")));
+	
+	if (flagBadDynamicChangeSnapping)
+		pMessages->AddWarning(ATL::CComBSTR(_T("You have snapped some or all of DynamicChange polygons to vertices instead of edges and hence I cannot apply them properly. They have been ignored.")));
 
 	// since vertices inside the cache are still pointing to some edges it's safer to clean them first
 	vcache = nullptr;
