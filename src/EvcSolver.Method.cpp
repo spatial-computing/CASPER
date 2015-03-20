@@ -17,7 +17,7 @@
 HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMessages, ITrackCancel* pTrackCancel, IStepProgressorPtr ipStepProgressor, std::shared_ptr<EvacueeList> AllEvacuees,
 	std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, std::shared_ptr<SafeZoneTable> safeZoneList, double & carmaSec, std::vector<unsigned int> & CARMAExtractCounts,
 	INetworkDatasetPtr ipNetworkDataset, unsigned int & EvacueesWithRestrictedSafezone, std::vector<double> & GlobalEvcCostAtIteration,
-	std::vector<double> & EffectiveIterationRatio, std::shared_ptr<DynamicDisaster> dynamicDisasters)
+	std::vector<size_t> & EffectiveIterationCount, std::shared_ptr<DynamicDisaster> dynamicDisasters)
 {
 	// creating the heap for the Dijkstra search
 	MyFibonacciHeap<NAEdgePtr, NAEdgePtrHasher, NAEdgePtrEqual> heap(NAEdge::GetHeapKeyHur);
@@ -101,8 +101,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			{
 				// Indexing all the population by their surrounding vertices this will be used to sort them by network distance to safe zone. Also time the carma loops.
 				dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeS, &cpuTimeS);
-				if (FAILED(hr = CARMALoop(ipNetworkQuery, ipStepProgressor, pMessages, pTrackCancel, AllEvacuees, sortedEvacuees, vcache, ecache, safeZoneList, CARMAClosedSize,
-					carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, minPop2Route, separationRequired, RevisedCarmaSortCriteria))) goto END_OF_FUNC;
+				if (FAILED(hr = CARMALoop(ipNetworkQuery, ipStepProgressor, pMessages, pTrackCancel, AllEvacuees, RevisedCarmaSortCriteria, sortedEvacuees, vcache, ecache, safeZoneList, CARMAClosedSize,
+					carmaClosedList, leafs, CARMAExtractCounts, globalMinPop2Route, minPop2Route, separationRequired))) goto END_OF_FUNC;
 				dummy = GetProcessTimes(proc, &createTime, &exitTime, &sysTimeE, &cpuTimeE);
 				carmaSec += (*((__int64 *)&cpuTimeE)) - (*((__int64 *)&cpuTimeS)) + (*((__int64 *)&sysTimeE)) - (*((__int64 *)&sysTimeS));
 
@@ -275,7 +275,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 			if (NumberOfEvacueesInIteration > 0)
 			{
 				RevisedCarmaSortCriteria = CARMASort::ReverseFinalCost;
-				EffectiveIterationRatio.push_back(pow(double(NumberOfEvacueesInIteration) / AllEvacuees->size(), 1.0 / GlobalEvcCostAtIteration.size()));
+				EffectiveIterationCount.push_back(NumberOfEvacueesInIteration);
 			}
 		} while (NumberOfEvacueesInIteration > 0);
 		progressBaseValue += (long)AllEvacuees->size();
@@ -314,6 +314,7 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 				}
 		}
 
+	if (allPaths.empty()) return 0;
 	std::sort(allPaths.begin(), allPaths.end(), EvcPath::MoreThanFinalCost);
 
 	// setting up the best ratios
@@ -329,13 +330,12 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	// the number 'Iteration' referes to the loops that happened since the last dynamic change
 	++LocalIteration;
 	size_t GolbalIteration = GlobalEvcCostAtIteration.size();
-	size_t MaxEvacueesInIteration = size_t(AllEvacuees->size() / (pow(1.0 / iterateRatio, LocalIteration)));
+	size_t MaxEvacueesInIteration = size_t(allPaths.size() / (pow(1.0 / iterateRatio, LocalIteration)));
 
 	if (LocalIteration > 1)
 	{
 		// check if it got worse and then undo it
-		if (GlobalEvcCostAtIteration[GolbalIteration - 1] >  GlobalEvcCostAtIteration[GolbalIteration - 2] ||
-		  ((GlobalEvcCostAtIteration[GolbalIteration - 1] == GlobalEvcCostAtIteration[GolbalIteration - 2]) && iterateRatio >= 1.0f))
+		if (GlobalEvcCostAtIteration[GolbalIteration - 1] >= GlobalEvcCostAtIteration[GolbalIteration - 2])
 		{
 			std::sort(detachedPaths->begin(), detachedPaths->end(), EvcPath::LessThanPathOrder2);
 			for (const auto & path : *detachedPaths) path->CleanYourEvacueePaths(solverMethod, touchededges);
@@ -367,9 +367,9 @@ size_t EvcSolver::FindPathsThatNeedToBeProcessedInIteration(std::shared_ptr<Evac
 	return EvacueesForNextIteration.size();
 }
 
-HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr ipStepProgressor, IGPMessages* pMessages, ITrackCancel* pTrackCancel, std::shared_ptr<EvacueeList> Evacuees, std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAVertexCache> vcache,
-	std::shared_ptr<NAEdgeCache> ecache, std::shared_ptr<SafeZoneTable> safeZoneList, size_t & closedSize, std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAEdgeContainer> leafs,
-	std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired, CARMASort RevisedCarmaSortCriteria)
+HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr ipStepProgressor, IGPMessages* pMessages, ITrackCancel* pTrackCancel, std::shared_ptr<EvacueeList> Evacuees, CARMASort RevisedCarmaSortCriteria,
+	std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, std::shared_ptr<SafeZoneTable> safeZoneList, size_t & closedSize,
+	std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAEdgeContainer> leafs, std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired)
 {
 	HRESULT hr = S_OK;
 

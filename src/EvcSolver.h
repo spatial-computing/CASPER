@@ -301,9 +301,10 @@ public:
 private:
 
 	HRESULT SolveMethod(INetworkQueryPtr, IGPMessages *, ITrackCancel *, IStepProgressorPtr, std::shared_ptr<EvacueeList>, std::shared_ptr<NAVertexCache>, std::shared_ptr<NAEdgeCache>,
-		    std::shared_ptr<SafeZoneTable>, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &, std::vector<double> &, std::shared_ptr<DynamicDisaster>);
-	HRESULT CARMALoop(INetworkQueryPtr, IStepProgressorPtr, IGPMessages*, ITrackCancel*, std::shared_ptr<EvacueeList>, std::shared_ptr<std::vector<EvacueePtr>>, std::shared_ptr<NAVertexCache>,
-		    std::shared_ptr<NAEdgeCache>, std::shared_ptr<SafeZoneTable>, size_t &, std::shared_ptr<NAEdgeMapTwoGen>, std::shared_ptr<NAEdgeContainer>, std::vector<unsigned int> &, double, double &, bool, CARMASort);
+		    std::shared_ptr<SafeZoneTable>, double &, std::vector<unsigned int> &, INetworkDatasetPtr, unsigned int &, std::vector<double> &, std::vector<size_t> &, std::shared_ptr<DynamicDisaster>);
+	HRESULT CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr ipStepProgressor, IGPMessages* pMessages, ITrackCancel* pTrackCancel, std::shared_ptr<EvacueeList> Evacuees, CARMASort RevisedCarmaSortCriteria,
+		    std::shared_ptr<std::vector<EvacueePtr>> SortedEvacuees, std::shared_ptr<NAVertexCache> vcache, std::shared_ptr<NAEdgeCache> ecache, std::shared_ptr<SafeZoneTable> safeZoneList, size_t & closedSize,
+		    std::shared_ptr<NAEdgeMapTwoGen> closedList, std::shared_ptr<NAEdgeContainer> leafs, std::vector<unsigned int> & CARMAExtractCounts, double globalMinPop2Route, double & minPop2Route, bool separationRequired);
 	HRESULT BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedSet** ppDefinitions, IDENetworkDataset* pDENDS);
 	HRESULT CreateSideOfEdgeDomain(IDomain** ppDomain);
 	HRESULT CreateCurbApproachDomain(IDomain** ppDomain);

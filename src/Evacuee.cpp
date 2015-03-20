@@ -42,7 +42,7 @@ EvcPath::EvcPath(double initDelayCostPerPop, double routedPop, int order, Evacue
 	myEvc = evc;
 }
 
-EvcPath::EvcPath(const EvcPath & that) : baselist(), MySafeZone(that.MySafeZone), RoutedPop(that.RoutedPop), Status(PathStatus::ActiveComplete)
+EvcPath::EvcPath(const EvcPath & that) : baselist(), MySafeZone(that.MySafeZone), RoutedPop(that.RoutedPop), Status(that.Status)
 {
 	PathStartCost = that.PathStartCost;
 	FinalEvacuationCost = that.FinalEvacuationCost;
@@ -60,7 +60,7 @@ bool EvcPath::LessThanPathOrder1(const Evacuee * e1, const Evacuee * e2) { retur
 size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPath::PtrHasher, EvcPath::PtrEqual> & AffectedPaths, std::vector<EvcPath *> & allPaths,
 	std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & DynamicallyAffectedEdges, double CurrentTime, EvcSolverMethod method, INetworkQueryPtr ipNetworkQuery, int & pathGenerationCount)
 {
-	size_t count = 0, segment = 0;
+	size_t count = 0, segment = 0, activeCompleteCount = 0;
 	double pathCost = 0.0, edgeRatio = 0.0, edgeCost = 0.0;
 
 	if (CurrentTime > 0.0)
@@ -73,7 +73,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 				// find the segment where we need to cut the path
 				if (path->FinalEvacuationCost > CurrentTime)
 				{
-					for (pathCost = 0.0, segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
+					for (pathCost = path->PathStartCost, segment = 0; pathCost < CurrentTime && segment < path->size(); ++segment)
 						pathCost += path->at(segment)->GetCurrentCost(method);
 
 					// segment is always moving one step ahead of pathCost and segCost.
@@ -128,8 +128,10 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 				{
 					// split this path into two seperate paths: one splittedfrozen and the other active. keep evacuee as processed.
 					EvcPathPtr newPath = new DEBUG_NEW_PLACEMENT EvcPath(*path);
+					newPath->Status = PathStatus::ActiveComplete;
 					newPath->Order = ++pathGenerationCount;
 					newPath->PathStartCost = CurrentTime;
+					++activeCompleteCount;
 
 					// pop out the rest of the segments in this path and then add it to the newPath
 					for (size_t i = path->size() - 1; i > segment; --i)
@@ -150,7 +152,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 			}
 		}
 	}
-	return count;
+	return count > 0 ? count : activeCompleteCount;
 }
 
 size_t EvcPath::DynamicStep_UnreachableEvacuees(std::shared_ptr<EvacueeList> AllEvacuees, double StartCost)

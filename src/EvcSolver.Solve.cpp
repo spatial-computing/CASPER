@@ -243,7 +243,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	INALocationObjectPtr ipNALocationObject;
 	INALocationPtr ipNALocation(CLSID_NALocation);
 	IEnumNetworkElementPtr ipEnumNetworkElement;
-	std::vector<double> GlobalEvcCostAtIteration, EffectiveIterationRatio;
+	std::vector<double> GlobalEvcCostAtIteration;
+	std::vector<size_t> EffectiveIterationCount;
 	INetworkElementPtr ipElement, ipOtherElement;
 	long sourceOID, sourceID;
 	double posAlong, posAlongEdge, fromPosition, toPosition;
@@ -567,7 +568,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	hr = S_OK;
 	UpdatePeakMemoryUsage();
 	if (FAILED(hr = SolveMethod(ipNetworkQuery, pMessages, pTrackCancel, ipStepProgressor, Evacuees, vcache, ecache, safeZoneList, carmaSec, CARMAExtractCounts,
-		ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationRatio, disasterTable))) return hr;
+		ipNetworkDataset, EvacueesWithRestrictedSafezone, GlobalEvcCostAtIteration, EffectiveIterationCount, disasterTable))) return hr;
 
 	// timing
 	c = GetProcessTimes(GetCurrentProcess(), &createTime, &exitTime, &sysTimeE, &cpuTimeE);
@@ -992,13 +993,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	{
 		iterationMsg1.Format(_T("The program ran for %d iterations. Evacuation costs at each iteration are: %.2f"), GlobalEvcCostAtIteration.size(), GlobalEvcCostAtIteration[0]);
 		for (size_t i = 1; i < GlobalEvcCostAtIteration.size(); ++i) iterationMsg1.AppendFormat(_T(", %.2f"), GlobalEvcCostAtIteration[i]);
-		if (!EffectiveIterationRatio.empty())
+		if (!EffectiveIterationCount.empty())
 		{
-			iterationMsg2.Format(_T("The effective iteration ratio at each pass: %.3f"), EffectiveIterationRatio[0]);
-			for (size_t i = 1; i < EffectiveIterationRatio.size(); ++i) iterationMsg2.AppendFormat(_T(", %.3f"), EffectiveIterationRatio[i]);
+			iterationMsg2.Format(_T("The effective processed evacuees at each pass: %d"), EffectiveIterationCount[0]);
+			for (size_t i = 1; i < EffectiveIterationCount.size(); ++i) iterationMsg2.AppendFormat(_T(", %d"), EffectiveIterationCount[i]);
 		}
 	}
-
 	pMessages->AddMessage(ATL::CComBSTR(initMsg));
 	pMessages->AddMessage(ATL::CComBSTR(performanceMsg));
 	pMessages->AddMessage(ATL::CComBSTR(CARMALoopMsg));
