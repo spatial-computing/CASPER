@@ -47,10 +47,10 @@ namespace CASPERLog
                 var CarmaRex = new Regex(@"algorithm performed (\d+) CARMA", RegexOptions.None);
                 var CarmaRex2 = new Regex(@"algorithm performed (\d+) CARMA loop\(s\) in (\d+\.\d+) seconds.", RegexOptions.None);
                 var EvcTimeRex1 = new Regex(@". Evacuation cost at the end is: (\d+\.\d+)" + Environment.NewLine, RegexOptions.None);
-                var EvcTimeRex2 = new Regex(@". Evacuation costs at each iteration are: [\, \.\d]+ (\d+\.\d+)" + Environment.NewLine, RegexOptions.None);
+                var EvcTimeRex2 = new Regex(@". Evacuation costs at each pass are: [\, \.\d]+ (\d+\.\d+)" + Environment.NewLine, RegexOptions.None);
                 var MemRex = new Regex(@". Peak memory usage \(exclude flocking\) was (\d+) MB.", RegexOptions.None);
-                var ItrRex1 = new Regex(@"The program ran for (\d+) iteration", RegexOptions.None);
-                var ItrRex2 = new Regex(@"The effective iteration ratio at each pass: ([\, \.\d]+)" + Environment.NewLine, RegexOptions.None);
+                var ItrRex1 = new Regex(@"The program ran for (\d+) pass", RegexOptions.None);
+                var ItrRex2 = new Regex(@"The effective processed evacuees at each extra pass: ([\, \.\d]+)" + Environment.NewLine, RegexOptions.None);
                 Match m = null;
                 int Setup = 0;
 

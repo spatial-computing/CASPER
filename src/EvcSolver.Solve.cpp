@@ -987,15 +987,15 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	}
 	if (GlobalEvcCostAtIteration.size() == 1)
 	{
-		iterationMsg1.Format(_T("The program ran for 1 iteration. Evacuation cost at the end is: %.2f"), GlobalEvcCostAtIteration[0]);
+		iterationMsg1.Format(_T("The program ran for 1 pass. Evacuation cost at the end is: %.2f"), GlobalEvcCostAtIteration[0]);
 	}
 	else if (GlobalEvcCostAtIteration.size() > 1)
 	{
-		iterationMsg1.Format(_T("The program ran for %d iterations. Evacuation costs at each iteration are: %.2f"), GlobalEvcCostAtIteration.size(), GlobalEvcCostAtIteration[0]);
+		iterationMsg1.Format(_T("The program ran for %d passes. Evacuation costs at each pass are: %.2f"), GlobalEvcCostAtIteration.size(), GlobalEvcCostAtIteration[0]);
 		for (size_t i = 1; i < GlobalEvcCostAtIteration.size(); ++i) iterationMsg1.AppendFormat(_T(", %.2f"), GlobalEvcCostAtIteration[i]);
 		if (!EffectiveIterationCount.empty())
 		{
-			iterationMsg2.Format(_T("The effective processed evacuees at each pass: %d"), EffectiveIterationCount[0]);
+			iterationMsg2.Format(_T("The effective processed evacuees at each extra pass: %d"), EffectiveIterationCount[0]);
 			for (size_t i = 1; i < EffectiveIterationCount.size(); ++i) iterationMsg2.AppendFormat(_T(", %d"), EffectiveIterationCount[i]);
 		}
 	}
