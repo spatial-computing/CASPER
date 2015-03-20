@@ -143,6 +143,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 					path->at(segment)->Edge->SwapReservation(path, newPath);
 					newPath->push_front(dupSegment);
 					newPath->myEvc->Paths->push_front(newPath);
+					path->myEvc->Status = EvacueeStatus::Processed;
 				}
 				
 				path->erase(path->begin() + segment + 1, path->end());
