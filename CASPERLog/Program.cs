@@ -40,7 +40,7 @@ namespace CASPERLog
                     Carma = string.Empty, EvcTime = string.Empty, Mem = string.Empty, carmaTime = string.Empty, stuck = string.Empty;
                 var csvStrings = new List<string>(logs.Count());
 
-                var StuckRex = new Regex(@"routes are generated from the evacuee points. (\d+) evacuee(s) were unreachable.", RegexOptions.None);
+                var StuckRex = new Regex(@" routes are generated from the evacuee points. (\d+) evacuee\(s\) were unreachable." + Environment.NewLine, RegexOptions.None);
                 var NameRex = new Regex("\\\\([A-Za-z0-9 \\-]+)\" SKIP TERMINATE", RegexOptions.None);
                 var SetupNameRex = new Regex(@"Solved ([^ ]+) with scenario ([^ \n\r]+)" + Environment.NewLine, RegexOptions.None);                
                 var CalcRex = new Regex(@"Calculation = (\d+\.\d+) \(kernel\), (\d+\.\d+) \(user\)", RegexOptions.None);

@@ -32,17 +32,21 @@ Input_Dataset = arcpy.GetParameterAsText(1)
 if Input_Dataset == '#' or not Input_Dataset:
     raise ValueError("Input dataset is missing")
 
-Evacuation_Feature_Class_Prefix = arcpy.GetParameterAsText(2)
+Input_Layer_Location = arcpy.GetParameterAsText(2)
+if Input_Layer_Location == '#' or not Input_Layer_Location:
+    raise ValueError("Evacuation routing layer file is missing")
+
+Evacuation_Feature_Class_Prefix = arcpy.GetParameterAsText(3)
 if Evacuation_Feature_Class_Prefix == '#' or not Evacuation_Feature_Class_Prefix:
     Evacuation_Feature_Class_Prefix = "Evc_" # provide a default value if unspecified
 
-Safe_Zone_Feature_Class_Prefix = arcpy.GetParameterAsText(3)
+Safe_Zone_Feature_Class_Prefix = arcpy.GetParameterAsText(4)
 if Safe_Zone_Feature_Class_Prefix == '#' or not Safe_Zone_Feature_Class_Prefix:
     Safe_Zone_Feature_Class_Prefix = "Safe_" # provide a default value if unspecified
 
-Input_Layer_Location = arcpy.GetParameterAsText(4)
-if Input_Layer_Location == '#' or not Input_Layer_Location:
-    raise ValueError("Evacuation routing layer file is missing")
+Dynamics_Feature_Class_Prefix = arcpy.GetParameterAsText(5)
+if Dynamics_Feature_Class_Prefix == '#' or not Dynamics_Feature_Class_Prefix:
+    Dynamics_Feature_Class_Prefix = "Dynamics_" # provide a default value if unspecified
 
 # Set current workspace
 arcpy.env.workspace = Input_Dataset
@@ -60,6 +64,7 @@ for ExpName in ScenarioNames:
     # arcpy.AddMessage("Importing scenario: " + ExpName[0])
     EVC = Input_Dataset + '\\' + Evacuation_Feature_Class_Prefix + ExpName[0]
     SAFE = Input_Dataset + '\\' + Safe_Zone_Feature_Class_Prefix + ExpName[0]
+    DYN = Input_Dataset + '\\' + Dynamics_Feature_Class_Prefix + ExpName[0]
 
     # now loop over all NA layers and solve them one by one
     for lyr in arcpy.mapping.ListLayers(lyrFile):
@@ -68,15 +73,15 @@ for ExpName in ScenarioNames:
         if desc.dataType == "NALayer":
             arcpy.SetProgressorLabel("Solving " + lyr.name + " with scenario " + ExpName[0] + "...")
 
-            # if you want to change some layer properties, this may help:
-            # http://resources.arcgis.com/en/help/main/10.1/index.html#//01mr0000000v000000
-            
             # load input locations
             arcpy.AddMessage("loading input points to " + lyr.name + " from scenario " + ExpName[0])
             arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name UID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
             arcpy.AddLocations_na(lyr, "Zones", SAFE, "Name OBJECTID #;Capacity Capacity #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
+            for msg in range(0, arcpy.GetMessageCount()):
+                arcpy.AddReturnMessage(msg)
+	    arcpy.AddLocations_na(lyr, "DynamicChanges", DYN, "EdgeDirection EdgeDirection #;StartingCost Zones_StartingCost #;EndingCost Zones_EndingCost #;CostChangeRatio Zones_CostChangeRatio #;CapacityChangeRatio Zones_CapacityChangeRatio #", "5000 Meters", "Zones_StartingCost", "Streets SHAPE;SoCal_ND_Junctions NONE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "INCLUDE", "Streets #;SoCal_ND_Junctions #")
             for msg in range(0, arcpy.GetMessageCount()):
                 arcpy.AddReturnMessage(msg)
 

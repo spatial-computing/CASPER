@@ -15,7 +15,7 @@ import multiprocessing as mp
 import numpy
 
 # The function that solves the NALayer
-def Solve(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix, Safe_Zone_Prefix, ThreadCount, mpLock, ThreadNum):
+def Solve(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix, Safe_Zone_Prefix, Dynamics_Prefix, ThreadCount, msgLock, dbLock, ThreadNum):
     # Check out any necessary licenses
     if arcpy.CheckExtension("Network") == "Available":
         arcpy.CheckOutExtension("Network")
@@ -38,6 +38,7 @@ def Solve(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix,
             # arcpy.AddMessage("Importing scenario: " + ExpName[0])
             EVC = Input_Dataset + '\\' + Evacuation_Prefix + ExpName[0]
             SAFE = Input_Dataset + '\\' + Safe_Zone_Prefix + ExpName[0]
+            DYN = Input_Dataset + '\\' + Dynamics_Prefix + ExpName[0]
 
             # now loop over all NA layers and solve them one by one
             for lyr in arcpy.mapping.ListLayers(lyrFile):
@@ -60,6 +61,9 @@ def Solve(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix,
                     arcpy.AddLocations_na(lyr, "Zones", SAFE, "Name OBJECTID #;Capacity Capacity #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
                     for msg in range(0, arcpy.GetMessageCount()):
                         messages.append(arcpy.GetMessage(msg))
+		    arcpy.AddLocations_na(lyr, "DynamicChanges", DYN, "EdgeDirection EdgeDirection #;StartingCost Zones_StartingCost #;EndingCost Zones_EndingCost #;CostChangeRatio Zones_CostChangeRatio #;CapacityChangeRatio Zones_CapacityChangeRatio #", "5000 Meters", "Zones_StartingCost", "Streets SHAPE;SoCal_ND_Junctions NONE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "INCLUDE", "Streets #;SoCal_ND_Junctions #")
+		    for msg in range(0, arcpy.GetMessageCount()):
+			messages.append(arcpy.GetMessage(msg))
                     
                     # solve the layer
                     messages.append("Solving NALayer " + lyr.name + " with scenario " + ExpName[0])
@@ -72,7 +76,7 @@ def Solve(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix,
                     
                     # lock and then write outputs to gdb
                     try:
-                        mpLock.acquire()
+                        dbLock.acquire()
                         arcpy.CopyFeatures_management(solved_layers[4], Input_Dataset + "\\Routes_" + lyr.name + "_" + ExpName[0]) #Routes
                         for msg in range(0, arcpy.GetMessageCount()):
                             messages.append(arcpy.GetMessage(msg))
@@ -80,18 +84,18 @@ def Solve(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix,
                         for msg in range(0, arcpy.GetMessageCount()):
                             messages.append(arcpy.GetMessage(msg))
                     finally:
-                        mpLock.release()
+                        dbLock.release()
                         del solved_layers
 
                     messages.append("Combination {}: Solved {} with scenario {}{}".format(SolveCount, lyr.name, ExpName[0], os.linesep))
 
                     # lock and then print messages
                     try:
-                        mpLock.acquire()
+                        msgLock.acquire()
                         for msg in messages:
                             arcpy.AddMessage(msg)
                     finally:
-                        mpLock.release()
+                        msgLock.release()
                 del desc
                 
     except BaseException as e:
@@ -129,6 +133,10 @@ def main():
     if Safe_Zone_Prefix == '#' or not Safe_Zone_Prefix:
         Safe_Zone_Prefix = "Safe_" # provide a default value if unspecified
 
+    Dynamics_Prefix = arcpy.GetParameterAsText(6)
+    if Dynamics_Prefix == '#' or not Dynamics_Prefix:
+        Dynamics_Prefix = "Dynamics_" # provide a default value if unspecified
+
     # Set current workspace
     arcpy.env.workspace = Input_Dataset
 
@@ -136,10 +144,11 @@ def main():
     ScenarioNames = arcpy.da.TableToNumPyArray(scenarios, 'ShortName')
 
     # queue the processes and pass the thread nums
-    mpLock = mp.Manager().Lock()
+    dbLock = mp.Manager().Lock()
+    msgLock = mp.Manager().Lock()
     pool = mp.Pool(processes=ThreadCount)
     for ThreadNum in range(ThreadCount):
-        pool.apply_async(Solve, args=(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix, Safe_Zone_Prefix, ThreadCount, mpLock, ThreadNum))
+        pool.apply_async(Solve, args=(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix, Safe_Zone_Prefix, Dynamics_Prefix, ThreadCount, msgLock, dbLock, ThreadNum))
     pool.close()
     pool.join()
     
