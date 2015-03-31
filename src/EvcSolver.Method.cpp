@@ -440,7 +440,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		// generally speaking we use FullSPT if the user wants it or if the mimPop2Route has changed.
 		// if the minPop has changed it means pretty much all edges are dirty and there is no point checking them or do DSPT.
 		// later in the code we also check if there are too many dirty edges and in that case we also revert back to FullSPT.
-		FullSPTSelected = ThreeGenCARMA == VARIANT_FALSE || minPop2Route != prevMinPop2Route;
+		FullSPTSelected = ThreeGenCARMA == VARIANT_FALSE || minPop2Route != prevMinPop2Route || CARMAExtractCounts.empty();
 		if (FullSPTSelected) closedList->Clear(NAEdgeMapGeneration::AllGens); // Full SPT
 		else closedList->MarkAllAsOldGen(); // DSPT option
 

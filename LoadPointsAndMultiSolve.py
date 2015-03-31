@@ -42,61 +42,66 @@ def Solve(Input_Layer_Location, ScenarioNames, Input_Dataset, Evacuation_Prefix,
 
             # now loop over all NA layers and solve them one by one
             for lyr in arcpy.mapping.ListLayers(lyrFile):
-                desc = arcpy.Describe(Input_Layer_Location + "\\" + lyr.longName)
-                # only solve if the layer is a network analysis layer
-                if desc.dataType == "NALayer":
+                try:
+                    desc = arcpy.Describe(Input_Layer_Location + "\\" + lyr.longName)
+                    # only solve if the layer is a network analysis layer
+                    if desc.dataType == "NALayer":
 
-                    # We check if this setup and scenario is intended for this particular sub-process
-                    SolveCount += 1
-                    if SolveCount % ThreadCount != ThreadNum:
-                        continue
+                        # We check if this setup and scenario is intended for this particular sub-process
+                        SolveCount += 1
+                        if SolveCount % ThreadCount != ThreadNum:
+                            continue
 
-                    # load input locations
-                    del messages[:]
-                    messages.append("Thread {}: loading input points to {} from scenario {}".format(ThreadNum, lyr.name, ExpName[0]))
-                                        
-                    arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name UID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
-                    for msg in range(0, arcpy.GetMessageCount()):
-                        messages.append(arcpy.GetMessage(msg))
-                    arcpy.AddLocations_na(lyr, "Zones", SAFE, "Name OBJECTID #;Capacity Capacity #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
-                    for msg in range(0, arcpy.GetMessageCount()):
-                        messages.append(arcpy.GetMessage(msg))
-		    arcpy.AddLocations_na(lyr, "DynamicChanges", DYN, "EdgeDirection EdgeDirection #;StartingCost Zones_StartingCost #;EndingCost Zones_EndingCost #;CostChangeRatio Zones_CostChangeRatio #;CapacityChangeRatio Zones_CapacityChangeRatio #", "5000 Meters", "Zones_StartingCost", "Streets SHAPE;SoCal_ND_Junctions NONE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "INCLUDE", "Streets #;SoCal_ND_Junctions #")
-		    for msg in range(0, arcpy.GetMessageCount()):
-			messages.append(arcpy.GetMessage(msg))
-                    
-                    # solve the layer
-                    messages.append("Solving NALayer " + lyr.name + " with scenario " + ExpName[0])
-                    arcpy.Solve_na(lyr, "SKIP", "TERMINATE")
-                    for msg in range(0, arcpy.GetMessageCount()):
-                        messages.append(arcpy.GetMessage(msg))
-
-                    # going to export route and edge sub_layers
-                    solved_layers = arcpy.mapping.ListLayers(lyr)
-                    
-                    # lock and then write outputs to gdb
-                    try:
-                        dbLock.acquire()
-                        arcpy.CopyFeatures_management(solved_layers[4], Input_Dataset + "\\Routes_" + lyr.name + "_" + ExpName[0]) #Routes
+                        # load input locations
+                        del messages[:]
+                        messages.append("Thread {}: loading input points to {} from scenario {}".format(ThreadNum, lyr.name, ExpName[0]))
+                                            
+                        arcpy.AddLocations_na(lyr, "Evacuees", EVC, "VehicleCount POPULATION #;Name UID #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
                         for msg in range(0, arcpy.GetMessageCount()):
                             messages.append(arcpy.GetMessage(msg))
-                        arcpy.CopyFeatures_management(solved_layers[5], Input_Dataset + "\\EdgeStat_"+ lyr.name + "_" + ExpName[0]) #EdgeStat
+                        arcpy.AddLocations_na(lyr, "Zones", SAFE, "Name OBJECTID #;Capacity Capacity #", "5000 Meters", "", "Streets NONE;SoCal_ND_Junctions SHAPE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "EXCLUDE", "Streets #;SoCal_ND_Junctions #")
                         for msg in range(0, arcpy.GetMessageCount()):
                             messages.append(arcpy.GetMessage(msg))
-                    finally:
-                        dbLock.release()
-                        del solved_layers
+                        arcpy.AddLocations_na(lyr, "DynamicChanges", DYN, "EdgeDirection EdgeDirection #;StartingCost Zones_StartingCost #;EndingCost Zones_EndingCost #;CostChangeRatio Zones_CostChangeRatio #;CapacityChangeRatio Zones_CapacityChangeRatio #", "5000 Meters", "Zones_StartingCost", "Streets SHAPE;SoCal_ND_Junctions NONE", "MATCH_TO_CLOSEST", "CLEAR", "NO_SNAP", "5 Meters", "INCLUDE", "Streets #;SoCal_ND_Junctions #")
+                        for msg in range(0, arcpy.GetMessageCount()):
+                            messages.append(arcpy.GetMessage(msg))
+                        
+                        # solve the layer
+                        messages.append("Solving NALayer " + lyr.name + " with scenario " + ExpName[0])
+                        arcpy.Solve_na(lyr, "SKIP", "TERMINATE")
+                        for msg in range(0, arcpy.GetMessageCount()):
+                            messages.append(arcpy.GetMessage(msg))
 
-                    messages.append("Combination {}: Solved {} with scenario {}{}".format(SolveCount, lyr.name, ExpName[0], os.linesep))
+                        # going to export route and edge sub_layers
+                        solved_layers = arcpy.mapping.ListLayers(lyr)
+                        
+                        # lock and then write outputs to gdb
+                        try:
+                            dbLock.acquire()
+                            arcpy.CopyFeatures_management(solved_layers[4], Input_Dataset + "\\Routes_" + lyr.name + "_" + ExpName[0]) #Routes
+                            for msg in range(0, arcpy.GetMessageCount()):
+                                messages.append(arcpy.GetMessage(msg))
+                            arcpy.CopyFeatures_management(solved_layers[5], Input_Dataset + "\\EdgeStat_"+ lyr.name + "_" + ExpName[0]) #EdgeStat
+                            for msg in range(0, arcpy.GetMessageCount()):
+                                messages.append(arcpy.GetMessage(msg))
+                        finally:
+                            dbLock.release()
+                            del solved_layers
 
-                    # lock and then print messages
-                    try:
-                        msgLock.acquire()
-                        for msg in messages:
-                            arcpy.AddMessage(msg)
-                    finally:
-                        msgLock.release()
-                del desc
+                        messages.append("Combination {}: Solved {} with scenario {}{}".format(SolveCount, lyr.name, ExpName[0], os.linesep))
+
+                        # lock and then print messages
+                        try:
+                            msgLock.acquire()
+                            for msg in messages:
+                                arcpy.AddMessage(msg)
+                        finally:
+                            msgLock.release()
+
+                except BaseException as e:
+                    arcpy.AddError(e)
+                finally:
+                    del desc
                 
     except BaseException as e:
         arcpy.AddError(e)
