@@ -38,14 +38,7 @@ DEFINE_ENUM_FLAG_OPERATORS(NAEdgeMapGeneration)
 DEFINE_ENUM_FLAG_OPERATORS(EvacueeGrouping)
 DEFINE_ENUM_FLAG_OPERATORS(EdgeDirection)
 template <class T> inline bool CheckFlag(T var, T flag) { return (var & flag) != T::None; }
-/*
-#define FLOCK_OBJ_STAT char
-#define FLOCK_OBJ_STAT_INIT		0x0
-#define FLOCK_OBJ_STAT_MOVE		0x1
-#define FLOCK_OBJ_STAT_STOP		0x2
-#define FLOCK_OBJ_STAT_COLLID	0x3
-#define FLOCK_OBJ_STAT_END		0x4
-*/
+
 #define FLOCK_PROFILE char
 #define FLOCK_PROFILE_CAR		0x0
 #define FLOCK_PROFILE_PERSON	0x1
