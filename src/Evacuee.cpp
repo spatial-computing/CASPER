@@ -119,8 +119,8 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 
 					// setup this path as frozen and mark the evacuee as unporcessed
 					path->myEvc->Status = EvacueeStatus::Unprocessed;
-					path->myEvc->PredictedCost = CASPER_INFINITY;
-					path->myEvc->FinalCost = CASPER_INFINITY;
+					/// path->myEvc->PredictedCost = path->FinalEvacuationCost - CurrentTime;
+					/// path->myEvc->FinalCost     = path->FinalEvacuationCost - CurrentTime;
 					path->MySafeZone->Reserve(-path->RoutedPop);
 					++count;
 				}

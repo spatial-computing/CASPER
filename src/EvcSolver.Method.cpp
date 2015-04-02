@@ -89,7 +89,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		 NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, EvcStartTime, pathGenerationCount))
 	{
 		LocalIteration = 0;
-		RevisedCarmaSortCriteria = this->CarmaSortCriteria;
+		/// Let's do an experiment and see if this is needed
+		/// RevisedCarmaSortCriteria = this->CarmaSortCriteria;
 		do // iteration loop
 		{
 			if (ipStepProgressor)
