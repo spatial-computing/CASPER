@@ -62,6 +62,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 {
 	size_t count = 0, segment = 0, activeCompleteCount = 0;
 	double pathCost = 0.0, edgeRatio = 0.0, edgeCost = 0.0;
+	std::vector<std::pair<NAEdgePtr, EvcPathPtr>> RemoveReservations;
 
 	if (CurrentTime > 0.0)
 	{
@@ -109,19 +110,18 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 					// pop out the rest of the segments in this path
 					for (size_t i = path->size() - 1; i > segment; --i)
 					{
-						path->at(i)->Edge->RemoveReservation(path, method, true);
-						DynamicallyAffectedEdges.insert(path->at(i)->Edge);
+						RemoveReservations.push_back(std::pair<NAEdgePtr, EvcPathPtr>(path->at(i)->Edge, path));
 						delete path->at(i);
 					}
 
 					// we also remove this reservation because the next path will start here and we don't want the evacuee to overlap itself
-					path->at(segment)->Edge->RemoveReservation(path, method, true);
+					RemoveReservations.push_back(std::pair<NAEdgePtr, EvcPathPtr>(path->at(segment)->Edge, path));
 
 					// setup this path as frozen and mark the evacuee as unporcessed
-					path->myEvc->Status = EvacueeStatus::Unprocessed;
-					/// path->myEvc->PredictedCost = path->FinalEvacuationCost - CurrentTime;
-					/// path->myEvc->FinalCost     = path->FinalEvacuationCost - CurrentTime;
-					path->MySafeZone->Reserve(-path->RoutedPop);
+					path->myEvc->Status        = EvacueeStatus::Unprocessed;
+					path->myEvc->PredictedCost = path->FinalEvacuationCost;
+					path->myEvc->FinalCost     = path->FinalEvacuationCost;
+					path->MySafeZone->Reserve (-path->RoutedPop);
 					++count;
 				}
 				else
@@ -152,6 +152,14 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 			}
 		}
 	}
+
+	// once all paths have been splitted and evacuees moved, now we execute all thoes edge reservation removals
+	for (auto p : RemoveReservations)
+	{
+		p.first->RemoveReservation(p.second, method, true);
+		DynamicallyAffectedEdges.insert(p.first);
+	}
+
 	return count > 0 ? count : activeCompleteCount;
 }
 
@@ -289,7 +297,7 @@ void EvcPath::DoesItNeedASecondChance(double ThreasholdForCost, double Threashol
 	double PredictionCostRatio = (ReserveEvacuationCost - myEvc-> PredictedCost) / ThisIterationMaxCost;
 	double EvacuationCostRatio = (FinalEvacuationCost   - ReserveEvacuationCost) / ThisIterationMaxCost;
 
-	if (this->Status == PathStatus::ActiveComplete && PredictionCostRatio >= ThreasholdForCost || EvacuationCostRatio >= ThreasholdForCost)
+	if (this->Status == PathStatus::ActiveComplete && (PredictionCostRatio >= ThreasholdForCost || EvacuationCostRatio >= ThreasholdForCost))
 	{
 		if (myEvc->Status == EvacueeStatus::Processed)
 		{
@@ -570,7 +578,16 @@ void NAEvacueeVertexTable::InsertReachable(std::shared_ptr<EvacueeList> list, CA
 			if (sortDir == CARMASort::BWCont || sortDir == CARMASort::FWCont) evc->PredictedCost = CASPER_INFINITY;
 
 			// this is to help CARMA find this evacuee again if it happens to be in a clean part of the tree/graph
-			if (evc->DiscoveryLeaf) leafs->Insert(evc->DiscoveryLeaf->EID, (unsigned char)3);
+			if (evc->DiscoveryLeaf)
+			{
+				// Speedup: check if this evacuee is for sure trapped in this case we mark it as unreachable even before CARMA starts
+				if (evc->DiscoveryLeaf->OriginalCost >= CASPER_INFINITY)
+				{
+					evc->Status = EvacueeStatus::Unreachable;
+					continue;
+				}
+				leafs->Insert(evc->DiscoveryLeaf->EID, (unsigned char)3);
+			}
 			evc->Status = EvacueeStatus::CARMALooking;
 
 			for (const auto & v : *evc->VerticesAndRatio)
@@ -611,7 +628,7 @@ void NAEvacueeVertexTable::RemoveDiscoveredEvacuees(NAVertexPtr myVertex, NAEdge
 				{
 					evc->Status = EvacueeStatus::Unprocessed;
 					newPredictedCost = myVertex->GVal + foundVertexRatio->GVal * edgeCost;
-					evc->PredictedCost = min(evc->PredictedCost, newPredictedCost);
+					evc->PredictedCost = min(evc->PredictedCost, newPredictedCost + evc->StartingCost);
 
 					// because this edge helped us find a new evacuee, we save it as a leaf for the next carma loop
 					evc->DiscoveryLeaf = myEdge;

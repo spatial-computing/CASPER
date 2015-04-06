@@ -36,27 +36,28 @@ EdgeReservations::EdgeReservations(const EdgeReservations& cpy)
 void EdgeReservations::AddReservation(double newFlow, EvcPathPtr path)
 {
 	push_back(path);
-	ReservedPop += (float)newFlow;
+	ReservedPop += newFlow;
 }
 
 void EdgeReservations::RemoveReservation(double flow, EvcPathPtr path)
-{
-	int i, last = (int)size() - 1;
-	for (i = last; i >= 0; --i) if (*path == *at(i)) break;
-	if (i < 0) throw std::out_of_range("Path not found in edge reservation");
-	erase(begin() + i);
-	ReservedPop -= (float)flow;
+{	
+	size_t orgSize = size();
+	erase(std::remove_if(begin(), end(), [&path](const EvcPathPtr & myPath)->bool { return *path == *myPath; }), end());
+	size_t removedCount = orgSize - size();
+	ReservedPop -= flow * removedCount;
+	ReservedPop = max(0.0, ReservedPop);
 }
 
 void EdgeReservations::SwapReservation(const EvcPathPtr oldPath, const EvcPathPtr newPath)
 {
 	int last = (int)size() - 1;
+	bool found = false;
 	for (int i = last; i >= 0; --i) if (*oldPath == *at(i))
 	{
+		// this->operator[](i) = newPath;
 		at(i) = newPath;
-		return;
+		found = true;
 	}
-	throw std::out_of_range("OldPath not found in edge reservation");
 }
 
 //******************************************************************************************/
@@ -181,7 +182,7 @@ HRESULT NAEdge::InsertEdgeToFeatureCursor(INetworkDatasetPtr ipNetworkDataset, I
 	IGeometryPtr ipGeometry;
 	BSTR dir = Direction == esriNEDAgainstDigitized ? L"Against" : L"Along";
 
-	float resPop = this->GetReservedPop();
+	double resPop = this->GetReservedPop();
 	if (resPop <= 0.0) return hr;
 
 	// retrieve street shape for this edge

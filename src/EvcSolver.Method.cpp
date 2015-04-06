@@ -28,7 +28,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	NAEdgePtr myEdge = nullptr;
 	HRESULT hr = S_OK;
 	VARIANT_BOOL keepGoing;
-	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, globalMinPop2Route = 0.0, minPop2Route = 1.0, globalDeltaCost = 0.0, MaxPathCostSoFar = 0.0, addedCostAsPenalty = 0.0, EvcStartTime = 0.0;
+	double populationLeft, population2Route, TimeToBeat = 0.0f, newCost, globalMinPop2Route = 0.0, minPop2Route = -1.0, globalDeltaCost = 0.0, MaxPathCostSoFar = 0.0, addedCostAsPenalty = 0.0, EvcStartTime = 0.0;
 	std::vector<NAVertexPtr>::const_iterator vit;
 	INetworkJunctionPtr ipCurrentJunction = nullptr;
 	INetworkElementPtr ipJunctionElement = nullptr;
@@ -89,8 +89,9 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 		 NumberOfEvacueesInIteration = dynamicDisasters->NextDynamicChange(AllEvacuees, ecache, EvcStartTime, pathGenerationCount))
 	{
 		LocalIteration = 0;
+		minPop2Route = -1.0; // this will insure that the first CARMA after each dynamic change will be FullSPT
 		/// Let's do an experiment and see if this is needed
-		/// RevisedCarmaSortCriteria = this->CarmaSortCriteria;
+		RevisedCarmaSortCriteria = this->CarmaSortCriteria;
 		do // iteration loop
 		{
 			if (ipStepProgressor)
@@ -109,8 +110,8 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 
 				if (ipStepProgressor) { if (FAILED(hr = ipStepProgressor->put_Message(ATL::CComBSTR(statusMsg)))) goto END_OF_FUNC; }
 				countEvacueesInOneBucket = 0;
-				sumVisitedDirtyEdge = 0;
-				sumVisitedEdge = 0;
+				sumVisitedDirtyEdge      = 0;
+				sumVisitedEdge           = 0;
 
 				for (const auto currentEvacuee : *sortedEvacuees)
 				{
@@ -441,7 +442,7 @@ HRESULT EvcSolver::CARMALoop(INetworkQueryPtr ipNetworkQuery, IStepProgressorPtr
 		// generally speaking we use FullSPT if the user wants it or if the mimPop2Route has changed.
 		// if the minPop has changed it means pretty much all edges are dirty and there is no point checking them or do DSPT.
 		// later in the code we also check if there are too many dirty edges and in that case we also revert back to FullSPT.
-		FullSPTSelected = ThreeGenCARMA == VARIANT_FALSE || minPop2Route != prevMinPop2Route || CARMAExtractCounts.empty();
+		FullSPTSelected = ThreeGenCARMA == VARIANT_FALSE || minPop2Route != prevMinPop2Route /*|| CARMAExtractCounts.empty()*/;
 		if (FullSPTSelected) closedList->Clear(NAEdgeMapGeneration::AllGens); // Full SPT
 		else closedList->MarkAllAsOldGen(); // DSPT option
 

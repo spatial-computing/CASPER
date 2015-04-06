@@ -96,6 +96,7 @@ public:
 	inline double GetReserveEvacuationCost() const { return ReserveEvacuationCost; }
 	inline double GetFinalEvacuationCost()   const { return FinalEvacuationCost; }
 	inline bool   IsActive()                 const { return Status == PathStatus::ActiveComplete; }
+	inline bool   IsComplete()               const { return Status == PathStatus::ActiveComplete || Status == PathStatus::FrozenComplete; }
 	void CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolverMethod method);
 
 	EvcPath(double initDelayCostPerPop, double routedPop, int order, Evacuee * evc, SafeZone * mySafeZone);

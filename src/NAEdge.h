@@ -20,7 +20,7 @@
 class EdgeReservations : private std::vector<EvcPathPtr>
 {
 private:
-	float          ReservedPop;
+	double         ReservedPop;
 	double         Capacity;
 	EdgeDirtyState dirtyState;
 	TrafficModel   * myTrafficModel;
@@ -81,7 +81,7 @@ public:
 	inline EdgeDirtyState GetDirtyState() const { return reservations->dirtyState; }
 	inline void SetClean(EvcSolverMethod method, double minPop2Route);
 	inline double GetCleanCost() const { return CleanCost; }
-	float GetReservedPop() const { return reservations->ReservedPop; }
+	double GetReservedPop() const { return reservations->ReservedPop; }
 	HRESULT GetGeometry(INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag, IGeometryPtr & geometry);
 	void RemoveReservation(EvcPathPtr path, EvcSolverMethod method, bool delayedDirtyState = false);
 	void SwapReservation(const EvcPathPtr oldPath, const EvcPathPtr newPath) { reservations->SwapReservation(oldPath, newPath); }
