@@ -153,7 +153,7 @@ size_t EvcPath::DynamicStep_MoveOnPath(const std::unordered_set<EvcPath *, EvcPa
 		}
 	}
 
-	// once all paths have been splitted and evacuees moved, now we execute all thoes edge reservation removals
+	// once all paths have been splitted and evacuees moved, now we execute all those edge reservation removals
 	for (auto p : RemoveReservations)
 	{
 		p.first->RemoveReservation(p.second, method, true);

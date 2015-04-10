@@ -26,14 +26,16 @@ namespace CountQuery
     {
         static int Main(string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length < 3)
             {
-                Console.WriteLine("Usage: CASPERCountQuery logfilename.csv MODE");
+                Console.WriteLine("Usage: CASPERCountQuery logfilename.csv MODE AggColumn");
                 return 1;
             }
 
             string inpFile = args[0];
             int mode = int.Parse(args[1]);
+            string AggColumn = args[2].ToString();
+            int AggColumnInd = -1;
 
             try
             {
@@ -41,9 +43,10 @@ namespace CountQuery
 
                 // check header of csv
                 var header = logFile[0].Split(',');
-                bool check1 = header[0] == "Setup Name";
+                AggColumnInd =  Array.FindIndex(header, h => h.Equals(AggColumn));
+                bool check1 = header[0] == "SetupName";
                 bool check2 = header[1] == "Scenario";
-                bool check3 = header[13] == "Improve";
+                bool check3 = header[AggColumnInd] == AggColumn;
 
                 if (!check1 || !check2 || !check3) throw new Exception("header of CSV does not pass the check.");
 
@@ -53,7 +56,7 @@ namespace CountQuery
                 {
                     var record = logFile[i].Split(',');
                     if (record.Count() != header.Count()) throw new Exception("Bad split by comma in record " + i);
-                    records.Add(new LogRecord(record[0], record[1], record[13]));
+                    records.Add(new LogRecord(record[0], record[1], record[AggColumnInd]));
                 }
 
                 var allSetupNames = records.Select(r => r.SetupName);
