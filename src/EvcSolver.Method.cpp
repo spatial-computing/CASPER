@@ -69,7 +69,7 @@ HRESULT EvcSolver::SolveMethod(INetworkQueryPtr ipNetworkQuery, IGPMessages* pMe
 	size_t countDynamic = dynamicDisasters->ResetDynamicChanges();
 
 	// Setup a message on our step progress bar indicating that we are traversing the network
-	if (ipStepProgressor)
+	if (ipStepProgressor && !AllEvacuees->empty())
 	{
 		// Setup our progress bar based on the number of Evacuee points
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) goto END_OF_FUNC;

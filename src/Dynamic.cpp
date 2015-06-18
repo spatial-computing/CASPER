@@ -163,7 +163,7 @@ size_t DynamicDisaster::NextDynamicChange(std::shared_ptr<EvacueeList> AllEvacue
 size_t CriticalTime::ProcessAllChanges(std::shared_ptr<EvacueeList> AllEvacuees, std::shared_ptr<NAEdgeCache> ecache, double & EvcStartTime,
 	std::unordered_map<NAEdgePtr, EdgeOriginalData, NAEdgePtrHasher, NAEdgePtrEqual> & OriginalEdgeSettings, DynamicMode myDynamicMode, EvcSolverMethod solverMethod, int & pathGenerationCount) const
 {
-	size_t CountPaths = AllEvacuees->size();
+	size_t CountPaths = max(1, AllEvacuees->size());
 	EvcStartTime = this->Time;
 
 	// first undo previous changes using the backup map 'OriginalEdgeSettings'

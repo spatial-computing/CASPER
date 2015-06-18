@@ -118,9 +118,12 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Validate the context (i.e., make sure that it is bound to a network dataset)
 	INetworkDatasetPtr ipNetworkDataset;
+	esriNetworkDatasetState dnState;
 	if (FAILED(hr = pNAContext->get_NetworkDataset(&ipNetworkDataset))) return hr;
 
 	if (!ipNetworkDataset) return ATL::AtlReportError(this->GetObjectCLSID(), _T("Context does not have a valid network dataset."), IID_INASolver);
+	if (FAILED(hr = ipNetworkDataset->get_State(&dnState))) return hr;
+	if (dnState != esriNetworkDatasetState::esriNDSBuilt)  return ATL::AtlReportError(this->GetObjectCLSID(), _T("Network dataset is not built or it's empty."), IID_INASolver);
 
 	// NOTE: this is also a good place to perform any additional necessary validation, such as
 	// synchronizing the attribute names set on your solver with those of the context's network dataset
@@ -630,7 +633,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// If we reach this point, we have some features to output to the Routes NAClass
 	// Reset the progress bar based on the number of features that we must output
-	if (ipStepProgressor)
+	if (ipStepProgressor && !tempPathList.empty())
 	{
 		// Step progress bar range = 0 through numberOfOutputSteps
 		if (FAILED(hr = ipStepProgressor->put_MinRange(0))) return hr;

@@ -201,6 +201,11 @@ private:
 	bool SeperationDisabledForDynamicCASPER;
 
 public:
+	using DoubleGrowingArrayList<EvacueePtr, size_t>::empty;
+	using DoubleGrowingArrayList<EvacueePtr, size_t>::size;
+	using DoubleGrowingArrayList<EvacueePtr, size_t>::begin;
+	using DoubleGrowingArrayList<EvacueePtr, size_t>::end;
+
 	EvacueeList(EvacueeGrouping GroupingOption, size_t capacity = 0) : groupingOption(GroupingOption), SeperationDisabledForDynamicCASPER(false), DoubleGrowingArrayList<EvacueePtr, size_t>(capacity) { }
 	virtual ~EvacueeList();
 	void FinilizeGroupings(double OKDistance, DynamicMode DynamicCASPEREnabled);
@@ -211,9 +216,6 @@ public:
 	bool IsSeperable() const { return CheckFlag(groupingOption, EvacueeGrouping::Separate); }
 	bool IsSeperationDisabledForDynamicCASPER() const { return SeperationDisabledForDynamicCASPER; }
 	void Insert(const EvacueePtr & item) { push_back(item); }
-	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator begin() const { return DoubleGrowingArrayList<EvacueePtr, size_t>::begin(); }
-	DoubleGrowingArrayList<EvacueePtr, size_t>::const_iterator end()   const { return DoubleGrowingArrayList<EvacueePtr, size_t>::end(); }
-	size_t size() const { return DoubleGrowingArrayList<EvacueePtr, size_t, 0>::size(); }
 };
 
 class NAEvacueeVertexTable : protected std::unordered_map<long, std::vector<EvacueePtr>>
