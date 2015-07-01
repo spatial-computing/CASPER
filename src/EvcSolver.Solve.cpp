@@ -269,8 +269,8 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Vertex table structures
 	auto safeZoneList = std::shared_ptr<SafeZoneTable>(new DEBUG_NEW_PLACEMENT SafeZoneTable(100));
-	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID, curbSideIndex = -1;
-	VARIANT evName, pop, cap;
+	long nameFieldIndex = 0l, popFieldIndex = 0l, capFieldIndex = 0l, objectID, curbSideIndex = -1, zoneNameFieldIndex = -1;
+	VARIANT evName, pop, cap, zoneNameVar;
 
 	// read cost attribute unit
 	INetworkAttributePtr costAttrib;
@@ -280,8 +280,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	FlockProfile flockProfile(flockingEnabled ? flockingProfile : FLOCK_PROFILE_CAR);
 	if (FAILED(hr = ipNetworkDataset->get_AttributeByID(costAttributeID, &costAttrib))) return hr;
 	if (FAILED(hr = costAttrib->get_Units(&unit))) return hr;
-	double costPerDay = GetUnitPerDay(unit, flockProfile.UsualSpeed);
-	double costPerSec = costPerDay / (3600.0 * 24.0);
+	double costPerDay = GetUnitPerDay(unit, flockProfile.UsualSpeed), costPerSec = costPerDay / (3600.0 * 24.0);
 
 	if (ipStepProgressor) ipStepProgressor->put_Message(ATL::CComBSTR(L"Collecting input points")); // add more specific information here if appropriate
 
@@ -290,6 +289,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 
 	// Get a cursor on the zones table to loop through each row
 	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CAP), &capFieldIndex))) return hr;
+	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_NAME), &zoneNameFieldIndex))) return hr;
 	if (FAILED(hr = ipZonesTable->FindField(ATL::CComBSTR(CS_FIELD_CURBAPPROACH), &curbSideIndex))) return hr;
 	if (FAILED(hr = ipZonesTable->Search(nullptr, VARIANT_TRUE, &ipCursor))) return hr;
 	while (ipCursor->NextRow(&ipRow) == S_OK)
@@ -327,6 +327,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 			if (FAILED(hr = ipNALocation->get_Side(&side))) return hr;
 
 			if (FAILED(hr = ipRow->get_Value(capFieldIndex, &cap))) return hr;
+			if (FAILED(hr = ipRow->get_Value(zoneNameFieldIndex, &zoneNameVar))) return hr;
 
 			// Get the side of curb that we can approach
 			if (FAILED(hr = ipRow->get_Value(curbSideIndex, &curbApproachVar))) curbApproach = esriNACurbApproachType::esriNANoUTurn;
@@ -348,7 +349,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 				if (elementType == esriNETJunction)
 				{
 					if (FAILED(hr = ipForwardStar->get_IsRestricted(ipElement, &isRestricted))) return hr;
-					if (!isRestricted) safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipElement, nullptr, 0, cap));
+					if (!isRestricted) safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipElement, nullptr, 0, cap, zoneNameVar));
 				}
 
 				// If the element is an edge, then we must check the fromPosition and toPosition
@@ -373,7 +374,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							if (FAILED(hr = ipNetworkQuery->CreateNetworkElement(esriNETJunction, &ipOtherElement))) return hr;
 							INetworkJunctionPtr ipCurrentJunction(ipOtherElement);
 							if (FAILED(hr = ipEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
-							IsSafeZoneMissed |= !(safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge), posAlongEdge, cap)));
+							IsSafeZoneMissed |= !(safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipEdge), posAlongEdge, cap, zoneNameVar)));
 						}
 					}
 
@@ -394,7 +395,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 							INetworkJunctionPtr ipCurrentJunction(ipOtherElement);
 							if (FAILED(hr = ipOtherEdge->QueryJunctions(ipCurrentJunction, nullptr))) return hr;
 
-							IsSafeZoneMissed |= !(safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge), posAlongEdge, cap)));
+							IsSafeZoneMissed |= !(safeZoneList->insert(new DEBUG_NEW_PLACEMENT SafeZone(ipCurrentJunction, ecache->New(ipOtherEdge), posAlongEdge, cap, zoneNameVar)));
 						}
 					}
 				}
@@ -662,13 +663,14 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	if (FAILED(hr = ipRoutesFC->CreateFeatureBuffer(&ipFeatureBufferR))) return hr;
 
 	// Query for the appropriate field index values in the "routes" feature class
-	long evNameFieldIndex = -1, evacTimeFieldIndex  = -1, orgTimeFieldIndex = -1, RIDFieldIndex    = -1;
+	long evNameFieldIndex = -1, evacTimeFieldIndex = -1, orgTimeFieldIndex = -1, RIDFieldIndex = -1;
 
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_NAME), &evNameFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_TIME), &evacTimeFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_ORG), &orgTimeFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_RID), &RIDFieldIndex))) return hr;
 	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_EVC_POP2), &popFieldIndex))) return hr;
+	if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_ZONENAME), &zoneNameFieldIndex))) return hr;
 	if (popFieldIndex < 0) { if (FAILED(hr = ipRoutesFC->FindField(ATL::CComBSTR(CS_FIELD_E_POP), &popFieldIndex))) return hr; }
 
 #ifdef DEBUG
@@ -681,7 +683,7 @@ STDMETHODIMP EvcSolver::Solve(INAContext* pNAContext, IGPMessages* pMessages, IT
 	for (const auto & p : tempPathList)
 	{
 		if (FAILED(hr = p->AddPathToFeatureBuffers(pTrackCancel, ipNetworkDataset, ipFeatureClassContainer, sourceNotFoundFlag, ipStepProgressor, globalEvcCost, ipFeatureBufferR,
-			ipFeatureCursorR, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex))) return hr;
+			ipFeatureCursorR, evNameFieldIndex, evacTimeFieldIndex, orgTimeFieldIndex, popFieldIndex, zoneNameFieldIndex))) return hr;
 	}
 
 	// flush the insert buffer

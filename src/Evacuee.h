@@ -113,7 +113,7 @@ public:
 	double GetAvgCostRatio(double MaxEvacuationCost = 0.0) const;
 	void AddSegment(EvcSolverMethod method, PathSegmentPtr segment);
 	HRESULT AddPathToFeatureBuffers(ITrackCancel *, INetworkDatasetPtr, IFeatureClassContainerPtr, bool &,
-		IStepProgressorPtr, double &, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long);
+		IStepProgressorPtr, double &, IFeatureBufferPtr, IFeatureCursorPtr, long, long, long, long, long);
 	void ReattachToEvacuee(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges);
 	inline void CleanYourEvacueePaths(EvcSolverMethod method, std::unordered_set<NAEdge *, NAEdgePtrHasher, NAEdgePtrEqual> & touchedEdges) { EvcPath::DetachPathsFromEvacuee(myEvc, method, touchedEdges); }
 	void DoesItNeedASecondChance(double ThreasholdForCost, double ThreasholdForPathOverlap, std::vector<Evacuee *> & AffectingList, double ThisIterationMaxCost, EvcSolverMethod method);
@@ -239,6 +239,7 @@ private:
 
 public:
 	NAVertex * VertexAndRatio;
+	double     Name;
 
 	inline void   Reserve(double pop)      { reservedPop += pop;   }
 	inline double getPositionAlong() const { return positionAlong; }
@@ -247,7 +248,7 @@ public:
 	SafeZone(const SafeZone & that) = delete;
 	SafeZone & operator=(const SafeZone &) = delete;
 	virtual ~SafeZone();
-	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap);
+	SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap, VARIANT name);
 	bool IsRestricted(std::shared_ptr<NAEdgeCache> ecache, NAEdge * leadingEdge, double costPerDensity);
 	double SafeZoneCost(double population2Route, EvcSolverMethod solverMethod, double costPerDensity, double * globalDeltaCost = nullptr);
 };

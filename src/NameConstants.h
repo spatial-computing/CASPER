@@ -59,6 +59,7 @@
 #define CS_FIELD_SIDE_OF_EDGE                       L"SideOfEdge"
 #define CS_FIELD_CURBAPPROACH                       L"CurbApproach"
 #define CS_FIELD_STATUS                             L"Status"
+#define CS_FIELD_ZONENAME                           L"DestZoneName"
 
 // Flocking
 

@@ -959,6 +959,12 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
 	ipFieldsEdit->AddField(ipFieldEdit);
 
+	ipField.CreateInstance(CLSID_Field);
+	ipFieldEdit = ipField;
+	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_ZONENAME));
+	ipFieldEdit->put_Type(esriFieldTypeDouble);
+	ipFieldsEdit->AddField(ipFieldEdit);
+
 	ipClassDefEdit->putref_Fields(ipFields);
 
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_OID), esriNAFieldTypeOutput | esriNAFieldTypeNotEditable);
@@ -967,6 +973,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_E_TIME), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_EVC_POP2), esriNAFieldTypeOutput);
 	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_E_ORG), esriNAFieldTypeOutput);
+	ipClassDefEdit->put_FieldType(ATL::CComBSTR(CS_FIELD_ZONENAME), esriNAFieldTypeOutput);
 
 	ipClassDefEdit->put_IsInput(VARIANT_FALSE);
 	ipClassDefEdit->put_IsOutput(VARIANT_TRUE);

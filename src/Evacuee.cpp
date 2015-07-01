@@ -348,7 +348,7 @@ void EvcPath::CalculateFinalEvacuationCost(double initDelayCostPerPop, EvcSolver
 
 HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDatasetPtr ipNetworkDataset, IFeatureClassContainerPtr ipFeatureClassContainer, bool & sourceNotFoundFlag,
 	IStepProgressorPtr ipStepProgressor, double & globalEvcCost, IFeatureBufferPtr ipFeatureBufferR, IFeatureCursorPtr ipFeatureCursorR,
-	long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex)
+	long evNameFieldIndex, long evacTimeFieldIndex, long orgTimeFieldIndex, long popFieldIndex, long zoneNameFieldIndex)
 {
 	HRESULT hr = S_OK;
 	IPointCollectionPtr pline = IPointCollectionPtr(CLSID_Polyline);
@@ -412,6 +412,7 @@ HRESULT EvcPath::AddPathToFeatureBuffers(ITrackCancel * pTrackCancel, INetworkDa
 	if (FAILED(hr = ipFeatureBufferR->put_Value(evacTimeFieldIndex, ATL::CComVariant(FinalEvacuationCost)))) return hr;
 	if (FAILED(hr = ipFeatureBufferR->put_Value(orgTimeFieldIndex, ATL::CComVariant(OrginalCost)))) return hr;
 	if (FAILED(hr = ipFeatureBufferR->put_Value(popFieldIndex, ATL::CComVariant(RoutedPop)))) return hr;
+	if (zoneNameFieldIndex >= 0 && MySafeZone != nullptr) { if (FAILED(hr = ipFeatureBufferR->put_Value(zoneNameFieldIndex, ATL::CComVariant(MySafeZone->Name)))) return hr; }
 
 	// Insert the feature buffer in the insert cursor
 	if (FAILED(hr = ipFeatureCursorR->InsertFeature(ipFeatureBufferR, &RouteOID))) return hr;
@@ -668,7 +669,8 @@ void NAEvacueeVertexTable::LoadSortedEvacuees(std::shared_ptr<std::vector<Evacue
 
 SafeZone::~SafeZone() { delete VertexAndRatio; }
 
-SafeZone::SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap) : junction(_junction), behindEdge(_behindEdge), positionAlong(posAlong), capacity(0.0)
+SafeZone::SafeZone(INetworkJunctionPtr _junction, NAEdge * _behindEdge, double posAlong, VARIANT cap, VARIANT name)
+	: junction(_junction), behindEdge(_behindEdge), positionAlong(posAlong), capacity(0.0), Name(name.dblVal)
 {
 	reservedPop = 0.0;
 	VertexAndRatio = new DEBUG_NEW_PLACEMENT NAVertex(junction, behindEdge);
