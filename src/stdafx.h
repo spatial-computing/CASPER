@@ -101,14 +101,14 @@ using ATL::CRegistryVirtualMachine;
 	#endif
 #else
     // Be sure to set these paths to the version of the software against which you want to run
-    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystem.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("GetJob", "GetJobESRI") rename("GetObject", "GetObjectESRI") rename("max", "maxESRI") rename("min", "minESRI") exclude("IErrorInfo", "ISupportErrorInfo", "IPersistStream", "IPersist", "tagRECT", "OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer", "IStream", "ISequentialStream", "_LARGE_INTEGER", "_ULARGE_INTEGER", "tagSTATSTG", "_FILETIME")
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esrisystemui.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR", "IPropertyPageSite", "tagMSG", "wireHWND", "_RemotableHandle", "__MIDL_IWinTypes_0009", "IPropertyPage", "tagPROPPAGEINFO", "tagSIZE")
-    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")  exclude("IClassFactory")
-    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI") rename("GetMessage", "GetMessageESRI") exclude("IPersistStreamInit")
-	#import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriNetworkAnalyst.olb" named_guids no_namespace raw_interfaces_only no_implementation
-    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriDisplay.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("ResetDC", "ResetDCESRI") rename("DrawText", "DrawTextESRI") rename("CMYK", "CMYKESRI") rename("RGB", "RGBESRI") exclude("tagPOINT", "IConnectionPointContainer", "IEnumConnectionPoints", "IConnectionPoint", "IEnumConnections", "tagCONNECTDATA")
-    #import "C:\Program Files (x86)\ArcGIS\Desktop10.2\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI") rename("PostMessage", "PostMessageESRI")
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.3\com\esrisystem.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("GetJob", "GetJobESRI") rename("GetObject", "GetObjectESRI") rename("max", "maxESRI") rename("min", "minESRI") exclude("IErrorInfo", "ISupportErrorInfo", "IPersistStream", "IPersist", "tagRECT", "OLE_COLOR", "OLE_HANDLE", "VARTYPE", "XMLSerializer", "IStream", "ISequentialStream", "_LARGE_INTEGER", "_ULARGE_INTEGER", "tagSTATSTG", "_FILETIME")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.3\com\esrisystemui.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ICommand", "ICommandESRI")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.3\com\esriFramework.olb" named_guids no_namespace raw_interfaces_only no_implementation exclude("UINT_PTR", "IPropertyPageSite", "tagMSG", "wireHWND", "_RemotableHandle", "__MIDL_IWinTypes_0009", "IPropertyPage", "tagPROPPAGEINFO", "tagSIZE")
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.3\com\esriGeometry.olb" named_guids no_namespace raw_interfaces_only no_implementation rename("ISegment", "ISegmentESRI")  exclude("IClassFactory")
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.3\com\esriGeoDatabase.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("IRow", "IRowESRI") rename("GetMessage", "GetMessageESRI") exclude("IPersistStreamInit")
+	#import "C:\Program Files (x86)\ArcGIS\Desktop10.3\com\esriNetworkAnalyst.olb" named_guids no_namespace raw_interfaces_only no_implementation
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.3\com\esriDisplay.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids rename("ResetDC", "ResetDCESRI") rename("DrawText", "DrawTextESRI") rename("CMYK", "CMYKESRI") rename("RGB", "RGBESRI") exclude("tagPOINT", "IConnectionPointContainer", "IEnumConnectionPoints", "IConnectionPoint", "IEnumConnections", "tagCONNECTDATA")
+    #import "C:\Program Files (x86)\ArcGIS\Desktop10.3\com\esriCarto.olb" raw_interfaces_only, raw_native_types, no_namespace, named_guids exclude("UINT_PTR") rename("ITableDefinition", "ITableDefinitionESRI") rename("PostMessage", "PostMessageESRI")
 #endif
 
 #pragma warning(pop)
