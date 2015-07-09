@@ -220,7 +220,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	costAttributeID = -1;
 	capAttributeID = -1;
 	SaturationPerCap = 500.0;
-	CriticalDensPerCap = 20.0;
+	CriticalDensPerCap = 10.0;
 	solverMethod = EvcSolverMethod::CASPERSolver;
 	trafficModel = EvcTrafficModel::POWERModel;
 	flockingProfile = FLOCK_PROFILE_CAR;
@@ -231,7 +231,7 @@ STDMETHODIMP EvcSolver::CreateContext(IDENetworkDataset* pNetwork, BSTR contextN
 	m_PreserveLastStop = VARIANT_FALSE;
 	m_UseTimeWindows = VARIANT_FALSE;
 	evacueeGroupingOption = EvacueeGrouping::None;
-	CASPERDynamicMode = DynamicMode::Disabled;
+	CASPERDynamicMode = DynamicMode::Simple;
 	VarExportEdgeStat = VARIANT_TRUE;
 	costPerDensity = 0.0f;
 	flockingEnabled = VARIANT_FALSE;
@@ -739,7 +739,7 @@ HRESULT EvcSolver::BuildClassDefinitions(ISpatialReference* pSpatialRef, INamedS
 	ipFieldEdit = ipField;
 	ipFieldEdit->put_Name(ATL::CComBSTR(CS_FIELD_DYNCOST));
 	ipFieldEdit->put_Type(esriFieldTypeDouble);
-	ipFieldEdit->put_DefaultValue(ATL::CComVariant(1.0));
+	ipFieldEdit->put_DefaultValue(ATL::CComVariant(10.0));
 	ipFieldsEdit->AddField(ipFieldEdit);
 
 	ipField.CreateInstance(CLSID_Field);
