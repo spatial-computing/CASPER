@@ -17,7 +17,7 @@ CASPER (Capacity-Aware Shortest Path Evacuation Routing) is a custom Network Ana
 ####Requirement
  - [Visual C++ Redistributable Packages for Visual Studio 
 2013](http://www.microsoft.com/en-us/download/details.aspx?id=40784) (Install both x86 and x64 versions)
- - ArcGIS Desktop 10.2
+ - ArcGIS Desktop 10.3
  - Network Analyst Extension
  - (Optional) Background Geoprocessing (64-bit)
  - (Optional) ArcGIS Desktop C++ SDK: only if you want to compile the program yourself
