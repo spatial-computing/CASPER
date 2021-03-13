@@ -4,7 +4,7 @@
 | Release Info |                                                                     |
 |:-------------| :-------------------------------------------------------------------|
 | Title        | CASPER for ArcGIS: Evacuation Routing                               |
-| Web Page     | http://esri.com/arccasper                                           |
+| Web Page     | https://github.com/spatial-computing/CASPER                         |
 | Revision     | REV                                                   |
 | Author       | Kaveh Shahabi                                                       |
 | Email        | kshahabi@usc.edu                                                    |
